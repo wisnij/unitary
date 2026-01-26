@@ -12,7 +12,6 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 
 ### Framework: Flutter
 **Rationale:**
-
 - Single codebase for Android and iOS
 - Dart language similar to Kotlin (easier learning curve)
 - Excellent performance (compiled to native code)
@@ -22,7 +21,6 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 - Active community and extensive packages
 
 **Alternatives Considered:**
-
 - Native Kotlin (Android only) - limits iOS support
 - React Native - ruled out per preference to avoid JS/TS
 - Kotlin Multiplatform Mobile - still maturing, more complex setup
@@ -112,7 +110,6 @@ class Token {
 ```
 
 **Lexer (Tokenizer):**
-
 - Converts input string into token stream
 - Recognizes: numbers, units, operators, functions, parentheses
 - Handles various multiplication/division symbols
@@ -217,33 +214,19 @@ void handleImplicitMultiply() {
 ```
 
 **Parser:**
-
 - Builds Abstract Syntax Tree (AST) from tokens
 - Implements operator precedence (lowest to highest):
   1. Addition/Subtraction (+, -)
-  2. Low-precedence division (/, ÷)
-  3. Multiplication (*, ×, ⋅, space)
-  4. High-precedence division (|)
-  5. Exponentiation (^) - right-associative
+  2. Low-precedence multiplication and division (*, ×, ⋅, /, ÷)
+  3. High-precedence multiplication (space, or implicit multiplication with no space)
+  4. Exponentiation (^) - right-associative
+  5. High-precedence division (|) - operands are numeric literals only, no units allowed
   6. Unary (+, -)
   7. Function calls
   8. Primary (numbers, units, parentheses)
 - Handles implicit multiplication
 - Error recovery and reporting with line/column information
 - Unit tests for parsing
-
-**Parser:**
-
-- Builds Abstract Syntax Tree (AST) from tokens
-- Implements operator precedence:
-  1. Parentheses
-  2. Functions
-  3. Exponentiation (^)
-  4. High-precedence division (|)
-  5. Multiplication (*, ×, ⋅, space)
-  6. Low-precedence division (/, ÷)
-  7. Addition/Subtraction (+, -)
-- Handles implicit multiplication (e.g., "5 meters")
 
 **AST Node Types:**
 ```dart
@@ -259,7 +242,6 @@ class FunctionNode extends ASTNode  // sin, cos, etc.
 ```
 
 **Evaluator:**
-
 - Traverses AST and computes result
 - Performs dimensional analysis
 - Returns `Quantity` objects with value and dimension
@@ -322,6 +304,46 @@ class Dimension {
 
   bool get isDimensionless => primitiveExponents.isEmpty;
 
+  // Canonical string representation: primitives with positive exponents / primitives with negative exponents
+  // e.g., "m / s^2" for acceleration, "kg * m / s^2" for force, "1 / s" for frequency
+  String canonicalRepresentation() {
+    if (isDimensionless) return "1";
+
+    final positive = <String>[];
+    final negative = <String>[];
+
+    // Sort primitives alphabetically by their ID
+    final sortedEntries = primitiveExponents.entries.toList()
+      ..sort((a, b) => a.key.compareTo(b.key));
+
+    for (var entry in sortedEntries) {
+      if (entry.value > 0) {
+        if (entry.value == 1) {
+          positive.add(entry.key);
+        } else {
+          positive.add('${entry.key}^${entry.value}');
+        }
+      } else if (entry.value < 0) {
+        final posExp = -entry.value;
+        if (posExp == 1) {
+          negative.add(entry.key);
+        } else {
+          negative.add('${entry.key}^$posExp');
+        }
+      }
+    }
+
+    // Build the representation
+    String numerator = positive.isEmpty ? "1" : positive.join(' * ');
+
+    if (negative.isEmpty) {
+      return numerator;
+    } else {
+      String denominator = negative.join(' * ');
+      return '$numerator / $denominator';
+    }
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
@@ -359,29 +381,7 @@ class DimensionRegistry {
 
   // Get category name for UI display
   String getCategoryName(Dimension dimension) {
-    return _dimensions[dimension]?.name ?? _formatDimensionFallback(dimension);
-  }
-
-  // Fallback: generate a name like "m s^-2" from the dimension
-  String _formatDimensionFallback(Dimension dimension) {
-    if (dimension.isDimensionless) return "Dimensionless";
-
-    // Format dimension as string for display
-    // e.g., {m: 1, s: -2} → "m s^-2"
-    final parts = <String>[];
-    for (var entry in dimension.primitiveExponents.entries) {
-      if (entry.value == 1) {
-        parts.add(entry.key);
-      } else {
-        parts.add('${entry.key}${_formatExponent(entry.value)}');
-      }
-    }
-    return parts.join(' ');
-  }
-
-  String _formatExponent(num exp) {
-    // Convert to superscript (simplified)
-    return '^$exp';
+    return _dimensions[dimension]?.name ?? dimension.canonicalRepresentation();
   }
 }
 
@@ -593,7 +593,6 @@ class Quantity {
 ### 3. Unit Database
 
 **Data Source:**
-
 - Import GNU Units database definitions
 - Parse into internal format
 - Store in embedded database (asset bundle)
@@ -733,7 +732,6 @@ class WorksheetField {
 ```
 
 **Worksheet State Management:**
-
 - Use reactive state management (Provider/Riverpod)
 - When any field changes, recalculate all others
 - Persist last values to local storage
@@ -752,14 +750,12 @@ class CurrencyService {
 ```
 
 **Rate Storage:**
-
 - Store in local database with timestamp
 - Ship with initial rates in assets
 - Background refresh on app launch
 - Manual refresh trigger in UI
 
 **API Integration:**
-
 - Configurable endpoint (future)
 - Retry logic with exponential backoff
 - Graceful failure handling
@@ -805,7 +801,6 @@ class UnitRepository {
 **Goals:** Development environment and project scaffolding
 
 **Tasks:**
-
 - Install Flutter SDK and Android Studio
 - Create new Flutter project
 - Set up version control (Git/GitHub)
@@ -821,7 +816,6 @@ class UnitRepository {
 **Goals:** Build the expression parsing and evaluation engine
 
 **Tasks:**
-
 1. Implement Lexer
    - Token types definition
    - Character-by-character scanning
@@ -850,7 +844,6 @@ class UnitRepository {
 **Goals:** Dimension system and unit definitions
 
 **Tasks:**
-
 1. Implement Dimension class
    - Base dimension representation
    - Dimensional arithmetic
@@ -881,7 +874,6 @@ class UnitRepository {
 **Goals:** Complex conversions and functions
 
 **Tasks:**
-
 1. Implement offset conversions (temperature)
 2. Implement compound units (Newton, Pascal, etc.)
 3. Add mathematical functions (sqrt, etc.)
@@ -898,7 +890,6 @@ class UnitRepository {
 **Goals:** First working UI for expression evaluation
 
 **Tasks:**
-
 1. Create app structure
    - Main navigation
    - Freeform input screen
@@ -930,7 +921,6 @@ class UnitRepository {
 **Goals:** Multi-unit worksheet interface
 
 **Tasks:**
-
 1. Implement Worksheet domain model
 2. Create worksheet UI components
    - Multi-field input grid
@@ -955,7 +945,6 @@ class UnitRepository {
 **Goals:** Save user data and preferences
 
 **Tasks:**
-
 1. Set up local database (sqflite)
 2. Implement PreferencesRepository
 3. Implement WorksheetRepository
@@ -975,7 +964,6 @@ class UnitRepository {
 **Goals:** Currency conversion with live rates
 
 **Tasks:**
-
 1. Choose and integrate currency rate API
 2. Implement CurrencyService
 3. Add currency rate storage
@@ -993,7 +981,6 @@ class UnitRepository {
 **Goals:** Import all unit categories
 
 **Tasks:**
-
 1. Complete GNU Units database import
    - All categories from requirements
    - Verify accuracy of conversions
@@ -1010,7 +997,6 @@ class UnitRepository {
 **Goals:** Production-ready quality
 
 **Tasks:**
-
 1. UI/UX refinement
    - Responsive layouts
    - Tablet support
@@ -1040,7 +1026,6 @@ class UnitRepository {
 **Goals:** Publish to GitHub and Play Store
 
 **Tasks:**
-
 1. Create app icon and branding
 2. Prepare Play Store assets
    - Screenshots

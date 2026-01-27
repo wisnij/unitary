@@ -119,7 +119,7 @@ class Token {
   - If no match, try removing common plural suffixes ("s", "es") and check again
   - This allows "meter", "meters", "metre", "metres" to all match without storing each variant
 - Support for unit prefixes:
-  - When parsing a potential unit name, try to split it into prefix + base unit
+  - When parsing a potential unit name, try to split it into prefix + unit name
   - Check all possible prefix positions (e.g., "km" → "k" + "m", "mega" + "meter")
   - Prefixes can be attached with no space: "km", "megameter", "MHz"
   - Examples: "km" → kilo * meter, "MW" → mega * watt, "ns" → nano * second
@@ -675,7 +675,7 @@ CREATE TABLE custom_dimensions (
 -- Examples of stored data:
 --
 -- Meter (primitive unit):
---   units: {id: "m", description: "SI base unit of length", definition_type: "primitive", is_dimensionless: 0}
+--   units: {id: "m", description: "SI unit of length", definition_type: "primitive", is_dimensionless: 0}
 --   unit_aliases: {unit_id: "m", alias: "meter"}, {unit_id: "m", alias: "metre"}
 --   Parser will also recognize: "meters", "metres" (automatic plural handling)
 --

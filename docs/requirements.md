@@ -28,7 +28,7 @@ All conversions work completely offline:
 
 #### Freeform Input Mode
 - GNU Units-style calculator interface
-- Single expression evaluation: displays result in base unit for that dimension
+- Single expression evaluation: displays result in primitive units for that dimension
 - Two expression evaluation: shows conversion factor between expressions
 - Error display when expressions have incompatible dimensions
 - Output unit customizable via output expression box
@@ -45,7 +45,7 @@ All conversions work completely offline:
 - Mathematical and physical constants (pi, e, c, etc.)
 
 **Dimensional Analysis:**
-- Radians as dimensionless base unit
+- Radians as dimensionless primitive unit
 - Degrees defined in terms of radians
 - Trig functions accept both radians and degrees
 - Automatic dimensional propagation (e.g., `sqrt(m^2) = m`)
@@ -64,7 +64,6 @@ All conversions work completely offline:
 - Based on GNU Units database for comprehensive coverage and compatibility
 - Compound unit support (e.g., `kg m/s^2` for Newton)
 - Offset conversion support (e.g., Celsius ↔ Fahrenheit)
-- Each dimension has a base unit; others defined relative to it
 
 **Aliases and Naming:**
 - Support for multiple names per unit (e.g., "meter", "metre", "m")
@@ -73,7 +72,7 @@ All conversions work completely offline:
 
 **Custom Units (Future Enhancement):**
 - Users can define new units in terms of existing units
-- Users can create new dimensions by defining new base units
+- Users can create new dimensions by defining new units
 - Custom unit definitions persist across sessions
 
 ### 4. Currency Conversion

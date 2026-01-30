@@ -29,6 +29,20 @@ The following areas have been thoroughly designed and documented:
 - **Functions**: Mathematical and trigonometric functions with proper dimension handling
 - **Error Handling**: Separate error types with line/column tracking for debugging, user-friendly messages
 
+### Quantity Class & Arithmetic
+- **Number Representation**: Use `double` for MVP with rational recovery via continued fractions (maxDenominator = 100)
+- **Arithmetic Operations**: Complete design for +, -, *, /, ^, abs, negate with dimensional analysis
+- **Dimensional Exponentiation**: Validation that base dimensions are divisible by rational denominator
+- **Unit Conversion**: Algorithm for converting between conformable units, handling chains and compound units
+- **Unit Reduction**: Algorithm to express quantities in primitive units
+- **Temperature Handling**: GNU Units approach with separate absolute (tempF/tempC) and difference (degF/degC) units
+- **Function/Affine Syntax**: Parentheses required for functions and affine units except when standalone (definition lookup/conversion target)
+- **Prefix Restrictions**: No prefixes allowed on functions or affine units
+- **Error Handling**: Fail-fast approach - throw immediately on NaN-producing operations with clear messages
+- **Edge Cases**: Division by zero, very large/small numbers, negative bases with fractional exponents, precision loss
+- **Testing Strategy**: Comprehensive unit tests, integration tests, and property-based tests documented
+- **Document**: [quantity_arithmetic_design.md](quantity_arithmetic_design.md)
+
 ### Terminology
 - Comprehensive definitions of all key terms
 - Consistent vocabulary established for codebase
@@ -40,27 +54,7 @@ The following areas have been thoroughly designed and documented:
 
 The following areas have been identified but need deeper design work:
 
-### 1. Quantity Class & Arithmetic
-**Current State**: Basic structure outlined in architecture document
-
-**Needs Detail On**:
-- Rational number representation vs. decimal
-  - When to use rational vs. decimal internally
-  - Conversion between the two
-  - Precision preservation strategy
-- Conversion algorithm between conformable units
-  - Step-by-step process for converting quantities
-  - Handling unit chains (e.g., mile → km → m)
-  - Handling compound units in conversions
-- Unit reduction algorithm
-  - How to fully reduce an expression to primitive units
-  - Handling of dimensionless primitives in reduction
-- Edge cases:
-  - Division by zero
-  - Very large/small numbers
-  - Temperature conversions with offsets
-
-### 2. Worksheet System
+### 1. Worksheet System
 **Current State**: High-level requirements defined
 
 **Needs Detail On**:
@@ -82,7 +76,7 @@ The following areas have been identified but need deeper design work:
   - Saving and loading custom worksheets
   - UI for worksheet management
 
-### 3. GNU Units Database Import
+### 2. GNU Units Database Import
 **Current State**: Identified as data source for units
 
 **Needs Detail On**:
@@ -105,7 +99,7 @@ The following areas have been identified but need deeper design work:
   - GNU Units features we won't support
   - Workarounds for differences in architecture
 
-### 4. Currency Rate Management
+### 3. Currency Rate Management
 **Current State**: Requirements defined (auto-update, offline support, manual refresh)
 
 **Needs Detail On**:
@@ -131,7 +125,7 @@ The following areas have been identified but need deeper design work:
   - How to bundle default rates with app releases
   - Update frequency for bundled rates
 
-### 5. User Preferences & State Management
+### 4. User Preferences & State Management
 **Current State**: List of what needs to persist, state management framework chosen (Provider/Riverpod)
 
 **Needs Detail On**:
@@ -156,7 +150,7 @@ The following areas have been identified but need deeper design work:
   - Handling corrupted preferences
   - Reset to defaults functionality
 
-### 6. UI/UX Design
+### 5. UI/UX Design
 **Current State**: Minimalist interface, Material Design, dark mode support identified
 
 **Needs Detail On**:
@@ -198,7 +192,7 @@ The following areas have been identified but need deeper design work:
   - Contrast requirements
   - Touch target sizes
 
-### 7. Testing Strategy (Not Yet Discussed)
+### 6. Testing Strategy (Not Yet Discussed)
 **Needs Detail On**:
 - Unit test approach
   - What to test at unit level
@@ -214,7 +208,7 @@ The following areas have been identified but need deeper design work:
   - Benchmarks for parser/evaluator
   - UI responsiveness targets
 
-### 8. Error Handling & User Feedback (Partially Discussed)
+### 7. Error Handling & User Feedback (Partially Discussed)
 **Current State**: Error types defined for parser/evaluator
 
 **Needs Detail On**:
@@ -238,7 +232,7 @@ The following areas have been identified but need deeper design work:
 
 When resuming design work, recommended order of priority:
 
-1. **Quantity Class & Arithmetic** - Core to everything else
+1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
 2. **Worksheet System** - Major user-facing feature
 3. **GNU Units Database Import** - Needed before implementation can begin
 4. **UI/UX Design** - Should be fleshed out before coding UI
@@ -253,7 +247,7 @@ When resuming design work, recommended order of priority:
 
 Questions that arose during design but haven't been resolved:
 
-1. Should we support variable-precision arithmetic, or is fixed precision acceptable?
+1. ~~Should we support variable-precision arithmetic, or is fixed precision acceptable?~~ → **RESOLVED**: Use `double` for MVP, rational numbers in Phase 15+
 2. How should we handle very long expressions in the UI (scrolling, wrapping, etc.)?
 3. Should worksheet field reordering be supported?
 4. Do we need undo/redo functionality?
@@ -264,5 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: January 2026*
-*Design Sessions: Initial requirements gathering and core architecture*
+*Last Updated: January 30, 2026*  
+*Design Sessions:*
+- *Initial requirements gathering and core architecture*
+- *Quantity Class & Arithmetic (January 30, 2026)*

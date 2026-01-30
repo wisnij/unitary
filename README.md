@@ -8,7 +8,7 @@ user-defined units and dimensions.
 ## Project Status
 
 **Current Phase:** Design and Architecture\
-**Last Updated:** January 2026
+**Last Updated:** January 30, 2026
 
 This project is currently in the design phase.  Core architecture and
 requirements have been defined, but implementation has not yet begun.
@@ -43,6 +43,7 @@ requirements have been defined, but implementation has not yet begun.
 - **[Requirements](docs/requirements.md)** - Complete feature specifications and user requirements
 - **[Terminology](docs/terminology.md)** - Definitions of key terms used throughout the project
 - **[Core Architecture](docs/architecture.md)** - Technical design of data models, parser, and core systems
+- **[Quantity Arithmetic Design](docs/quantity_arithmetic_design.md)** - Detailed design for Quantity class, arithmetic operations, and conversion algorithms
 - **[Implementation Plan](docs/implementation_plan.md)** - Phased development roadmap, risks, and success metrics
 - **[Development Best Practices](docs/best_practices.md)** - Coding standards and workflow guidelines
 - **[Design Progress](docs/design_progress.md)** - Tracker for completed and in-progress design work
@@ -85,6 +86,7 @@ unitary/
 │   ├── requirements.md
 │   ├── terminology.md
 │   ├── architecture.md
+│   ├── quantity_arithmetic_design.md
 │   ├── implementation_plan.md
 │   ├── best_practices.md
 │   └── design_progress.md
@@ -165,10 +167,10 @@ The following areas are fully designed and ready for implementation:
 - ✅ Core domain models (Dimension, Unit, Quantity, Prefix)
 - ✅ Expression parser and evaluator architecture
 - ✅ Terminology and conventions
+- ✅ **Quantity arithmetic and conversion algorithms** (see quantity_arithmetic_design.md)
 
 The following areas still need detailed design:
 
-- ⏳ Quantity arithmetic and conversion algorithms
 - ⏳ Worksheet system details
 - ⏳ GNU Units database import strategy
 - ⏳ Currency rate management

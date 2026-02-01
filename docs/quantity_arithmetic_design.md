@@ -144,7 +144,7 @@ class Rational {
   // maxDenominator limits the complexity of the fraction
   static Rational fromDouble(double value, {int maxDenominator = 100}) {
     if (value.isNaN || value.isInfinite) {
-      throw ArgumentError('Cannot convert NaN or Infinity to rational');
+      throw ArgumentException('Cannot convert NaN or Infinity to rational');
     }
 
     final sign = value < 0 ? -1 : 1;
@@ -314,7 +314,7 @@ enum NotationStyle {
 
 **Algorithm:**
 
-1. Check that dimensions match (throw DimensionError if not)
+1. Check that dimensions match (throw DimensionException if not)
 2. Add/subtract the values
 3. Keep the same dimension
 4. Discard displayUnit (result is in primitive units)
@@ -322,7 +322,7 @@ enum NotationStyle {
 ```dart
 Quantity add(Quantity other) {
   if (!dimension.isCompatibleWith(other.dimension)) {
-    throw DimensionError(
+    throw DimensionException(
       'Cannot add quantities with different dimensions: '
       '${dimension.canonicalRepresentation()} and '
       '${other.dimension.canonicalRepresentation()}'
@@ -334,7 +334,7 @@ Quantity add(Quantity other) {
 
 Quantity subtract(Quantity other) {
   if (!dimension.isCompatibleWith(other.dimension)) {
-    throw DimensionError(
+    throw DimensionException(
       'Cannot subtract quantities with different dimensions: '
       '${dimension.canonicalRepresentation()} and '
       '${other.dimension.canonicalRepresentation()}'
@@ -355,7 +355,7 @@ final c = a + b;  // Quantity(8, Dimension({m: 1}))
 
 // 5 m + 3 s = ERROR
 final d = Quantity(3, Dimension({s: 1}));
-final e = a + d;  // throws DimensionError
+final e = a + d;  // throws DimensionException
 ```
 
 ### Multiplication
@@ -400,7 +400,7 @@ final g = a * f;  // Quantity(15, Dimension({m: 1}))
 
 **Algorithm:**
 
-1. Check for division by zero (throw EvalError if zero)
+1. Check for division by zero (throw EvalException if zero)
 2. Divide the values
 3. Divide the dimensions (subtract exponents for each primitive)
 4. Discard displayUnit
@@ -408,7 +408,7 @@ final g = a * f;  // Quantity(15, Dimension({m: 1}))
 ```dart
 Quantity divide(Quantity other) {
   if (other.value == 0.0) {
-    throw EvalError('Division by zero');
+    throw EvalException('Division by zero');
   }
 
   return Quantity(
@@ -432,7 +432,7 @@ final e = a / d;  // Quantity(5, Dimension.dimensionless())
 
 // 10 m / 0 = ERROR
 final f = Quantity(0, Dimension({m: 1}));
-final g = a / f;  // throws EvalError
+final g = a / f;  // throws EvalException
 ```
 
 ### Negation and Absolute Value
@@ -476,7 +476,7 @@ Quantity power(num exponent) {
   if (dimension.isDimensionless) {
     // Check for negative base with fractional exponent
     if (value < 0 && exponent is double && exponent != exponent.truncate()) {
-      throw EvalError(
+      throw EvalException(
         'Cannot raise negative number to fractional power: $value ^ $exponent'
       );
     }
@@ -501,7 +501,7 @@ Quantity power(num exponent) {
     // Verify the recovered rational is close enough to the original
     final recovered = rationalExponent.toDouble();
     if ((recovered - exponent).abs() > 1e-10) {
-      throw EvalError(
+      throw EvalException(
         'Cannot determine rational approximation for exponent: $exponent'
       );
     }
@@ -518,7 +518,7 @@ Quantity power(num exponent) {
     final resultNumerator = (dimExp * rationalExponent.numerator);
 
     if (resultNumerator % rationalExponent.denominator != 0) {
-      throw DimensionError(
+      throw DimensionException(
         'Cannot raise dimension ${entry.key}^$dimExp to power $exponent: '
         'result would be ${entry.key}^${dimExp * exponent} which is not integral'
       );
@@ -527,7 +527,7 @@ Quantity power(num exponent) {
 
   // Check for negative base with fractional exponent
   if (value < 0 && rationalExponent.denominator != 1) {
-    throw EvalError(
+    throw EvalException(
       'Cannot raise negative number to fractional power: $value ^ $exponent'
     );
   }
@@ -563,7 +563,7 @@ final h = g.power(1.0/3.0);  // Quantity(2, Dimension({m: 1}))
 // (5 m^3)^0.5 = ERROR
 // 0.5 recovers as 1/2, but 3 is not divisible by 2 ✗
 final i = Quantity(5, Dimension({m: 3}));
-final j = i.power(0.5);  // throws DimensionError
+final j = i.power(0.5);  // throws DimensionException
 ```
 
 ---
@@ -592,7 +592,7 @@ double getConversionFactor(Unit fromUnit, Unit toUnit, UnitRepository repo) {
   final toDim = toUnit.getDimension(repo);
 
   if (!fromDim.isCompatibleWith(toDim)) {
-    throw DimensionError(
+    throw DimensionException(
       'Cannot convert between non-conformable units: '
       '${fromUnit.id} (${fromDim.canonicalRepresentation()}) and '
       '${toUnit.id} (${toDim.canonicalRepresentation()})'
@@ -641,7 +641,7 @@ Quantity convertTo(Unit targetUnit, UnitRepository repo) {
     // Check conformability
     final targetDim = targetUnit.getDimension(repo);
     if (!dimension.isCompatibleWith(targetDim)) {
-      throw DimensionError(
+      throw DimensionException(
         'Cannot convert to non-conformable unit: '
         '${dimension.canonicalRepresentation()} to ${targetUnit.id}'
       );
@@ -822,12 +822,12 @@ class CompoundDefinition extends UnitDefinition {
 
 **Scenario**: `quantity / Quantity(0, ...)`
 
-**Handling**: Throw `EvalError` with clear message
+**Handling**: Throw `EvalException` with clear message
 
 ```dart
 Quantity divide(Quantity other) {
   if (other.value == 0.0) {
-    throw EvalError('Division by zero');
+    throw EvalException('Division by zero');
   }
   // ... rest of division logic
 }
@@ -915,7 +915,7 @@ class Quantity {
 
   static double _validateValue(double value) {
     if (value.isNaN) {
-      throw EvalError('Invalid computation resulted in undefined value (NaN)');
+      throw EvalException('Invalid computation resulted in undefined value (NaN)');
     }
     // Allow infinity - it's mathematically meaningful
     return value;
@@ -925,19 +925,19 @@ class Quantity {
   Quantity multiply(Quantity other) {
     final result = value * other.value;
     if (result.isNaN && !value.isNaN && !other.isNaN) {
-      throw EvalError('Multiplication resulted in undefined value');
+      throw EvalException('Multiplication resulted in undefined value');
     }
     return Quantity(result, dimension.multiply(other.dimension));
   }
 
   Quantity divide(Quantity other) {
     if (other.value == 0.0) {
-      throw EvalError('Division by zero');
+      throw EvalException('Division by zero');
     }
 
     final result = value / other.value;
     if (result.isNaN && !value.isNaN && !other.isNaN) {
-      throw EvalError('Division resulted in undefined value');
+      throw EvalException('Division resulted in undefined value');
     }
     return Quantity(result, dimension.divide(other.dimension));
   }
@@ -946,11 +946,11 @@ class Quantity {
 // In mathematical functions:
 Quantity sqrt(Quantity q) {
   if (!q.dimension.isDimensionless) {
-    throw DimensionError('sqrt requires dimensionless argument or even powers');
+    throw DimensionException('sqrt requires dimensionless argument or even powers');
   }
 
   if (q.value < 0) {
-    throw EvalError('Cannot take square root of negative number: ${q.value}');
+    throw EvalException('Cannot take square root of negative number: ${q.value}');
   }
 
   return Quantity(math.sqrt(q.value), Dimension.dimensionless());
@@ -958,11 +958,11 @@ Quantity sqrt(Quantity q) {
 
 Quantity log(Quantity q) {
   if (!q.dimension.isDimensionless) {
-    throw DimensionError('log requires dimensionless argument');
+    throw DimensionException('log requires dimensionless argument');
   }
 
   if (q.value <= 0) {
-    throw EvalError('Cannot take logarithm of non-positive number: ${q.value}');
+    throw EvalException('Cannot take logarithm of non-positive number: ${q.value}');
   }
 
   return Quantity(math.log(q.value), Dimension.dimensionless());
@@ -970,11 +970,11 @@ Quantity log(Quantity q) {
 
 Quantity asin(Quantity q) {
   if (!q.dimension.isDimensionless) {
-    throw DimensionError('asin requires dimensionless argument');
+    throw DimensionException('asin requires dimensionless argument');
   }
 
   if (q.value < -1 || q.value > 1) {
-    throw EvalError('asin requires argument in range [-1, 1], got ${q.value}');
+    throw EvalException('asin requires argument in range [-1, 1], got ${q.value}');
   }
 
   return Quantity(math.asin(q.value), Dimension.dimensionless());
@@ -999,7 +999,7 @@ group('NaN handling', () {
   test('sqrt of negative throws error', () {
     final neg = Quantity(-4, Dimension.dimensionless());
     expect(() => sqrt(neg),
-           throwsA(isA<EvalError>().having(
+           throwsA(isA<EvalException>().having(
              (e) => e.message, 'message', contains('square root of negative')
            )));
   });
@@ -1007,7 +1007,7 @@ group('NaN handling', () {
   test('log of zero throws error', () {
     final zero = Quantity(0, Dimension.dimensionless());
     expect(() => log(zero),
-           throwsA(isA<EvalError>().having(
+           throwsA(isA<EvalException>().having(
              (e) => e.message, 'message', contains('logarithm of non-positive')
            )));
   });
@@ -1015,7 +1015,7 @@ group('NaN handling', () {
   test('asin out of range throws error', () {
     final outOfRange = Quantity(2, Dimension.dimensionless());
     expect(() => asin(outOfRange),
-           throwsA(isA<EvalError>().having(
+           throwsA(isA<EvalException>().having(
              (e) => e.message, 'message', contains('range [-1, 1]')
            )));
   });
@@ -1024,7 +1024,7 @@ group('NaN handling', () {
     final a = Quantity(10, Dimension({'m': 1}));
     final zero = Quantity(0, Dimension({'s': 1}));
     expect(() => a / zero,
-           throwsA(isA<EvalError>().having(
+           throwsA(isA<EvalException>().having(
              (e) => e.message, 'message', contains('Division by zero')
            )));
   });
@@ -1348,13 +1348,13 @@ class Lexer {
       // Validate prefix restrictions
       if (unitMatch.prefix != null) {
         if (isFunction(unitMatch.unitName)) {
-          throw LexError(
+          throw LexException(
             "Cannot attach prefix '${unitMatch.prefix!.id}' to function '${unitMatch.unitName}'",
             line, column
           );
         }
         if (unitMatch.unit.isAffine) {
-          throw LexError(
+          throw LexException(
             "Cannot attach prefix '${unitMatch.prefix!.id}' to affine unit '${unitMatch.unitName}'",
             line, column
           );
@@ -1365,7 +1365,7 @@ class Lexer {
       return;
     }
 
-    throw LexError("Unknown identifier: $text", line, column);
+    throw LexException("Unknown identifier: $text", line, column);
   }
 }
 
@@ -1391,7 +1391,7 @@ class Parser {
       // Check functions
       if (token.type == TokenType.function) {
         if (nextToken.type != TokenType.leftParen) {
-          throw ParseError(
+          throw ParseException(
             "Function '${token.lexeme}' requires arguments: ${token.lexeme}(...)",
             token.line, token.column
           );
@@ -1403,7 +1403,7 @@ class Parser {
         var unitMatch = token.literal as UnitMatch;
         if (unitMatch.unit.isAffine) {
           if (nextToken.type != TokenType.leftParen) {
-            throw ParseError(
+            throw ParseException(
               "Affine unit '${token.lexeme}' requires function syntax: ${token.lexeme}(...)",
               token.line, token.column
             );
@@ -1467,7 +1467,7 @@ class DefinitionRequestNode extends ASTNode {
 
   @override
   Quantity evaluate(Context context) {
-    throw EvalError('Definition request nodes should not be evaluated');
+    throw EvalException('Definition request nodes should not be evaluated');
   }
 
   String getDefinition(Context context) {
@@ -1487,7 +1487,7 @@ class FunctionDefinitionRequestNode extends ASTNode {
 
   @override
   Quantity evaluate(Context context) {
-    throw EvalError('Function definition request should not be evaluated');
+    throw EvalException('Function definition request should not be evaluated');
   }
 
   String getDefinition() {
@@ -1507,7 +1507,7 @@ class AffineUnitNode extends ASTNode {
 
     // Argument must be dimensionless
     if (!argQuantity.dimension.isDimensionless) {
-      throw DimensionError(
+      throw DimensionException(
         'Affine unit ${unitMatch.unitName} requires dimensionless argument, '
         'got ${argQuantity.dimension.canonicalRepresentation()}'
       );
@@ -1620,7 +1620,7 @@ group('Function and affine syntax', () {
 
   test('affine argument must be dimensionless', () {
     expect(() => parse('tempF(60 m)').evaluate(context),
-           throwsA(isA<DimensionError>()));
+           throwsA(isA<DimensionException>()));
     expect(parse('tempF(60)').evaluate(context), isA<Quantity>());
   });
 });
@@ -1845,12 +1845,12 @@ For MVP, the subtraction operation returns the same dimension (since tempF and d
 
 **Scenario**: `(-4)^0.5` is complex, not real
 
-**Handling**: Throw `EvalError`
+**Handling**: Throw `EvalException`
 
 ```dart
 Quantity power(num exponent) {
   if (value < 0 && exponent is double && exponent != exponent.truncate()) {
-    throw EvalError(
+    throw EvalException(
       'Cannot raise negative number to fractional power: $value ^ $exponent'
     );
   }
@@ -1862,24 +1862,24 @@ Quantity power(num exponent) {
 
 **Scenario**: Operations on non-conformable quantities
 
-**Handling**: Throw `DimensionError` with helpful message
+**Handling**: Throw `DimensionException` with helpful message
 
 ```dart
-class DimensionError extends Error {
+class DimensionException extends Exception {
   final String message;
   final Dimension? leftDimension;
   final Dimension? rightDimension;
 
-  DimensionError(this.message, {this.leftDimension, this.rightDimension});
+  DimensionException(this.message, {this.leftDimension, this.rightDimension});
 
   @override
   String toString() {
     if (leftDimension != null && rightDimension != null) {
-      return 'DimensionError: $message\n'
+      return 'DimensionException: $message\n'
              'Left: ${leftDimension!.canonicalRepresentation()}\n'
              'Right: ${rightDimension!.canonicalRepresentation()}';
     }
-    return 'DimensionError: $message';
+    return 'DimensionException: $message';
   }
 }
 ```
@@ -1970,7 +1970,7 @@ group('Quantity arithmetic', () {
   test('cannot add non-conformable quantities', () {
     final a = Quantity(5, Dimension({'m': 1}));
     final b = Quantity(3, Dimension({'s': 1}));
-    expect(() => a + b, throwsA(isA<DimensionError>()));
+    expect(() => a + b, throwsA(isA<DimensionException>()));
   });
 
   test('multiply quantities', () {
@@ -1999,7 +1999,7 @@ group('Quantity arithmetic', () {
   test('division by zero throws error', () {
     final a = Quantity(10, Dimension({'m': 1}));
     final b = Quantity(0, Dimension({'s': 1}));
-    expect(() => a / b, throwsA(isA<EvalError>()));
+    expect(() => a / b, throwsA(isA<EvalException>()));
   });
 });
 ```
@@ -2036,7 +2036,7 @@ group('Quantity conversion', () {
     final seconds = repo.getUnit('s')!;
     final distance = Quantity.fromUnit(5, meters, repo);
     expect(() => distance.convertTo(seconds, repo),
-           throwsA(isA<DimensionError>()));
+           throwsA(isA<DimensionException>()));
   });
 });
 ```
@@ -2053,7 +2053,7 @@ group('Quantity edge cases', () {
 
   test('negative base with fractional exponent', () {
     final neg = Quantity(-4, Dimension({'m': 1}));
-    expect(() => neg.power(0.5), throwsA(isA<EvalError>()));
+    expect(() => neg.power(0.5), throwsA(isA<EvalException>()));
   });
 
   test('dimensional exponent validation', () {
@@ -2064,7 +2064,7 @@ group('Quantity edge cases', () {
 
     // Invalid: (m^3)^0.5 would give m^1.5 (not integral)
     final invalid = Quantity(8, Dimension({'m': 3}));
-    expect(() => invalid.power(0.5), throwsA(isA<DimensionError>()));
+    expect(() => invalid.power(0.5), throwsA(isA<DimensionException>()));
   });
 
   test('rational recovery from double', () {

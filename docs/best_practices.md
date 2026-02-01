@@ -221,15 +221,15 @@ testWidgets('freeform input should display result', (WidgetTester tester) async 
 
 ## Error Handling
 
-### Error Types
+### Exception Types
 
-Define custom error classes for different error categories:
+Define custom exception classes for different error categories:
 
 ```dart
-class LexError extends Error { }
-class ParseError extends Error { }
-class DimensionError extends Error { }
-class EvalError extends Error { }
+class LexException extends Exception { }
+class ParseException extends Exception { }
+class DimensionException extends Exception { }
+class EvalException extends Exception { }
 ```
 
 ### Error Reporting
@@ -250,7 +250,7 @@ class EvalError extends Error { }
 
 ```dart
 // Internal
-throw LexError("Unexpected character: '$c'", line: 5, column: 12);
+throw LexException("Unexpected character: '$c'", line: 5, column: 12);
 
 // User-facing
 "Invalid input: unexpected character. Please check your expression."
@@ -362,7 +362,7 @@ i++;
 /// Converts a quantity to the specified target unit.
 ///
 /// The quantity and target unit must be conformable (same dimension).
-/// Throws [DimensionError] if units are not conformable.
+/// Throws [DimensionException] if units are not conformable.
 ///
 /// Example:
 /// ```dart

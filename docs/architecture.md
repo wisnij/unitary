@@ -167,7 +167,7 @@ void scanNumber() {
   if (peek() == 'e' || peek() == 'E') {
     advance();
     if (peek() == '+' || peek() == '-') advance();
-    if (!isDigit(peek())) throw LexError("Invalid scientific notation");
+    if (!isDigit(peek())) throw LexException("Invalid scientific notation");
     while (isDigit(peek())) advance();
   }
 
@@ -194,7 +194,7 @@ void scanIdentifier() {
     return;
   }
 
-  throw LexError("Unknown identifier: $text", line, column);
+  throw LexException("Unknown identifier: $text", line, column);
 }
 
 void handleImplicitMultiply() {

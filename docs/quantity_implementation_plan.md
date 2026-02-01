@@ -18,8 +18,8 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 
 ### Step 1: `lib/core/domain/models/errors.dart`
 
-- `DimensionError extends Error` — conformability failures
-- `EvalError extends Error` — computation failures (div-by-zero, NaN, etc.)
+- `DimensionException extends Exception` — conformability failures
+- `EvalException extends Exception` — computation failures (div-by-zero, NaN, etc.)
 - No dependencies, no dedicated tests (validated through other tests)
 
 ### Step 2: `test/core/domain/models/dimension_test.dart` THEN `lib/core/domain/models/dimension.dart`
@@ -27,7 +27,7 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 - `Dimension` with `Map<String, int> primitiveExponents` (unmodifiable, zeros stripped in constructor)
 - `Dimension.dimensionless()` — empty map
 - `multiply(other)`, `divide(other)` — add/subtract exponent maps
-- `power(num)` — multiply exponents, validate results are integral, throw `DimensionError` if not
+- `power(num)` — multiply exponents, validate results are integral, throw `DimensionException` if not
 - `isDimensionless`, `isCompatibleWith(other)`, `canonicalRepresentation()`
 - `==` / `hashCode` — deep map equality with sorted deterministic hash
 
@@ -35,7 +35,7 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 
 - `Rational(numerator, denominator)` — int pair
 - `Rational.fromDouble(value, {maxDenominator = 100})` — continued fractions algorithm
-- Handles NaN/infinity (throws `ArgumentError`), negatives, exact integers
+- Handles NaN/infinity (throws `ArgumentException`), negatives, exact integers
 - `toDouble()`, `==` (cross-multiply), `hashCode`, `toString()`
 
 ### Step 4: `lib/core/domain/models/display_settings.dart`
@@ -81,7 +81,7 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 
 - `isConformableWith(other)` — dimension equality
 - `approximatelyEquals(other, {tolerance})` — reduces both to primitives first, then compares
-- `compareTo(other)` — reduces both to primitives first, then compares; throws `DimensionError` if not conformable
+- `compareTo(other)` — reduces both to primitives first, then compares; throws `DimensionException` if not conformable
 - `==` / `hashCode` — exact value + dimension (excludes displayUnit)
 
 **Query:** `isDimensionless`, `isZero`, `isPositive`, `isNegative`
@@ -105,7 +105,7 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 - `UnitLookup` interface in `unit.dart` breaks the circular dependency
 - `Quantity.==` excludes `displayUnit` (mathematical equality)
 - `Quantity.power` computes new exponents via integer division after rational validation
-- Errors extend `Error` (not `Exception`) per design docs
+- Errors extend `Exception` (not `Error`) per Dart exception semantics
 
 
 ## Verification

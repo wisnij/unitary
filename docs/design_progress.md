@@ -2,11 +2,13 @@
 
 This document tracks which aspects of the design have been completed and which still need work.
 
+
 ## Already Discussed in Detail ✓
 
 The following areas have been thoroughly designed and documented:
 
 ### Requirements and Feature Set
+
 - Complete requirements document with all feature specifications
 - Target platforms (Android primary, iOS secondary via Flutter)
 - User preferences and customization options
@@ -14,6 +16,7 @@ The following areas have been thoroughly designed and documented:
 - Complete list of unit categories to support
 
 ### Core Domain Models
+
 - **Dimension**: Representation as map of primitive unit IDs to exponents
 - **Unit**: Structure with id, aliases, description, and definition
 - **Primitive Units**: Units that cannot be reduced further (dimensioned and dimensionless)
@@ -22,6 +25,7 @@ The following areas have been thoroughly designed and documented:
 - **DimensionRegistry**: Mapping dimensions to human-readable names for UI
 
 ### Expression Parser and Evaluator
+
 - **Lexer**: Token types, number parsing (including leading decimals), implicit multiplication, prefix handling
 - **Parser**: Operator precedence, AST construction, function call parsing
 - **AST Nodes**: Number, Unit, BinaryOp, UnaryOp, Function nodes
@@ -30,6 +34,7 @@ The following areas have been thoroughly designed and documented:
 - **Error Handling**: Separate error types with line/column tracking for debugging, user-friendly messages
 
 ### Quantity Class & Arithmetic
+
 - **Number Representation**: Use `double` for MVP with rational recovery via continued fractions (maxDenominator = 100)
 - **Arithmetic Operations**: Complete design for +, -, *, /, ^, abs, negate with dimensional analysis
 - **Dimensional Exponentiation**: Validation that base dimensions are divisible by rational denominator
@@ -44,20 +49,24 @@ The following areas have been thoroughly designed and documented:
 - **Document**: [quantity_arithmetic_design.md](quantity_arithmetic_design.md)
 
 ### Terminology
+
 - Comprehensive definitions of all key terms
 - Consistent vocabulary established for codebase
 - Clear distinctions between values, quantities, units, dimensions, etc.
 
 ---
 
+
 ## Areas That Need More Detail
 
 The following areas have been identified but need deeper design work:
 
 ### 1. Worksheet System
+
 **Current State**: High-level requirements defined
 
 **Needs Detail On**:
+
 - Detailed data model for worksheets
   - Worksheet structure and fields
   - How to represent "last used values"
@@ -77,9 +86,11 @@ The following areas have been identified but need deeper design work:
   - UI for worksheet management
 
 ### 2. GNU Units Database Import
+
 **Current State**: Identified as data source for units
 
 **Needs Detail On**:
+
 - GNU Units file format
   - Structure and syntax of the definitions file
   - How units, prefixes, and constants are represented
@@ -100,9 +111,11 @@ The following areas have been identified but need deeper design work:
   - Workarounds for differences in architecture
 
 ### 3. Currency Rate Management
+
 **Current State**: Requirements defined (auto-update, offline support, manual refresh)
 
 **Needs Detail On**:
+
 - API selection and integration
   - Which currency rate API to use (e.g., exchangerate-api.io, ECB, etc.)
   - API request/response format
@@ -126,9 +139,11 @@ The following areas have been identified but need deeper design work:
   - Update frequency for bundled rates
 
 ### 4. User Preferences & State Management
+
 **Current State**: List of what needs to persist, state management framework chosen (Provider/Riverpod)
 
 **Needs Detail On**:
+
 - Complete preference model
   - All user settings and their data types
   - Default values
@@ -151,9 +166,11 @@ The following areas have been identified but need deeper design work:
   - Reset to defaults functionality
 
 ### 5. UI/UX Design
+
 **Current State**: Minimalist interface, Material Design, dark mode support identified
 
 **Needs Detail On**:
+
 - Screen layouts and navigation
   - Main screen structure
   - Navigation between freeform and worksheet modes
@@ -193,7 +210,9 @@ The following areas have been identified but need deeper design work:
   - Touch target sizes
 
 ### 6. Testing Strategy (Not Yet Discussed)
+
 **Needs Detail On**:
+
 - Unit test approach
   - What to test at unit level
   - Coverage targets
@@ -209,9 +228,11 @@ The following areas have been identified but need deeper design work:
   - UI responsiveness targets
 
 ### 7. Error Handling & User Feedback (Partially Discussed)
+
 **Current State**: Error types defined for parser/evaluator
 
 **Needs Detail On**:
+
 - User-facing error messages
   - Exact wording for common errors
   - Helpful suggestions for fixes
@@ -228,6 +249,7 @@ The following areas have been identified but need deeper design work:
 
 ---
 
+
 ## Next Steps
 
 When resuming design work, recommended order of priority:
@@ -242,6 +264,7 @@ When resuming design work, recommended order of priority:
 8. **Error Handling Details** - Refine during implementation
 
 ---
+
 
 ## Open Questions
 
@@ -260,8 +283,10 @@ Questions that arose during design but haven't been resolved:
 
 *Last Updated: January 31, 2026*
 *Design Sessions:*
+
 - *Initial requirements gathering and core architecture*
 - *Quantity Class & Arithmetic (January 30, 2026)*
 
 *Implementation Progress:*
+
 - *Phase 0: Project Setup completed (January 31, 2026)*

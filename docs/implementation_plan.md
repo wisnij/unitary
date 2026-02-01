@@ -4,12 +4,15 @@ This document outlines the phased approach to implementing Unitary, along with f
 
 ---
 
+
 ## Implementation Phases
 
 ### Phase 0: Project Setup (Week 1) — COMPLETE
+
 **Goals:** Development environment and project scaffolding
 
 **Tasks:**
+
 - [x] Install Flutter SDK (3.38.9) and Dart SDK (3.10.8)
 - [x] Create new Flutter project (`flutter create`, org `com.wisnij`, version 0.1.0+1)
 - [x] Set up version control (Git/GitHub)
@@ -26,9 +29,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 1: Core Domain - Expression Parser (Weeks 2-4)
+
 **Goals:** Build the expression parsing and evaluation engine
 
 **Tasks:**
+
 1. Implement Lexer
    - Token types definition
    - Character-by-character scanning
@@ -55,9 +60,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 2: Unit System Foundation (Weeks 5-7)
+
 **Goals:** Dimension system and unit definitions
 
 **Tasks:**
+
 1. Implement Dimension class
    - Primitive dimension representation
    - Dimensional arithmetic
@@ -85,9 +92,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 3: Advanced Unit Features (Weeks 8-9)
+
 **Goals:** Complex conversions and functions
 
 **Tasks:**
+
 1. Implement offset conversions (temperature)
 2. Implement compound units (Newton, Pascal, etc.)
 3. Add mathematical functions (sqrt, etc.)
@@ -101,9 +110,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 4: Basic UI - Freeform Mode (Weeks 10-12)
+
 **Goals:** First working UI for expression evaluation
 
 **Tasks:**
+
 1. Create app structure
    - Main navigation
    - Freeform input screen
@@ -132,9 +143,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 5: Worksheet Mode (Weeks 13-15)
+
 **Goals:** Multi-unit worksheet interface
 
 **Tasks:**
+
 1. Implement Worksheet domain model
 2. Create worksheet UI components
    - Multi-field input grid
@@ -156,9 +169,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 6: Persistence (Weeks 16-17)
+
 **Goals:** Save user data and preferences
 
 **Tasks:**
+
 1. Set up local database (sqflite)
 2. Implement PreferencesRepository
 3. Implement WorksheetRepository
@@ -175,9 +190,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 7: Currency Support (Weeks 18-19)
+
 **Goals:** Currency conversion with live rates
 
 **Tasks:**
+
 1. Choose and integrate currency rate API
 2. Implement CurrencyService
 3. Add currency rate storage
@@ -192,9 +209,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 8: Complete Unit Database (Week 20-21)
+
 **Goals:** Import all unit categories
 
 **Tasks:**
+
 1. Complete GNU Units database import
    - All categories from requirements
    - Verify accuracy of conversions
@@ -208,9 +227,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 9: Polish & Testing (Weeks 22-24)
+
 **Goals:** Production-ready quality
 
 **Tasks:**
+
 1. UI/UX refinement
    - Responsive layouts
    - Tablet support
@@ -237,9 +258,11 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 ### Phase 10: Release (Week 25)
+
 **Goals:** Publish to GitHub and Play Store
 
 **Tasks:**
+
 1. Create app icon and branding
 2. Prepare Play Store assets
    - Screenshots
@@ -259,59 +282,70 @@ This document outlines the phased approach to implementing Unitary, along with f
 
 ---
 
+
 ## Future Enhancement Phases
 
 ### Phase 11: Custom Units
+
 - UI for defining custom units
 - Custom unit persistence
 - Validation and testing
 
 ### Phase 12: Worksheet Customization
+
 - Edit existing worksheets
 - Create new worksheets
 - Worksheet sharing (export/import)
 
 ### Phase 13: iOS Support
+
 - Test on iOS simulator
 - iOS-specific UI adjustments
 - Submit to App Store
 
 ### Phase 14: Advanced Features
+
 - Equation solver
 - Graphing
 - Additional functions
 - More mathematical constants
 
 ### Phase 15: Rational Number Support
+
 - Implement exact rational arithmetic
 - Convert from decimal to rational where beneficial
 - UI for displaying rational results
 
 ---
 
+
 ## Risk Mitigation
 
 ### Technical Risks
 
 **Risk 1: Parser complexity too high**
+
 - **Likelihood:** Medium
 - **Impact:** High
 - **Mitigation:** Start simple, iterate incrementally, reference existing parsers (GNU Units, other unit converters)
 - **Contingency:** Fall back to simpler expression support initially, expand later
 
 **Risk 2: Performance issues with real-time updates**
+
 - **Likelihood:** Medium
 - **Impact:** Medium
 - **Mitigation:** Profile early, optimize hot paths, add debouncing if needed
 - **Contingency:** Add toggle for real-time vs. on-demand evaluation
 
 **Risk 3: GNU Units database parsing difficulties**
+
 - **Likelihood:** Medium
 - **Impact:** Medium
 - **Mitigation:** Start with subset of units, manual conversion if needed, thorough testing
 - **Contingency:** Manually curate unit definitions if automated parsing too difficult
 
 **Risk 4: Floating-point precision issues**
+
 - **Likelihood:** High
 - **Impact:** Medium
 - **Mitigation:** Use rational numbers where possible, document precision limitations
@@ -320,12 +354,14 @@ This document outlines the phased approach to implementing Unitary, along with f
 ### Learning Curve Risks
 
 **Risk 5: Flutter/Dart unfamiliarity**
+
 - **Likelihood:** Medium
 - **Impact:** Medium
 - **Mitigation:** Official tutorials, small prototypes first, active community support
 - **Contingency:** Allocate extra time for learning, consult documentation frequently
 
 **Risk 6: Mobile development patterns**
+
 - **Likelihood:** Medium
 - **Impact:** Low
 - **Mitigation:** Follow official guidelines, study example apps, use established patterns
@@ -334,18 +370,21 @@ This document outlines the phased approach to implementing Unitary, along with f
 ### Scope Creep Risks
 
 **Risk 7: Feature bloat before MVP**
+
 - **Likelihood:** Medium
 - **Impact:** High
 - **Mitigation:** Strict phase adherence, defer enhancements to post-MVP
 - **Contingency:** Re-evaluate scope, cut non-essential features
 
 **Risk 8: Perfectionism delays**
+
 - **Likelihood:** Medium
 - **Impact:** Medium
 - **Mitigation:** "Good enough" for MVP, iterate post-release, set time limits
 - **Contingency:** Timebox features, accept technical debt for MVP
 
 ---
+
 
 ## Success Metrics
 
@@ -354,6 +393,7 @@ This document outlines the phased approach to implementing Unitary, along with f
 The MVP will be considered successful when it meets these criteria:
 
 **Functional Requirements:**
+
 - ✓ Accurate conversions for all required unit categories
 - ✓ Freeform mode handles complex expressions with proper dimensional analysis
 - ✓ Worksheet mode supports at least 5 pre-defined worksheets per major dimension
@@ -363,6 +403,7 @@ The MVP will be considered successful when it meets these criteria:
 - ✓ All core features work offline
 
 **Quality Requirements:**
+
 - ✓ No critical bugs (crashes, data loss, incorrect conversions)
 - ✓ Runs smoothly on mid-range Android devices (60 FPS UI)
 - ✓ Parser handles malformed input gracefully with helpful error messages
@@ -370,6 +411,7 @@ The MVP will be considered successful when it meets these criteria:
 - ✓ App size <50MB
 
 **Documentation Requirements:**
+
 - ✓ Published on GitHub with clear README
 - ✓ Architecture documented
 - ✓ Contributing guidelines available
@@ -378,11 +420,13 @@ The MVP will be considered successful when it meets these criteria:
 ### Post-MVP Goals
 
 **User Adoption:**
+
 - 100+ GitHub stars within 6 months
 - Active user feedback and feature requests
 - Community contributions (bug reports, PRs)
 
 **Feature Completeness:**
+
 - User feedback incorporated
 - Additional worksheet templates based on user requests
 - Custom unit feature implemented
@@ -390,6 +434,7 @@ The MVP will be considered successful when it meets these criteria:
 - Play Store publication (optional)
 
 **Code Quality:**
+
 - Refactoring of technical debt from MVP
 - Performance optimizations based on profiling
 - Accessibility improvements

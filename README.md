@@ -5,6 +5,7 @@ technically-minded users.  Features both freeform calculator-style expression
 evaluation and worksheet-based conversion modes, with support for custom
 user-defined units and dimensions.
 
+
 ## Project Status
 
 **Current Phase:** Phase 0 Complete, ready for Phase 1 (Expression Parser)\
@@ -16,9 +17,11 @@ structure, linting, and test infrastructure in place.
 
 ---
 
+
 ## Features (Planned)
 
 ### Core Functionality
+
 - **Freeform Expression Mode**: GNU Units-style calculator supporting complex mathematical expressions with full dimensional analysis
 - **Worksheet Mode**: Multi-unit conversion interface with real-time updates across all fields
 - **Comprehensive Unit Support**: Length, mass, temperature, volume, area, speed, time, pressure, energy, digital storage, and currency
@@ -27,6 +30,7 @@ structure, linting, and test infrastructure in place.
 - **Dark Mode**: System-aware dark mode support
 
 ### Advanced Features
+
 - Expression parsing with dimensional analysis
 - Support for prefixes (kilo, mega, milli, etc.)
 - Mathematical and trigonometric functions
@@ -36,6 +40,7 @@ structure, linting, and test infrastructure in place.
 - Configurable precision and notation (decimal, scientific, engineering)
 
 ---
+
 
 ## Documentation
 
@@ -58,6 +63,7 @@ structure, linting, and test infrastructure in place.
 
 ---
 
+
 ## Technology Stack
 
 **Framework:** Flutter (Dart)
@@ -79,6 +85,7 @@ structure, linting, and test infrastructure in place.
 
 ---
 
+
 ## Project Structure
 
 ```
@@ -93,8 +100,8 @@ unitary/
 │   └── design_progress.md
 ├── lib/                           # Flutter application code (not yet created)
 │   ├── core/                      # Core domain logic
-│   │   ├── domain/               # Models, parser, services
-│   │   └── data/                 # Repositories, data sources
+│   │   ├── domain/                # Models, parser, services
+│   │   └── data/                  # Repositories, data sources
 │   ├── features/                  # Feature-specific code
 │   │   ├── freeform/
 │   │   ├── worksheet/
@@ -109,20 +116,24 @@ unitary/
 
 ---
 
+
 ## Architecture Highlights
 
 ### Expression Parser & Evaluator
+
 - Lexer → Parser → AST → Evaluator pipeline
 - Full dimensional analysis during evaluation
 - Support for complex expressions: `sqrt(9 m^2) + sin(45 degrees) * 5 ft`
 
 ### Unit System
+
 - **Primitive units**: Cannot be reduced further (e.g., meter, kilogram)
 - **Derived units**: Defined in terms of other units (e.g., newton = kg⋅m/s²)
 - **Dimensions**: Represented as maps of primitive units to exponents
 - **Conformability**: Units are convertible if they share the same dimension
 
 ### Worksheet System
+
 - Pre-defined templates for common conversions
 - User-customizable worksheets
 - Real-time updates across all fields
@@ -130,9 +141,11 @@ unitary/
 
 ---
 
+
 ## Getting Started
 
 ### Prerequisites
+
 - Flutter SDK (latest stable)
 - Android Studio or VS Code
 - Git
@@ -161,12 +174,15 @@ flutter run
 
 ---
 
+
 ## Current Progress
 
 ### Implementation
+
 - ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
 
 ### Design (ready for implementation)
+
 - ✅ Core domain models (Dimension, Unit, Quantity, Prefix)
 - ✅ Expression parser and evaluator architecture
 - ✅ Terminology and conventions
@@ -183,6 +199,7 @@ flutter run
 See [Design Progress](design_progress.md) for full details.
 
 ---
+
 
 ## Contributing
 
@@ -207,9 +224,11 @@ begins, contributions will be welcome!
 
 ---
 
+
 ## Roadmap
 
 ### Phase 1: MVP (Weeks 1-25)
+
 - Core expression parser and evaluator
 - Basic unit system with major categories
 - Freeform and worksheet modes
@@ -218,12 +237,14 @@ begins, contributions will be welcome!
 - Polish and release
 
 ### Phase 2: Enhancements
+
 - Custom unit definitions
 - Worksheet customization
 - iOS support
 - Advanced mathematical functions
 
 ### Phase 3: Advanced Features
+
 - Rational number arithmetic
 - Equation solver
 - Graphing capabilities
@@ -233,21 +254,25 @@ See [Implementation Plan](implementation_plan.md) for detailed timeline.
 
 ---
 
+
 ## Design Philosophy
 
 ### For Users
+
 - **Utility over simplicity**: Powerful features for technical users
 - **Flexibility**: Support for complex expressions and custom units
 - **Precision**: Accurate conversions with configurable precision
 - **Offline-first**: Core features work without internet
 
 ### For Developers
+
 - **Clean architecture**: Clear separation of concerns
 - **Testability**: High test coverage for core logic
 - **Maintainability**: Well-documented, follows best practices
 - **Extensibility**: Easy to add new units, functions, and features
 
 ---
+
 
 ## License
 
@@ -267,6 +292,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ---
+
 
 ## Acknowledgments
 

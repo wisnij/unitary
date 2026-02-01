@@ -4,6 +4,7 @@ This document outlines coding standards, architecture patterns, and development 
 
 ---
 
+
 ## Code Organization
 
 ### Project Structure
@@ -89,6 +90,7 @@ lib/
 
 ---
 
+
 ## Architecture Patterns
 
 ### Layered Architecture
@@ -105,12 +107,14 @@ The app follows a layered architecture with clear separation of concerns:
 ### State Management
 
 **Provider/Riverpod Patterns:**
+
 - Use `Provider` for simple read-only dependencies
 - Use `StateNotifierProvider` for mutable state
 - Use `FutureProvider` for async data loading
 - Use `StreamProvider` for reactive data streams
 
 **Example:**
+
 ```dart
 final unitRepositoryProvider = Provider<UnitRepository>((ref) {
   return UnitRepository();
@@ -124,11 +128,13 @@ final freeformInputProvider = StateNotifierProvider<FreeformInputNotifier, Freef
 ### Repository Pattern
 
 All data access goes through repositories:
+
 - Repositories abstract data sources
 - Single source of truth for each domain object
 - Handle caching and data transformation
 
 **Example:**
+
 ```dart
 class UnitRepository {
   Future<Unit?> getUnit(String id);
@@ -139,6 +145,7 @@ class UnitRepository {
 
 ---
 
+
 ## Testing Strategy
 
 ### Unit Tests
@@ -146,6 +153,7 @@ class UnitRepository {
 **Coverage Target**: >80% for core domain logic
 
 **What to Test**:
+
 - All parser and evaluator logic
 - Dimension arithmetic
 - Unit conversions
@@ -153,6 +161,7 @@ class UnitRepository {
 - Error cases and edge conditions
 
 **Test Structure**:
+
 ```dart
 group('Lexer', () {
   test('should tokenize simple number', () {
@@ -173,11 +182,13 @@ group('Lexer', () {
 ### Widget Tests
 
 **What to Test**:
+
 - Critical UI components
 - User interaction flows
 - State updates reflected in UI
 
 **Example**:
+
 ```dart
 testWidgets('freeform input should display result', (WidgetTester tester) async {
   await tester.pumpWidget(MyApp());
@@ -192,6 +203,7 @@ testWidgets('freeform input should display result', (WidgetTester tester) async 
 ### Integration Tests
 
 **Key Flows to Test**:
+
 - Complete conversion workflow
 - Worksheet multi-field updates
 - Currency rate updates
@@ -206,11 +218,13 @@ testWidgets('freeform input should display result', (WidgetTester tester) async 
 
 ---
 
+
 ## Error Handling
 
 ### Error Types
 
 Define custom error classes for different error categories:
+
 ```dart
 class LexError extends Error { }
 class ParseError extends Error { }
@@ -221,16 +235,19 @@ class EvalError extends Error { }
 ### Error Reporting
 
 **Internal Errors** (for debugging):
+
 - Include line/column numbers
 - Stack traces
 - Full context
 
 **User-Facing Errors**:
+
 - Simple, clear messages
 - No technical jargon
 - Actionable suggestions
 
 **Example**:
+
 ```dart
 // Internal
 throw LexError("Unexpected character: '$c'", line: 5, column: 12);
@@ -246,6 +263,7 @@ throw LexError("Unexpected character: '$c'", line: 5, column: 12);
 - Provide clear feedback to user
 
 ---
+
 
 ## Performance Guidelines
 
@@ -271,17 +289,20 @@ throw LexError("Unexpected character: '$c'", line: 5, column: 12);
 
 ---
 
+
 ## Version Control
 
 ### Git Workflow
 
 **Branch Strategy**:
+
 - `main`: Production-ready code
 - `develop`: Integration branch for features
 - `feature/feature-name`: Individual features
 - `bugfix/issue-number`: Bug fixes
 
 **Commit Messages**:
+
 - Use conventional commits format
 - Examples:
   - `feat: add trigonometric functions to parser`
@@ -300,21 +321,25 @@ throw LexError("Unexpected character: '$c'", line: 5, column: 12);
 
 ---
 
+
 ## Documentation
 
 ### Code Comments
 
 **When to Comment**:
+
 - Complex algorithms
 - Non-obvious design decisions
 - Workarounds for limitations
 - Public APIs
 
 **When NOT to Comment**:
+
 - Obvious code ("increment counter")
 - What code does (code should be self-documenting)
 
 **Example**:
+
 ```dart
 // Good
 // Use binary search since units are sorted by ID
@@ -332,6 +357,7 @@ i++;
 - Document parameters, return values, exceptions
 
 **Example**:
+
 ```dart
 /// Converts a quantity to the specified target unit.
 ///
@@ -347,6 +373,7 @@ Quantity convertTo(Unit targetUnit);
 ```
 
 ---
+
 
 ## Dependency Management
 
@@ -364,6 +391,7 @@ Quantity convertTo(Unit targetUnit);
 - Consider implementing simple features ourselves
 
 ---
+
 
 ## Continuous Improvement
 

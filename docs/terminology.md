@@ -4,6 +4,7 @@ This document defines key terms used throughout the project documentation and co
 
 ---
 
+
 ## Core Concepts
 
 **Value**: A pure number, which may be an integer, a decimal (floating-point), or a numerator/denominator ratio (rational number). Values have no dimensional information.
@@ -28,6 +29,7 @@ This document defines key terms used throughout the project documentation and co
 
 ---
 
+
 ## Operations and Expressions
 
 **Expression**: A mathematical expression containing values, units, and/or functions, combined via operators (+, -, *, /, ^, etc.). Examples: "5 meters + 3 feet", "sqrt(9 m^2)", "sin(pi/4 radians)".
@@ -42,11 +44,13 @@ This document defines key terms used throughout the project documentation and co
 
 ---
 
+
 ## Modifiers and Components
 
 **Prefix**: A multiplier that can be attached to a unit (e.g., kilo, mega, milli). SI prefixes are a particular subset of prefixes but are not treated differently in the system - they may be noted as coming from SI in their description text.
 
 ---
+
 
 ## Number Representations
 
@@ -56,24 +60,29 @@ This document defines key terms used throughout the project documentation and co
 
 ---
 
+
 ## Usage Examples
 
 ### Primitives vs. Derived Units
+
 - `meter` (m) is a **primitive unit** with dimension {m: 1}
 - `kilometer` (km) is a **derived unit** defined as 1000 meters
 - `mile` (mi) is a **derived unit** that could be defined in terms of kilometers or meters
 
 ### Dimensions
+
 - A speed of "60 mph" has dimension {m: 1, s: -1} (after reduction)
 - A force of "5 N" has dimension {kg: 1, m: 1, s: -2} (after reduction)
 - An angle of "45 degrees" has dimension {} (dimensionless, since both degree and radian are dimensionless primitives)
 
 ### Conformability
+
 - "5 meters" and "10 feet" are **conformable** because both have dimension {m: 1}
 - "5 meters" and "10 seconds" are **not conformable** because they have different dimensions
 - You can convert between conformable expressions but not between non-conformable ones
 
 ### Reducing Expressions
+
 - "5 km" reduces to "5000 m" (expressing in terms of the primitive)
 - "3 N" reduces to "3 kg m / s^2" (expanding the compound unit)
 - "60 mph" reduces to approximately "26.8224 m / s"

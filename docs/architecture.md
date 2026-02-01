@@ -8,10 +8,13 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 
 ---
 
+
 ## Technology Stack Recommendation
 
 ### Framework: Flutter
+
 **Rationale:**
+
 - Single codebase for Android and iOS
 - Dart language similar to Kotlin (easier learning curve)
 - Excellent performance (compiled to native code)
@@ -21,17 +24,20 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 - Active community and extensive packages
 
 **Alternatives Considered:**
+
 - Native Kotlin (Android only) - limits iOS support
 - React Native - ruled out per preference to avoid JS/TS
 - Kotlin Multiplatform Mobile - still maturing, more complex setup
 
 ### Core Dependencies
+
 - **Flutter SDK** (latest stable)
 - **sqflite** or **hive** - local database for persistence
 - **shared_preferences** - simple key-value storage
 - **http** or **dio** - HTTP client for currency rates
 - **intl** - internationalization and number formatting
 - **provider** or **riverpod** - state management
+
 
 ## Architecture Overview
 
@@ -59,11 +65,13 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 └─────────────────────────────────────────┘
 ```
 
+
 ## Core Components Design
 
 ### 1. Expression Parser & Evaluator
 
 **Component Structure:**
+
 ```
 Lexer → Parser → AST Builder → Evaluator
   ↓       ↓          ↓            ↓
@@ -72,6 +80,7 @@ Stream  Nodes    Expression   + Units
 ```
 
 **Token Types:**
+
 ```dart
 enum TokenType {
   // Literals
@@ -110,6 +119,7 @@ class Token {
 ```
 
 **Lexer (Tokenizer):**
+
 - Converts input string into token stream
 - Recognizes: numbers, units, operators, functions, parentheses
 - Handles various multiplication/division symbols
@@ -122,7 +132,7 @@ class Token {
   - When parsing a potential unit name, try to split it into prefix + unit name
   - Check all possible prefix positions (e.g., "km" → "k" + "m", "mega" + "meter")
   - Prefixes can be attached with no space: "km", "megameter", "MHz"
-  - Examples: "km" → kilo * meter, "MW" → mega * watt, "ns" → nano * second
+  - Examples: "km" → kilo *meter, "MW" → mega* watt, "ns" → nano * second
 - Implicit multiplication handling:
   - "5m" (no space) treated as "5 * m"
   - Space between number/unit and number/unit also implies multiplication
@@ -135,6 +145,7 @@ class Token {
 - Physical constants are just defined units (e.g., "c" = 299792458 m/s)
 
 **Lexer Implementation Notes:**
+
 ```dart
 void scanNumber() {
   // Handle leading decimal point (.5)
@@ -214,6 +225,7 @@ void handleImplicitMultiply() {
 ```
 
 **Parser:**
+
 - Builds Abstract Syntax Tree (AST) from tokens
 - Implements operator precedence (lowest to highest):
   1. Addition/Subtraction (+, -)
@@ -229,6 +241,7 @@ void handleImplicitMultiply() {
 - Unit tests for parsing
 
 **AST Node Types:**
+
 ```dart
 abstract class ASTNode {
   Quantity evaluate(Context context);
@@ -242,6 +255,7 @@ class FunctionNode extends ASTNode  // sin, cos, etc.
 ```
 
 **Evaluator:**
+
 - Traverses AST and computes result
 - Performs dimensional analysis
 - Returns `Quantity` objects with value and dimension
@@ -249,6 +263,7 @@ class FunctionNode extends ASTNode  // sin, cos, etc.
 ### 2. Unit System & Dimensional Analysis
 
 **Dimension Model:**
+
 ```dart
 // Represents a dimension as a product of primitive units with exponents
 class Dimension {
@@ -429,6 +444,7 @@ class PrefixRegistry {
 ```
 
 **Unit Definition:**
+
 ```dart
 class Unit {
   final String id;          // Primary symbol/name (e.g., "m", "meter", "kg")
@@ -576,6 +592,7 @@ class CompoundDefinition extends UnitDefinition {
 ```
 
 **Quantity Model:**
+
 ```dart
 class Quantity {
   final num value;
@@ -593,11 +610,13 @@ class Quantity {
 ### 3. Unit Database
 
 **Data Source:**
+
 - Import GNU Units database definitions
 - Parse into internal format
 - Store in embedded database (asset bundle)
 
 **Database Schema:**
+
 ```sql
 -- Units table (includes both primitive and derived units)
 CREATE TABLE units (
@@ -713,6 +732,7 @@ CREATE TABLE custom_dimensions (
 ### 4. Worksheet System
 
 **Worksheet Model:**
+
 ```dart
 class Worksheet {
   final String id;
@@ -732,6 +752,7 @@ class WorksheetField {
 ```
 
 **Worksheet State Management:**
+
 - Use reactive state management (Provider/Riverpod)
 - When any field changes, recalculate all others
 - Persist last values to local storage
@@ -740,6 +761,7 @@ class WorksheetField {
 ### 5. Currency Rate Management
 
 **Currency Service:**
+
 ```dart
 class CurrencyService {
   Future<void> fetchRates();
@@ -750,20 +772,24 @@ class CurrencyService {
 ```
 
 **Rate Storage:**
+
 - Store in local database with timestamp
 - Ship with initial rates in assets
 - Background refresh on app launch
 - Manual refresh trigger in UI
 
 **API Integration:**
+
 - Configurable endpoint (future)
 - Retry logic with exponential backoff
 - Graceful failure handling
 - Rate limiting respect
 
+
 ## State Management Strategy
 
 ### Global State (Provider/Riverpod)
+
 - User preferences (precision, notation, theme)
 - Current conversion mode (freeform/worksheet)
 - Active worksheet
@@ -771,11 +797,13 @@ class CurrencyService {
 - Custom unit definitions
 
 ### Local State
+
 - Individual field values
 - Input validation errors
 - UI ephemeral state (dropdowns, dialogs)
 
 ### Persistence Layer
+
 ```dart
 class PreferencesRepository {
   Future<void> savePreference(String key, dynamic value);
@@ -795,12 +823,15 @@ class UnitRepository {
 }
 ```
 
+
 ## Implementation Phases
 
 ### Phase 0: Project Setup (Week 1)
+
 **Goals:** Development environment and project scaffolding
 
 **Tasks:**
+
 - Install Flutter SDK and Android Studio
 - Create new Flutter project
 - Set up version control (Git/GitHub)
@@ -813,9 +844,11 @@ class UnitRepository {
 ---
 
 ### Phase 1: Core Domain - Expression Parser (Weeks 2-4)
+
 **Goals:** Build the expression parsing and evaluation engine
 
 **Tasks:**
+
 1. Implement Lexer
    - Token types definition
    - Character-by-character scanning
@@ -841,9 +874,11 @@ class UnitRepository {
 ---
 
 ### Phase 2: Unit System Foundation (Weeks 5-7)
+
 **Goals:** Dimension system and unit definitions
 
 **Tasks:**
+
 1. Implement Dimension class
    - Base dimension representation
    - Dimensional arithmetic
@@ -871,9 +906,11 @@ class UnitRepository {
 ---
 
 ### Phase 3: Advanced Unit Features (Weeks 8-9)
+
 **Goals:** Complex conversions and functions
 
 **Tasks:**
+
 1. Implement offset conversions (temperature)
 2. Implement compound units (Newton, Pascal, etc.)
 3. Add mathematical functions (sqrt, etc.)
@@ -887,9 +924,11 @@ class UnitRepository {
 ---
 
 ### Phase 4: Basic UI - Freeform Mode (Weeks 10-12)
+
 **Goals:** First working UI for expression evaluation
 
 **Tasks:**
+
 1. Create app structure
    - Main navigation
    - Freeform input screen
@@ -918,9 +957,11 @@ class UnitRepository {
 ---
 
 ### Phase 5: Worksheet Mode (Weeks 13-15)
+
 **Goals:** Multi-unit worksheet interface
 
 **Tasks:**
+
 1. Implement Worksheet domain model
 2. Create worksheet UI components
    - Multi-field input grid
@@ -942,9 +983,11 @@ class UnitRepository {
 ---
 
 ### Phase 6: Persistence (Weeks 16-17)
+
 **Goals:** Save user data and preferences
 
 **Tasks:**
+
 1. Set up local database (sqflite)
 2. Implement PreferencesRepository
 3. Implement WorksheetRepository
@@ -961,9 +1004,11 @@ class UnitRepository {
 ---
 
 ### Phase 7: Currency Support (Weeks 18-19)
+
 **Goals:** Currency conversion with live rates
 
 **Tasks:**
+
 1. Choose and integrate currency rate API
 2. Implement CurrencyService
 3. Add currency rate storage
@@ -978,9 +1023,11 @@ class UnitRepository {
 ---
 
 ### Phase 8: Complete Unit Database (Week 20-21)
+
 **Goals:** Import all unit categories
 
 **Tasks:**
+
 1. Complete GNU Units database import
    - All categories from requirements
    - Verify accuracy of conversions
@@ -994,9 +1041,11 @@ class UnitRepository {
 ---
 
 ### Phase 9: Polish & Testing (Weeks 22-24)
+
 **Goals:** Production-ready quality
 
 **Tasks:**
+
 1. UI/UX refinement
    - Responsive layouts
    - Tablet support
@@ -1023,9 +1072,11 @@ class UnitRepository {
 ---
 
 ### Phase 10: Release (Week 25)
+
 **Goals:** Publish to GitHub and Play Store
 
 **Tasks:**
+
 1. Create app icon and branding
 2. Prepare Play Store assets
    - Screenshots
@@ -1045,24 +1096,29 @@ class UnitRepository {
 
 ---
 
+
 ## Future Enhancement Phases
 
 ### Phase 11: Custom Units
+
 - UI for defining custom units
 - Custom unit persistence
 - Validation and testing
 
 ### Phase 12: Worksheet Customization
+
 - Edit existing worksheets
 - Create new worksheets
 - Worksheet sharing (export/import)
 
 ### Phase 13: iOS Support
+
 - Test on iOS simulator
 - iOS-specific UI adjustments
 - Submit to App Store
 
 ### Phase 14: Advanced Features
+
 - Equation solver
 - Graphing
 - Additional functions
@@ -1070,9 +1126,11 @@ class UnitRepository {
 
 ---
 
+
 ## Development Best Practices
 
 ### Code Organization
+
 ```
 lib/
 ├── main.dart
@@ -1116,18 +1174,21 @@ lib/
 ```
 
 ### Testing Strategy
+
 - **Unit tests:** All parser, evaluator, and domain logic (>80% coverage)
 - **Widget tests:** All UI components
 - **Integration tests:** Key user flows
 - **Manual testing:** Real devices, various screen sizes
 
 ### Version Control
+
 - Feature branches for each phase
 - Pull requests with code review (self-review)
 - Semantic versioning (0.1.0 for MVP)
 - Changelog maintenance
 
 ### Documentation
+
 - Inline code comments for complex logic
 - README with setup instructions
 - Architecture decision records (ADRs)
@@ -1135,9 +1196,11 @@ lib/
 
 ---
 
+
 ## Risk Mitigation
 
 ### Technical Risks
+
 1. **Parser complexity too high**
    - Mitigation: Start simple, iterate, reference existing parsers
 
@@ -1148,6 +1211,7 @@ lib/
    - Mitigation: Start with subset, manual conversion if needed
 
 ### Learning Curve Risks
+
 1. **Flutter/Dart unfamiliarity**
    - Mitigation: Official tutorials, small prototypes first, active community
 
@@ -1155,6 +1219,7 @@ lib/
    - Mitigation: Follow official guidelines, study example apps
 
 ### Scope Creep Risks
+
 1. **Feature bloat before MVP**
    - Mitigation: Strict phase adherence, defer enhancements
 
@@ -1163,9 +1228,11 @@ lib/
 
 ---
 
+
 ## Success Metrics
 
 ### MVP Success Criteria
+
 - ✓ Accurate conversions for all categories
 - ✓ Freeform mode handles complex expressions
 - ✓ Worksheet mode supports 5+ worksheets
@@ -1177,6 +1244,7 @@ lib/
 - ✓ Published on GitHub with documentation
 
 ### Post-MVP Goals
+
 - User feedback incorporation
 - Additional worksheet templates
 - Custom unit feature
@@ -1185,21 +1253,25 @@ lib/
 
 ---
 
+
 ## Resources & References
 
 ### Learning Resources
-- Flutter documentation: https://docs.flutter.dev
-- Dart language tour: https://dart.dev/guides/language/language-tour
-- Material Design: https://m3.material.io
-- GNU Units: https://www.gnu.org/software/units/
+
+- Flutter documentation: <https://docs.flutter.dev>
+- Dart language tour: <https://dart.dev/guides/language/language-tour>
+- Material Design: <https://m3.material.io>
+- GNU Units: <https://www.gnu.org/software/units/>
 
 ### Tools
+
 - Flutter DevTools for debugging
 - Android Studio / VS Code
 - Git for version control
 - GitHub for hosting
 
 ### Community
+
 - Flutter Discord/Reddit for questions
 - Stack Overflow for specific issues
 - GitHub Issues for bug tracking

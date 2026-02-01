@@ -256,12 +256,12 @@ void main() {
 
     test('force dimension (sorted alphabetically)', () {
       final force = Dimension({'kg': 1, 'm': 1, 's': -2});
-      expect(force.canonicalRepresentation(), 'kg * m / s^2');
+      expect(force.canonicalRepresentation(), 'kg m / s^2');
     });
 
     test('multiple negative exponents', () {
       final d = Dimension({'m': 1, 'kg': -1, 's': -2});
-      expect(d.canonicalRepresentation(), 'm / kg * s^2');
+      expect(d.canonicalRepresentation(), 'm / kg s^2');
     });
   });
 

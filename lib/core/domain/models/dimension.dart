@@ -90,7 +90,7 @@ class Dimension {
   /// conformable.
   bool isCompatibleWith(Dimension other) => this == other;
 
-  /// Returns a human-readable string like `kg * m / s^2`.
+  /// Returns a human-readable string like `kg m / s^2`.
   ///
   /// Primitives are sorted alphabetically.  Positive exponents appear in
   /// the numerator, negative in the denominator.  Returns `'1'` for
@@ -115,9 +115,9 @@ class Dimension {
       }
     }
 
-    final numerator = positive.isEmpty ? '1' : positive.join(' * ');
+    final numerator = positive.isEmpty ? '1' : positive.join(' ');
     if (negative.isEmpty) return numerator;
-    return '$numerator / ${negative.join(' * ')}';
+    return '$numerator / ${negative.join(' ')}';
   }
 
   @override

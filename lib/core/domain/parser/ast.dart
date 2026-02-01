@@ -1,0 +1,297 @@
+import 'dart:math' as math;
+
+import '../errors.dart';
+import '../models/dimension.dart';
+import '../models/quantity.dart';
+import 'token.dart';
+
+/// Evaluation context passed to AST nodes during evaluation.
+///
+/// Empty for Phase 1.  Will hold UnitRepository in Phase 2.
+class EvalContext {
+  const EvalContext();
+}
+
+/// Base class for all AST nodes.
+abstract class ASTNode {
+  const ASTNode();
+
+  /// Evaluate this node and return a [Quantity].
+  Quantity evaluate(EvalContext context);
+}
+
+/// A numeric literal.
+class NumberNode extends ASTNode {
+  final double value;
+
+  const NumberNode(this.value);
+
+  @override
+  Quantity evaluate(EvalContext context) => Quantity.dimensionless(value);
+
+  @override
+  String toString() => 'NumberNode($value)';
+}
+
+/// A unit identifier.  In Phase 1, all units are treated as primitives.
+class UnitNode extends ASTNode {
+  final String unitName;
+
+  const UnitNode(this.unitName);
+
+  @override
+  Quantity evaluate(EvalContext context) =>
+      Quantity(1.0, Dimension({unitName: 1}));
+
+  @override
+  String toString() => 'UnitNode($unitName)';
+}
+
+/// A binary operation (e.g., +, -, *, /, ^).
+class BinaryOpNode extends ASTNode {
+  final ASTNode left;
+  final ASTNode right;
+  final TokenType operator;
+
+  const BinaryOpNode(this.left, this.operator, this.right);
+
+  @override
+  Quantity evaluate(EvalContext context) {
+    final leftVal = left.evaluate(context);
+    final rightVal = right.evaluate(context);
+
+    switch (operator) {
+      case TokenType.plus:
+        return leftVal.add(rightVal);
+      case TokenType.minus:
+        return leftVal.subtract(rightVal);
+      case TokenType.multiply:
+        return leftVal.multiply(rightVal);
+      case TokenType.divide || TokenType.divideHigh:
+        return leftVal.divide(rightVal);
+      case TokenType.power:
+        if (!rightVal.isDimensionless) {
+          throw DimensionException(
+            'Exponent must be dimensionless, got '
+            '${rightVal.dimension.canonicalRepresentation()}',
+          );
+        }
+        return leftVal.power(rightVal.value);
+      default:
+        throw EvalException('Unknown binary operator: $operator');
+    }
+  }
+
+  @override
+  String toString() => 'BinaryOp($operator, $left, $right)';
+}
+
+/// A unary operation (+ or -).
+class UnaryOpNode extends ASTNode {
+  final TokenType operator;
+  final ASTNode operand;
+
+  const UnaryOpNode(this.operator, this.operand);
+
+  @override
+  Quantity evaluate(EvalContext context) {
+    final val = operand.evaluate(context);
+    switch (operator) {
+      case TokenType.minus:
+        return val.negate();
+      case TokenType.plus:
+        return val;
+      default:
+        throw EvalException('Unknown unary operator: $operator');
+    }
+  }
+
+  @override
+  String toString() => 'UnaryOp($operator, $operand)';
+}
+
+/// A function call (e.g., sin(x), sqrt(x)).
+class FunctionNode extends ASTNode {
+  final String name;
+  final List<ASTNode> arguments;
+
+  const FunctionNode(this.name, this.arguments);
+
+  @override
+  Quantity evaluate(EvalContext context) {
+    final args = arguments.map((a) => a.evaluate(context)).toList();
+    return _evaluateBuiltin(name, args);
+  }
+
+  @override
+  String toString() => 'Function($name, $arguments)';
+}
+
+/// An affine unit application (e.g., tempF(60)).
+///
+/// Stub for Phase 1; evaluation requires unit definitions.
+class AffineUnitNode extends ASTNode {
+  final String unitName;
+  final ASTNode argument;
+
+  const AffineUnitNode(this.unitName, this.argument);
+
+  @override
+  Quantity evaluate(EvalContext context) {
+    throw UnimplementedError(
+      'AffineUnitNode evaluation requires unit definitions (Phase 2)',
+    );
+  }
+
+  @override
+  String toString() => 'AffineUnit($unitName, $argument)';
+}
+
+/// A standalone unit identifier used as a definition request.
+///
+/// Stub for Phase 1; requires unit definitions.
+class DefinitionRequestNode extends ASTNode {
+  final String unitName;
+
+  const DefinitionRequestNode(this.unitName);
+
+  @override
+  Quantity evaluate(EvalContext context) {
+    throw UnimplementedError(
+      'DefinitionRequestNode evaluation requires unit definitions (Phase 2)',
+    );
+  }
+
+  @override
+  String toString() => 'DefinitionRequest($unitName)';
+}
+
+/// A standalone function name used as a definition request.
+///
+/// Stub for Phase 1; requires function registry.
+class FunctionDefinitionRequestNode extends ASTNode {
+  final String functionName;
+
+  const FunctionDefinitionRequestNode(this.functionName);
+
+  @override
+  Quantity evaluate(EvalContext context) {
+    throw UnimplementedError(
+      'FunctionDefinitionRequestNode evaluation not yet implemented',
+    );
+  }
+
+  @override
+  String toString() => 'FunctionDefinitionRequest($functionName)';
+}
+
+// -- Built-in function evaluation --
+
+/// Set of recognized built-in function names.
+const _builtinFunctions = {
+  'sin',
+  'cos',
+  'tan',
+  'asin',
+  'acos',
+  'atan',
+  'sqrt',
+  'cbrt',
+  'ln',
+  'log',
+  'exp',
+  'abs',
+};
+
+/// Returns true if [name] is a recognized built-in function.
+bool isBuiltinFunction(String name) => _builtinFunctions.contains(name);
+
+Quantity _evaluateBuiltin(String name, List<Quantity> args) {
+  switch (name) {
+    case 'sin':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      return Quantity.dimensionless(dartMathSin(args[0].value));
+    case 'cos':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      return Quantity.dimensionless(dartMathCos(args[0].value));
+    case 'tan':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      return Quantity.dimensionless(dartMathTan(args[0].value));
+    case 'asin':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      if (args[0].value < -1 || args[0].value > 1) {
+        throw EvalException(
+          'asin requires argument in range [-1, 1], got ${args[0].value}',
+        );
+      }
+      return Quantity.dimensionless(dartMathAsin(args[0].value));
+    case 'acos':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      if (args[0].value < -1 || args[0].value > 1) {
+        throw EvalException(
+          'acos requires argument in range [-1, 1], got ${args[0].value}',
+        );
+      }
+      return Quantity.dimensionless(dartMathAcos(args[0].value));
+    case 'atan':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      return Quantity.dimensionless(dartMathAtan(args[0].value));
+    case 'sqrt':
+      _requireArgCount(name, args, 1);
+      return args[0].power(0.5);
+    case 'cbrt':
+      _requireArgCount(name, args, 1);
+      return args[0].power(1.0 / 3.0);
+    case 'ln' || 'log':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      if (args[0].value <= 0) {
+        throw EvalException(
+          '$name requires positive argument, got ${args[0].value}',
+        );
+      }
+      return Quantity.dimensionless(dartMathLog(args[0].value));
+    case 'exp':
+      _requireArgCount(name, args, 1);
+      _requireDimensionless(name, args[0]);
+      return Quantity.dimensionless(dartMathExp(args[0].value));
+    case 'abs':
+      _requireArgCount(name, args, 1);
+      return args[0].abs();
+    default:
+      throw EvalException("Unknown function: '$name'");
+  }
+}
+
+void _requireArgCount(String name, List<Quantity> args, int expected) {
+  if (args.length != expected) {
+    throw EvalException(
+      "Function '$name' expects $expected argument(s), got ${args.length}",
+    );
+  }
+}
+
+void _requireDimensionless(String name, Quantity arg) {
+  if (!arg.isDimensionless) {
+    throw DimensionException(
+      "Function '$name' requires dimensionless argument, got "
+      '${arg.dimension.canonicalRepresentation()}',
+    );
+  }
+}
+
+// Wrappers for dart:math functions.
+double dartMathSin(double x) => math.sin(x);
+double dartMathCos(double x) => math.cos(x);
+double dartMathTan(double x) => math.tan(x);
+double dartMathAsin(double x) => math.asin(x);
+double dartMathAcos(double x) => math.acos(x);
+double dartMathAtan(double x) => math.atan(x);
+double dartMathLog(double x) => math.log(x);
+double dartMathExp(double x) => math.exp(x);

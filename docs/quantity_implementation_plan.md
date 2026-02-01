@@ -98,7 +98,7 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 
 ## Key Design Decisions
 
-- **`+`/`-` reduce operands; `*`/`/`/`^` do not** — addition/subtraction need common base units for correctness; multiplication/division/power operate on raw values
+- **`+`/`-` reduce operands; `*`/`/` do not** — addition/subtraction need common base units for correctness; multiplication/division operate on raw values.  `^` reduces its left operand if it is not dimensionless and its right operand is a rational with denominator greater than 1.
 - **Tests first** — write test file before implementation for each step
 - **LinearDefinition uses expression stub** — a `Quantity Function(UnitLookup)` closure that will be replaced by parsed expressions when the parser is ready
 - Dimension exponents are `int`, not `num`

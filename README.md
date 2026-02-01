@@ -7,11 +7,12 @@ user-defined units and dimensions.
 
 ## Project Status
 
-**Current Phase:** Design and Architecture\
-**Last Updated:** January 30, 2026
+**Current Phase:** Phase 0 Complete, ready for Phase 1 (Expression Parser)\
+**Last Updated:** January 31, 2026
 
-This project is currently in the design phase.  Core architecture and
-requirements have been defined, but implementation has not yet begun.
+Project setup is complete.  Core architecture and requirements have been
+defined, and the Flutter project is scaffolded with the full directory
+structure, linting, and test infrastructure in place.
 
 ---
 
@@ -160,16 +161,18 @@ flutter run
 
 ---
 
-## Current Design Priorities
+## Current Progress
 
-The following areas are fully designed and ready for implementation:
+### Implementation
+- ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
 
+### Design (ready for implementation)
 - ✅ Core domain models (Dimension, Unit, Quantity, Prefix)
 - ✅ Expression parser and evaluator architecture
 - ✅ Terminology and conventions
 - ✅ **Quantity arithmetic and conversion algorithms** (see quantity_arithmetic_design.md)
 
-The following areas still need detailed design:
+### Design (still needs detail)
 
 - ⏳ Worksheet system details
 - ⏳ GNU Units database import strategy

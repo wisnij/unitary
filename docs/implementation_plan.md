@@ -6,18 +6,22 @@ This document outlines the phased approach to implementing Unitary, along with f
 
 ## Implementation Phases
 
-### Phase 0: Project Setup (Week 1)
+### Phase 0: Project Setup (Week 1) — COMPLETE
 **Goals:** Development environment and project scaffolding
 
 **Tasks:**
-- Install Flutter SDK and Android Studio
-- Create new Flutter project
-- Set up version control (Git/GitHub)
-- Configure project structure
-- Set up linting and code formatting
-- Create README with project overview
+- [x] Install Flutter SDK (3.38.9) and Dart SDK (3.10.8)
+- [x] Create new Flutter project (`flutter create`, org `com.wisnij`, version 0.1.0+1)
+- [x] Set up version control (Git/GitHub)
+- [x] Configure project structure (layered architecture: core/domain, core/data, features, shared)
+- [x] Set up linting and code formatting (`flutter_lints` + project-specific rules in `analysis_options.yaml`)
+- [x] Create README with project overview
+- [x] Minimal app scaffolding with Material 3 and light/dark theme support
+- [x] Matching test/ directory structure
 
-**Deliverable:** Empty Flutter app that runs on Android emulator
+**Deliverable:** Empty Flutter app that builds, passes `dart analyze` with no issues, and passes `flutter test`
+
+**Completed:** January 31, 2026
 
 ---
 

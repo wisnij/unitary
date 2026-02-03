@@ -16,8 +16,8 @@ import 'token.dart';
 /// primary     = numexpr / LPAR expression RPAR / function / unit
 /// numexpr     = NUMBER ( NUMDIV NUMBER )*
 /// function    = IDENTIFIER LPAR arguments RPAR  [if known builtin function]
+/// unit        = IDENTIFIER                      [fallback if not function]
 /// arguments   = expression ( COMMA expression )*
-/// unit        = IDENTIFIER                       [fallback if not function]
 /// ```
 ///
 /// Implicit multiplication is handled at the `listProduct` level, giving it
@@ -45,7 +45,9 @@ class Parser {
 
   // -- Grammar rules (lowest to highest precedence) --
 
+  /// ```
   /// expression = sum / DIVIDE listProduct
+  /// ```
   ///
   /// Leading `/` creates a reciprocal (1/x).
   ASTNode _expression() {
@@ -56,7 +58,9 @@ class Parser {
     return _sum();
   }
 
+  /// ```
   /// sum = opProduct ( (PLUS / MINUS) opProduct )*
+  /// ```
   ASTNode _sum() {
     var left = _opProduct();
 
@@ -69,7 +73,9 @@ class Parser {
     return left;
   }
 
+  /// ```
   /// opProduct = listProduct ( (TIMES / DIVIDE) listProduct )*
+  /// ```
   ASTNode _opProduct() {
     var left = _listProduct();
 
@@ -82,10 +88,14 @@ class Parser {
     return left;
   }
 
+  /// ```
   /// listProduct = unary power*
+  /// ```
   ///
   /// Implicit multiplication: after parsing `unary`, continue collecting
   /// `power` terms while the current token can start an implicit multiply.
+  /// Only the first term can have a leading unary operator, so any + or - seen
+  /// after that ends the list and starts the next term in a sum.
   ASTNode _listProduct() {
     var left = _unary();
 
@@ -104,7 +114,9 @@ class Parser {
         _check(TokenType.leftParen);
   }
 
+  /// ```
   /// unary = ( PLUS / MINUS )? power
+  /// ```
   ASTNode _unary() {
     if (_match(TokenType.plus) || _match(TokenType.minus)) {
       final op = _previous().type;
@@ -114,7 +126,9 @@ class Parser {
     return _power();
   }
 
+  /// ```
   /// power = primary ( EXPONENT unary )*  [folded right-to-left]
+  /// ```
   ///
   /// Right-associative: `2^3^4` = `2^(3^4)`.
   ASTNode _power() {
@@ -133,7 +147,9 @@ class Parser {
     return result;
   }
 
+  /// ```
   /// primary = numexpr / LPAR expression RPAR / function / unit
+  /// ```
   ASTNode _primary() {
     if (_check(TokenType.number)) {
       return _numexpr();
@@ -157,7 +173,9 @@ class Parser {
     );
   }
 
+  /// ```
   /// numexpr = NUMBER ( NUMDIV NUMBER )*
+  /// ```
   ///
   /// Both operands of `|` must be bare NUMBER literals.
   ASTNode _numexpr() {
@@ -181,8 +199,10 @@ class Parser {
     return left;
   }
 
+  /// ```
   /// function = IDENTIFIER LPAR arguments RPAR  [if known builtin function]
-  /// unit = IDENTIFIER                          [fallback if not function]
+  /// unit     = IDENTIFIER                      [fallback if not function]
+  /// ```
   ///
   /// If the identifier is a known builtin function AND followed by `(`,
   /// parse as function call. Otherwise, treat as unit (which may still
@@ -211,7 +231,9 @@ class Parser {
     return UnitNode(name);
   }
 
+  /// ```
   /// arguments = expression ( COMMA expression )*
+  /// ```
   List<ASTNode> _arguments() {
     final args = <ASTNode>[_expression()];
     while (_match(TokenType.comma)) {

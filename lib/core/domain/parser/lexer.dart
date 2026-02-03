@@ -106,11 +106,13 @@ class Lexer {
     }
   }
 
+  /// ```
   /// NUMBER      = coefficient exponent?
   /// coefficient = "." digits / digits ( "." digits? )?
   /// exponent    = [eE] sign? digits
   /// sign        = [-+]
   /// digits      = [0-9]+
+  /// ```
   void _scanNumber(int startLine, int startColumn) {
     while (!_isAtEnd() && _isDigit(_peek())) {
       _advance();

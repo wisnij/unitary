@@ -50,6 +50,12 @@ void main() {
       expect(node, isA<BinaryOpNode>());
       expect((node as BinaryOpNode).operator, TokenType.divide);
     });
+
+    test('division with per', () {
+      final node = parse('6 per 2');
+      expect(node, isA<BinaryOpNode>());
+      expect((node as BinaryOpNode).operator, TokenType.divide);
+    });
   });
 
   group('Parser: operator precedence', () {
@@ -81,8 +87,8 @@ void main() {
       expect((node.left as BinaryOpNode).operator, TokenType.minus);
     });
 
-    test('left-to-right: 2/3/4 = (2/3) / 4', () {
-      final node = parse('2/3/4') as BinaryOpNode;
+    test('left-to-right: 2 per 3 per 4 = (2/3) / 4', () {
+      final node = parse('2 per 3 per 4') as BinaryOpNode;
       expect(node.operator, TokenType.divide);
       expect(node.left, isA<BinaryOpNode>());
       expect((node.left as BinaryOpNode).operator, TokenType.divide);
@@ -284,6 +290,14 @@ void main() {
 
     test('/m = 1/m (reciprocal unit)', () {
       final node = parse('/m') as BinaryOpNode;
+      expect(node.operator, TokenType.divide);
+      expect(node.left, isA<NumberNode>());
+      expect((node.left as NumberNode).value, 1.0);
+      expect(node.right, isA<UnitNode>());
+    });
+
+    test('per m = 1/m (reciprocal unit)', () {
+      final node = parse('per m') as BinaryOpNode;
       expect(node.operator, TokenType.divide);
       expect(node.left, isA<NumberNode>());
       expect((node.left as NumberNode).value, 1.0);

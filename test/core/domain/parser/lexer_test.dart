@@ -290,6 +290,10 @@ void main() {
       expect(types(lex('/')), [TokenType.divide]);
     });
 
+    test('per', () {
+      expect(types(lex('per')), [TokenType.divide]);
+    });
+
     test('pipe', () {
       expect(types(lex('|')), [TokenType.divideHigh]);
     });
@@ -367,6 +371,24 @@ void main() {
       final tokens = lex('m s');
       final nonEof = tokens.where((t) => t.type != TokenType.eof).toList();
       expect(nonEof.where((t) => t.type == TokenType.identifier).length, 2);
+    });
+
+    test('per as divide operator: not leading', () {
+      final tokens = lex('percent');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'percent');
+    });
+
+    test('per as divide operator: not trailing', () {
+      final tokens = lex('super');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'super');
+    });
+
+    test('per as divide operator: not internal', () {
+      final tokens = lex('mileperhour');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'mileperhour');
     });
   });
 

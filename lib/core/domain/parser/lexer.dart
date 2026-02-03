@@ -30,6 +30,17 @@ class Lexer {
     return _tokens;
   }
 
+  /// ```
+  /// PLUS   = "+"
+  /// MINUS  = "-"
+  /// TIMES  = ("*" !"*") / "×" / "·"
+  /// DIVIDE = "/" / "÷" / "per"
+  /// POWER  = "^" / "**"
+  /// LPAR   = "("
+  /// RPAR   = ")"
+  /// NUMDIV = "|"
+  /// COMMA  = ","
+  /// ```
   void _scanToken() {
     final startLine = _line;
     final startColumn = _column;
@@ -161,9 +172,14 @@ class Lexer {
     }
 
     final lexeme = _source.substring(_start, _current);
-    _tokens.add(
-      Token(TokenType.identifier, lexeme, lexeme, startLine, startColumn),
-    );
+    if (lexeme == 'per') {
+      // Handle as a different spelling of the / operator
+      _tokens.add(Token(TokenType.divide, 'per', null, startLine, startColumn));
+    } else {
+      _tokens.add(
+        Token(TokenType.identifier, lexeme, lexeme, startLine, startColumn),
+      );
+    }
   }
 
   void _skipWhitespace() {

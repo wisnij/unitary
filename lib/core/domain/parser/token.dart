@@ -7,7 +7,7 @@ enum TokenType {
   plus, // +
   minus, // -
   multiply, // *, ×, ·
-  divide, // /, ÷
+  divide, // /, ÷, per
   divideHigh, // |
   power, // ^, **
   // Grouping

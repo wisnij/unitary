@@ -2,7 +2,7 @@
 enum TokenType {
   // Literals
   number, // 3.14, 1.5e-10, .5
-  unit, // any identifier not followed by '('
+  identifier, // any identifier (unit or function name)
   // Operators
   plus, // +
   minus, // -
@@ -14,8 +14,6 @@ enum TokenType {
   leftParen, // (
   rightParen, // )
   comma, // ,
-  // Functions
-  function, // identifier followed by '('
   // Special
   eof, // end of input
 }
@@ -28,7 +26,7 @@ class Token {
   /// The original source text of this token.
   final String lexeme;
 
-  /// Parsed value: [double] for numbers, [String] for unit/function names.
+  /// Parsed value: [double] for numbers, [String] for identifiers.
   final Object? literal;
 
   /// The 1-based line number where this token starts.

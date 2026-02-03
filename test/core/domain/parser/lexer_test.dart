@@ -131,131 +131,90 @@ void main() {
   });
 
   group('Lexer: identifiers', () {
-    test('identifier not followed by ( is unit', () {
+    test('simple identifier', () {
       final tokens = lex('m');
-      expect(types(tokens), [TokenType.unit]);
+      expect(types(tokens), [TokenType.identifier]);
       expect(tokens[0].literal, 'm');
     });
 
-    test('identifier followed by ( is function', () {
+    test('identifier followed by ( is still identifier', () {
       final tokens = lex('sin(');
-      expect(tokens[0].type, TokenType.function);
+      expect(tokens[0].type, TokenType.identifier);
       expect(tokens[0].literal, 'sin');
       expect(tokens[1].type, TokenType.leftParen);
     });
 
-    test('identifier with space then ( is function', () {
+    test('identifier with space then ( is still identifier', () {
       final tokens = lex('sin (');
-      expect(tokens[0].type, TokenType.function);
+      expect(tokens[0].type, TokenType.identifier);
       expect(tokens[0].literal, 'sin');
     });
 
-    test('multi-character unit', () {
+    test('multi-character identifier', () {
       final tokens = lex('meter');
-      expect(types(tokens), [TokenType.unit]);
+      expect(types(tokens), [TokenType.identifier]);
       expect(tokens[0].literal, 'meter');
     });
 
     test('identifier with digits', () {
       final tokens = lex('log2');
-      expect(types(tokens), [TokenType.unit]);
+      expect(types(tokens), [TokenType.identifier]);
       expect(tokens[0].literal, 'log2');
     });
 
     test('identifier starting with underscore', () {
       final tokens = lex('_foo');
-      expect(types(tokens), [TokenType.unit]);
+      expect(types(tokens), [TokenType.identifier]);
       expect(tokens[0].literal, '_foo');
     });
 
-    test('multiple identifiers as units', () {
-      // No implicit multiply between identifiers here is checked in
-      // implicit multiply tests; here just verify they are units.
+    test('multiple identifiers', () {
       final tokens = lex('m s');
       final nonEof = tokens.where((t) => t.type != TokenType.eof).toList();
-      expect(nonEof.where((t) => t.type == TokenType.unit).length, 2);
+      expect(nonEof.where((t) => t.type == TokenType.identifier).length, 2);
     });
   });
 
-  group('Lexer: implicit multiplication', () {
+  group('Lexer: no implicit multiplication insertion', () {
     test('number followed by identifier: 5m', () {
-      expect(types(lex('5m')), [
-        TokenType.number,
-        TokenType.multiply,
-        TokenType.unit,
-      ]);
+      // Lexer no longer inserts implicit multiply tokens
+      expect(types(lex('5m')), [TokenType.number, TokenType.identifier]);
     });
 
     test('number space identifier: 5 m', () {
-      expect(types(lex('5 m')), [
-        TokenType.number,
-        TokenType.multiply,
-        TokenType.unit,
-      ]);
+      expect(types(lex('5 m')), [TokenType.number, TokenType.identifier]);
     });
 
     test('number space number: 2 3', () {
-      expect(types(lex('2 3')), [
-        TokenType.number,
-        TokenType.multiply,
-        TokenType.number,
-      ]);
+      expect(types(lex('2 3')), [TokenType.number, TokenType.number]);
     });
 
-    test('unit space unit: m s', () {
-      expect(types(lex('m s')), [
-        TokenType.unit,
-        TokenType.multiply,
-        TokenType.unit,
-      ]);
+    test('identifier space identifier: m s', () {
+      expect(types(lex('m s')), [TokenType.identifier, TokenType.identifier]);
     });
 
     test('right paren followed by left paren: )(', () {
-      expect(types(lex(')(')), [
-        TokenType.rightParen,
-        TokenType.multiply,
-        TokenType.leftParen,
-      ]);
+      expect(types(lex(')(')), [TokenType.rightParen, TokenType.leftParen]);
     });
 
     test('right paren followed by number: )5', () {
-      expect(types(lex(')5')), [
-        TokenType.rightParen,
-        TokenType.multiply,
-        TokenType.number,
-      ]);
+      expect(types(lex(')5')), [TokenType.rightParen, TokenType.number]);
     });
 
-    test('right paren followed by unit: )m', () {
-      expect(types(lex(')m')), [
-        TokenType.rightParen,
-        TokenType.multiply,
-        TokenType.unit,
-      ]);
+    test('right paren followed by identifier: )m', () {
+      expect(types(lex(')m')), [TokenType.rightParen, TokenType.identifier]);
     });
 
     test('number followed by left paren: 5(', () {
-      expect(types(lex('5(')), [
-        TokenType.number,
-        TokenType.multiply,
-        TokenType.leftParen,
-      ]);
+      expect(types(lex('5(')), [TokenType.number, TokenType.leftParen]);
     });
 
-    test('unit followed by number: m 5', () {
-      expect(types(lex('m 5')), [
-        TokenType.unit,
-        TokenType.multiply,
-        TokenType.number,
-      ]);
+    test('identifier followed by number: m 5', () {
+      expect(types(lex('m 5')), [TokenType.identifier, TokenType.number]);
     });
 
-    test('identifier followed by left paren is function: m(', () {
-      // In Phase 1, any identifier followed by '(' is classified as a
-      // function.  No implicit multiply is inserted between a function
-      // and its paren.  Phase 2 will distinguish units from functions
-      // using the unit repository.
-      expect(types(lex('m(')), [TokenType.function, TokenType.leftParen]);
+    test('identifier followed by left paren: m(', () {
+      expect(types(lex('m(')), [TokenType.identifier, TokenType.leftParen]);
     });
 
     test('no implicit multiply after operator: 5 + 3', () {
@@ -266,29 +225,12 @@ void main() {
       ]);
     });
 
-    test('no implicit multiply between function and paren: sin(', () {
-      expect(types(lex('sin(')), [TokenType.function, TokenType.leftParen]);
-    });
-
     test('no implicit multiply after left paren', () {
       expect(types(lex('(5')), [TokenType.leftParen, TokenType.number]);
     });
 
-    test('number followed by function: 5sin(', () {
-      expect(types(lex('5sin(')), [
-        TokenType.number,
-        TokenType.multiply,
-        TokenType.function,
-        TokenType.leftParen,
-      ]);
-    });
-
     test('number followed by leading-dot number: 5 .5', () {
-      expect(types(lex('5 .5')), [
-        TokenType.number,
-        TokenType.multiply,
-        TokenType.number,
-      ]);
+      expect(types(lex('5 .5')), [TokenType.number, TokenType.number]);
     });
   });
 
@@ -367,12 +309,12 @@ void main() {
 
     test('sin(0.5) + cos(1)', () {
       expect(types(lex('sin(0.5) + cos(1)')), [
-        TokenType.function,
+        TokenType.identifier,
         TokenType.leftParen,
         TokenType.number,
         TokenType.rightParen,
         TokenType.plus,
-        TokenType.function,
+        TokenType.identifier,
         TokenType.leftParen,
         TokenType.number,
         TokenType.rightParen,
@@ -384,8 +326,7 @@ void main() {
         TokenType.number,
         TokenType.divideHigh,
         TokenType.number,
-        TokenType.multiply,
-        TokenType.unit,
+        TokenType.identifier,
       ]);
     });
 
@@ -408,11 +349,10 @@ void main() {
 
     test('sqrt(9 m^2)', () {
       expect(types(lex('sqrt(9 m^2)')), [
-        TokenType.function,
+        TokenType.identifier,
         TokenType.leftParen,
         TokenType.number,
-        TokenType.multiply,
-        TokenType.unit,
+        TokenType.identifier,
         TokenType.power,
         TokenType.number,
         TokenType.rightParen,

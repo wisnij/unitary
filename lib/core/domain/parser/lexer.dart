@@ -4,8 +4,8 @@ import 'token.dart';
 /// Converts an input string into a list of [Token]s.
 ///
 /// Handles numbers (including scientific notation), operators (including
-/// Unicode variants), identifiers (classified as functions or units based
-/// on whether they are followed by `(`), and implicit multiplication.
+/// Unicode variants), and identifiers. Implicit multiplication is handled
+/// by the parser, not the lexer.
 class Lexer {
   final String _source;
 
@@ -27,7 +27,7 @@ class Lexer {
     }
 
     _tokens.add(Token(TokenType.eof, '', null, _line, _column));
-    return _insertImplicitMultiplies(_tokens);
+    return _tokens;
   }
 
   void _scanToken() {
@@ -153,74 +153,9 @@ class Lexer {
     }
 
     final lexeme = _source.substring(_start, _current);
-    final isFunction = _isFollowedByParen();
-
-    if (isFunction) {
-      _tokens.add(
-        Token(TokenType.function, lexeme, lexeme, startLine, startColumn),
-      );
-    } else {
-      _tokens.add(
-        Token(TokenType.unit, lexeme, lexeme, startLine, startColumn),
-      );
-    }
-  }
-
-  /// Checks if the next non-whitespace character is '('.
-  bool _isFollowedByParen() {
-    var i = _current;
-    while (i < _source.length && (_source[i] == ' ' || _source[i] == '\t')) {
-      i++;
-    }
-    return i < _source.length && _source[i] == '(';
-  }
-
-  /// Second pass: insert implicit multiply tokens between adjacent tokens
-  /// where juxtaposition implies multiplication.
-  static List<Token> _insertImplicitMultiplies(List<Token> tokens) {
-    if (tokens.length <= 1) return tokens;
-
-    final result = <Token>[];
-
-    for (var i = 0; i < tokens.length; i++) {
-      final token = tokens[i];
-
-      // Before adding this token, check if we need an implicit multiply
-      // between the previous token and this one.
-      if (result.isNotEmpty && _needsImplicitMultiply(result.last, token)) {
-        result.add(
-          Token(TokenType.multiply, '', null, token.line, token.column),
-        );
-      }
-
-      result.add(token);
-    }
-
-    return result;
-  }
-
-  /// Returns true if an implicit multiply should be inserted between
-  /// [left] and [right].
-  static bool _needsImplicitMultiply(Token left, Token right) {
-    // Left must be a "value-producing" token.
-    final leftIsValue =
-        left.type == TokenType.number ||
-        left.type == TokenType.unit ||
-        left.type == TokenType.rightParen;
-
-    if (!leftIsValue) return false;
-
-    // Right must start a new primary expression.
-    // But NOT if left is a function token (function followed by paren is
-    // a call, not multiplication).  Since functions are already classified
-    // by the lexer, a unit followed by '(' IS implicit multiply.
-    final rightStartsPrimary =
-        right.type == TokenType.number ||
-        right.type == TokenType.unit ||
-        right.type == TokenType.function ||
-        right.type == TokenType.leftParen;
-
-    return rightStartsPrimary;
+    _tokens.add(
+      Token(TokenType.identifier, lexeme, lexeme, startLine, startColumn),
+    );
   }
 
   void _skipWhitespace() {

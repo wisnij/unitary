@@ -7,29 +7,22 @@ import 'token.dart';
 /// Grammar (lowest to highest precedence):
 ///
 /// ```
-/// expression     → addition
-/// addition       → multiplication ( ('+' | '-') multiplication )*
-/// multiplication → exponentiation ( ('*' | '/' | '÷' | '×' | '·') exponentiation )*
-/// exponentiation → highDivision ( ('^' | '**') exponentiation )?
-/// highDivision   → unary ( '|' unary )*
-/// unary          → ('-' | '+') unary | call
-/// call           → primary ( '(' arguments ')' )?    [only for functions]
-/// primary        → NUMBER | UNIT | '(' expression ')'
+/// expression  = sum / DIVIDE listProduct
+/// sum         = opProduct ( (PLUS / MINUS) opProduct )*
+/// opProduct   = listProduct ( (TIMES / DIVIDE) listProduct )*
+/// listProduct = unary power*
+/// unary       = ( PLUS / MINUS )? power
+/// power       = primary ( EXPONENT unary )*  [folded right-to-left]
+/// primary     = numexpr / LPAR expression RPAR / function / unit
+/// numexpr     = NUMBER ( NUMDIV NUMBER )*
+/// function    = IDENTIFIER LPAR arguments RPAR  [if known builtin function]
+/// arguments   = expression ( COMMA expression )*
+/// unit        = IDENTIFIER                       [fallback if not function]
 /// ```
 ///
-/// Implicit multiplication (juxtaposition) is handled by the lexer, which
-/// inserts synthetic [TokenType.multiply] tokens between adjacent values.
-/// These are handled at the `multiplication` level along with explicit `*`
-/// and `/`.
-///
-/// **Note on precedence:** The Phase 1 plan specifies implicit multiplication
-/// at a *higher* precedence than explicit multiplication/division.  However,
-/// since the lexer inserts implicit multiply as [TokenType.multiply] tokens,
-/// they are indistinguishable from explicit `*` at parse time and are handled
-/// at the same level.  This means `5 m / 2 s` parses as `((5*m)/2)*s` rather
-/// than `(5*m)/(2*s)`.  This is a known Phase 1 simplification; Phase 2 can
-/// introduce separate precedence levels if needed once unit identifiers are
-/// distinguishable from function names.
+/// Implicit multiplication is handled at the `listProduct` level, giving it
+/// higher precedence than explicit `*` and `/`. This means `5 m / 2 s` parses
+/// as `(5*m) / (2*s)`.
 class Parser {
   final List<Token> _tokens;
   int _current = 0;
@@ -52,132 +45,100 @@ class Parser {
 
   // -- Grammar rules (lowest to highest precedence) --
 
-  /// expression → addition
-  ASTNode _expression() => _addition();
+  /// expression = sum / DIVIDE listProduct
+  ///
+  /// Leading `/` creates a reciprocal (1/x).
+  ASTNode _expression() {
+    if (_match(TokenType.divide)) {
+      final operand = _listProduct();
+      return BinaryOpNode(const NumberNode(1.0), TokenType.divide, operand);
+    }
+    return _sum();
+  }
 
-  /// addition → multiplication ( ('+' | '-') multiplication )*
-  ASTNode _addition() {
-    var left = _multiplication();
+  /// sum = opProduct ( (PLUS / MINUS) opProduct )*
+  ASTNode _sum() {
+    var left = _opProduct();
 
     while (_match(TokenType.plus) || _match(TokenType.minus)) {
       final op = _previous().type;
-      final right = _multiplication();
+      final right = _opProduct();
       left = BinaryOpNode(left, op, right);
     }
 
     return left;
   }
 
-  /// multiplication → exponentiation ( ('*' | '/' | '÷') exponentiation )*
-  ///
-  /// Also handles implicit multiply tokens inserted by the lexer.
-  ASTNode _multiplication() {
-    var left = _exponentiation();
+  /// opProduct = listProduct ( (TIMES / DIVIDE) listProduct )*
+  ASTNode _opProduct() {
+    var left = _listProduct();
 
     while (_match(TokenType.multiply) || _match(TokenType.divide)) {
       final op = _previous().type;
-      final right = _exponentiation();
+      final right = _listProduct();
       left = BinaryOpNode(left, op, right);
     }
 
     return left;
   }
 
-  /// exponentiation → highDivision ( ('^' | '**') exponentiation )?
+  /// listProduct = unary power*
   ///
-  /// Right-associative: `2^3^4` = `2^(3^4)`.  The right operand is parsed
-  /// at the `exponentiation` level (right-recursive) to achieve this.
-  ASTNode _exponentiation() {
-    final left = _highDivision();
-
-    if (_match(TokenType.power)) {
-      final right = _exponentiation();
-      return BinaryOpNode(left, TokenType.power, right);
-    }
-
-    return left;
-  }
-
-  /// highDivision → unary ( '|' unary )*
-  ///
-  /// Both operands of `|` must be [NumberNode]s; any other expression is a
-  /// parse error.
-  ASTNode _highDivision() {
+  /// Implicit multiplication: after parsing `unary`, continue collecting
+  /// `power` terms while the current token can start an implicit multiply.
+  ASTNode _listProduct() {
     var left = _unary();
 
-    if (_check(TokenType.divideHigh) && left is! NumberNode) {
-      final opToken = _peek();
-      throw ParseException(
-        "Left operand of '|' must be a numeric literal",
-        line: opToken.line,
-        column: opToken.column,
-      );
-    }
-
-    while (_match(TokenType.divideHigh)) {
-      final opToken = _previous();
-      final right = _unary();
-
-      if (right is! NumberNode) {
-        throw ParseException(
-          "Right operand of '|' must be a numeric literal",
-          line: opToken.line,
-          column: opToken.column,
-        );
-      }
-
-      left = BinaryOpNode(left, TokenType.divideHigh, right);
+    while (_startsImplicitMultiply()) {
+      final right = _power();
+      left = BinaryOpNode(left, TokenType.multiply, right);
     }
 
     return left;
   }
 
-  /// unary → ('-' | '+') unary | call
+  /// Check if current token can start a power (for implicit multiply).
+  bool _startsImplicitMultiply() {
+    return _check(TokenType.number) ||
+        _check(TokenType.identifier) ||
+        _check(TokenType.leftParen);
+  }
+
+  /// unary = ( PLUS / MINUS ) unary | power
+  ///
+  /// Recursive to support `--5` (double negation).
   ASTNode _unary() {
-    if (_match(TokenType.minus) || _match(TokenType.plus)) {
+    if (_match(TokenType.plus) || _match(TokenType.minus)) {
       final op = _previous().type;
       final operand = _unary();
       return UnaryOpNode(op, operand);
     }
-
-    return _call();
+    return _power();
   }
 
-  /// call → primary ( '(' arguments ')' )?
+  /// power = primary ( EXPONENT unary )*  [folded right-to-left]
   ///
-  /// Only consumes parenthesized arguments if the primary was a function
-  /// token.
-  ASTNode _call() {
-    // If current token is a function, consume it and parse arguments.
-    if (_check(TokenType.function)) {
-      final funcToken = _advance();
-      final name = funcToken.literal as String;
+  /// Right-associative: `2^3^4` = `2^(3^4)`.
+  ASTNode _power() {
+    final operands = <ASTNode>[_primary()];
 
-      _consume(TokenType.leftParen, "Expected '(' after function '$name'");
-
-      final args = <ASTNode>[];
-      if (!_check(TokenType.rightParen)) {
-        do {
-          args.add(_expression());
-        } while (_match(TokenType.comma));
-      }
-
-      _consume(TokenType.rightParen, "Expected ')' after function arguments");
-
-      return FunctionNode(name, args);
+    while (_match(TokenType.power)) {
+      operands.add(_unary());
     }
 
-    return _primary();
+    // Fold right-to-left
+    var result = operands.last;
+    for (var i = operands.length - 2; i >= 0; i--) {
+      result = BinaryOpNode(operands[i], TokenType.power, result);
+    }
+
+    return result;
   }
 
-  /// primary → NUMBER | UNIT | '(' expression ')'
+  /// primary = numexpr / LPAR expression RPAR / function / unit
   ASTNode _primary() {
-    if (_match(TokenType.number)) {
-      return NumberNode(_previous().literal as double);
-    }
-
-    if (_match(TokenType.unit)) {
-      return UnitNode(_previous().literal as String);
+    if (_check(TokenType.number)) {
+      return _numexpr();
     }
 
     if (_match(TokenType.leftParen)) {
@@ -186,12 +147,79 @@ class Parser {
       return expr;
     }
 
+    if (_check(TokenType.identifier)) {
+      return _identifierOrFunction();
+    }
+
     final token = _peek();
     throw ParseException(
       'Unexpected token: ${token.lexeme.isEmpty ? token.type : token.lexeme}',
       line: token.line,
       column: token.column,
     );
+  }
+
+  /// numexpr = NUMBER ( NUMDIV NUMBER )*
+  ///
+  /// Both operands of `|` must be bare NUMBER literals.
+  ASTNode _numexpr() {
+    final numberToken = _advance();
+    var left = NumberNode(numberToken.literal as double) as ASTNode;
+
+    while (_match(TokenType.divideHigh)) {
+      final opToken = _previous();
+      if (!_check(TokenType.number)) {
+        throw ParseException(
+          "Right operand of '|' must be a numeric literal",
+          line: opToken.line,
+          column: opToken.column,
+        );
+      }
+      final rightToken = _advance();
+      final right = NumberNode(rightToken.literal as double);
+      left = BinaryOpNode(left, TokenType.divideHigh, right);
+    }
+
+    return left;
+  }
+
+  /// function = IDENTIFIER LPAR arguments RPAR  [if known builtin function]
+  /// unit = IDENTIFIER                          [fallback if not function]
+  ///
+  /// If the identifier is a known builtin function AND followed by `(`,
+  /// parse as function call. Otherwise, treat as unit (which may still
+  /// be followed by `(` for implicit multiplication).
+  ASTNode _identifierOrFunction() {
+    final token = _advance();
+    final name = token.literal as String;
+
+    if (_check(TokenType.leftParen) && isBuiltinFunction(name)) {
+      _advance(); // consume '('
+
+      // Require at least one argument (zero-arg calls not allowed)
+      if (_check(TokenType.rightParen)) {
+        throw ParseException(
+          "Function '$name' requires at least one argument",
+          line: token.line,
+          column: token.column,
+        );
+      }
+
+      final args = _arguments();
+      _consume(TokenType.rightParen, "Expected ')' after function arguments");
+      return FunctionNode(name, args);
+    }
+
+    return UnitNode(name);
+  }
+
+  /// arguments = expression ( COMMA expression )*
+  List<ASTNode> _arguments() {
+    final args = <ASTNode>[_expression()];
+    while (_match(TokenType.comma)) {
+      args.add(_expression());
+    }
+    return args;
   }
 
   // -- Token navigation helpers --

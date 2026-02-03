@@ -334,15 +334,16 @@ void main() {
       expect(node.arguments[0], isA<FunctionNode>());
     });
 
-    test('multi-argument function: atan2(1, 2)', () {
-      // atan2 is not in builtins, so this parses as unit * (1, 2)
-      // which will fail. Let's use a real multi-arg test.
-      // Actually, let's just test comma separation works.
-      // We can call sin with wrong args (will fail at eval, not parse).
-      final node = parse('sin(1 + 2)') as FunctionNode;
-      expect(node.name, 'sin');
-      expect(node.arguments.length, 1);
-    });
+    test(
+      'multi-argument function: atan2(1, 2)',
+      () {
+        final node = parse('atan2(1, 2)') as FunctionNode;
+        expect(node.name, 'atan2');
+        expect(node.arguments.length, 2);
+      },
+      skip:
+          'Function recognition is TODO, so this parses as unit * (1, 2) which will fail',
+    );
 
     test('function in expression: 5 + sin(0)', () {
       final node = parse('5 + sin(0)') as BinaryOpNode;

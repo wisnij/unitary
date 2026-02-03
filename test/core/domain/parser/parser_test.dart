@@ -128,10 +128,15 @@ void main() {
       expect((node as UnaryOpNode).operator, TokenType.plus);
     });
 
-    test('double negative: --5', () {
-      final node = parse('--5') as UnaryOpNode;
+    test('double negative: 1--2 = 1 - (-2)', () {
+      final node = parse('1--2') as BinaryOpNode;
       expect(node.operator, TokenType.minus);
-      expect(node.operand, isA<UnaryOpNode>());
+      expect(node.left, isA<NumberNode>());
+      expect(node.right, isA<UnaryOpNode>());
+
+      final unary = node.right as UnaryOpNode;
+      expect(unary.operator, TokenType.minus);
+      expect(unary.operand, isA<NumberNode>());
     });
 
     test('unary binds lower than ^: -2^3 = -(2^3)', () {
@@ -381,6 +386,10 @@ void main() {
     test('consecutive operators', () {
       // 5 + * 3 — * after + is unexpected
       expect(() => parse('5 + * 3'), throwsA(isA<ParseException>()));
+    });
+
+    test('double negative: --1', () {
+      expect(() => parse('--1'), throwsA(isA<ParseException>()));
     });
   });
 }

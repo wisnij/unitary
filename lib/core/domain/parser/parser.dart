@@ -104,13 +104,11 @@ class Parser {
         _check(TokenType.leftParen);
   }
 
-  /// unary = ( PLUS / MINUS ) unary | power
-  ///
-  /// Recursive to support `--5` (double negation).
+  /// unary = ( PLUS / MINUS )? power
   ASTNode _unary() {
     if (_match(TokenType.plus) || _match(TokenType.minus)) {
       final op = _previous().type;
-      final operand = _unary();
+      final operand = _power();
       return UnaryOpNode(op, operand);
     }
     return _power();

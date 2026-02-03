@@ -44,9 +44,9 @@ void main() {
       expect(result.value, -2.0);
     });
 
-    test('--5 = 5', () {
-      final result = eval('--5');
-      expect(result.value, 5.0);
+    test('1--2 = 1 - (-2) = 3', () {
+      final result = eval('1--2');
+      expect(result.value, 3.0);
     });
 
     test('+5 = 5', () {

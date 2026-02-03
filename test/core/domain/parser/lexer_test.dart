@@ -33,6 +33,12 @@ void main() {
       expect(tokens[0].literal, 0.5);
     });
 
+    test('trailing decimal point', () {
+      final tokens = lex('5.');
+      expect(types(tokens), [TokenType.number]);
+      expect(tokens[0].literal, 5.0);
+    });
+
     test('zero', () {
       final tokens = lex('0');
       expect(types(tokens), [TokenType.number]);
@@ -61,6 +67,12 @@ void main() {
       final tokens = lex('.5e2');
       expect(types(tokens), [TokenType.number]);
       expect(tokens[0].literal, 50.0);
+    });
+
+    test('trailing decimal with scientific notation', () {
+      final tokens = lex('5.e2');
+      expect(types(tokens), [TokenType.number]);
+      expect(tokens[0].literal, 500.0);
     });
   });
 
@@ -411,8 +423,16 @@ void main() {
       expect(types(lex('(5')), [TokenType.leftParen, TokenType.number]);
     });
 
-    test('number followed by leading-dot number: 5 .5', () {
-      expect(types(lex('5 .5')), [TokenType.number, TokenType.number]);
+    test('number followed by leading-dot number: 2 .3', () {
+      expect(types(lex('2 .3')), [TokenType.number, TokenType.number]);
+    });
+
+    test('trailing-dot number followed by number: 2. 3', () {
+      expect(types(lex('2. 3')), [TokenType.number, TokenType.number]);
+    });
+
+    test('trailing-dot number followed by number: 2. .3', () {
+      expect(types(lex('2. .3')), [TokenType.number, TokenType.number]);
     });
   });
 

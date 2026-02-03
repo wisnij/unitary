@@ -106,6 +106,11 @@ class Lexer {
     }
   }
 
+  /// NUMBER      = coefficient exponent?
+  /// coefficient = "." digits / digits ( "." digits? )?
+  /// exponent    = [eE] sign? digits
+  /// sign        = [-+]
+  /// digits      = [0-9]+
   void _scanNumber(int startLine, int startColumn) {
     while (!_isAtEnd() && _isDigit(_peek())) {
       _advance();
@@ -113,11 +118,7 @@ class Lexer {
 
     // Decimal part (only if we haven't already started with '.').
     final lexemeSoFar = _source.substring(_start, _current);
-    if (!lexemeSoFar.contains('.') &&
-        !_isAtEnd() &&
-        _peek() == '.' &&
-        _current + 1 < _source.length &&
-        _isDigit(_source[_current + 1])) {
+    if (!lexemeSoFar.contains('.') && !_isAtEnd() && _peek() == '.') {
       _advance(); // consume '.'
       while (!_isAtEnd() && _isDigit(_peek())) {
         _advance();

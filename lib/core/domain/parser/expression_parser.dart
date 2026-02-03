@@ -8,14 +8,13 @@ import 'token.dart';
 class ExpressionParser {
   /// Lex, parse, and evaluate an expression string.
   Quantity evaluate(String input) {
-    final tokens = Lexer(input).scanTokens();
-    final ast = Parser(tokens).parse();
+    final ast = parse(input);
     return ast.evaluate(const EvalContext());
   }
 
   /// Lex and parse an expression string, returning the AST.
   ASTNode parse(String input) {
-    final tokens = Lexer(input).scanTokens();
+    final tokens = tokenize(input);
     return Parser(tokens).parse();
   }
 

@@ -156,6 +156,7 @@ void main() {
 
     test('1e+: sign without digit produces three tokens', () {
       // '1e+' → number(1), identifier(e), plus
+      // This is invalid grammar, but that's the parser's problem
       final tokens = lex('1e+');
       expect(types(tokens), [
         TokenType.number,
@@ -357,9 +358,8 @@ void main() {
     });
   });
 
-  group('Lexer: no implicit multiplication insertion', () {
+  group('Lexer: implicit multiplication', () {
     test('number followed by identifier: 5m', () {
-      // Lexer no longer inserts implicit multiply tokens
       expect(types(lex('5m')), [TokenType.number, TokenType.identifier]);
     });
 

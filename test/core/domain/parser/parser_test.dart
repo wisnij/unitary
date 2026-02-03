@@ -53,8 +53,7 @@ void main() {
   });
 
   group('Parser: operator precedence', () {
-    test('multiplication before addition: 1 + 2 * 3', () {
-      // Should parse as 1 + (2 * 3)
+    test('multiplication before addition: 1 + 2 * 3 = 1 + (2 * 3)', () {
       final node = parse('1 + 2 * 3') as BinaryOpNode;
       expect(node.operator, TokenType.plus);
       expect(node.left, isA<NumberNode>());
@@ -62,7 +61,7 @@ void main() {
       expect((node.right as BinaryOpNode).operator, TokenType.multiply);
     });
 
-    test('multiplication before subtraction: 5 - 2 * 3', () {
+    test('multiplication before subtraction: 5 - 2 * 3 = 5 - (2 * 3)', () {
       final node = parse('5 - 2 * 3') as BinaryOpNode;
       expect(node.operator, TokenType.minus);
       expect(node.right, isA<BinaryOpNode>());
@@ -75,12 +74,19 @@ void main() {
       expect((node.left as BinaryOpNode).operator, TokenType.plus);
     });
 
-    test('left-to-right: 10 - 3 - 2', () {
-      // Should parse as (10 - 3) - 2
+    test('left-to-right: 10 - 3 - 2 = (10 - 3) - 2', () {
       final node = parse('10 - 3 - 2') as BinaryOpNode;
       expect(node.operator, TokenType.minus);
       expect(node.left, isA<BinaryOpNode>());
       expect((node.left as BinaryOpNode).operator, TokenType.minus);
+    });
+
+    test('left-to-right: 2/3/4 = (2/3) / 4', () {
+      final node = parse('2/3/4') as BinaryOpNode;
+      expect(node.operator, TokenType.divide);
+      expect(node.left, isA<BinaryOpNode>());
+      expect((node.left as BinaryOpNode).operator, TokenType.divide);
+      expect(node.right, isA<NumberNode>());
     });
   });
 
@@ -104,12 +110,22 @@ void main() {
       expect((node.right as BinaryOpNode).operator, TokenType.power);
     });
 
-    test('exponent higher than multiply: 2 * 3^4', () {
+    test('exponent higher than multiply: 2*3^4 = 2 * (3^4)', () {
       // Should parse as 2 * (3^4)
-      final node = parse('2 * 3^4') as BinaryOpNode;
+      final node = parse('2*3^4') as BinaryOpNode;
       expect(node.operator, TokenType.multiply);
+      expect(node.left, isA<NumberNode>());
       expect(node.right, isA<BinaryOpNode>());
       expect((node.right as BinaryOpNode).operator, TokenType.power);
+    });
+
+    test('exponent higher than multiply: 2^3*4 = (2^3) * 4', () {
+      // Should parse as (2^3) * 4
+      final node = parse('2^3*4') as BinaryOpNode;
+      expect(node.operator, TokenType.multiply);
+      expect(node.left, isA<BinaryOpNode>());
+      expect((node.left as BinaryOpNode).operator, TokenType.power);
+      expect(node.right, isA<NumberNode>());
     });
   });
 
@@ -140,7 +156,7 @@ void main() {
     });
 
     test('unary binds lower than ^: -2^3 = -(2^3)', () {
-      // With new grammar, unary calls power, so -2^3 = -(2^3)
+      // unary calls power, so -2^3 = -(2^3)
       final node = parse('-2^3') as UnaryOpNode;
       expect(node.operator, TokenType.minus);
       expect(node.operand, isA<BinaryOpNode>());
@@ -180,16 +196,15 @@ void main() {
       expect((node.left as BinaryOpNode).operator, TokenType.divideHigh);
     });
 
+    test('non-numeric left operand throws', () {
+      expect(() => parse('m|1'), throwsA(isA<ParseException>()));
+    });
+
     test('non-numeric right operand throws', () {
       expect(() => parse('1|m'), throwsA(isA<ParseException>()));
     });
 
     test('expression operand for | is rejected', () {
-      // In new grammar, | only works with NUMBER tokens, not expressions
-      // (1+2)|3 has (1+2) parsed as grouped expression, then we'd hit |
-      // but | isn't parsed at that level
-      // Actually (1+2)|3 parses (1+2) as expression, then sees |3 which
-      // would be unexpected. Let's verify the error.
       expect(() => parse('(1+2)|3'), throwsA(isA<ParseException>()));
     });
 
@@ -236,9 +251,8 @@ void main() {
     test(
       'implicit multiply higher precedence than /: 5 m / 2 s = (5m)/(2s)',
       () {
-        // With new grammar, implicit multiply is at listProduct level,
-        // higher than opProduct (explicit * and /), so this parses as
-        // (5*m) / (2*s)
+        // implicit multiply is at listProduct level, higher than opProduct
+        // (explicit * and /), so this parses as (5*m) / (2*s)
         final node = parse('5 m / 2 s') as BinaryOpNode;
         expect(node.operator, TokenType.divide);
         expect(node.left, isA<BinaryOpNode>());
@@ -371,6 +385,10 @@ void main() {
       expect(() => parse('(5 + 3'), throwsA(isA<ParseException>()));
     });
 
+    test('extra right paren', () {
+      expect(() => parse('(5 + 3))'), throwsA(isA<ParseException>()));
+    });
+
     test('missing function argument closing paren', () {
       expect(() => parse('sin(5'), throwsA(isA<ParseException>()));
     });
@@ -390,6 +408,10 @@ void main() {
 
     test('double negative: --1', () {
       expect(() => parse('--1'), throwsA(isA<ParseException>()));
+    });
+
+    test('invalid numeric literal: 1e+', () {
+      expect(() => parse('1e+'), throwsA(isA<ParseException>()));
     });
   });
 }

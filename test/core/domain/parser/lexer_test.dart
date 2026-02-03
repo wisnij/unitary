@@ -62,13 +62,195 @@ void main() {
       expect(types(tokens), [TokenType.number]);
       expect(tokens[0].literal, 50.0);
     });
+  });
 
-    test('malformed scientific notation throws', () {
-      expect(() => lex('1.5e'), throwsA(isA<LexException>()));
+  group('Lexer: scientific notation edge cases', () {
+    // When 'e'/'E' is not followed by [optional sign] + digits,
+    // it becomes a separate identifier token.
+
+    test('1e without digits: number then identifier', () {
+      final tokens = lex('1e');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
     });
 
-    test('malformed scientific notation with sign only', () {
-      expect(() => lex('1.5e+'), throwsA(isA<LexException>()));
+    test('1E without digits: number then identifier', () {
+      final tokens = lex('1E');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'E');
+    });
+
+    test('1e+2 is valid scientific notation', () {
+      final tokens = lex('1e+2');
+      expect(types(tokens), [TokenType.number]);
+      expect(tokens[0].literal, 100.0);
+    });
+
+    test('1e2 is valid scientific notation', () {
+      final tokens = lex('1e2');
+      expect(types(tokens), [TokenType.number]);
+      expect(tokens[0].literal, 100.0);
+    });
+
+    test('1e-2 is valid scientific notation', () {
+      final tokens = lex('1e-2');
+      expect(types(tokens), [TokenType.number]);
+      expect(tokens[0].literal, 0.01);
+    });
+
+    test('1e+ space 2: space breaks scientific notation', () {
+      // '1e+ 2' → number(1), identifier(e), plus, number(2)
+      final tokens = lex('1e+ 2');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.plus,
+        TokenType.number,
+      ]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
+      expect(tokens[3].literal, 2.0);
+    });
+
+    test('1e space +2: space breaks scientific notation', () {
+      // '1e +2' → number(1), identifier(e), plus, number(2)
+      final tokens = lex('1e +2');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.plus,
+        TokenType.number,
+      ]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
+      expect(tokens[3].literal, 2.0);
+    });
+
+    test('1e- space 2: space breaks scientific notation', () {
+      final tokens = lex('1e- 2');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.minus,
+        TokenType.number,
+      ]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
+      expect(tokens[3].literal, 2.0);
+    });
+
+    test('1e space -2: space breaks scientific notation', () {
+      final tokens = lex('1e -2');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.minus,
+        TokenType.number,
+      ]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
+      expect(tokens[3].literal, 2.0);
+    });
+
+    test('1e+: sign without digit produces three tokens', () {
+      // '1e+' → number(1), identifier(e), plus
+      final tokens = lex('1e+');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.plus,
+      ]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
+    });
+
+    test('1e-: sign without digit produces three tokens', () {
+      final tokens = lex('1e-');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.minus,
+      ]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
+    });
+
+    test('1.5e without digits: decimal then identifier', () {
+      final tokens = lex('1.5e');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 1.5);
+      expect(tokens[1].literal, 'e');
+    });
+
+    test('1.5e+ without digit: three tokens', () {
+      final tokens = lex('1.5e+');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.plus,
+      ]);
+      expect(tokens[0].literal, 1.5);
+      expect(tokens[1].literal, 'e');
+    });
+
+    test('.5e without digits: decimal then identifier', () {
+      final tokens = lex('.5e');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 0.5);
+      expect(tokens[1].literal, 'e');
+    });
+
+    test('.5e2 is valid scientific notation', () {
+      final tokens = lex('.5e2');
+      expect(types(tokens), [TokenType.number]);
+      expect(tokens[0].literal, 50.0);
+    });
+
+    test('1e2e: scientific notation followed by identifier', () {
+      // '1e2' is number(100), then 'e' starts new identifier
+      final tokens = lex('1e2e');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 100.0);
+      expect(tokens[1].literal, 'e');
+    });
+
+    test('1e+2e: scientific notation followed by identifier', () {
+      // '1e+2' is number(100), then 'e' starts new identifier
+      final tokens = lex('1e+2e');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 100.0);
+      expect(tokens[1].literal, 'e');
+    });
+
+    test('1e2m: scientific notation followed by identifier', () {
+      final tokens = lex('1e2m');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 100.0);
+      expect(tokens[1].literal, 'm');
+    });
+
+    test('1em: e followed by letter is identifier', () {
+      // '1' is number, 'em' is identifier (not scientific notation)
+      final tokens = lex('1em');
+      expect(types(tokens), [TokenType.number, TokenType.identifier]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'em');
+    });
+
+    test('1e+m: e+ not followed by digit', () {
+      // '1' is number, 'e' is identifier, '+' is plus, 'm' is identifier
+      final tokens = lex('1e+m');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.identifier,
+        TokenType.plus,
+        TokenType.identifier,
+      ]);
+      expect(tokens[0].literal, 1.0);
+      expect(tokens[1].literal, 'e');
+      expect(tokens[3].literal, 'm');
     });
   });
 

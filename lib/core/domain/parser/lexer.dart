@@ -124,22 +124,27 @@ class Lexer {
       }
     }
 
-    // Scientific notation.
+    // Scientific notation: only if 'e'/'E' is immediately followed by
+    // an optional sign and at least one digit (no intervening whitespace).
     if (!_isAtEnd() && (_peek() == 'e' || _peek() == 'E')) {
-      _advance();
-      if (!_isAtEnd() && (_peek() == '+' || _peek() == '-')) {
-        _advance();
+      // Look ahead to validate the pattern before consuming 'e'.
+      var lookahead = _current + 1;
+      if (lookahead < _source.length &&
+          (_source[lookahead] == '+' || _source[lookahead] == '-')) {
+        lookahead++;
       }
-      if (_isAtEnd() || !_isDigit(_peek())) {
-        throw LexException(
-          'Invalid scientific notation',
-          line: startLine,
-          column: startColumn,
-        );
+      // Only parse as scientific notation if there's at least one digit.
+      if (lookahead < _source.length && _isDigit(_source[lookahead])) {
+        _advance(); // consume 'e' or 'E'
+        if (!_isAtEnd() && (_peek() == '+' || _peek() == '-')) {
+          _advance(); // consume sign
+        }
+        while (!_isAtEnd() && _isDigit(_peek())) {
+          _advance();
+        }
       }
-      while (!_isAtEnd() && _isDigit(_peek())) {
-        _advance();
-      }
+      // If pattern doesn't match, 'e' is not consumed and will be lexed
+      // as a separate identifier token.
     }
 
     final lexeme = _source.substring(_start, _current);

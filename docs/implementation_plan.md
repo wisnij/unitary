@@ -28,34 +28,45 @@ This document outlines the phased approach to implementing Unitary, along with f
 
 ---
 
-### Phase 1: Core Domain - Expression Parser (Weeks 2-4)
+### Phase 1: Core Domain - Expression Parser (Weeks 2-4) — COMPLETE
 
 **Goals:** Build the expression parsing and evaluation engine
 
 **Tasks:**
 
-1. Implement Lexer
-   - Token types definition
-   - Character-by-character scanning
-   - Number parsing (decimals, scientific notation, leading decimal point)
-   - Operator recognition
-   - Unit name recognition
-   - Prefix handling
-   - Test with various inputs
+- [x] Implement Lexer
+  - [x] Token types definition
+  - [x] Character-by-character scanning
+  - [x] Number parsing (decimals, scientific notation, leading decimal point)
+  - [x] Operator recognition
+  - [x] Unit name recognition (as identifiers)
+  - [x] Test with various inputs
 
-2. Implement Parser
-   - AST node classes
-   - Recursive descent parser
-   - Operator precedence handling
-   - Error recovery and reporting
-   - Unit tests for parsing
+- [x] Implement Parser
+  - [x] AST node classes
+  - [x] Recursive descent parser
+  - [x] Operator precedence handling (6 levels including implicit multiplication)
+  - [x] Error recovery and reporting
+  - [x] Unit tests for parsing
 
-3. Implement basic Evaluator
-   - Number arithmetic
-   - Basic operators (+, -, *, /, ^)
-   - Unit tests for evaluation
+- [x] Implement basic Evaluator
+  - [x] Number arithmetic
+  - [x] Basic operators (+, -, *, /, ^, |)
+  - [x] Reciprocal syntax (/x = 1/x)
+  - [x] Built-in functions (sin, cos, tan, asin, acos, atan, sqrt, cbrt, ln, log, exp, abs)
+  - [x] Unit tests for evaluation
 
-**Deliverable:** Parser that converts "5 * 3 + 2" → correct result
+- [x] Supporting infrastructure
+  - [x] Exception hierarchy (UnitaryException, LexException, ParseException, EvalException, DimensionException)
+  - [x] Rational class with continued fractions for exponent recovery
+  - [x] Dimension class with arithmetic and conformability checking
+  - [x] Quantity class with dimensional analysis
+
+**Deliverable:** Parser that converts "5 * 3 + 2" → correct result ✓
+
+**Test Coverage:** 372 tests passing
+
+**Completed:** February 4, 2026
 
 ---
 

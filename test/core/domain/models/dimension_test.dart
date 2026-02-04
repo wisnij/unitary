@@ -7,12 +7,12 @@ void main() {
   group('Dimension construction', () {
     test('creates from exponent map', () {
       final d = Dimension({'m': 1, 's': -2});
-      expect(d.primitiveExponents, {'m': 1, 's': -2});
+      expect(d.units, {'m': 1, 's': -2});
     });
 
     test('strips zero exponents', () {
       final d = Dimension({'m': 1, 's': 0, 'kg': 0});
-      expect(d.primitiveExponents, {'m': 1});
+      expect(d.units, {'m': 1});
     });
 
     test('dimensionless from empty map', () {
@@ -23,7 +23,7 @@ void main() {
     test('dimensionless constructor', () {
       final d = Dimension.dimensionless();
       expect(d.isDimensionless, isTrue);
-      expect(d.primitiveExponents, isEmpty);
+      expect(d.units, isEmpty);
     });
 
     test('all-zero exponents becomes dimensionless', () {
@@ -33,10 +33,7 @@ void main() {
 
     test('exponent map is unmodifiable', () {
       final d = Dimension({'m': 1});
-      expect(
-        () => (d.primitiveExponents as Map)['m'] = 2,
-        throwsUnsupportedError,
-      );
+      expect(() => (d.units as Map)['m'] = 2, throwsUnsupportedError);
     });
   });
 
@@ -195,35 +192,35 @@ void main() {
     });
   });
 
-  group('Dimension.isCompatibleWith', () {
-    test('same dimensions are compatible', () {
+  group('Dimension.isConformableWith', () {
+    test('same dimensions are conformable', () {
       final a = Dimension({'m': 1, 's': -2});
       final b = Dimension({'m': 1, 's': -2});
-      expect(a.isCompatibleWith(b), isTrue);
+      expect(a.isConformableWith(b), isTrue);
     });
 
-    test('different dimensions are not compatible', () {
+    test('different dimensions are not conformable', () {
       final a = Dimension({'m': 1});
       final b = Dimension({'s': 1});
-      expect(a.isCompatibleWith(b), isFalse);
+      expect(a.isConformableWith(b), isFalse);
     });
 
-    test('different exponents are not compatible', () {
+    test('different exponents are not conformable', () {
       final a = Dimension({'m': 1});
       final b = Dimension({'m': 2});
-      expect(a.isCompatibleWith(b), isFalse);
+      expect(a.isConformableWith(b), isFalse);
     });
 
-    test('dimensionless is compatible with dimensionless', () {
+    test('dimensionless is conformable with dimensionless', () {
       expect(
-        Dimension.dimensionless().isCompatibleWith(Dimension.dimensionless()),
+        Dimension.dimensionless().isConformableWith(Dimension.dimensionless()),
         isTrue,
       );
     });
 
-    test('dimensionless is not compatible with dimensioned', () {
+    test('dimensionless is not conformable with dimensioned', () {
       expect(
-        Dimension.dimensionless().isCompatibleWith(Dimension({'m': 1})),
+        Dimension.dimensionless().isConformableWith(Dimension({'m': 1})),
         isFalse,
       );
     });

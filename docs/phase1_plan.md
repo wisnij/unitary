@@ -60,7 +60,7 @@ These decisions were made during the Phase 1 design review:
    unit identifiers treated as primitive (creating their own dimension).  This
    avoids an interface change in Phase 2.
 
-7. **Dimension exponents are `int`:** The `Dimension.primitiveExponents` map is
+7. **Dimension exponents are `int`:** The `Dimension.units` map is
    `Map<String, int>`.  Dimension exponents are always integers by definition;
    the `Quantity.power()` validation with `Rational` enforces this.
 
@@ -191,7 +191,7 @@ Represents a dimension as a product of primitive units with integer exponents.
 
 **Fields:**
 
-- `Map<String, int> primitiveExponents` — unmodifiable; zero exponents are
+- `Map<String, int> units` — unmodifiable; zero exponents are
   stripped on construction.
 
 **Constructors:**
@@ -208,7 +208,7 @@ Represents a dimension as a product of primitive units with integer exponents.
   `exponent.numerator`, then check divisibility by `exponent.denominator`.
   Throws `DimensionException` if any result is not evenly divisible.  Returns
   the `Dimension` with divided exponents.
-- `bool isCompatibleWith(Dimension other)` — map equality.
+- `bool isConformableWith(Dimension other)` — map equality.
 - `bool get isDimensionless` — empty map check.
 - `String canonicalRepresentation()` — sorted alphabetically, positive
   exponents in numerator, negative in denominator.  E.g., `kg * m / s^2`.
@@ -224,7 +224,7 @@ Represents a dimension as a product of primitive units with integer exponents.
 - `powerRational` error: `{m: 3}.powerRational(Rational(1, 2))` throws
   `DimensionException`.
 - Zero exponent stripping: `{m: 1, s: 0}` becomes `{m: 1}`.
-- `isCompatibleWith`: same dimensions match, different don't.
+- `isConformableWith`: same dimensions match, different don't.
 - Equality: `Dimension({m: 1}) == Dimension({m: 1})`.
 - `canonicalRepresentation`: verify formatting.
 

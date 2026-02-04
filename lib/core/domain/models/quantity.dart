@@ -14,8 +14,7 @@ class Quantity {
   /// The numeric value of this quantity.
   final double value;
 
-  /// The dimension of this quantity (a map of primitive unit IDs to
-  /// exponents).
+  /// The dimension of this quantity (a map of unit IDs to exponents).
   final Dimension dimension;
 
   /// Epsilon for floating-point comparisons.
@@ -56,7 +55,7 @@ class Quantity {
 
   /// Whether this quantity has the same dimension as [other].
   bool isConformableWith(Quantity other) =>
-      dimension.isCompatibleWith(other.dimension);
+      dimension.isConformableWith(other.dimension);
 
   // -- Arithmetic operations --
 
@@ -155,7 +154,7 @@ class Quantity {
   /// Uses relative tolerance for large values and absolute tolerance for
   /// small values.  Returns `false` if dimensions differ.
   bool approximatelyEquals(Quantity other, {double tolerance = epsilon}) {
-    if (!dimension.isCompatibleWith(other.dimension)) return false;
+    if (!dimension.isConformableWith(other.dimension)) return false;
 
     final maxVal = math.max(value.abs(), other.value.abs());
     final effectiveTolerance = maxVal > 1.0 ? tolerance * maxVal : tolerance;
@@ -173,7 +172,7 @@ class Quantity {
   // -- Internal --
 
   void _requireConformable(Quantity other, String operation) {
-    if (!dimension.isCompatibleWith(other.dimension)) {
+    if (!dimension.isConformableWith(other.dimension)) {
       throw DimensionException(
         'Cannot $operation quantities with different dimensions: '
         '${dimension.canonicalRepresentation()} and '

@@ -24,11 +24,11 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 
 ### Step 2: `test/core/domain/models/dimension_test.dart` THEN `lib/core/domain/models/dimension.dart`
 
-- `Dimension` with `Map<String, int> primitiveExponents` (unmodifiable, zeros stripped in constructor)
+- `Dimension` with `Map<String, int> units` (unmodifiable, zeros stripped in constructor)
 - `Dimension.dimensionless()` — empty map
 - `multiply(other)`, `divide(other)` — add/subtract exponent maps
 - `power(num)` — multiply exponents, validate results are integral, throw `DimensionException` if not
-- `isDimensionless`, `isCompatibleWith(other)`, `canonicalRepresentation()`
+- `isDimensionless`, `isConformableWith(other)`, `canonicalRepresentation()`
 - `==` / `hashCode` — deep map equality with sorted deterministic hash
 
 ### Step 3: `test/core/domain/models/rational_test.dart` THEN `lib/core/domain/models/rational.dart`

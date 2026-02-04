@@ -62,7 +62,6 @@ void main() {
     });
 
     test('-2^3 = -(2^3) = -8', () {
-      // New grammar: unary binds lower than ^, so -2^3 = -(2^3) = -8
       final result = eval('-2^3');
       expect(result.value, -8.0);
     });
@@ -73,7 +72,6 @@ void main() {
     });
 
     test('-2^2 = -(2^2) = -4', () {
-      // New grammar: unary binds lower than ^, so -2^2 = -(2^2) = -4
       final result = eval('-2^2');
       expect(result.value, -4.0);
     });
@@ -167,8 +165,7 @@ void main() {
     });
 
     test('10 m / 2 s → Quantity(5, {m: 1, s: -1})', () {
-      // New grammar: implicit multiply is higher precedence than /,
-      // so 10 m / 2 s = (10*m) / (2*s) = 5 m/s
+      // implicit multiply is higher precedence than /
       final result = eval('10 m / 2 s');
       expect(result.value, 5.0);
       expect(result.dimension, Dimension({'m': 1, 's': -1}));
@@ -310,8 +307,7 @@ void main() {
     });
 
     test('5 m / 2 s → Quantity(2.5, {m: 1, s: -1})', () {
-      // New grammar: implicit multiply is higher precedence than /,
-      // so 5 m / 2 s = (5*m) / (2*s) = 2.5 m/s
+      // implicit multiply is higher precedence than /
       final result = eval('5 m / 2 s');
       expect(result.value, 2.5);
       expect(result.dimension, Dimension({'m': 1, 's': -1}));
@@ -322,10 +318,9 @@ void main() {
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
-    test('unknown function throws EvalException', () {
+    test('unit(expr) = unit * expr', () {
       // 'foo' is not a builtin, so foo(1) parses as foo * 1
       // which evaluates to Quantity(1, {foo: 1}), not an error.
-      // Let's test a different scenario.
       final result = eval('foo(1)');
       expect(result.value, 1.0);
       expect(result.dimension, Dimension({'foo': 1}));

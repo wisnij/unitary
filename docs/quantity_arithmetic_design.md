@@ -321,7 +321,7 @@ enum NotationStyle {
 
 ```dart
 Quantity add(Quantity other) {
-  if (!dimension.isCompatibleWith(other.dimension)) {
+  if (!dimension.isConformableWith(other.dimension)) {
     throw DimensionException(
       'Cannot add quantities with different dimensions: '
       '${dimension.canonicalRepresentation()} and '
@@ -333,7 +333,7 @@ Quantity add(Quantity other) {
 }
 
 Quantity subtract(Quantity other) {
-  if (!dimension.isCompatibleWith(other.dimension)) {
+  if (!dimension.isConformableWith(other.dimension)) {
     throw DimensionException(
       'Cannot subtract quantities with different dimensions: '
       '${dimension.canonicalRepresentation()} and '
@@ -510,7 +510,7 @@ Quantity power(num exponent) {
   // Check that all dimension exponents are divisible by the denominator
   // For example: (m^2)^(1/2) is valid because 2 is divisible by 2
   // But (m^3)^(1/2) is invalid because 3 is not divisible by 2
-  for (var entry in dimension.primitiveExponents.entries) {
+  for (var entry in dimension.units.entries) {
     final dimExp = entry.value;
 
     // Check if dimExp * numerator is divisible by denominator
@@ -591,7 +591,7 @@ double getConversionFactor(Unit fromUnit, Unit toUnit, UnitRepository repo) {
   final fromDim = fromUnit.getDimension(repo);
   final toDim = toUnit.getDimension(repo);
 
-  if (!fromDim.isCompatibleWith(toDim)) {
+  if (!fromDim.isConformableWith(toDim)) {
     throw DimensionException(
       'Cannot convert between non-conformable units: '
       '${fromUnit.id} (${fromDim.canonicalRepresentation()}) and '
@@ -640,7 +640,7 @@ Quantity convertTo(Unit targetUnit, UnitRepository repo) {
 
     // Check conformability
     final targetDim = targetUnit.getDimension(repo);
-    if (!dimension.isCompatibleWith(targetDim)) {
+    if (!dimension.isConformableWith(targetDim)) {
       throw DimensionException(
         'Cannot convert to non-conformable unit: '
         '${dimension.canonicalRepresentation()} to ${targetUnit.id}'

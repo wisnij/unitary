@@ -281,12 +281,16 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: January 31, 2026*
+*Last Updated: February 4, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
 - *Quantity Class & Arithmetic (January 30, 2026)*
+- *Lexer/Parser Grammar Redesign (February 1, 2026)*
 
 *Implementation Progress:*
 
 - *Phase 0: Project Setup completed (January 31, 2026)*
+- *Phase 1: Core Domain - Expression Parser completed (February 4, 2026)*
+  - 372 tests passing
+  - Lexer, Parser, Evaluator, Dimension, Quantity, Rational all implemented

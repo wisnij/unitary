@@ -270,27 +270,27 @@ class Dimension {
   // Map from primitive unit ID to exponent
   // e.g., {m: 1, s: -1} represents velocity
   // e.g., {m: 1, s: -2} represents acceleration
-  final Map<String, num> primitiveExponents;
+  final Map<String, num> units;
 
   // Constructor for dimensionless quantities
-  Dimension.dimensionless() : primitiveExponents = {};
+  Dimension.dimensionless() : units = {};
 
   // Constructor from primitive exponents
-  Dimension(this.primitiveExponents);
+  Dimension(this.units);
 
   // Check if two dimensions are the same (for conformability check)
-  bool isCompatibleWith(Dimension other) {
-    if (primitiveExponents.length != other.primitiveExponents.length) return false;
-    for (var entry in primitiveExponents.entries) {
-      if (other.primitiveExponents[entry.key] != entry.value) return false;
+  bool isConformableWith(Dimension other) {
+    if (units.length != other.units.length) return false;
+    for (var entry in units.entries) {
+      if (other.units[entry.key] != entry.value) return false;
     }
     return true;
   }
 
   // Multiply dimensions: add exponents
   Dimension multiply(Dimension other) {
-    final result = Map<String, num>.from(primitiveExponents);
-    for (var entry in other.primitiveExponents.entries) {
+    final result = Map<String, num>.from(units);
+    for (var entry in other.units.entries) {
       result[entry.key] = (result[entry.key] ?? 0) + entry.value;
     }
     // Remove zero exponents
@@ -300,8 +300,8 @@ class Dimension {
 
   // Divide dimensions: subtract exponents
   Dimension divide(Dimension other) {
-    final result = Map<String, num>.from(primitiveExponents);
-    for (var entry in other.primitiveExponents.entries) {
+    final result = Map<String, num>.from(units);
+    for (var entry in other.units.entries) {
       result[entry.key] = (result[entry.key] ?? 0) - entry.value;
     }
     result.removeWhere((key, value) => value == 0);
@@ -311,13 +311,13 @@ class Dimension {
   // Raise dimension to a power: multiply all exponents
   Dimension power(num exponent) {
     final result = <String, num>{};
-    for (var entry in primitiveExponents.entries) {
+    for (var entry in units.entries) {
       result[entry.key] = entry.value * exponent;
     }
     return Dimension(result);
   }
 
-  bool get isDimensionless => primitiveExponents.isEmpty;
+  bool get isDimensionless => units.isEmpty;
 
   // Canonical string representation: primitives with positive exponents / primitives with negative exponents
   // e.g., "m / s^2" for acceleration, "kg * m / s^2" for force, "1 / s" for frequency
@@ -328,7 +328,7 @@ class Dimension {
     final negative = <String>[];
 
     // Sort primitives alphabetically by their ID
-    final sortedEntries = primitiveExponents.entries.toList()
+    final sortedEntries = units.entries.toList()
       ..sort((a, b) => a.key.compareTo(b.key));
 
     for (var entry in sortedEntries) {
@@ -364,10 +364,10 @@ class Dimension {
     if (identical(this, other)) return true;
     if (other is! Dimension) return false;
 
-    if (primitiveExponents.length != other.primitiveExponents.length) return false;
+    if (units.length != other.units.length) return false;
 
-    for (var entry in primitiveExponents.entries) {
-      if (other.primitiveExponents[entry.key] != entry.value) return false;
+    for (var entry in units.entries) {
+      if (other.units[entry.key] != entry.value) return false;
     }
     return true;
   }
@@ -376,7 +376,7 @@ class Dimension {
   int get hashCode {
     // Combine hashes of all entries
     int hash = 0;
-    for (var entry in primitiveExponents.entries) {
+    for (var entry in units.entries) {
       hash ^= entry.key.hashCode ^ entry.value.hashCode;
     }
     return hash;

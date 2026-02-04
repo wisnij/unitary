@@ -211,15 +211,15 @@ Quantity _evaluateBuiltin(String name, List<Quantity> args) {
     case 'sin':
       _requireArgCount(name, args, 1);
       _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(dartMathSin(args[0].value));
+      return Quantity.dimensionless(math.sin(args[0].value));
     case 'cos':
       _requireArgCount(name, args, 1);
       _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(dartMathCos(args[0].value));
+      return Quantity.dimensionless(math.cos(args[0].value));
     case 'tan':
       _requireArgCount(name, args, 1);
       _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(dartMathTan(args[0].value));
+      return Quantity.dimensionless(math.tan(args[0].value));
     case 'asin':
       _requireArgCount(name, args, 1);
       _requireDimensionless(name, args[0]);
@@ -228,7 +228,7 @@ Quantity _evaluateBuiltin(String name, List<Quantity> args) {
           'asin requires argument in range [-1, 1], got ${args[0].value}',
         );
       }
-      return Quantity.dimensionless(dartMathAsin(args[0].value));
+      return Quantity.dimensionless(math.asin(args[0].value));
     case 'acos':
       _requireArgCount(name, args, 1);
       _requireDimensionless(name, args[0]);
@@ -237,11 +237,11 @@ Quantity _evaluateBuiltin(String name, List<Quantity> args) {
           'acos requires argument in range [-1, 1], got ${args[0].value}',
         );
       }
-      return Quantity.dimensionless(dartMathAcos(args[0].value));
+      return Quantity.dimensionless(math.acos(args[0].value));
     case 'atan':
       _requireArgCount(name, args, 1);
       _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(dartMathAtan(args[0].value));
+      return Quantity.dimensionless(math.atan(args[0].value));
     case 'sqrt':
       _requireArgCount(name, args, 1);
       return args[0].power(0.5);
@@ -256,11 +256,11 @@ Quantity _evaluateBuiltin(String name, List<Quantity> args) {
           '$name requires positive argument, got ${args[0].value}',
         );
       }
-      return Quantity.dimensionless(dartMathLog(args[0].value));
+      return Quantity.dimensionless(math.log(args[0].value));
     case 'exp':
       _requireArgCount(name, args, 1);
       _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(dartMathExp(args[0].value));
+      return Quantity.dimensionless(math.exp(args[0].value));
     case 'abs':
       _requireArgCount(name, args, 1);
       return args[0].abs();
@@ -285,13 +285,3 @@ void _requireDimensionless(String name, Quantity arg) {
     );
   }
 }
-
-// Wrappers for dart:math functions.
-double dartMathSin(double x) => math.sin(x);
-double dartMathCos(double x) => math.cos(x);
-double dartMathTan(double x) => math.tan(x);
-double dartMathAsin(double x) => math.asin(x);
-double dartMathAcos(double x) => math.acos(x);
-double dartMathAtan(double x) => math.atan(x);
-double dartMathLog(double x) => math.log(x);
-double dartMathExp(double x) => math.exp(x);

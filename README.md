@@ -46,13 +46,13 @@ structure, linting, and test infrastructure in place.
 
 ### Design Documents
 
-- **[Requirements](docs/requirements.md)** - Complete feature specifications and user requirements
-- **[Terminology](docs/terminology.md)** - Definitions of key terms used throughout the project
-- **[Core Architecture](docs/architecture.md)** - Technical design of data models, parser, and core systems
-- **[Quantity Arithmetic Design](docs/quantity_arithmetic_design.md)** - Detailed design for Quantity class, arithmetic operations, and conversion algorithms
-- **[Implementation Plan](docs/implementation_plan.md)** - Phased development roadmap, risks, and success metrics
-- **[Development Best Practices](docs/best_practices.md)** - Coding standards and workflow guidelines
-- **[Design Progress](docs/design_progress.md)** - Tracker for completed and in-progress design work
+- **[Requirements](doc/requirements.md)** - Complete feature specifications and user requirements
+- **[Terminology](doc/terminology.md)** - Definitions of key terms used throughout the project
+- **[Core Architecture](doc/architecture.md)** - Technical design of data models, parser, and core systems
+- **[Quantity Arithmetic Design](doc/quantity_arithmetic_design.md)** - Detailed design for Quantity class, arithmetic operations, and conversion algorithms
+- **[Implementation Plan](doc/implementation_plan.md)** - Phased development roadmap, risks, and success metrics
+- **[Development Best Practices](doc/best_practices.md)** - Coding standards and workflow guidelines
+- **[Design Progress](doc/design_progress.md)** - Tracker for completed and in-progress design work
 
 ### Quick Links
 
@@ -90,7 +90,7 @@ structure, linting, and test infrastructure in place.
 
 ```
 unitary/
-├── docs/                          # All design documentation
+├── doc/                           # All design documentation
 │   ├── requirements.md
 │   ├── terminology.md
 │   ├── architecture.md

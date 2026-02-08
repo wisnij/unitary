@@ -5,8 +5,6 @@ import '../models/unit_repository.dart';
 /// Registers all built-in units into the given [repo].
 ///
 /// Phase 2 includes length (10), mass (6), and time (6) units.
-/// All non-primitive units use direct-to-primitive conversion factors
-/// from NIST/SI reference values to minimize floating-point chain errors.
 void registerBuiltinUnits(UnitRepository repo) {
   _registerLengthUnits(repo);
   _registerMassUnits(repo);
@@ -54,21 +52,21 @@ void _registerLengthUnits(UnitRepository repo) {
     const Unit(
       id: 'in',
       aliases: ['inch'],
-      definition: LinearDefinition(factor: 0.0254, baseUnitId: 'm'),
+      definition: LinearDefinition(factor: 2.54, baseUnitId: 'cm'),
     ),
   );
   repo.register(
     const Unit(
       id: 'ft',
       aliases: ['foot', 'feet'],
-      definition: LinearDefinition(factor: 0.3048, baseUnitId: 'm'),
+      definition: LinearDefinition(factor: 12.0, baseUnitId: 'inch'),
     ),
   );
   repo.register(
     const Unit(
       id: 'yd',
       aliases: ['yard'],
-      definition: LinearDefinition(factor: 0.9144, baseUnitId: 'm'),
+      definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
     ),
   );
   repo.register(
@@ -107,21 +105,21 @@ void _registerMassUnits(UnitRepository repo) {
     const Unit(
       id: 'mg',
       aliases: ['milligram'],
-      definition: LinearDefinition(factor: 1e-6, baseUnitId: 'kg'),
+      definition: LinearDefinition(factor: 1e-3, baseUnitId: 'g'),
     ),
   );
   repo.register(
     const Unit(
       id: 'lb',
       aliases: ['pound'],
-      definition: LinearDefinition(factor: 0.45359237, baseUnitId: 'kg'),
+      definition: LinearDefinition(factor: 453.59237, baseUnitId: 'g'),
     ),
   );
   repo.register(
     const Unit(
       id: 'oz',
       aliases: ['ounce'],
-      definition: LinearDefinition(factor: 0.028349523125, baseUnitId: 'kg'),
+      definition: LinearDefinition(factor: 28.349523125, baseUnitId: 'g'),
     ),
   );
   repo.register(
@@ -160,20 +158,20 @@ void _registerTimeUnits(UnitRepository repo) {
     const Unit(
       id: 'hr',
       aliases: ['hour'],
-      definition: LinearDefinition(factor: 3600, baseUnitId: 's'),
+      definition: LinearDefinition(factor: 60, baseUnitId: 'min'),
     ),
   );
   repo.register(
     const Unit(
       id: 'day',
-      definition: LinearDefinition(factor: 86400, baseUnitId: 's'),
+      definition: LinearDefinition(factor: 24, baseUnitId: 'hour'),
     ),
   );
   repo.register(
     const Unit(
       id: 'week',
       aliases: ['wk'],
-      definition: LinearDefinition(factor: 604800, baseUnitId: 's'),
+      definition: LinearDefinition(factor: 7, baseUnitId: 'day'),
     ),
   );
 }

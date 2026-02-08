@@ -255,13 +255,14 @@ The following areas have been identified but need deeper design work:
 When resuming design work, recommended order of priority:
 
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
-2. **Worksheet System** - Major user-facing feature
-3. **GNU Units Database Import** - Needed before implementation can begin
-4. **UI/UX Design** - Should be fleshed out before coding UI
-5. **State Management Details** - Needed early in implementation
-6. **Currency Rate Management** - Can be added after core features work
-7. **Testing Strategy** - Define before/during implementation
-8. **Error Handling Details** - Refine during implementation
+2. ✅ ~~**Unit System Foundation**~~ - **DESIGN COMPLETE** (see phase2_plan.md) — implementation in progress
+3. **Worksheet System** - Major user-facing feature
+4. **GNU Units Database Import** - Needed before implementation can begin
+5. **UI/UX Design** - Should be fleshed out before coding UI
+6. **State Management Details** - Needed early in implementation
+7. **Currency Rate Management** - Can be added after core features work
+8. **Testing Strategy** - Define before/during implementation
+9. **Error Handling Details** - Refine during implementation
 
 ---
 
@@ -281,12 +282,13 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 4, 2026*
+*Last Updated: February 6, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
 - *Quantity Class & Arithmetic (January 30, 2026)*
 - *Lexer/Parser Grammar Redesign (February 1, 2026)*
+- *Phase 2: Unit System Foundation (February 6, 2026)*
 
 *Implementation Progress:*
 
@@ -294,3 +296,4 @@ Questions that arose during design but haven't been resolved:
 - *Phase 1: Core Domain - Expression Parser completed (February 4, 2026)*
   - 372 tests passing
   - Lexer, Parser, Evaluator, Dimension, Quantity, Rational all implemented
+- *Phase 2: Unit System Foundation — in progress*

@@ -70,35 +70,54 @@ This document outlines the phased approach to implementing Unitary, along with f
 
 ---
 
-### Phase 2: Unit System Foundation (Weeks 5-7)
+### Phase 2: Unit System Foundation (Weeks 5-7) — IN PROGRESS
 
-**Goals:** Dimension system and unit definitions
+**Goals:** Build the unit definition system and integrate it with the evaluator
 
 **Tasks:**
 
-1. Implement Dimension class
-   - Primitive dimension representation
-   - Dimensional arithmetic
-   - Conformability checking
-   - Comprehensive unit tests
+- [ ] Implement Unit class and UnitDefinition hierarchy
+  - [ ] Unit class with id, aliases, description, definition
+  - [ ] UnitDefinition base class with toBase/fromBase/getDimension contract
+  - [ ] PrimitiveUnitDefinition (identity conversion, self-referencing dimension)
+  - [ ] LinearDefinition (factor-based conversion with recursive resolution)
+  - [ ] Unit tests for all definition types
 
-2. Implement Unit and Quantity classes
-   - Linear conversion definitions
-   - Quantity arithmetic with dimensional analysis
-   - Unit tests for conversions
+- [ ] Implement UnitRepository
+  - [ ] Registration with alias mapping and collision detection
+  - [ ] Lookup by name/alias with plural stripping fallback
+  - [ ] Factory constructor with built-in units
+  - [ ] Unit tests for registration, lookup, and plural stripping
 
-3. Parse GNU Units database
-   - Write parser for GNU Units format
-   - Extract basic units (length, mass, time)
-   - Convert to internal JSON format
-   - Store as asset
+- [ ] Implement built-in unit definitions
+  - [ ] Length units (10): m, km, cm, mm, um, in, ft, yd, mi, nmi
+  - [ ] Mass units (6): kg, g, mg, lb, oz, t
+  - [ ] Time units (6): s, ms, min, hr, day, week
+  - [ ] Unit tests for conversion factors, aliases, and dimensions
 
-4. Implement UnitRepository
-   - Load units from assets
-   - Unit lookup by name/alias
-   - Dimension filtering
+- [ ] Implement reduce() and convert() utilities
+  - [ ] reduce(): resolve non-primitive dimensions to primitives
+  - [ ] convert(): reduce + fromBase with conformability check
+  - [ ] Unit tests for reduction, conversion, round-trips, and errors
+
+- [ ] Integrate with evaluator
+  - [ ] Add nullable repo field to EvalContext (backward compatible)
+  - [ ] UnitNode resolves to base units when repo is present
+  - [ ] Fallback to raw dimension for null repo or unknown units
+  - [ ] Unit tests for unit-aware evaluation
+  - [ ] Verify all 372 Phase 1 tests still pass
+
+- [ ] Integrate with ExpressionParser
+  - [ ] Add optional repo parameter to ExpressionParser
+  - [ ] Wire repo through to EvalContext
+  - [ ] Deliverable test: parse "5 ft" → evaluate → convert
+  - [ ] End-to-end unit tests
+
+- [ ] Update documentation
 
 **Deliverable:** Can convert "5 feet" to meters programmatically
+
+**Detailed Plan:** See [Phase 2 Plan](phase2_plan.md)
 
 ---
 

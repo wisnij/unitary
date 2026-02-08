@@ -255,7 +255,7 @@ The following areas have been identified but need deeper design work:
 When resuming design work, recommended order of priority:
 
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
-2. ✅ ~~**Unit System Foundation**~~ - **DESIGN COMPLETE** (see phase2_plan.md) — implementation in progress
+2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
 3. **Worksheet System** - Major user-facing feature
 4. **GNU Units Database Import** - Needed before implementation can begin
 5. **UI/UX Design** - Should be fleshed out before coding UI
@@ -282,7 +282,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 6, 2026*
+*Last Updated: February 7, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -294,6 +294,8 @@ Questions that arose during design but haven't been resolved:
 
 - *Phase 0: Project Setup completed (January 31, 2026)*
 - *Phase 1: Core Domain - Expression Parser completed (February 4, 2026)*
-  - 372 tests passing
+  - 373 tests passing
   - Lexer, Parser, Evaluator, Dimension, Quantity, Rational all implemented
-- *Phase 2: Unit System Foundation — in progress*
+- *Phase 2: Unit System Foundation completed (February 7, 2026)*
+  - 506 tests passing (133 new)
+  - Unit, UnitDefinition, UnitRepository, built-in units, reduce/convert, evaluator integration

@@ -3,13 +3,16 @@ import 'dart:math' as math;
 import '../errors.dart';
 import '../models/dimension.dart';
 import '../models/quantity.dart';
+import '../models/unit_repository.dart';
 import 'token.dart';
 
 /// Evaluation context passed to AST nodes during evaluation.
-///
-/// Empty for Phase 1.  Will hold UnitRepository in Phase 2.
 class EvalContext {
-  const EvalContext();
+  /// Unit repository for resolving unit names.  Null means Phase 1
+  /// behavior (all identifiers treated as raw dimensions).
+  final UnitRepository? repo;
+
+  const EvalContext({this.repo});
 }
 
 /// Base class for all AST nodes.
@@ -33,15 +36,35 @@ class NumberNode extends ASTNode {
   String toString() => 'NumberNode($value)';
 }
 
-/// A unit identifier.  In Phase 1, all units are treated as primitives.
+/// A unit identifier.
+///
+/// When the evaluation context has a unit repository, the unit name is
+/// resolved to its base-unit representation.  Otherwise, or if the unit
+/// is not found in the repository, it falls back to a raw dimension.
 class UnitNode extends ASTNode {
   final String unitName;
 
   const UnitNode(this.unitName);
 
   @override
-  Quantity evaluate(EvalContext context) =>
-      Quantity(1.0, Dimension({unitName: 1}));
+  Quantity evaluate(EvalContext context) {
+    final repo = context.repo;
+    if (repo == null) {
+      // No repo: Phase 1 behavior (raw dimension).
+      return Quantity(1.0, Dimension({unitName: 1}));
+    }
+
+    final unit = repo.findUnit(unitName);
+    if (unit == null) {
+      // Unknown unit: fall back to raw dimension.
+      return Quantity(1.0, Dimension({unitName: 1}));
+    }
+
+    // Resolve to base units: 1 <unit> = factor <primitives>
+    final baseValue = unit.definition.toBase(1.0, repo);
+    final baseDimension = unit.definition.getDimension(repo);
+    return Quantity(baseValue, baseDimension);
+  }
 
   @override
   String toString() => 'UnitNode($unitName)';

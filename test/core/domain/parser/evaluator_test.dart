@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/data/builtin_units.dart';
 import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
+import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
 import 'package:unitary/core/domain/parser/lexer.dart';
 import 'package:unitary/core/domain/parser/parser.dart';
@@ -12,6 +14,12 @@ Quantity eval(String input) {
   final tokens = Lexer(input).scanTokens();
   final ast = Parser(tokens).parse();
   return ast.evaluate(const EvalContext());
+}
+
+Quantity evalWithRepo(String input, UnitRepository repo) {
+  final tokens = Lexer(input).scanTokens();
+  final ast = Parser(tokens).parse();
+  return ast.evaluate(EvalContext(repo: repo));
 }
 
 void main() {
@@ -346,6 +354,101 @@ void main() {
       final result = eval('/m');
       expect(result.value, 1.0);
       expect(result.dimension, Dimension({'m': -1}));
+    });
+  });
+
+  group('Evaluator: unit-aware evaluation', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinUnits(repo);
+    });
+
+    test('5 ft resolves to meters', () {
+      final result = evalWithRepo('5 ft', repo);
+      expect(result.value, closeTo(1.524, 1e-10));
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+
+    test('5 feet resolves via alias', () {
+      final result = evalWithRepo('5 feet', repo);
+      expect(result.value, closeTo(1.524, 1e-10));
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+
+    test('5 ft + 3 m combines in base units', () {
+      final result = evalWithRepo('5 ft + 3 m', repo);
+      expect(result.value, closeTo(4.524, 1e-10));
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+
+    test('5 ft * 2 s gives m*s', () {
+      final result = evalWithRepo('5 ft * 2 s', repo);
+      expect(result.value, closeTo(3.048, 1e-10));
+      expect(result.dimension, Dimension({'m': 1, 's': 1}));
+    });
+
+    test('5 ft / 2 s gives m/s', () {
+      final result = evalWithRepo('5 ft / 2 s', repo);
+      expect(result.value, closeTo(0.762, 1e-10));
+      expect(result.dimension, Dimension({'m': 1, 's': -1}));
+    });
+
+    test('(3 ft)^2 gives m^2', () {
+      final result = evalWithRepo('(3 ft)^2', repo);
+      expect(result.value, closeTo(0.83612736, 1e-8));
+      expect(result.dimension, Dimension({'m': 2}));
+    });
+
+    test('sqrt(9 ft^2) gives meters', () {
+      final result = evalWithRepo('sqrt(9 ft^2)', repo);
+      expect(result.value, closeTo(0.9144, 1e-10));
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+
+    test('1 km resolves to 1000 m', () {
+      final result = evalWithRepo('1 km', repo);
+      expect(result.value, closeTo(1000.0, 1e-10));
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+
+    test('2 lb resolves to kg', () {
+      final result = evalWithRepo('2 lb', repo);
+      expect(result.value, closeTo(0.90718474, 1e-8));
+      expect(result.dimension, Dimension({'kg': 1}));
+    });
+
+    test('1 hr resolves to 3600 s', () {
+      final result = evalWithRepo('1 hr', repo);
+      expect(result.value, closeTo(3600.0, 1e-10));
+      expect(result.dimension, Dimension({'s': 1}));
+    });
+
+    test('unknown unit with repo falls back to raw dimension', () {
+      final result = evalWithRepo('5 zorblax', repo);
+      expect(result.value, 5.0);
+      expect(result.dimension, Dimension({'zorblax': 1}));
+    });
+
+    test('null repo preserves Phase 1 behavior', () {
+      // Verify a few existing-style evaluations still work with no repo.
+      final result = eval('5 m');
+      expect(result.value, 5.0);
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+
+    test('pure arithmetic with repo is unaffected', () {
+      final result = evalWithRepo('2 + 3', repo);
+      expect(result.value, 5.0);
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('60 mi / hr gives velocity in m/s', () {
+      final result = evalWithRepo('60 mi / hr', repo);
+      // 60 * 1609.344 / 3600 = 26.8224 m/s
+      expect(result.value, closeTo(26.8224, 1e-4));
+      expect(result.dimension, Dimension({'m': 1, 's': -1}));
     });
   });
 }

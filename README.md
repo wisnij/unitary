@@ -8,12 +8,12 @@ user-defined units and dimensions.
 
 ## Project Status
 
-**Current Phase:** Phase 0 Complete, ready for Phase 1 (Expression Parser)\
-**Last Updated:** January 31, 2026
+**Current Phase:** Phase 2 Complete, ready for Phase 3 (Advanced Unit Features)\
+**Last Updated:** February 7, 2026
 
-Project setup is complete.  Core architecture and requirements have been
-defined, and the Flutter project is scaffolded with the full directory
-structure, linting, and test infrastructure in place.
+Phases 0-2 are complete.  The expression parser, evaluator, and unit system
+foundation are fully implemented with 506 passing tests.  Unit definitions
+for length, mass, and time are available with full conversion support.
 
 ---
 
@@ -180,6 +180,8 @@ flutter run
 ### Implementation
 
 - ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
+- ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
+- ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (506 tests)
 
 ### Design (ready for implementation)
 

@@ -70,52 +70,56 @@ This document outlines the phased approach to implementing Unitary, along with f
 
 ---
 
-### Phase 2: Unit System Foundation (Weeks 5-7) — IN PROGRESS
+### Phase 2: Unit System Foundation (Weeks 5-7) — COMPLETE
 
 **Goals:** Build the unit definition system and integrate it with the evaluator
 
 **Tasks:**
 
-- [ ] Implement Unit class and UnitDefinition hierarchy
-  - [ ] Unit class with id, aliases, description, definition
-  - [ ] UnitDefinition base class with toBase/fromBase/getDimension contract
-  - [ ] PrimitiveUnitDefinition (identity conversion, self-referencing dimension)
-  - [ ] LinearDefinition (factor-based conversion with recursive resolution)
-  - [ ] Unit tests for all definition types
+- [x] Implement Unit class and UnitDefinition hierarchy
+  - [x] Unit class with id, aliases, description, definition
+  - [x] UnitDefinition base class with toBase/fromBase/getDimension contract
+  - [x] PrimitiveUnitDefinition (identity conversion, self-referencing dimension)
+  - [x] LinearDefinition (factor-based conversion with recursive resolution)
+  - [x] Unit tests for all definition types
 
-- [ ] Implement UnitRepository
-  - [ ] Registration with alias mapping and collision detection
-  - [ ] Lookup by name/alias with plural stripping fallback
-  - [ ] Factory constructor with built-in units
-  - [ ] Unit tests for registration, lookup, and plural stripping
+- [x] Implement UnitRepository
+  - [x] Registration with alias mapping and collision detection
+  - [x] Lookup by name/alias with plural stripping fallback
+  - [x] Factory constructor with built-in units
+  - [x] Unit tests for registration, lookup, and plural stripping
 
-- [ ] Implement built-in unit definitions
-  - [ ] Length units (10): m, km, cm, mm, um, in, ft, yd, mi, nmi
-  - [ ] Mass units (6): kg, g, mg, lb, oz, t
-  - [ ] Time units (6): s, ms, min, hr, day, week
-  - [ ] Unit tests for conversion factors, aliases, and dimensions
+- [x] Implement built-in unit definitions
+  - [x] Length units (10): m, km, cm, mm, um, in, ft, yd, mi, nmi
+  - [x] Mass units (6): kg, g, mg, lb, oz, t
+  - [x] Time units (6): s, ms, min, hr, day, week
+  - [x] Unit tests for conversion factors, aliases, and dimensions
 
-- [ ] Implement reduce() and convert() utilities
-  - [ ] reduce(): resolve non-primitive dimensions to primitives
-  - [ ] convert(): reduce + fromBase with conformability check
-  - [ ] Unit tests for reduction, conversion, round-trips, and errors
+- [x] Implement reduce() and convert() utilities
+  - [x] reduce(): resolve non-primitive dimensions to primitives
+  - [x] convert(): reduce + fromBase with conformability check
+  - [x] Unit tests for reduction, conversion, round-trips, and errors
 
-- [ ] Integrate with evaluator
-  - [ ] Add nullable repo field to EvalContext (backward compatible)
-  - [ ] UnitNode resolves to base units when repo is present
-  - [ ] Fallback to raw dimension for null repo or unknown units
-  - [ ] Unit tests for unit-aware evaluation
-  - [ ] Verify all 372 Phase 1 tests still pass
+- [x] Integrate with evaluator
+  - [x] Add nullable repo field to EvalContext (backward compatible)
+  - [x] UnitNode resolves to base units when repo is present
+  - [x] Fallback to raw dimension for null repo or unknown units
+  - [x] Unit tests for unit-aware evaluation
+  - [x] Verify all Phase 1 tests still pass
 
-- [ ] Integrate with ExpressionParser
-  - [ ] Add optional repo parameter to ExpressionParser
-  - [ ] Wire repo through to EvalContext
-  - [ ] Deliverable test: parse "5 ft" → evaluate → convert
-  - [ ] End-to-end unit tests
+- [x] Integrate with ExpressionParser
+  - [x] Add optional repo parameter to ExpressionParser
+  - [x] Wire repo through to EvalContext
+  - [x] Deliverable test: parse "5 ft" → evaluate → convert
+  - [x] End-to-end unit tests
 
-- [ ] Update documentation
+- [x] Update documentation
 
-**Deliverable:** Can convert "5 feet" to meters programmatically
+**Deliverable:** Can convert "5 feet" to meters programmatically ✓
+
+**Test Coverage:** 506 tests passing
+
+**Completed:** February 7, 2026
 
 **Detailed Plan:** See [Phase 2 Plan](phase2_plan.md)
 

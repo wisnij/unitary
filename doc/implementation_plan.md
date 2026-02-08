@@ -346,6 +346,16 @@ This document outlines the phased approach to implementing Unitary, along with f
 - Convert from decimal to rational where beneficial
 - UI for displaying rational results
 
+### Future: Unit Resolution Caching
+
+- Cache the resulting base-unit Quantity the first time a unit is fully reduced
+  during evaluation, so subsequent evaluations skip the resolution chain
+- Invalidate the cache whenever unit definitions are added or edited (expected
+  to be infrequent, so the cache should remain valid for long periods)
+- Explore pre-warming the cache for all registered units as a background task
+  at initial app startup and after definition edits, to minimize user-visible
+  processing time
+
 ---
 
 

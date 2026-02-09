@@ -80,7 +80,7 @@ Implementation Phases
 
 - [x] Implement Unit class and UnitDefinition hierarchy
   - [x] Unit class with id, aliases, description, definition
-  - [x] UnitDefinition base class with toBase/fromBase/getDimension contract
+  - [x] UnitDefinition base class with getQuantity contract
   - [x] PrimitiveUnitDefinition (identity conversion, self-referencing dimension)
   - [x] LinearDefinition (factor-based conversion with recursive resolution)
   - [x] Unit tests for all definition types
@@ -97,10 +97,9 @@ Implementation Phases
   - [x] Time units (6): s, ms, min, hr, day, week
   - [x] Unit tests for conversion factors, aliases, and dimensions
 
-- [x] Implement reduce() and convert() utilities
+- [x] Implement reduce() utility
   - [x] reduce(): resolve non-primitive dimensions to primitives
-  - [x] convert(): reduce + fromBase with conformability check
-  - [x] Unit tests for reduction, conversion, round-trips, and errors
+  - [x] Unit tests for reduction and edge cases
 
 - [x] Integrate with evaluator
   - [x] Add nullable repo field to EvalContext (backward compatible)

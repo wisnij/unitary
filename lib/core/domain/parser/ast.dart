@@ -60,10 +60,8 @@ class UnitNode extends ASTNode {
       return Quantity(1.0, Dimension({unitName: 1}));
     }
 
-    // Resolve to base units: 1 <unit> = factor <primitives>
-    final baseValue = unit.definition.toBase(1.0, repo);
-    final baseDimension = unit.definition.getDimension(repo);
-    return Quantity(baseValue, baseDimension);
+    // Resolve to base units: 1 <unit> = quantity in primitives.
+    return unit.definition.getQuantity(1.0, repo);
   }
 
   @override

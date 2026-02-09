@@ -79,7 +79,7 @@ void main() {
     test('binds PrimitiveUnitDefinition on registration', () {
       final def = PrimitiveUnitDefinition();
       repo.register(Unit(id: 'kg', definition: def));
-      expect(def.getDimension(repo), Dimension({'kg': 1}));
+      expect(def.getQuantity(1.0, repo).dimension, Dimension({'kg': 1}));
     });
   });
 

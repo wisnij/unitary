@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
+import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_definition.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
@@ -71,30 +72,33 @@ void main() {
       expect(PrimitiveUnitDefinition().isPrimitive, isTrue);
     });
 
-    test('toBase is identity', () {
+    test('getQuantity returns value with self-dimension', () {
       final def = repo.getUnit('m').definition;
-      expect(def.toBase(5.0, repo), 5.0);
-      expect(def.toBase(0.0, repo), 0.0);
-      expect(def.toBase(-3.14, repo), -3.14);
+      final q = def.getQuantity(5.0, repo);
+      expect(q.value, 5.0);
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('fromBase is identity', () {
+    test('getQuantity with zero', () {
       final def = repo.getUnit('m').definition;
-      expect(def.fromBase(5.0, repo), 5.0);
-      expect(def.fromBase(0.0, repo), 0.0);
-      expect(def.fromBase(-3.14, repo), -3.14);
+      final q = def.getQuantity(0.0, repo);
+      expect(q.value, 0.0);
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getDimension returns {unitId: 1} after bind', () {
+    test('getQuantity with negative value', () {
       final def = repo.getUnit('m').definition;
-      expect(def.getDimension(repo), Dimension({'m': 1}));
+      final q = def.getQuantity(-3.14, repo);
+      expect(q.value, -3.14);
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getDimension uses bound id', () {
+    test('getQuantity uses bound id', () {
       final repo2 = UnitRepository();
       repo2.register(Unit(id: 'kg', definition: PrimitiveUnitDefinition()));
       final def = repo2.getUnit('kg').definition;
-      expect(def.getDimension(repo2), Dimension({'kg': 1}));
+      final q = def.getQuantity(1.0, repo2);
+      expect(q.dimension, Dimension({'kg': 1}));
     });
   });
 
@@ -126,31 +130,25 @@ void main() {
       );
     });
 
-    test('toBase multiplies by factor', () {
+    test('getQuantity converts value and returns primitive dimension', () {
       final def = repo.getUnit('ft').definition;
-      expect(def.toBase(1.0, repo), closeTo(0.3048, 1e-10));
-      expect(def.toBase(5.0, repo), closeTo(1.524, 1e-10));
-      expect(def.toBase(0.0, repo), 0.0);
+      final q = def.getQuantity(1.0, repo);
+      expect(q.value, closeTo(0.3048, 1e-10));
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('fromBase divides by factor', () {
+    test('getQuantity with multiple units', () {
       final def = repo.getUnit('ft').definition;
-      expect(def.fromBase(0.3048, repo), closeTo(1.0, 1e-10));
-      expect(def.fromBase(1.524, repo), closeTo(5.0, 1e-10));
-      expect(def.fromBase(0.0, repo), 0.0);
+      final q = def.getQuantity(5.0, repo);
+      expect(q.value, closeTo(1.524, 1e-10));
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getDimension returns primitive dimension', () {
+    test('getQuantity with zero', () {
       final def = repo.getUnit('ft').definition;
-      expect(def.getDimension(repo), Dimension({'m': 1}));
-    });
-
-    test('round-trip: fromBase(toBase(x)) equals x', () {
-      final def = repo.getUnit('ft').definition;
-      for (final x in [0.0, 1.0, 5.0, -3.14, 100.0, 0.001]) {
-        final roundTripped = def.fromBase(def.toBase(x, repo), repo);
-        expect(roundTripped, closeTo(x, 1e-10), reason: 'round-trip for $x');
-      }
+      final q = def.getQuantity(0.0, repo);
+      expect(q.value, 0.0);
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
     test('chain resolution: yard → ft → m', () {
@@ -164,11 +162,12 @@ void main() {
       final def = repo.getUnit('yd').definition;
 
       // 1 yard = 3 feet = 3 * 0.3048 m = 0.9144 m
-      expect(def.toBase(1.0, repo), closeTo(0.9144, 1e-10));
-      expect(def.fromBase(0.9144, repo), closeTo(1.0, 1e-10));
+      final q = def.getQuantity(1.0, repo);
+      expect(q.value, closeTo(0.9144, 1e-10));
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('chain getDimension returns primitive dimension', () {
+    test('chain getQuantity returns primitive dimension', () {
       repo.register(
         const Unit(
           id: 'yd',
@@ -177,10 +176,11 @@ void main() {
         ),
       );
       final def = repo.getUnit('yd').definition;
-      expect(def.getDimension(repo), Dimension({'m': 1}));
+      final q = def.getQuantity(1.0, repo);
+      expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('chain round-trip: fromBase(toBase(x)) equals x', () {
+    test('getQuantity value matches reduce for derived units', () {
       repo.register(
         const Unit(
           id: 'yd',
@@ -190,8 +190,12 @@ void main() {
       );
       final def = repo.getUnit('yd').definition;
       for (final x in [0.0, 1.0, 5.0, -2.5, 100.0]) {
-        final roundTripped = def.fromBase(def.toBase(x, repo), repo);
-        expect(roundTripped, closeTo(x, 1e-10), reason: 'round-trip for $x');
+        final q = def.getQuantity(x, repo);
+        expect(
+          q.value,
+          closeTo(x * 0.9144, 1e-10),
+          reason: 'getQuantity for $x yd',
+        );
       }
     });
 

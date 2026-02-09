@@ -1,24 +1,17 @@
 import 'dimension.dart';
+import 'quantity.dart';
 import 'unit_repository.dart';
 
 /// Base class for unit definitions.
 ///
 /// Provides the conversion contract: every definition can convert a value
-/// to primitive base units and back, and can report its dimension in terms
-/// of primitives.
+/// to a [Quantity] expressed in primitive base units.
 abstract class UnitDefinition {
   const UnitDefinition();
 
-  /// Convert [value] in this unit to the equivalent value in primitive
+  /// Convert [value] in this unit to an equivalent [Quantity] in primitive
   /// base units.  May recurse through [repo] for chained definitions.
-  double toBase(double value, UnitRepository repo);
-
-  /// Convert [value] in primitive base units to the equivalent value in
-  /// this unit.  May recurse through [repo] for chained definitions.
-  double fromBase(double value, UnitRepository repo);
-
-  /// The dimension of this unit expressed in primitive unit IDs.
-  Dimension getDimension(UnitRepository repo);
+  Quantity getQuantity(double value, UnitRepository repo);
 
   /// Whether this is a primitive (base) unit definition.
   bool get isPrimitive;
@@ -27,7 +20,8 @@ abstract class UnitDefinition {
 /// A primitive (base) unit that defines a fundamental dimension.
 ///
 /// The unit's ID becomes its own dimension key.  For example, the meter
-/// unit (id: 'm') has dimension {m: 1}.  toBase/fromBase are identity.
+/// unit (id: 'm') has dimension {m: 1}.  getQuantity returns the value
+/// unchanged with dimension {unitId: 1}.
 class PrimitiveUnitDefinition extends UnitDefinition {
   /// The unit ID, used as the dimension key.  Set during registration.
   late final String _unitId;
@@ -38,13 +32,8 @@ class PrimitiveUnitDefinition extends UnitDefinition {
   void bind(String unitId) => _unitId = unitId;
 
   @override
-  double toBase(double value, UnitRepository repo) => value;
-
-  @override
-  double fromBase(double value, UnitRepository repo) => value;
-
-  @override
-  Dimension getDimension(UnitRepository repo) => Dimension({_unitId: 1});
+  Quantity getQuantity(double value, UnitRepository repo) =>
+      Quantity(value, Dimension({_unitId: 1}));
 
   @override
   bool get isPrimitive => true;
@@ -69,21 +58,9 @@ class LinearDefinition extends UnitDefinition {
   const LinearDefinition({required this.factor, required this.baseUnitId});
 
   @override
-  double toBase(double value, UnitRepository repo) {
+  Quantity getQuantity(double value, UnitRepository repo) {
     final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toBase(value * factor, repo);
-  }
-
-  @override
-  double fromBase(double value, UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.fromBase(value, repo) / factor;
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.getDimension(repo);
+    return baseUnit.definition.getQuantity(value * factor, repo);
   }
 
   @override

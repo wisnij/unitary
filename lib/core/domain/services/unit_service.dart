@@ -1,9 +1,7 @@
 import 'dart:math' as math;
 
-import '../errors.dart';
 import '../models/dimension.dart';
 import '../models/quantity.dart';
-import '../models/unit.dart';
 import '../models/unit_repository.dart';
 
 /// Reduce a quantity to primitive base units.
@@ -34,43 +32,15 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
     }
 
     // Resolve to base units.
-    final baseFactor = unit.definition.toBase(1.0, repo);
-    value *= math.pow(baseFactor, exponent);
+    final baseQuantity = unit.definition.getQuantity(1.0, repo);
+    value *= math.pow(baseQuantity.value, exponent);
 
     // Replace with primitive dimension entries.
-    final baseDimension = unit.definition.getDimension(repo);
-    for (final baseEntry in baseDimension.units.entries) {
+    for (final baseEntry in baseQuantity.dimension.units.entries) {
       newDimension[baseEntry.key] =
           (newDimension[baseEntry.key] ?? 0) + baseEntry.value * exponent;
     }
   }
 
   return Quantity(value, Dimension(newDimension));
-}
-
-/// Convert a quantity to the specified target unit.
-///
-/// The quantity is first reduced to primitive base units, then converted
-/// to the target unit using fromBase().
-///
-/// Throws [DimensionException] if the quantity's dimension is not
-/// conformable with the target unit's dimension.
-///
-/// The returned Quantity has the target unit's primitive dimension
-/// and a value expressed in the target unit.
-Quantity convert(Quantity quantity, Unit targetUnit, UnitRepository repo) {
-  final reduced = reduce(quantity, repo);
-
-  final targetDimension = targetUnit.definition.getDimension(repo);
-  if (!reduced.dimension.isConformableWith(targetDimension)) {
-    throw DimensionException(
-      'Cannot convert '
-      '${reduced.dimension.canonicalRepresentation()} '
-      'to ${targetUnit.id} '
-      '(${targetDimension.canonicalRepresentation()})',
-    );
-  }
-
-  final convertedValue = targetUnit.definition.fromBase(reduced.value, repo);
-  return Quantity(convertedValue, targetDimension);
 }

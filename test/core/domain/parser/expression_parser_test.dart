@@ -4,7 +4,6 @@ import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
 import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/core/domain/parser/token.dart';
-import 'package:unitary/core/domain/services/unit_service.dart';
 
 void main() {
   final parser = ExpressionParser();
@@ -79,7 +78,7 @@ void main() {
   });
 
   group('Phase 2 deliverable', () {
-    test('convert 5 feet to meters and back', () {
+    test('evaluate 5 feet and convert via division', () {
       final repo = UnitRepository.withBuiltinUnits();
       final repoParser = ExpressionParser(repo: repo);
 
@@ -88,15 +87,15 @@ void main() {
       expect(quantity.value, closeTo(1.524, 1e-10));
       expect(quantity.dimension, Dimension({'m': 1}));
 
-      // Convert to feet explicitly
-      final feet = repo.getUnit('ft');
-      final inFeet = convert(quantity, feet, repo);
-      expect(inFeet.value, closeTo(5.0, 1e-10));
+      // Convert to feet: divide base value by 1 ft in base units
+      final feetBase = repo.getUnit('ft').definition.getQuantity(1.0, repo);
+      final inFeet = quantity.value / feetBase.value;
+      expect(inFeet, closeTo(5.0, 1e-10));
 
-      // Convert to miles
-      final miles = repo.getUnit('mi');
-      final inMiles = convert(quantity, miles, repo);
-      expect(inMiles.value, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
+      // Convert to miles: divide base value by 1 mi in base units
+      final milesBase = repo.getUnit('mi').definition.getQuantity(1.0, repo);
+      final inMiles = quantity.value / milesBase.value;
+      expect(inMiles, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
     });
   });
 }

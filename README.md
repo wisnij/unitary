@@ -14,7 +14,7 @@ Project Status
 **Last Updated:** February 7, 2026
 
 Phases 0-2 are complete.  The expression parser, evaluator, and unit system
-foundation are fully implemented with 506 passing tests.  Unit definitions
+foundation are fully implemented with 492 passing tests.  Unit definitions
 for length, mass, and time are available with full conversion support.
 
 ---
@@ -190,7 +190,7 @@ Current Progress
 
 - ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
 - ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
-- ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (506 tests)
+- ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
 
 ### Design (ready for implementation)
 

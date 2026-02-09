@@ -459,36 +459,31 @@ class Unit {
   // All recognized names for this unit (id + aliases)
   // Parser will also check plural forms automatically
   List<String> get allNames => [id, ...aliases];
-
-  // Lazy-computed dimension based on definition
-  Dimension getDimension(UnitRepository repo) => definition.getDimension(repo, id);
 }
 
 abstract class UnitDefinition {
-  double toBase(double value, UnitRepository repo, String unitId);
-  double fromBase(double value, UnitRepository repo, String unitId);
-  Dimension getDimension(UnitRepository repo, String unitId);
+  /// Convert [value] in this unit to an equivalent Quantity in primitive
+  /// base units.  May recurse through [repo] for chained definitions.
+  Quantity getQuantity(double value, UnitRepository repo);
+
+  /// Whether this is a primitive (base) unit definition.
+  bool get isPrimitive;
 }
 
 // For primitive units - these define fundamental dimensions
 class PrimitiveUnitDefinition extends UnitDefinition {
-  final bool isDimensionless;
+  late final String _unitId;
 
-  PrimitiveUnitDefinition({this.isDimensionless = false});
+  PrimitiveUnitDefinition();
 
-  @override
-  double toBase(double value, UnitRepository repo, String unitId) => value;  // identity
-
-  @override
-  double fromBase(double value, UnitRepository repo, String unitId) => value;  // identity
+  void bind(String unitId) => _unitId = unitId;
 
   @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    // The unit's ID becomes the dimension identifier
-    return isDimensionless
-      ? Dimension.dimensionless()
-      : Dimension({unitId: 1});
-  }
+  Quantity getQuantity(double value, UnitRepository repo) =>
+      Quantity(value, Dimension({_unitId: 1}));
+
+  @override
+  bool get isPrimitive => true;
 }
 
 // For units defined as linear multiples of another unit
@@ -496,80 +491,51 @@ class LinearDefinition extends UnitDefinition {
   final double factor;      // e.g., 1 mile = 1609.344 meters
   final String baseUnitId;  // ID of unit this is defined in terms of (e.g., "meter")
 
-  LinearDefinition(this.factor, this.baseUnitId);
+  const LinearDefinition({required this.factor, required this.baseUnitId});
 
   @override
-  double toBase(double value, UnitRepository repo, String unitId) {
-    // Recursively convert through the chain
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toBase(value * factor, repo, baseUnitId);
+  Quantity getQuantity(double value, UnitRepository repo) {
+    final baseUnit = repo.getUnit(baseUnitId);
+    return baseUnit.definition.getQuantity(value * factor, repo);
   }
 
   @override
-  double fromBase(double value, UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.fromBase(value, repo, baseUnitId) / factor;
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    // Get dimension from the unit we're based on
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.getDimension(repo);
-  }
+  bool get isPrimitive => false;
 }
 
-// For units with offset (like temperature)
+// For units with offset (like temperature) — planned for Phase 3
 class AffineDefinition extends UnitDefinition {
   final double factor;
   final double offset;      // e.g., Celsius = Kelvin - 273.15
   final String baseUnitId;
 
-  AffineDefinition(this.factor, this.offset, this.baseUnitId);
+  const AffineDefinition(this.factor, this.offset, this.baseUnitId);
 
   @override
-  double toBase(double value, UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toBase((value + offset) * factor, repo, baseUnitId);
+  Quantity getQuantity(double value, UnitRepository repo) {
+    final baseUnit = repo.getUnit(baseUnitId);
+    return baseUnit.definition.getQuantity((value + offset) * factor, repo);
   }
 
   @override
-  double fromBase(double value, UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return (baseUnit.definition.fromBase(value, repo, baseUnitId) / factor) - offset;
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.getDimension(repo);
-  }
+  bool get isPrimitive => false;
 }
 
-// For compound units defined as expressions
+// For compound units defined as expressions — planned for Phase 3
 class CompoundDefinition extends UnitDefinition {
   final String expr;  // e.g., "kg*m/s^2" for Newton
 
   CompoundDefinition(this.expr);
 
   @override
-  double toBase(double value, UnitRepository repo, String unitId) {
+  Quantity getQuantity(double value, UnitRepository repo) {
     // Parse and evaluate the expression to get conversion factor
     // This requires the expression parser/evaluator
     throw UnimplementedError("Requires expression evaluator");
   }
 
   @override
-  double fromBase(double value, UnitRepository repo, String unitId) {
-    throw UnimplementedError("Requires expression evaluator");
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    // Parse and evaluate the expression to get dimension
-    // This requires the expression parser/evaluator
-    throw UnimplementedError("Requires expression evaluator");
-  }
+  bool get isPrimitive => false;
 }
 
 // Examples of unit definitions:

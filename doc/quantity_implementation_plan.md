@@ -50,10 +50,9 @@ Files to Create (in order)
 
 - `UnitLookup` abstract interface (breaks circular dep with repository)
 - `Unit` class (id, aliases, description, definition)
-- `UnitDefinition` abstract class with `reduce(repo)` returning a `Quantity` in primitive units
-  - `toBase(value, repo, unitId)` and `fromBase(value, repo, unitId)` derived from reduce
-- `PrimitiveUnitDefinition` — identity; reduce returns `Quantity(1, Dimension({unitId: 1}))`
-- `LinearDefinition` — holds an expression stub (`Quantity Function(UnitLookup)`) that evaluates to the unit's value in terms of other units. Until the parser exists, construct with a closure that returns a `Quantity` directly. `toBase`/`fromBase` use the reduced quantity's value as the conversion factor.
+- `UnitDefinition` abstract class with `getQuantity(value, repo)` returning a `Quantity` in primitive units
+- `PrimitiveUnitDefinition` — identity; `getQuantity` returns `Quantity(value, Dimension({unitId: 1}))`
+- `LinearDefinition` — factor-based conversion; `getQuantity` recurses through the definition chain to produce a `Quantity` in primitive units.
 - `AffineDefinition` — `(value + offset) * factor` for absolute temperature; offset + linear base
 - Tests use a simple `UnitLookup` stub built from a `Map<String, Unit>`
 
@@ -91,8 +90,7 @@ Files to Create (in order)
 
 **Conversion:**
 
-- `convertTo(targetUnit, repo)` — reduces to primitives internally, then converts to target
-- `reduceToPrimitives(repo)` — converts to primitive representation via displayUnit's toBase
+- `reduceToPrimitives(repo)` — converts to primitive representation via unit's `getQuantity`
 
 ### Step 8: `lib/core/domain/models/models.dart`
 

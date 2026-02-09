@@ -302,5 +302,5 @@ Questions that arose during design but haven't been resolved:
   - 373 tests passing
   - Lexer, Parser, Evaluator, Dimension, Quantity, Rational all implemented
 - *Phase 2: Unit System Foundation completed (February 7, 2026)*
-  - 506 tests passing (133 new)
-  - Unit, UnitDefinition, UnitRepository, built-in units, reduce/convert, evaluator integration
+  - 492 tests passing (119 new)
+  - Unit, UnitDefinition, UnitRepository, built-in units, reduce, evaluator integration

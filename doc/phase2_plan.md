@@ -3,7 +3,7 @@ Phase 2: Unit System Foundation
 
 > **Status: COMPLETE**
 >
-> 506 tests passing (373 Phase 1 + 133 Phase 2). Completed February 7, 2026.
+> 492 tests passing (373 Phase 1 + 119 Phase 2). Completed February 7, 2026.
 
 
 Overview
@@ -21,8 +21,9 @@ final quantity = parser.evaluate('5 ft');
 // quantity == Quantity(1.524, {m: 1})
 
 final feet = repo.getUnit('ft');
-final inFeet = convert(quantity, feet, repo);
-// inFeet.value ≈ 5.0
+final feetBase = feet.definition.getQuantity(1.0, repo);
+final inFeet = quantity.value / feetBase.value;
+// inFeet ≈ 5.0
 ~~~~
 
 **Scope boundaries:**
@@ -31,8 +32,8 @@ final inFeet = convert(quantity, feet, repo);
   or compound (expression-based) definitions.
 - No SI prefix splitting — prefixed units (km, mg, ms) are registered as
   explicit entries.
-- No conversion syntax in the expression grammar — conversion is a Dart API
-  (`convert()` function), not a parser feature.
+- No conversion syntax in the expression grammar — conversion is computed by
+  reducing both quantities and dividing values.
 - No constants (pi, c, e) as units.
 - Backward compatible — all 372 Phase 1 tests pass unchanged.
 
@@ -52,7 +53,7 @@ These decisions were made during the Phase 2 design review:
    unit name, it resolves it to base units immediately via the repo.  By the
    time arithmetic happens, all operands are in primitive base units.
 
-3. **Recursive resolution at lookup time:** LinearDefinition.toBase() recurses
+3. **Recursive resolution at lookup time:** LinearDefinition.getQuantity() recurses
    through the definition chain each time.  No pre-flattening at repo load
    time.  Chain depths are small (typically 1 hop since definitions point
    directly to primitives).
@@ -66,8 +67,9 @@ These decisions were made during the Phase 2 design review:
    fails, it tries removing 'es' then 's' as a plural fallback.  Irregular
    plurals (like "feet") must be explicit aliases.
 
-6. **Conversion is Dart API only:** A top-level `convert(Quantity, Unit, repo)`
-   function handles conversion.  No `to` or `->` syntax in the parser grammar.
+6. **Conversion is computed by division:** To convert a quantity to a different
+   unit, reduce both the quantity and the target unit to primitives, then divide
+   their values.  No `to` or `->` syntax in the parser grammar.
 
 7. **General-purpose reduce() utility:** A `reduce(Quantity, repo)` function
    handles reducing compound dimensions to primitives.  Useful for test code
@@ -142,22 +144,17 @@ class Unit {
 ~~~~ dart
 /// Base class for unit definitions.
 ///
-/// Provides the conversion contract: every definition can convert a value
-/// to primitive base units and back, and can report its dimension in terms
-/// of primitives.
+/// Provides the conversion contract: every definition can produce a Quantity
+/// representing the given value in this unit, reduced to primitive base units.
 abstract class UnitDefinition {
   const UnitDefinition();
 
-  /// Convert [value] in this unit to the equivalent value in primitive
-  /// base units.  May recurse through [repo] for chained definitions.
-  double toBase(double value, UnitRepository repo);
-
-  /// Convert [value] in primitive base units to the equivalent value in
-  /// this unit.  May recurse through [repo] for chained definitions.
-  double fromBase(double value, UnitRepository repo);
-
-  /// The dimension of this unit expressed in primitive unit IDs.
-  Dimension getDimension(UnitRepository repo);
+  /// Convert [value] in this unit to a Quantity in primitive base units.
+  /// May recurse through [repo] for chained definitions.
+  ///
+  /// Returns a Quantity whose value is the equivalent in base units and
+  /// whose dimension is expressed in primitive unit IDs.
+  Quantity getQuantity(double value, UnitRepository repo);
 
   /// Whether this is a primitive (base) unit definition.
   bool get isPrimitive;
@@ -170,7 +167,7 @@ abstract class UnitDefinition {
 /// A primitive (base) unit that defines a fundamental dimension.
 ///
 /// The unit's ID becomes its own dimension key.  For example, the meter
-/// unit (id: 'm') has dimension {m: 1}.  toBase/fromBase are identity.
+/// unit (id: 'm') has dimension {m: 1}.  The value is returned unchanged.
 class PrimitiveUnitDefinition extends UnitDefinition {
   /// The unit ID, used as the dimension key.  Set during registration.
   late final String _unitId;
@@ -181,14 +178,8 @@ class PrimitiveUnitDefinition extends UnitDefinition {
   void bind(String unitId) => _unitId = unitId;
 
   @override
-  double toBase(double value, UnitRepository repo) => value;
-
-  @override
-  double fromBase(double value, UnitRepository repo) => value;
-
-  @override
-  Dimension getDimension(UnitRepository repo) =>
-      Dimension({_unitId: 1});
+  Quantity getQuantity(double value, UnitRepository repo) =>
+      Quantity(value, Dimension({_unitId: 1}));
 
   @override
   bool get isPrimitive => true;
@@ -220,21 +211,9 @@ class LinearDefinition extends UnitDefinition {
   });
 
   @override
-  double toBase(double value, UnitRepository repo) {
+  Quantity getQuantity(double value, UnitRepository repo) {
     final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toBase(value * factor, repo);
-  }
-
-  @override
-  double fromBase(double value, UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.fromBase(value, repo) / factor;
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.getDimension(repo);
+    return baseUnit.definition.getQuantity(value * factor, repo);
   }
 
   @override
@@ -250,13 +229,12 @@ constructor parameter, but `bind()` avoids requiring the ID in two places
 
 **Tests:** `test/core/domain/models/unit_test.dart` (same file as Unit)
 
-- PrimitiveUnitDefinition: after bind, toBase/fromBase are identity,
-  getDimension returns `{unitId: 1}`.
-- LinearDefinition: toBase multiplies by factor, fromBase divides by factor.
+- PrimitiveUnitDefinition: after bind, getQuantity returns Quantity with
+  the input value and dimension `{unitId: 1}`.
+- LinearDefinition: getQuantity multiplies value by factor and recurses.
 - Chain resolution: define yard = 3 ft, ft = 0.3048 m, m = primitive.
-  Verify `yard.toBase(1.0)` = 0.9144, `yard.fromBase(0.9144)` ≈ 1.0.
-- getDimension returns primitive dimension regardless of chain depth.
-- Round-trip: `fromBase(toBase(x))` ≈ x within epsilon.
+  Verify `yard.getQuantity(1.0, repo)` = Quantity(0.9144, {m: 1}).
+- getQuantity returns primitive dimension regardless of chain depth.
 
 
 ### Step 3: UnitRepository
@@ -359,7 +337,7 @@ aliases since stripping 's' gives "feet" → "fee" (wrong).
 - getUnit throws ArgumentError for unknown names.
 - allUnits returns all registered units.
 - factory `withBuiltinUnits()` creates a populated repository.
-- Primitive binding: after registration, primitive's getDimension works.
+- Primitive binding: after registration, primitive's getQuantity works.
 
 
 ### Step 4: Built-in Unit Definitions
@@ -440,13 +418,13 @@ all hand-curated units.
   - "meters" → unit "m" (via "meter" + strip "s")
   - "inches" → unit "in" (via "inch" + strip "es")
   - "pounds" → unit "lb" (via "pound" + strip "s")
-- getDimension for each unit returns the correct primitive dimension:
+- getQuantity dimension for each unit returns the correct primitive dimension:
   - Length units → {m: 1}
   - Mass units → {kg: 1}
   - Time units → {s: 1}
 
 
-### Step 5: reduce() and convert() Utilities
+### Step 5: reduce() Utility
 
 **File:** `lib/core/domain/services/unit_service.dart`
 
@@ -456,8 +434,8 @@ all hand-curated units.
 /// Reduce a quantity to primitive base units.
 ///
 /// Each non-primitive unit name in the quantity's dimension is resolved
-/// through the repository, and the value is multiplied/divided by the
-/// appropriate conversion factors.
+/// through the repository using getQuantity(), and the resulting value
+/// and dimension are combined.
 ///
 /// If the dimension already contains only primitive unit names, the
 /// quantity is returned unchanged.  Unknown unit names are kept as-is.
@@ -481,13 +459,12 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
       continue;
     }
 
-    // Resolve to base units.
-    final baseFactor = unit.definition.toBase(1.0, repo);
-    value *= math.pow(baseFactor, exponent);
+    // Resolve to base units using getQuantity.
+    final baseQuantity = unit.definition.getQuantity(1.0, repo);
+    value *= math.pow(baseQuantity.value, exponent);
 
     // Replace with primitive dimension entries.
-    final baseDimension = unit.definition.getDimension(repo);
-    for (final baseEntry in baseDimension.units.entries) {
+    for (final baseEntry in baseQuantity.dimension.units.entries) {
       newDimension[baseEntry.key] =
           (newDimension[baseEntry.key] ?? 0) +
           baseEntry.value * exponent;
@@ -495,39 +472,6 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
   }
 
   return Quantity(value, Dimension(newDimension));
-}
-~~~~
-
-**`convert(Quantity, Unit, UnitRepository)`:**
-
-~~~~ dart
-/// Convert a quantity to the specified target unit.
-///
-/// The quantity is first reduced to primitive base units, then converted
-/// to the target unit using fromBase().
-///
-/// Throws [DimensionException] if the quantity's dimension is not
-/// conformable with the target unit's dimension.
-///
-/// The returned Quantity has the target unit's primitive dimension
-/// and a value expressed in the target unit.
-Quantity convert(Quantity quantity, Unit targetUnit,
-    UnitRepository repo) {
-  final reduced = reduce(quantity, repo);
-
-  final targetDimension = targetUnit.definition.getDimension(repo);
-  if (!reduced.dimension.isConformableWith(targetDimension)) {
-    throw DimensionException(
-      'Cannot convert '
-      '${reduced.dimension.canonicalRepresentation()} '
-      'to ${targetUnit.id} '
-      '(${targetDimension.canonicalRepresentation()})',
-    );
-  }
-
-  final convertedValue =
-      targetUnit.definition.fromBase(reduced.value, repo);
-  return Quantity(convertedValue, targetDimension);
 }
 ~~~~
 
@@ -543,16 +487,6 @@ reduce() tests:
 - Mixed primitive/non-primitive: `Quantity(5.0, {ft: 1, kg: 1})` →
   `Quantity(1.524, {m: 1, kg: 1})`.
 - Unknown unit name → kept as-is in dimension.
-
-convert() tests:
-
-- Convert 5 feet to meters: `convert(Quantity(1.524, {m: 1}), meterUnit, repo)`
-  → value ≈ 1.524.
-- Convert meters to feet: value ≈ 5.0.
-- Round-trip: convert A→B→A gives original value within epsilon.
-- Convert with chained units: miles to feet.
-- Non-conformable: meters to seconds → throws DimensionException.
-- **Deliverable test:** Full pipeline from parsing "5 ft" through convert.
 
 
 ### Step 6: Evaluator Integration
@@ -593,10 +527,8 @@ class UnitNode extends ASTNode {
       return Quantity(1.0, Dimension({unitName: 1}));
     }
 
-    // Resolve to base units: 1 <unit> = factor <primitives>
-    final baseValue = unit.definition.toBase(1.0, repo);
-    final baseDimension = unit.definition.getDimension(repo);
-    return Quantity(baseValue, baseDimension);
+    // Resolve to base units using getQuantity.
+    return unit.definition.getQuantity(1.0, repo);
   }
 
   @override
@@ -669,15 +601,17 @@ test('Phase 2 deliverable: convert 5 feet to meters', () {
   expect(quantity.value, closeTo(1.524, 1e-10));
   expect(quantity.dimension, Dimension({'m': 1}));
 
-  // Convert to feet explicitly
+  // Convert to feet by dividing by the base quantity for 1 foot
   final feet = repo.getUnit('ft');
-  final inFeet = convert(quantity, feet, repo);
-  expect(inFeet.value, closeTo(5.0, 1e-10));
+  final feetBase = feet.definition.getQuantity(1.0, repo);
+  final inFeet = quantity.value / feetBase.value;
+  expect(inFeet, closeTo(5.0, 1e-10));
 
-  // Convert to miles
+  // Convert to miles similarly
   final miles = repo.getUnit('mi');
-  final inMiles = convert(quantity, miles, repo);
-  expect(inMiles.value, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
+  final milesBase = miles.definition.getQuantity(1.0, repo);
+  final inMiles = quantity.value / milesBase.value;
+  expect(inMiles, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
 });
 ~~~~
 
@@ -702,7 +636,7 @@ File Summary
 | `lib/core/domain/models/unit.dart`            | `Unit` class                                                    |
 | `lib/core/domain/models/unit_definition.dart` | `UnitDefinition`, `PrimitiveUnitDefinition`, `LinearDefinition` |
 | `lib/core/domain/models/unit_repository.dart` | `UnitRepository` class with alias lookup                        |
-| `lib/core/domain/services/unit_service.dart`  | `reduce()` and `convert()` functions                            |
+| `lib/core/domain/services/unit_service.dart`  | `reduce()` function                                             |
 | `lib/core/domain/data/builtin_units.dart`     | `registerBuiltinUnits()` function                               |
 
 ### Modified production code
@@ -718,7 +652,7 @@ File Summary
 |-----------------------------------------------------|--------------------------------------------|
 | `test/core/domain/models/unit_test.dart`            | Unit class, UnitDefinition hierarchy       |
 | `test/core/domain/models/unit_repository_test.dart` | Registration, lookup, plural stripping     |
-| `test/core/domain/services/unit_service_test.dart`  | reduce() and convert() algorithms          |
+| `test/core/domain/services/unit_service_test.dart`  | reduce() algorithm                         |
 | `test/core/domain/data/builtin_units_test.dart`     | Built-in unit registration and conversions |
 
 ### Modified test code
@@ -738,7 +672,7 @@ Each step's tests should be written and passing before proceeding to the next:
 1. **Unit + UnitDefinition** (no dependencies on other new code)
 2. **UnitRepository** (depends on Unit, UnitDefinition)
 3. **Built-in unit definitions** (depends on Unit, UnitDefinition, UnitRepository)
-4. **reduce() and convert()** (depends on UnitRepository)
+4. **reduce()** (depends on UnitRepository)
 5. **Evaluator integration** — modify EvalContext and UnitNode (depends on
    UnitRepository; verify backward compatibility with existing tests)
 6. **ExpressionParser integration** — wire repo through (depends on all above;

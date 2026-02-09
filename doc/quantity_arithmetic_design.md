@@ -1,4 +1,5 @@
-# Unitary - Quantity Class & Arithmetic Design
+Unitary - Quantity Class & Arithmetic Design
+============================================
 
 This document provides detailed design for the Quantity class, including arithmetic operations, unit conversion algorithms, and edge case handling.
 
@@ -9,7 +10,8 @@ This document provides detailed design for the Quantity class, including arithme
 ---
 
 
-## Table of Contents
+Table of Contents
+-----------------
 
 1. [Overview](#overview)
 2. [Number Representation Strategy](#number-representation-strategy)
@@ -24,7 +26,8 @@ This document provides detailed design for the Quantity class, including arithme
 ---
 
 
-## Overview
+Overview
+--------
 
 The Quantity class is the core data structure representing a physical quantity with both a numeric value and dimensional information. It must support:
 
@@ -46,7 +49,8 @@ The Quantity class is the core data structure representing a physical quantity w
 ---
 
 
-## Number Representation Strategy
+Number Representation Strategy
+------------------------------
 
 ### Decision: Use Double (Decimal) for MVP
 
@@ -87,7 +91,7 @@ When an exponent is provided as a `double`, we can recover a rational approximat
 
 ### Internal Representation
 
-```dart
+~~~~ dart
 class Quantity {
   final double value;           // Always stored as double
   final Dimension dimension;    // Dimensional information
@@ -105,7 +109,7 @@ class Quantity {
       dimension = unit.getDimension(repo),
       displayUnit = unit;
 }
-```
+~~~~
 
 ### Precision Management
 
@@ -117,7 +121,7 @@ To minimize floating-point errors:
 4. **Document limitations**: Make users aware that some operations may have small errors
 5. **Rational recovery for exponents**: Use continued fractions to recover rational approximations from doubles
 
-```dart
+~~~~ dart
 class Quantity {
   // Epsilon for floating-point comparisons (relative to magnitude)
   static const double epsilon = 1e-10;
@@ -207,16 +211,17 @@ class Rational {
   @override
   int get hashCode => numerator.hashCode ^ denominator.hashCode;
 }
-```
+~~~~
 
 ---
 
 
-## Quantity Class Design
+Quantity Class Design
+---------------------
 
 ### Complete Class Structure
 
-```dart
+~~~~ dart
 class Quantity {
   final double value;
   final Dimension dimension;
@@ -277,11 +282,11 @@ class Quantity {
   // Constants
   static const double epsilon = 1e-10;
 }
-```
+~~~~
 
 ### DisplaySettings
 
-```dart
+~~~~ dart
 class DisplaySettings {
   final int precision;              // Number of decimal places (2-10)
   final NotationStyle notation;     // Plain, scientific, engineering
@@ -301,12 +306,13 @@ enum NotationStyle {
   scientific,   // 1.23456e3
   engineering,  // 1.23456k (with SI prefix if applicable)
 }
-```
+~~~~
 
 ---
 
 
-## Arithmetic Operations
+Arithmetic Operations
+---------------------
 
 ### Addition and Subtraction
 
@@ -319,7 +325,7 @@ enum NotationStyle {
 3. Keep the same dimension
 4. Discard displayUnit (result is in primitive units)
 
-```dart
+~~~~ dart
 Quantity add(Quantity other) {
   if (!dimension.isConformableWith(other.dimension)) {
     throw DimensionException(
@@ -343,11 +349,11 @@ Quantity subtract(Quantity other) {
 
   return Quantity(value - other.value, dimension);
 }
-```
+~~~~
 
 **Example:**
 
-```dart
+~~~~ dart
 // 5 m + 3 m = 8 m
 final a = Quantity(5, Dimension({m: 1}));
 final b = Quantity(3, Dimension({m: 1}));
@@ -356,7 +362,7 @@ final c = a + b;  // Quantity(8, Dimension({m: 1}))
 // 5 m + 3 s = ERROR
 final d = Quantity(3, Dimension({s: 1}));
 final e = a + d;  // throws DimensionException
-```
+~~~~
 
 ### Multiplication
 
@@ -368,18 +374,18 @@ final e = a + d;  // throws DimensionException
 2. Multiply the dimensions (add exponents for each primitive)
 3. Discard displayUnit
 
-```dart
+~~~~ dart
 Quantity multiply(Quantity other) {
   return Quantity(
     value * other.value,
     dimension.multiply(other.dimension),
   );
 }
-```
+~~~~
 
 **Example:**
 
-```dart
+~~~~ dart
 // 5 m * 3 m = 15 m^2
 final a = Quantity(5, Dimension({m: 1}));
 final b = Quantity(3, Dimension({m: 1}));
@@ -392,7 +398,7 @@ final e = a * d;  // Quantity(10, Dimension({m: 1, s: 1}))
 // 5 m * 3 (dimensionless) = 15 m
 final f = Quantity.dimensionless(3);
 final g = a * f;  // Quantity(15, Dimension({m: 1}))
-```
+~~~~
 
 ### Division
 
@@ -405,7 +411,7 @@ final g = a * f;  // Quantity(15, Dimension({m: 1}))
 3. Divide the dimensions (subtract exponents for each primitive)
 4. Discard displayUnit
 
-```dart
+~~~~ dart
 Quantity divide(Quantity other) {
   if (other.value == 0.0) {
     throw EvalException('Division by zero');
@@ -416,11 +422,11 @@ Quantity divide(Quantity other) {
     dimension.divide(other.dimension),
   );
 }
-```
+~~~~
 
 **Example:**
 
-```dart
+~~~~ dart
 // 10 m / 2 s = 5 m/s
 final a = Quantity(10, Dimension({m: 1}));
 final b = Quantity(2, Dimension({s: 1}));
@@ -433,11 +439,11 @@ final e = a / d;  // Quantity(5, Dimension.dimensionless())
 // 10 m / 0 = ERROR
 final f = Quantity(0, Dimension({m: 1}));
 final g = a / f;  // throws EvalException
-```
+~~~~
 
 ### Negation and Absolute Value
 
-```dart
+~~~~ dart
 Quantity negate() {
   return Quantity(-value, dimension, displayUnit: displayUnit);
 }
@@ -445,7 +451,7 @@ Quantity negate() {
 Quantity abs() {
   return Quantity(value.abs(), dimension, displayUnit: displayUnit);
 }
-```
+~~~~
 
 ### Exponentiation
 
@@ -461,7 +467,7 @@ Quantity abs() {
 4. Compute `value ^ exponent`
 5. Multiply all dimension exponents by the power exponent
 
-```dart
+~~~~ dart
 Quantity power(num exponent) {
   // Special cases
   if (exponent == 0) {
@@ -537,11 +543,11 @@ Quantity power(num exponent) {
     dimension.power(exponent),
   );
 }
-```
+~~~~
 
 **Example:**
 
-```dart
+~~~~ dart
 // (3 m)^2 = 9 m^2
 final a = Quantity(3, Dimension({m: 1}));
 final b = a.power(2);  // Quantity(9, Dimension({m: 2}))
@@ -564,12 +570,13 @@ final h = g.power(1.0/3.0);  // Quantity(2, Dimension({m: 1}))
 // 0.5 recovers as 1/2, but 3 is not divisible by 2 ✗
 final i = Quantity(5, Dimension({m: 3}));
 final j = i.power(0.5);  // throws DimensionException
-```
+~~~~
 
 ---
 
 
-## Unit Conversion Algorithm
+Unit Conversion Algorithm
+-------------------------
 
 ### Overview
 
@@ -585,7 +592,7 @@ The conversion factor is the ratio of the two units when expressed in primitive 
 
 **Algorithm: `getConversionFactor(fromUnit, toUnit, repo)`**
 
-```dart
+~~~~ dart
 double getConversionFactor(Unit fromUnit, Unit toUnit, UnitRepository repo) {
   // 1. Check conformability
   final fromDim = fromUnit.getDimension(repo);
@@ -608,11 +615,11 @@ double getConversionFactor(Unit fromUnit, Unit toUnit, UnitRepository repo) {
   // 4. The ratio is the conversion factor
   return toValue;
 }
-```
+~~~~
 
 **Example:**
 
-```dart
+~~~~ dart
 // Convert miles to meters
 // 1 mile = 1609.344 meters (fromUnit.toBase)
 // 1 meter = 1 meter (toUnit.fromBase)
@@ -627,11 +634,11 @@ double getConversionFactor(Unit fromUnit, Unit toUnit, UnitRepository repo) {
 // 1 mile = 1609.344 meters (fromUnit.toBase)
 // 1609.344 meters = 5280 feet (toUnit.fromBase)
 // factor = 5280
-```
+~~~~
 
 ### Quantity Conversion
 
-```dart
+~~~~ dart
 Quantity convertTo(Unit targetUnit, UnitRepository repo) {
   // Handle case where we don't have a displayUnit
   if (displayUnit == null) {
@@ -666,11 +673,11 @@ Quantity convertTo(Unit targetUnit, UnitRepository repo) {
     displayUnit: targetUnit,
   );
 }
-```
+~~~~
 
 **Example Usage:**
 
-```dart
+~~~~ dart
 // Convert 5 miles to meters
 final miles = repo.getUnit('mi')!;
 final meters = repo.getUnit('m')!;
@@ -685,7 +692,7 @@ final celsius = repo.getUnit('degC')!;
 final temp = Quantity.fromUnit(100, fahrenheit, repo);
 final tempInCelsius = temp.convertTo(celsius, repo);
 // tempInCelsius.value ≈ 37.78
-```
+~~~~
 
 ### Handling Affine Conversions (Temperature)
 
@@ -693,7 +700,7 @@ Temperature units with offsets (like Celsius/Fahrenheit) require special handlin
 
 **Key Insight**: Affine conversions (with offset) are only valid for absolute values, not for differences or in compound units.
 
-```dart
+~~~~ dart
 // In AffineDefinition:
 @override
 double toBase(double value, UnitRepository repo, String unitId) {
@@ -710,7 +717,7 @@ double fromBase(double value, UnitRepository repo, String unitId) {
   var baseUnit = repo.getUnit(baseUnitId);
   return (baseUnit.definition.fromBase(value, repo, baseUnitId) / factor) - offset;
 }
-```
+~~~~
 
 **Important**: When temperature appears in compound units (e.g., °C/s), the offset should NOT be applied. This is a complex edge case that may need additional validation.
 
@@ -719,7 +726,8 @@ For MVP, we can document this limitation and handle it in future versions.
 ---
 
 
-## Unit Reduction Algorithm
+Unit Reduction Algorithm
+------------------------
 
 ### Purpose
 
@@ -731,7 +739,7 @@ Reduce a quantity to its representation in primitive units only. This is useful 
 
 ### Algorithm: `reduceToPrimitives(repo)`
 
-```dart
+~~~~ dart
 Quantity reduceToPrimitives(UnitRepository repo) {
   if (displayUnit == null) {
     // Already in primitive units
@@ -744,11 +752,11 @@ Quantity reduceToPrimitives(UnitRepository repo) {
   // The dimension is already correct (it's based on primitives)
   return Quantity(baseValue, dimension);
 }
-```
+~~~~
 
 **Example:**
 
-```dart
+~~~~ dart
 // 5 miles -> ~8046.72 meters
 final miles = repo.getUnit('mi')!;
 final distance = Quantity.fromUnit(5, miles, repo);
@@ -764,13 +772,13 @@ final reduced = force.reduceToPrimitives(repo);
 // reduced.value = 10
 // reduced.dimension = {kg: 1, m: 1, s: -2}
 // reduced.displayUnit = null
-```
+~~~~
 
 ### Compound Unit Reduction
 
 For compound units defined as expressions:
 
-```dart
+~~~~ dart
 // CompoundDefinition needs evaluator access
 class CompoundDefinition extends UnitDefinition {
   final String expr;  // e.g., "kg*m/s^2" for Newton
@@ -811,12 +819,13 @@ class CompoundDefinition extends UnitDefinition {
     return _baseQuantity!.dimension;
   }
 }
-```
+~~~~
 
 ---
 
 
-## Edge Cases and Error Handling
+Edge Cases and Error Handling
+-----------------------------
 
 ### 1. Division by Zero
 
@@ -824,14 +833,14 @@ class CompoundDefinition extends UnitDefinition {
 
 **Handling**: Throw `EvalException` with clear message
 
-```dart
+~~~~ dart
 Quantity divide(Quantity other) {
   if (other.value == 0.0) {
     throw EvalException('Division by zero');
   }
   // ... rest of division logic
 }
-```
+~~~~
 
 ### 2. Very Large Numbers
 
@@ -844,7 +853,7 @@ Quantity divide(Quantity other) {
 - Display as "∞" in UI with appropriate unit
 - Document limitation in user guide
 
-```dart
+~~~~ dart
 Quantity multiply(Quantity other) {
   final result = value * other.value;
 
@@ -863,7 +872,7 @@ String format(DisplaySettings settings) {
   }
   // ... normal formatting
 }
-```
+~~~~
 
 ### 3. Very Small Numbers (Underflow)
 
@@ -903,7 +912,7 @@ For an interactive calculator where users need immediate, clear feedback:
 
 **Implementation:**
 
-```dart
+~~~~ dart
 class Quantity {
   final double value;
   final Dimension dimension;
@@ -979,7 +988,7 @@ Quantity asin(Quantity q) {
 
   return Quantity(math.asin(q.value), Dimension.dimensionless());
 }
-```
+~~~~
 
 **Error Messages for Common Cases:**
 
@@ -994,7 +1003,7 @@ Quantity asin(Quantity q) {
 
 **Testing:**
 
-```dart
+~~~~ dart
 group('NaN handling', () {
   test('sqrt of negative throws error', () {
     final neg = Quantity(-4, Dimension.dimensionless());
@@ -1035,7 +1044,7 @@ group('NaN handling', () {
     expect(result.value.isInfinite, true);
   });
 });
-```
+~~~~
 
 ### 5. Temperature: Absolute vs. Difference (GNU Units Approach)
 
@@ -1051,7 +1060,7 @@ group('NaN handling', () {
 
 **Example:**
 
-```
+~~~~
 // Absolute temperature conversion (with offset)
 100 tempF = 37.78 tempC  (affine: (100-32)×5/9)
 
@@ -1060,13 +1069,13 @@ group('NaN handling', () {
 
 // Temperature rate (uses degF/degC, not tempF/tempC)
 10 degF/hour = 5.56 degC/hour
-```
+~~~~
 
 **Implementation:**
 
 Define two types of temperature units for each scale:
 
-```dart
+~~~~ dart
 // Absolute Fahrenheit (with offset to Kelvin)
 Unit(
   id: "tempF",
@@ -1093,7 +1102,7 @@ Unit(
 // Similar for Celsius:
 // tempC: affine with offset to tempK
 // degC: linear to degK
-```
+~~~~
 
 **Key Insight**:
 
@@ -1114,7 +1123,7 @@ Unit(
 
 Store both variants:
 
-```sql
+~~~~ sql
 -- Absolute Fahrenheit
 INSERT INTO units VALUES ('tempF', 'Absolute temperature in Fahrenheit', 'affine',
   '{"factor": 0.5555556, "offset": -32, "baseUnitId": "tempK"}', 0);
@@ -1124,11 +1133,11 @@ INSERT INTO units VALUES ('degF', 'Fahrenheit temperature difference', 'linear',
   '{"factor": 0.5555556, "baseUnitId": "degK"}', 0);
 
 -- Similar for tempC/degC, and tempK/degK (where tempK = degK as both primitive)
-```
+~~~~
 
 **Testing:**
 
-```dart
+~~~~ dart
 group('Temperature units', () {
   test('absolute temperature conversion', () {
     final result = parse('tempF(100)').evaluate(context);
@@ -1157,15 +1166,15 @@ group('Temperature units', () {
     expect(converted.value, closeTo(20, 0.1));
   });
 });
-```
+~~~~
 
 **Temperature Subtraction:**
 
 When subtracting absolute temperatures, the result should be a temperature difference (degree unit), not an absolute temperature:
 
-```
+~~~~
 100 tempF - 32 tempF = 68 degF  (difference in size, not absolute)
-```
+~~~~
 
 For MVP, the subtraction operation returns the same dimension (since tempF and degF both have dimension {K: 1}). However, semantically the result is a difference.
 
@@ -1175,7 +1184,7 @@ For MVP, the subtraction operation returns the same dimension (since tempF and d
 
 Include in help/docs:
 
-```
+~~~~
 Temperature Units: Absolute vs. Difference
 
 Unitary provides two types of temperature units following GNU Units convention:
@@ -1199,7 +1208,7 @@ Quick Guide:
   ✓ "tempC"               (as conversion target or definition lookup)
   ✗ "100 tempF"           (error in expressions - use tempF(100))
   ✗ "10 tempC/hour"       (incorrect - use degC for rates)
-```
+~~~~
 
 **Implementation Notes:**
 
@@ -1300,7 +1309,7 @@ Affine conversions don't distribute over multiplication. Consider `2 60 tempF`:
 
 ### Implementation
 
-```dart
+~~~~ dart
 // Token class - track if standalone
 class Token {
   final TokenType type;
@@ -1531,11 +1540,11 @@ class AffineUnitNode extends ASTNode {
     );
   }
 }
-```
+~~~~
 
 ### Examples
 
-```dart
+~~~~ dart
 // Valid expressions:
 parse('sin(0.5)')                    → FunctionNode ✓
 parse('tempF(60)')                   → AffineUnitNode ✓
@@ -1564,11 +1573,11 @@ parse('megatempF(60)')               → Error: "Cannot attach prefix to affine 
 // Edge cases:
 parse('5')                           → NumberNode (not standalone special case)
 parse('(tempF)')                     → Counts as expression (parens = multiple tokens)
-```
+~~~~
 
 ### Testing
 
-```dart
+~~~~ dart
 group('Function and affine syntax', () {
   test('function requires parentheses in expressions', () {
     expect(() => parse('sin 0.5'), throwsA(contains('requires arguments')));
@@ -1624,13 +1633,13 @@ group('Function and affine syntax', () {
     expect(parse('tempF(60)').evaluate(context), isA<Quantity>());
   });
 });
-```
+~~~~
 
 ### Warning About Temperature in Compound Units
 
 When parsing expressions, detect if `tempF` or `tempC` appears in the numerator of a compound expression and issue a warning:
 
-```dart
+~~~~ dart
 // In evaluator or validator:
 void validateTemperatureUsage(ASTNode node) {
   if (node is BinaryOpNode && node.operator == TokenType.divide) {
@@ -1651,7 +1660,7 @@ bool containsAffineUnit(ASTNode node) {
   }
   return false;
 }
-```
+~~~~
 
 **Implementation Notes:**
 
@@ -1673,7 +1682,7 @@ bool containsAffineUnit(ASTNode node) {
 
 **Example:**
 
-```
+~~~~
 // Absolute temperature conversion (with offset)
 100 tempF = 37.78 tempC  (affine: (100-32)×5/9)
 
@@ -1682,13 +1691,13 @@ bool containsAffineUnit(ASTNode node) {
 
 // Temperature rate (uses degF/degC, not tempF/tempC)
 10 degF/hour = 5.56 degC/hour
-```
+~~~~
 
 **Implementation:**
 
 Define two types of temperature units for each scale:
 
-```dart
+~~~~ dart
 // Absolute Fahrenheit (with offset to Kelvin)
 Unit(
   id: "tempF",
@@ -1715,7 +1724,7 @@ Unit(
 // Similar for Celsius:
 // tempC: affine with offset to tempK
 // degC: linear to degK
-```
+~~~~
 
 **Key Insight**:
 
@@ -1743,7 +1752,7 @@ The parser should guide users toward correct usage:
 
 Store both variants:
 
-```sql
+~~~~ sql
 -- Absolute Fahrenheit
 INSERT INTO units VALUES ('tempF', 'Absolute temperature in Fahrenheit', 'affine',
   '{"factor": 0.5555556, "offset": -32, "baseUnitId": "tempK"}', 0);
@@ -1753,11 +1762,11 @@ INSERT INTO units VALUES ('degF', 'Fahrenheit temperature difference', 'linear',
   '{"factor": 0.5555556, "baseUnitId": "degK"}', 0);
 
 -- Similar for tempC/degC, and tempK/degK (where tempK = degK as both primitive)
-```
+~~~~
 
 **Testing:**
 
-```dart
+~~~~ dart
 group('Temperature units', () {
   test('absolute temperature conversion', () {
     final tempF = repo.getUnit('tempF')!;
@@ -1792,13 +1801,13 @@ group('Temperature units', () {
     // Future: add validation to detect and warn
   });
 });
-```
+~~~~
 
 **Documentation for Users:**
 
 Include in help/docs:
 
-```
+~~~~
 Temperature Units: Absolute vs. Difference
 
 Unitary provides two types of temperature units following GNU Units convention:
@@ -1819,15 +1828,15 @@ Quick Guide:
   ✓ "10 degC/hour"        (temperature rate)
   ✓ "(100 tempF - 32 tempF) = 68 degF"  (difference gives degree unit)
   ✗ "10 tempC/hour"       (incorrect - use degC for rates)
-```
+~~~~
 
 **Temperature Subtraction:**
 
 When subtracting absolute temperatures, the result should be a temperature difference (degree unit), not an absolute temperature:
 
-```
+~~~~
 100 tempF - 32 tempF = 68 degF  (difference in size, not absolute)
-```
+~~~~
 
 For MVP, the subtraction operation returns the same dimension (since tempF and degF both have dimension {K: 1}). However, semantically the result is a difference.
 
@@ -1847,7 +1856,7 @@ For MVP, the subtraction operation returns the same dimension (since tempF and d
 
 **Handling**: Throw `EvalException`
 
-```dart
+~~~~ dart
 Quantity power(num exponent) {
   if (value < 0 && exponent is double && exponent != exponent.truncate()) {
     throw EvalException(
@@ -1856,7 +1865,7 @@ Quantity power(num exponent) {
   }
   // ... rest of power logic
 }
-```
+~~~~
 
 ### 7. Dimension Mismatch Errors
 
@@ -1864,7 +1873,7 @@ Quantity power(num exponent) {
 
 **Handling**: Throw `DimensionException` with helpful message
 
-```dart
+~~~~ dart
 class DimensionException extends Exception {
   final String message;
   final Dimension? leftDimension;
@@ -1882,7 +1891,7 @@ class DimensionException extends Exception {
     return 'DimensionException: $message';
   }
 }
-```
+~~~~
 
 ### 7. Precision Loss in Floating-Point Operations
 
@@ -1904,21 +1913,22 @@ class DimensionException extends Exception {
 
 **Example of Precision Loss:**
 
-```dart
+~~~~ dart
 // Repeated operations may accumulate error
 var x = Quantity(1.0/3.0, Dimension.dimensionless());  // 0.333333...
 var y = x * 3;  // Should be 1.0, might be 0.999999...
 
 // Use epsilon comparison:
 expect(y.approximatelyEquals(Quantity(1.0, Dimension.dimensionless())), true);
-```
+~~~~
 
 **Not Implemented for MVP**: Operation depth tracking. This adds complexity without clear benefit for most users. If precision becomes a concern in practice, we can add it later.
 
 ---
 
 
-## Performance Considerations
+Performance Considerations
+--------------------------
 
 ### Optimization Strategies
 
@@ -1951,13 +1961,14 @@ These should be easily achievable with the proposed design.
 ---
 
 
-## Testing Strategy
+Testing Strategy
+----------------
 
 ### Unit Tests
 
 **Arithmetic Operations:**
 
-```dart
+~~~~ dart
 group('Quantity arithmetic', () {
   test('add conformable quantities', () {
     final a = Quantity(5, Dimension({'m': 1}));
@@ -2002,11 +2013,11 @@ group('Quantity arithmetic', () {
     expect(() => a / b, throwsA(isA<EvalException>()));
   });
 });
-```
+~~~~
 
 **Conversion Tests:**
 
-```dart
+~~~~ dart
 group('Quantity conversion', () {
   late UnitRepository repo;
 
@@ -2039,11 +2050,11 @@ group('Quantity conversion', () {
            throwsA(isA<DimensionException>()));
   });
 });
-```
+~~~~
 
 **Edge Case Tests:**
 
-```dart
+~~~~ dart
 group('Quantity edge cases', () {
   test('very large numbers', () {
     final big = Quantity(1e308, Dimension.dimensionless());
@@ -2086,11 +2097,11 @@ group('Quantity edge cases', () {
     expect(nan.format(DisplaySettings()), 'undefined');
   });
 });
-```
+~~~~
 
 ### Integration Tests
 
-```dart
+~~~~ dart
 group('Quantity integration', () {
   test('complex expression evaluation', () {
     // Test: sqrt(9 m^2) + 5 ft
@@ -2115,13 +2126,13 @@ group('Quantity integration', () {
     expect(inM.value, closeTo(1609.344, 0.001));
   });
 });
-```
+~~~~
 
 ### Property-Based Tests
 
 Use property-based testing for mathematical properties:
 
-```dart
+~~~~ dart
 group('Quantity properties', () {
   test('commutativity of addition', () {
     // For all conformable a, b: a + b == b + a
@@ -2140,12 +2151,13 @@ group('Quantity properties', () {
     // (within floating-point precision)
   });
 });
-```
+~~~~
 
 ---
 
 
-## Summary
+Summary
+-------
 
 This design provides:
 

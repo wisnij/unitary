@@ -1,11 +1,13 @@
-# Unitary - Implementation Plan
+Unitary - Implementation Plan
+=============================
 
 This document outlines the phased approach to implementing Unitary, along with future enhancements, risk mitigation strategies, and success criteria.
 
 ---
 
 
-## Implementation Phases
+Implementation Phases
+---------------------
 
 ### Phase 0: Project Setup (Week 1) — COMPLETE
 
@@ -317,7 +319,8 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 
-## Future Enhancement Phases
+Future Enhancement Phases
+-------------------------
 
 ### Phase 11: Custom Units
 
@@ -363,7 +366,8 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 
-## Risk Mitigation
+Risk Mitigation
+---------------
 
 ### Technical Risks
 
@@ -430,7 +434,8 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 
-## Success Metrics
+Success Metrics
+---------------
 
 ### MVP Success Criteria
 

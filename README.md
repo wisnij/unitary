@@ -1,4 +1,5 @@
-# Unitary
+Unitary
+=======
 
 A powerful, flexible unit conversion mobile application targeting scientific and
 technically-minded users.  Features both freeform calculator-style expression
@@ -6,7 +7,8 @@ evaluation and worksheet-based conversion modes, with support for custom
 user-defined units and dimensions.
 
 
-## Project Status
+Project Status
+--------------
 
 **Current Phase:** Phase 2 Complete, ready for Phase 3 (Advanced Unit Features)\
 **Last Updated:** February 7, 2026
@@ -18,7 +20,8 @@ for length, mass, and time are available with full conversion support.
 ---
 
 
-## Features (Planned)
+Features (Planned)
+------------------
 
 ### Core Functionality
 
@@ -42,7 +45,8 @@ for length, mass, and time are available with full conversion support.
 ---
 
 
-## Documentation
+Documentation
+-------------
 
 ### Design Documents
 
@@ -64,7 +68,8 @@ for length, mass, and time are available with full conversion support.
 ---
 
 
-## Technology Stack
+Technology Stack
+----------------
 
 **Framework:** Flutter (Dart)
 
@@ -86,9 +91,10 @@ for length, mass, and time are available with full conversion support.
 ---
 
 
-## Project Structure
+Project Structure
+-----------------
 
-```
+~~~~
 unitary/
 ├── doc/                           # All design documentation
 │   ├── requirements.md
@@ -112,12 +118,13 @@ unitary/
 │   ├── units/
 │   └── currency/
 └── README.md                      # This file
-```
+~~~~
 
 ---
 
 
-## Architecture Highlights
+Architecture Highlights
+-----------------------
 
 ### Expression Parser & Evaluator
 
@@ -142,7 +149,8 @@ unitary/
 ---
 
 
-## Getting Started
+Getting Started
+---------------
 
 ### Prerequisites
 
@@ -152,7 +160,7 @@ unitary/
 
 ### Setup (When Implementation Begins)
 
-```bash
+~~~~ bash
 # Clone the repository
 git clone https://github.com/wisnij/unitary.git
 cd unitary
@@ -162,7 +170,7 @@ flutter pub get
 
 # Run the app
 flutter run
-```
+~~~~
 
 ### Development Workflow
 
@@ -175,7 +183,8 @@ flutter run
 ---
 
 
-## Current Progress
+Current Progress
+----------------
 
 ### Implementation
 
@@ -203,7 +212,8 @@ See [Design Progress](design_progress.md) for full details.
 ---
 
 
-## Contributing
+Contributing
+------------
 
 This is currently a personal project in the design phase.  Once implementation
 begins, contributions will be welcome!
@@ -227,7 +237,8 @@ begins, contributions will be welcome!
 ---
 
 
-## Roadmap
+Roadmap
+-------
 
 ### Phase 1: MVP (Weeks 1-25)
 
@@ -257,7 +268,8 @@ See [Implementation Plan](implementation_plan.md) for detailed timeline.
 ---
 
 
-## Design Philosophy
+Design Philosophy
+-----------------
 
 ### For Users
 
@@ -276,7 +288,8 @@ See [Implementation Plan](implementation_plan.md) for detailed timeline.
 ---
 
 
-## License
+License
+-------
 
 Copyright © 2026 Jim Wisniewski <wisnij@gmail.com>
 
@@ -296,7 +309,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
 
 
-## Acknowledgments
+Acknowledgments
+---------------
 
 - GNU Units project for inspiration and unit database
 - Flutter and Dart communities

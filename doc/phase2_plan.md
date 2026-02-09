@@ -1,18 +1,20 @@
-# Phase 2: Unit System Foundation
+Phase 2: Unit System Foundation
+===============================
 
 > **Status: COMPLETE**
 >
 > 506 tests passing (373 Phase 1 + 133 Phase 2). Completed February 7, 2026.
 
 
-## Overview
+Overview
+--------
 
 **Goal:** Build the unit definition system and integrate it with the evaluator
 so that unit names resolve to real units with conversion factors.
 
 **Deliverable:** A Dart API that converts "5 feet" to meters programmatically:
 
-```dart
+~~~~ dart
 final repo = UnitRepository.withBuiltinUnits();
 final parser = ExpressionParser(repo: repo);
 final quantity = parser.evaluate('5 ft');
@@ -21,7 +23,7 @@ final quantity = parser.evaluate('5 ft');
 final feet = repo.getUnit('ft');
 final inFeet = convert(quantity, feet, repo);
 // inFeet.value ≈ 5.0
-```
+~~~~
 
 **Scope boundaries:**
 
@@ -37,7 +39,8 @@ final inFeet = convert(quantity, feet, repo);
 ---
 
 
-## Design Decisions
+Design Decisions
+----------------
 
 These decisions were made during the Phase 2 design review:
 
@@ -83,14 +86,15 @@ These decisions were made during the Phase 2 design review:
 ---
 
 
-## Implementation Steps
+Implementation Steps
+--------------------
 
 
 ### Step 1: Unit Class
 
 **File:** `lib/core/domain/models/unit.dart`
 
-```dart
+~~~~ dart
 /// Represents a unit of measurement.
 ///
 /// Each unit has a unique [id] (its primary short name), a list of [aliases]
@@ -122,7 +126,7 @@ class Unit {
   /// All recognized names for this unit: id + aliases.
   List<String> get allNames => [id, ...aliases];
 }
-```
+~~~~
 
 **Tests:** `test/core/domain/models/unit_test.dart`
 
@@ -135,7 +139,7 @@ class Unit {
 
 **File:** `lib/core/domain/models/unit_definition.dart`
 
-```dart
+~~~~ dart
 /// Base class for unit definitions.
 ///
 /// Provides the conversion contract: every definition can convert a value
@@ -158,11 +162,11 @@ abstract class UnitDefinition {
   /// Whether this is a primitive (base) unit definition.
   bool get isPrimitive;
 }
-```
+~~~~
 
 **PrimitiveUnitDefinition:**
 
-```dart
+~~~~ dart
 /// A primitive (base) unit that defines a fundamental dimension.
 ///
 /// The unit's ID becomes its own dimension key.  For example, the meter
@@ -189,11 +193,11 @@ class PrimitiveUnitDefinition extends UnitDefinition {
   @override
   bool get isPrimitive => true;
 }
-```
+~~~~
 
 **LinearDefinition:**
 
-```dart
+~~~~ dart
 /// A unit defined as a linear multiple of another unit.
 ///
 /// For example: 1 foot = 0.3048 meters, so feet has
@@ -236,7 +240,7 @@ class LinearDefinition extends UnitDefinition {
   @override
   bool get isPrimitive => false;
 }
-```
+~~~~
 
 **Design note on `bind()`:** PrimitiveUnitDefinition needs its unit's ID to
 produce the correct dimension (e.g., `{m: 1}` for meters).  The repo calls
@@ -259,7 +263,7 @@ constructor parameter, but `bind()` avoids requiring the ID in two places
 
 **File:** `lib/core/domain/models/unit_repository.dart`
 
-```dart
+~~~~ dart
 /// Registry for unit definitions.  Provides lookup by name/alias with
 /// automatic plural stripping fallback.
 class UnitRepository {
@@ -336,7 +340,7 @@ class UnitRepository {
   /// All registered units (by primary ID).
   Iterable<Unit> get allUnits => _units.values;
 }
-```
+~~~~
 
 **Plural stripping order:** 'es' before 's'.  This handles "inches" → "inch"
 correctly before trying "inche".  Regular plurals like "meters" → "meter" are
@@ -448,7 +452,7 @@ all hand-curated units.
 
 **`reduce(Quantity, UnitRepository)`:**
 
-```dart
+~~~~ dart
 /// Reduce a quantity to primitive base units.
 ///
 /// Each non-primitive unit name in the quantity's dimension is resolved
@@ -492,11 +496,11 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
 
   return Quantity(value, Dimension(newDimension));
 }
-```
+~~~~
 
 **`convert(Quantity, Unit, UnitRepository)`:**
 
-```dart
+~~~~ dart
 /// Convert a quantity to the specified target unit.
 ///
 /// The quantity is first reduced to primitive base units, then converted
@@ -525,7 +529,7 @@ Quantity convert(Quantity quantity, Unit targetUnit,
       targetUnit.definition.fromBase(reduced.value, repo);
   return Quantity(convertedValue, targetDimension);
 }
-```
+~~~~
 
 **Tests:** `test/core/domain/services/unit_service_test.dart`
 
@@ -557,7 +561,7 @@ convert() tests:
 
 **EvalContext changes:**
 
-```dart
+~~~~ dart
 class EvalContext {
   /// Unit repository for resolving unit names.  Null means Phase 1
   /// behavior (all identifiers treated as raw dimensions).
@@ -565,11 +569,11 @@ class EvalContext {
 
   const EvalContext({this.repo});
 }
-```
+~~~~
 
 **UnitNode.evaluate() changes:**
 
-```dart
+~~~~ dart
 class UnitNode extends ASTNode {
   final String unitName;
 
@@ -598,7 +602,7 @@ class UnitNode extends ASTNode {
   @override
   String toString() => 'UnitNode($unitName)';
 }
-```
+~~~~
 
 **Backward compatibility:** When repo is null, the behavior is identical to
 Phase 1.  `const EvalContext()` produces null repo.  All 372 existing tests
@@ -621,7 +625,7 @@ use `const EvalContext()` implicitly through ExpressionParser and are unaffected
 
 **Modified file:** `lib/core/domain/parser/expression_parser.dart`
 
-```dart
+~~~~ dart
 class ExpressionParser {
   /// Optional unit repository for unit-aware evaluation.
   final UnitRepository? repo;
@@ -645,7 +649,7 @@ class ExpressionParser {
     return Lexer(input).scanTokens();
   }
 }
-```
+~~~~
 
 **Tests:** `test/core/domain/parser/expression_parser_test.dart` (add or extend)
 
@@ -655,7 +659,7 @@ class ExpressionParser {
 
 **Deliverable test:**
 
-```dart
+~~~~ dart
 test('Phase 2 deliverable: convert 5 feet to meters', () {
   final repo = UnitRepository.withBuiltinUnits();
   final parser = ExpressionParser(repo: repo);
@@ -675,7 +679,7 @@ test('Phase 2 deliverable: convert 5 feet to meters', () {
   final inMiles = convert(quantity, miles, repo);
   expect(inMiles.value, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
 });
-```
+~~~~
 
 
 ### Step 8: Update Documentation
@@ -688,7 +692,8 @@ test('Phase 2 deliverable: convert 5 feet to meters', () {
 ---
 
 
-## File Summary
+File Summary
+------------
 
 ### New production code
 
@@ -725,7 +730,8 @@ test('Phase 2 deliverable: convert 5 feet to meters', () {
 ---
 
 
-## Implementation Order
+Implementation Order
+--------------------
 
 Each step's tests should be written and passing before proceeding to the next:
 
@@ -742,7 +748,8 @@ Each step's tests should be written and passing before proceeding to the next:
 ---
 
 
-## Risks and Mitigations
+Risks and Mitigations
+---------------------
 
 ### Risk 1: Alias/plural collisions
 
@@ -780,7 +787,8 @@ falls back to Phase 1 behavior when repo is null.  Verified by running all
 ---
 
 
-## Open Decisions for Phase 3
+Open Decisions for Phase 3
+--------------------------
 
 - AffineDefinition (temperature with offsets) and the `tempF(60)` syntax
 - CompoundDefinition (expression-based units like Newton = kg*m/s^2)

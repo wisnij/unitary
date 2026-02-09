@@ -1,4 +1,5 @@
-# Unitary - Core Architecture
+Unitary - Core Architecture
+===========================
 
 This document describes the core technical architecture of Unitary, including data models, the expression parser/evaluator, and key subsystems.
 
@@ -9,7 +10,8 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 ---
 
 
-## Technology Stack Recommendation
+Technology Stack Recommendation
+-------------------------------
 
 ### Framework: Flutter
 
@@ -39,11 +41,12 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 - **provider** or **riverpod** - state management
 
 
-## Architecture Overview
+Architecture Overview
+---------------------
 
 ### Layered Architecture
 
-```
+~~~~
 ┌─────────────────────────────────────────┐
 │         Presentation Layer              │
 │  (UI Widgets, Screens, View Models)     │
@@ -63,25 +66,26 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 │           Data Layer                    │
 │  (Repositories, Local DB, Preferences)  │
 └─────────────────────────────────────────┘
-```
+~~~~
 
 
-## Core Components Design
+Core Components Design
+----------------------
 
 ### 1. Expression Parser & Evaluator
 
 **Component Structure:**
 
-```
+~~~~
 Lexer → Parser → AST Builder → Evaluator
   ↓       ↓          ↓            ↓
 Token   AST      Validated     Result
 Stream  Nodes    Expression   + Units
-```
+~~~~
 
 **Token Types:**
 
-```dart
+~~~~ dart
 enum TokenType {
   // Literals
   number,        // 3.14, 1.5e-10, .5
@@ -116,7 +120,7 @@ class Token {
 
   Token(this.type, this.lexeme, this.literal, this.line, this.column);
 }
-```
+~~~~
 
 **Lexer (Tokenizer):**
 
@@ -146,7 +150,7 @@ class Token {
 
 **Lexer Implementation Notes:**
 
-```dart
+~~~~ dart
 void scanNumber() {
   // Handle leading decimal point (.5)
   if (previous() == '.' && isDigit(peek())) {
@@ -222,7 +226,7 @@ void handleImplicitMultiply() {
     }
   }
 }
-```
+~~~~
 
 **Parser:**
 
@@ -242,7 +246,7 @@ void handleImplicitMultiply() {
 
 **AST Node Types:**
 
-```dart
+~~~~ dart
 abstract class ASTNode {
   Quantity evaluate(Context context);
 }
@@ -252,7 +256,7 @@ class UnitNode extends ASTNode
 class BinaryOpNode extends ASTNode  // +, -, *, /, ^
 class UnaryOpNode extends ASTNode   // -, sqrt, etc.
 class FunctionNode extends ASTNode  // sin, cos, etc.
-```
+~~~~
 
 **Evaluator:**
 
@@ -264,7 +268,7 @@ class FunctionNode extends ASTNode  // sin, cos, etc.
 
 **Dimension Model:**
 
-```dart
+~~~~ dart
 // Represents a dimension as a product of primitive units with exponents
 class Dimension {
   // Map from primitive unit ID to exponent
@@ -441,11 +445,11 @@ class PrefixRegistry {
 
   List<UnitPrefix> getAllPrefixes() => _prefixes.values.toSet().toList();
 }
-```
+~~~~
 
 **Unit Definition:**
 
-```dart
+~~~~ dart
 class Unit {
   final String id;          // Primary symbol/name (e.g., "m", "meter", "kg")
   final List<String> aliases;  // Alternative names (e.g., ["metre"])
@@ -589,11 +593,11 @@ class CompoundDefinition extends UnitDefinition {
 //   Unit(id: "N", aliases: ["newton", "newtons"],
 //        definition: CompoundDefinition("kg*m/s^2"))
 //   dimension: {kg: 1, m: 1, s: -2}
-```
+~~~~
 
 **Quantity Model:**
 
-```dart
+~~~~ dart
 class Quantity {
   final num value;
   final Dimension dimension;
@@ -605,7 +609,7 @@ class Quantity {
   Quantity power(num exponent);
   String format(DisplaySettings settings);
 }
-```
+~~~~
 
 ### 3. Unit Database
 
@@ -617,7 +621,7 @@ class Quantity {
 
 **Database Schema:**
 
-```sql
+~~~~ sql
 -- Units table (includes both primitive and derived units)
 CREATE TABLE units (
   id TEXT PRIMARY KEY,             -- Primary symbol/name (e.g., "m", "kg", "N")
@@ -727,13 +731,13 @@ CREATE TABLE custom_dimensions (
 --
 -- CompoundDefinition (newton):
 --   {"type": "compound", "expression": "kg*m/s^2"}
-```
+~~~~
 
 ### 4. Worksheet System
 
 **Worksheet Model:**
 
-```dart
+~~~~ dart
 class Worksheet {
   final String id;
   final String name;
@@ -749,7 +753,7 @@ class WorksheetField {
   String? lastValue;     // persisted
   bool isInput;          // which field is currently being edited
 }
-```
+~~~~
 
 **Worksheet State Management:**
 
@@ -762,14 +766,14 @@ class WorksheetField {
 
 **Currency Service:**
 
-```dart
+~~~~ dart
 class CurrencyService {
   Future<void> fetchRates();
   Future<Map<String, double>> getRates();
   DateTime getLastUpdateTime();
   bool needsUpdate();
 }
-```
+~~~~
 
 **Rate Storage:**
 
@@ -786,7 +790,8 @@ class CurrencyService {
 - Rate limiting respect
 
 
-## State Management Strategy
+State Management Strategy
+-------------------------
 
 ### Global State (Provider/Riverpod)
 
@@ -804,7 +809,7 @@ class CurrencyService {
 
 ### Persistence Layer
 
-```dart
+~~~~ dart
 class PreferencesRepository {
   Future<void> savePreference(String key, dynamic value);
   Future<T?> getPreference<T>(String key);
@@ -821,10 +826,11 @@ class UnitRepository {
   Future<Unit?> findUnit(String name);
   Future<void> saveCustomUnit(Unit unit);
 }
-```
+~~~~
 
 
-## Implementation Phases
+Implementation Phases
+---------------------
 
 ### Phase 0: Project Setup (Week 1)
 
@@ -1097,7 +1103,8 @@ class UnitRepository {
 ---
 
 
-## Future Enhancement Phases
+Future Enhancement Phases
+-------------------------
 
 ### Phase 11: Custom Units
 
@@ -1127,11 +1134,12 @@ class UnitRepository {
 ---
 
 
-## Development Best Practices
+Development Best Practices
+--------------------------
 
 ### Code Organization
 
-```
+~~~~
 lib/
 ├── main.dart
 ├── app.dart
@@ -1171,7 +1179,7 @@ lib/
 └── assets/
     ├── units/
     └── currency/
-```
+~~~~
 
 ### Testing Strategy
 
@@ -1197,7 +1205,8 @@ lib/
 ---
 
 
-## Risk Mitigation
+Risk Mitigation
+---------------
 
 ### Technical Risks
 
@@ -1229,7 +1238,8 @@ lib/
 ---
 
 
-## Success Metrics
+Success Metrics
+---------------
 
 ### MVP Success Criteria
 
@@ -1254,7 +1264,8 @@ lib/
 ---
 
 
-## Resources & References
+Resources & References
+----------------------
 
 ### Learning Resources
 

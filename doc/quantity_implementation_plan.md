@@ -1,14 +1,17 @@
-# Plan: Implement Quantity Evaluation & Comparison Logic
+Plan: Implement Quantity Evaluation & Comparison Logic
+======================================================
 
 
-## Overview
+Overview
+--------
 
 Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefinition stubs, UnitRepository, and the Quantity class with full arithmetic, comparison, and conversion logic. All pure Dart — no Flutter dependency.
 
 **Workflow:** For each code step, write the unit tests FIRST, then implement the code to make them pass.
 
 
-## Files to Create (in order)
+Files to Create (in order)
+--------------------------
 
 ### Step 0: Project scaffold
 
@@ -96,7 +99,8 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 - Barrel export of all model files
 
 
-## Key Design Decisions
+Key Design Decisions
+--------------------
 
 - **`+`/`-` reduce operands; `*`/`/` do not** — addition/subtraction need common base units for correctness; multiplication/division operate on raw values.  `^` reduces its left operand if it is not dimensionless and its right operand is a rational with denominator greater than 1.
 - **Tests first** — write test file before implementation for each step
@@ -108,7 +112,8 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 - Errors extend `Exception` (not `Error`) per Dart exception semantics
 
 
-## Verification
+Verification
+------------
 
 1. `dart pub get` succeeds
 2. `dart test` — all tests pass

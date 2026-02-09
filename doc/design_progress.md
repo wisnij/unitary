@@ -1,9 +1,11 @@
-# Unitary - Design Progress Tracker
+Unitary - Design Progress Tracker
+=================================
 
 This document tracks which aspects of the design have been completed and which still need work.
 
 
-## Already Discussed in Detail ✓
+Already Discussed in Detail ✓
+-----------------------------
 
 The following areas have been thoroughly designed and documented:
 
@@ -57,7 +59,8 @@ The following areas have been thoroughly designed and documented:
 ---
 
 
-## Areas That Need More Detail
+Areas That Need More Detail
+---------------------------
 
 The following areas have been identified but need deeper design work:
 
@@ -250,7 +253,8 @@ The following areas have been identified but need deeper design work:
 ---
 
 
-## Next Steps
+Next Steps
+----------
 
 When resuming design work, recommended order of priority:
 
@@ -267,7 +271,8 @@ When resuming design work, recommended order of priority:
 ---
 
 
-## Open Questions
+Open Questions
+--------------
 
 Questions that arose during design but haven't been resolved:
 

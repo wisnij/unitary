@@ -1,15 +1,17 @@
-# Evaluation Pipeline
+Evaluation Pipeline
+===================
 
 
-## Overview
+Overview
+--------
 
-```
+~~~~
 String → Lexer → Tokens → Parser → AST → Evaluator → Quantity
                                             ↑
                                        UnitRepository
                                     (alias lookup + chain
                                      resolution to primitives)
-```
+~~~~
 
 The evaluation pipeline has four stages:
 
@@ -32,20 +34,21 @@ about the original units.
 ---
 
 
-## Worked Example: `3e6 yard/week`
+Worked Example: `3e6 yard/week`
+-------------------------------
 
 ### Step 1: Lexing
 
 The `Lexer` scans character-by-character and produces tokens:
 
-```
+~~~~
 "3e6"   → Token(number, 3000000.0)
 " "     → whitespace consumed (not a token)
 "yard"  → Token(identifier, "yard")
 "/"     → Token(divide)
 "week"  → Token(identifier, "week")
         → Token(eof)
-```
+~~~~
 
 `3e6` is parsed as scientific notation during number scanning.  `yard` and
 `week` are scanned as identifier tokens (not recognized as built-in functions,
@@ -64,13 +67,13 @@ The key decisions:
 
 Resulting AST:
 
-```
+~~~~
 BinaryOpNode(divide,
   BinaryOpNode(multiply,       ← implicit multiplication
     NumberNode(3000000.0),
     UnitNode("yard")),
   UnitNode("week"))
-```
+~~~~
 
 Note: implicit multiplication produces the same `BinaryOpNode` with
 `TokenType.multiply` as an explicit `*` would.  The distinction only exists at
@@ -86,7 +89,6 @@ The evaluator walks the tree bottom-up, with `EvalContext` carrying the
 
 Returns `Quantity(3000000.0, dimensionless)`.
 
-
 #### 3b: `UnitNode("yard")`
 
 This is where unit resolution happens:
@@ -95,14 +97,14 @@ This is where unit resolution happens:
 2. `yd`'s definition is `LinearDefinition(factor: 3.0, baseUnitId: 'ft')`.
 3. `definition.toBase(1.0, repo)` **recurses** through the definition chain:
 
-   ```
+   ~~~~
    yd.toBase(1.0)
-     → ft.toBase(1.0 * 3.0 = 3.0)           # ft = 12 inch
-       → in.toBase(3.0 * 12.0 = 36.0)       # in = 2.54 cm
-         → cm.toBase(36.0 * 2.54 = 91.44)   # cm = 0.01 m
+     → ft.toBase(1.0 * 3.0 = 3.0)            # ft = 12 inch
+       → in.toBase(3.0 * 12.0 = 36.0)        # in = 2.54 cm
+         → cm.toBase(36.0 * 2.54 = 91.44)    # cm = 0.01 m
            → m.toBase(91.44 * 0.01 = 0.9144) # m is primitive (identity)
              → returns 0.9144
-   ```
+   ~~~~
 
 4. `getDimension(repo)` recurses the same chain, each `LinearDefinition`
    delegating to its `baseUnitId`, until hitting the `PrimitiveUnitDefinition`
@@ -110,17 +112,15 @@ This is where unit resolution happens:
 
 Result: **`Quantity(0.9144, {m: 1})`**
 
-
 #### 3c: Implicit multiplication
 
-```
+~~~~
 Quantity(3000000.0, dimensionless) * Quantity(0.9144, {m: 1})
   → values multiply: 3000000.0 * 0.9144 = 2743200.0
   → dimensions combine: {} * {m: 1} = {m: 1}
-```
+~~~~
 
 Result: **`Quantity(2743200.0, {m: 1})`**
-
 
 #### 3d: `UnitNode("week")`
 
@@ -128,27 +128,26 @@ Result: **`Quantity(2743200.0, {m: 1})`**
 2. Definition: `LinearDefinition(factor: 7, baseUnitId: 'day')`.
 3. Chain resolution:
 
-   ```
+   ~~~~
    week.toBase(1.0)
-     → day.toBase(1.0 * 7 = 7.0)              # day = 24 hour
-       → hr.toBase(7.0 * 24 = 168.0)          # hr = 60 min
-         → min.toBase(168.0 * 60 = 10080.0)   # min = 60 s
+     → day.toBase(1.0 * 7 = 7.0)               # day = 24 hour
+       → hr.toBase(7.0 * 24 = 168.0)           # hr = 60 min
+         → min.toBase(168.0 * 60 = 10080.0)    # min = 60 s
            → s.toBase(10080.0 * 60 = 604800.0) # primitive (identity)
              → returns 604800.0
-   ```
+   ~~~~
 
 4. `getDimension` recurses to `s` → `{s: 1}`.
 
 Result: **`Quantity(604800.0, {s: 1})`**
 
-
 #### 3e: Division
 
-```
+~~~~
 Quantity(2743200.0, {m: 1}) / Quantity(604800.0, {s: 1})
   → values divide: 2743200.0 / 604800.0 ≈ 4.5357
   → dimensions: {m: 1} / {s: 1} = {m: 1, s: -1}
-```
+~~~~
 
 **Final result: `Quantity(4.5357..., {m: 1, s: -1})`** — about 4.54 meters
 per second.

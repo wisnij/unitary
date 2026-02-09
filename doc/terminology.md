@@ -1,11 +1,13 @@
-# Unit Converter - Terminology
+Unit Converter - Terminology
+============================
 
 This document defines key terms used throughout the project documentation and codebase. All contributors should use these terms consistently.
 
 ---
 
 
-## Core Concepts
+Core Concepts
+-------------
 
 **Value**: A pure number, which may be an integer, a decimal (floating-point), or a numerator/denominator ratio (rational number). Values have no dimensional information.
 
@@ -30,7 +32,8 @@ This document defines key terms used throughout the project documentation and co
 ---
 
 
-## Operations and Expressions
+Operations and Expressions
+--------------------------
 
 **Expression**: A mathematical expression containing values, units, and/or functions, combined via operators (+, -, *, /, ^, etc.). Examples: "5 meters + 3 feet", "sqrt(9 m^2)", "sin(pi/4 radians)".
 
@@ -45,14 +48,16 @@ This document defines key terms used throughout the project documentation and co
 ---
 
 
-## Modifiers and Components
+Modifiers and Components
+------------------------
 
 **Prefix**: A multiplier that can be attached to a unit (e.g., kilo, mega, milli). SI prefixes are a particular subset of prefixes but are not treated differently in the system - they may be noted as coming from SI in their description text.
 
 ---
 
 
-## Number Representations
+Number Representations
+----------------------
 
 **Decimal**: A floating-point number (as opposed to a rational number). Used to distinguish from exact rational representations.
 
@@ -61,7 +66,8 @@ This document defines key terms used throughout the project documentation and co
 ---
 
 
-## Usage Examples
+Usage Examples
+--------------
 
 ### Primitives vs. Derived Units
 

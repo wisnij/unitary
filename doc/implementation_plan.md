@@ -80,7 +80,7 @@ Implementation Phases
 
 - [x] Implement Unit class and UnitDefinition hierarchy
   - [x] Unit class with id, aliases, description, definition
-  - [x] UnitDefinition base class with getQuantity contract
+  - [x] UnitDefinition base class with toQuantity contract
   - [x] PrimitiveUnitDefinition (identity conversion, self-referencing dimension)
   - [x] LinearDefinition (factor-based conversion with recursive resolution)
   - [x] Unit tests for all definition types

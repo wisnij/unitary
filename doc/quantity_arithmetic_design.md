@@ -106,7 +106,7 @@ class Quantity {
 
   Quantity.fromUnit(double value, Unit unit, UnitRepository repo)
     : value = value,
-      dimension = unit.definition.getQuantity(1.0, repo).dimension,
+      dimension = unit.definition.toQuantity(1.0, repo).dimension,
       displayUnit = unit;
 }
 ~~~~
@@ -235,7 +235,7 @@ class Quantity {
 
   Quantity.fromUnit(double value, Unit unit, UnitRepository repo)
     : value = value,
-      dimension = unit.definition.getQuantity(1.0, repo).dimension,
+      dimension = unit.definition.toQuantity(1.0, repo).dimension,
       displayUnit = unit;
 
   // Arithmetic operations
@@ -595,8 +595,8 @@ The conversion factor is the ratio of the two units when expressed in primitive 
 ~~~~ dart
 double getConversionFactor(Unit fromUnit, Unit toUnit, UnitRepository repo) {
   // 1. Check conformability
-  final fromQuantity = fromUnit.definition.getQuantity(1.0, repo);
-  final toQuantity = toUnit.definition.getQuantity(1.0, repo);
+  final fromQuantity = fromUnit.definition.toQuantity(1.0, repo);
+  final toQuantity = toUnit.definition.toQuantity(1.0, repo);
 
   if (!fromQuantity.dimension.isConformableWith(toQuantity.dimension)) {
     throw DimensionException(
@@ -618,18 +618,18 @@ double getConversionFactor(Unit fromUnit, Unit toUnit, UnitRepository repo) {
 
 ~~~~ dart
 // Convert miles to meters
-// miles.getQuantity(1.0, repo) = Quantity(1609.344, {m: 1})
-// meters.getQuantity(1.0, repo) = Quantity(1.0, {m: 1})
+// miles.toQuantity(1.0, repo) = Quantity(1609.344, {m: 1})
+// meters.toQuantity(1.0, repo) = Quantity(1.0, {m: 1})
 // factor = 1609.344 / 1.0 = 1609.344
 
 // Convert feet to meters
-// feet.getQuantity(1.0, repo) = Quantity(0.3048, {m: 1})
-// meters.getQuantity(1.0, repo) = Quantity(1.0, {m: 1})
+// feet.toQuantity(1.0, repo) = Quantity(0.3048, {m: 1})
+// meters.toQuantity(1.0, repo) = Quantity(1.0, {m: 1})
 // factor = 0.3048 / 1.0 = 0.3048
 
 // Convert miles to feet
-// miles.getQuantity(1.0, repo) = Quantity(1609.344, {m: 1})
-// feet.getQuantity(1.0, repo) = Quantity(0.3048, {m: 1})
+// miles.toQuantity(1.0, repo) = Quantity(1609.344, {m: 1})
+// feet.toQuantity(1.0, repo) = Quantity(0.3048, {m: 1})
 // factor = 1609.344 / 0.3048 = 5280
 ~~~~
 
@@ -643,7 +643,7 @@ Quantity convertTo(Unit targetUnit, UnitRepository repo) {
     // We need to convert from primitives to targetUnit
 
     // Check conformability
-    final targetQuantity = targetUnit.definition.getQuantity(1.0, repo);
+    final targetQuantity = targetUnit.definition.toQuantity(1.0, repo);
     if (!dimension.isConformableWith(targetQuantity.dimension)) {
       throw DimensionException(
         'Cannot convert to non-conformable unit: '
@@ -668,7 +668,7 @@ Quantity convertTo(Unit targetUnit, UnitRepository repo) {
 
   return Quantity(
     value * factor,
-    targetUnit.definition.getQuantity(1.0, repo).dimension,
+    targetUnit.definition.toQuantity(1.0, repo).dimension,
     displayUnit: targetUnit,
   );
 }
@@ -702,11 +702,11 @@ Temperature units with offsets (like Celsius/Fahrenheit) require special handlin
 ~~~~ dart
 // In AffineDefinition:
 @override
-Quantity getQuantity(double value, UnitRepository repo) {
+Quantity toQuantity(double value, UnitRepository repo) {
   // Convert from this unit to base (e.g., Celsius to Kelvin)
   // value_kelvin = (value_celsius + offset) * factor + base_offset
   var baseUnit = repo.getUnit(baseUnitId);
-  var baseQuantity = baseUnit.definition.getQuantity((value + offset) * factor, repo);
+  var baseQuantity = baseUnit.definition.toQuantity((value + offset) * factor, repo);
   return baseQuantity;
 }
 ~~~~
@@ -739,8 +739,8 @@ Quantity reduceToPrimitives(UnitRepository repo) {
   }
 
   // Convert to base primitives using the unit's definition
-  // getQuantity(value, repo) gives us the value in primitive units
-  final baseQuantity = displayUnit!.definition.getQuantity(value, repo);
+  // toQuantity(value, repo) gives us the value in primitive units
+  final baseQuantity = displayUnit!.definition.toQuantity(value, repo);
 
   // Return with no displayUnit (in primitive form)
   return Quantity(baseQuantity.value, baseQuantity.dimension);
@@ -780,7 +780,7 @@ class CompoundDefinition extends UnitDefinition {
   Quantity? _baseQuantity;
 
   @override
-  Quantity getQuantity(double value, UnitRepository repo) {
+  Quantity toQuantity(double value, UnitRepository repo) {
     if (_baseQuantity == null) {
       // Parse and evaluate the expression to get the base quantity
       final parser = ExpressionParser(repo);
@@ -1507,7 +1507,7 @@ class AffineUnitNode extends ASTNode {
     }
 
     // Convert using affine definition
-    var quantity = unit.definition.getQuantity(value, context.repo);
+    var quantity = unit.definition.toQuantity(value, context.repo);
 
     return Quantity(
       quantity.value,

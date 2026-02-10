@@ -72,32 +72,32 @@ void main() {
       expect(PrimitiveUnitDefinition().isPrimitive, isTrue);
     });
 
-    test('getQuantity returns value with self-dimension', () {
+    test('toQuantity returns value with self-dimension', () {
       final def = repo.getUnit('m').definition;
-      final q = def.getQuantity(5.0, repo);
+      final q = def.toQuantity(5.0, repo);
       expect(q.value, 5.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getQuantity with zero', () {
+    test('toQuantity with zero', () {
       final def = repo.getUnit('m').definition;
-      final q = def.getQuantity(0.0, repo);
+      final q = def.toQuantity(0.0, repo);
       expect(q.value, 0.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getQuantity with negative value', () {
+    test('toQuantity with negative value', () {
       final def = repo.getUnit('m').definition;
-      final q = def.getQuantity(-3.14, repo);
+      final q = def.toQuantity(-3.14, repo);
       expect(q.value, -3.14);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getQuantity uses bound id', () {
+    test('toQuantity uses bound id', () {
       final repo2 = UnitRepository();
       repo2.register(Unit(id: 'kg', definition: PrimitiveUnitDefinition()));
       final def = repo2.getUnit('kg').definition;
-      final q = def.getQuantity(1.0, repo2);
+      final q = def.toQuantity(1.0, repo2);
       expect(q.dimension, Dimension({'kg': 1}));
     });
   });
@@ -130,23 +130,23 @@ void main() {
       );
     });
 
-    test('getQuantity converts value and returns primitive dimension', () {
+    test('toQuantity converts value and returns primitive dimension', () {
       final def = repo.getUnit('ft').definition;
-      final q = def.getQuantity(1.0, repo);
+      final q = def.toQuantity(1.0, repo);
       expect(q.value, closeTo(0.3048, 1e-10));
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getQuantity with multiple units', () {
+    test('toQuantity with multiple units', () {
       final def = repo.getUnit('ft').definition;
-      final q = def.getQuantity(5.0, repo);
+      final q = def.toQuantity(5.0, repo);
       expect(q.value, closeTo(1.524, 1e-10));
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getQuantity with zero', () {
+    test('toQuantity with zero', () {
       final def = repo.getUnit('ft').definition;
-      final q = def.getQuantity(0.0, repo);
+      final q = def.toQuantity(0.0, repo);
       expect(q.value, 0.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
@@ -162,12 +162,12 @@ void main() {
       final def = repo.getUnit('yd').definition;
 
       // 1 yard = 3 feet = 3 * 0.3048 m = 0.9144 m
-      final q = def.getQuantity(1.0, repo);
+      final q = def.toQuantity(1.0, repo);
       expect(q.value, closeTo(0.9144, 1e-10));
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('chain getQuantity returns primitive dimension', () {
+    test('chain toQuantity returns primitive dimension', () {
       repo.register(
         const Unit(
           id: 'yd',
@@ -176,11 +176,11 @@ void main() {
         ),
       );
       final def = repo.getUnit('yd').definition;
-      final q = def.getQuantity(1.0, repo);
+      final q = def.toQuantity(1.0, repo);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('getQuantity value matches reduce for derived units', () {
+    test('toQuantity value matches reduce for derived units', () {
       repo.register(
         const Unit(
           id: 'yd',
@@ -190,11 +190,11 @@ void main() {
       );
       final def = repo.getUnit('yd').definition;
       for (final x in [0.0, 1.0, 5.0, -2.5, 100.0]) {
-        final q = def.getQuantity(x, repo);
+        final q = def.toQuantity(x, repo);
         expect(
           q.value,
           closeTo(x * 0.9144, 1e-10),
-          reason: 'getQuantity for $x yd',
+          reason: 'toQuantity for $x yd',
         );
       }
     });

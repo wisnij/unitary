@@ -50,9 +50,9 @@ Files to Create (in order)
 
 - `UnitLookup` abstract interface (breaks circular dep with repository)
 - `Unit` class (id, aliases, description, definition)
-- `UnitDefinition` abstract class with `getQuantity(value, repo)` returning a `Quantity` in primitive units
-- `PrimitiveUnitDefinition` — identity; `getQuantity` returns `Quantity(value, Dimension({unitId: 1}))`
-- `LinearDefinition` — factor-based conversion; `getQuantity` recurses through the definition chain to produce a `Quantity` in primitive units.
+- `UnitDefinition` abstract class with `toQuantity(value, repo)` returning a `Quantity` in primitive units
+- `PrimitiveUnitDefinition` — identity; `toQuantity` returns `Quantity(value, Dimension({unitId: 1}))`
+- `LinearDefinition` — factor-based conversion; `toQuantity` recurses through the definition chain to produce a `Quantity` in primitive units.
 - `AffineDefinition` — `(value + offset) * factor` for absolute temperature; offset + linear base
 - Tests use a simple `UnitLookup` stub built from a `Map<String, Unit>`
 
@@ -90,7 +90,7 @@ Files to Create (in order)
 
 **Conversion:**
 
-- `reduceToPrimitives(repo)` — converts to primitive representation via unit's `getQuantity`
+- `reduceToPrimitives(repo)` — converts to primitive representation via unit's `toQuantity`
 
 ### Step 8: `lib/core/domain/models/models.dart`
 

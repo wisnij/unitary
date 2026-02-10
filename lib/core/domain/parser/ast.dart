@@ -61,7 +61,7 @@ class UnitNode extends ASTNode {
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
-    return unit.definition.getQuantity(1.0, repo);
+    return unit.definition.toQuantity(1.0, repo);
   }
 
   @override

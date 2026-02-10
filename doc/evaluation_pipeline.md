@@ -95,15 +95,15 @@ This is where unit resolution happens:
 
 1. `repo.findUnit("yard")` — exact lookup in the alias map finds unit `yd`.
 2. `yd`'s definition is `LinearDefinition(factor: 3.0, baseUnitId: 'ft')`.
-3. `definition.getQuantity(1.0, repo)` **recurses** through the definition
+3. `definition.toQuantity(1.0, repo)` **recurses** through the definition
    chain, computing both the base value and dimension in a single pass:
 
    ~~~~
-   yd.getQuantity(1.0)
-     → ft.getQuantity(1.0 * 3.0 = 3.0)            # ft = 12 inch
-       → in.getQuantity(3.0 * 12.0 = 36.0)        # in = 2.54 cm
-         → cm.getQuantity(36.0 * 2.54 = 91.44)    # cm = 0.01 m
-           → m.getQuantity(91.44 * 0.01 = 0.9144) # m is primitive
+   yd.toQuantity(1.0)
+     → ft.toQuantity(1.0 * 3.0 = 3.0)            # ft = 12 inch
+       → in.toQuantity(3.0 * 12.0 = 36.0)        # in = 2.54 cm
+         → cm.toQuantity(36.0 * 2.54 = 91.44)    # cm = 0.01 m
+           → m.toQuantity(91.44 * 0.01 = 0.9144) # m is primitive
              → returns Quantity(0.9144, {m: 1})
    ~~~~
 
@@ -123,14 +123,14 @@ Result: **`Quantity(2743200.0, {m: 1})`**
 
 1. `repo.findUnit("week")` — exact match on id `week`.
 2. Definition: `LinearDefinition(factor: 7, baseUnitId: 'day')`.
-3. Chain resolution via `getQuantity(1.0, repo)`:
+3. Chain resolution via `toQuantity(1.0, repo)`:
 
    ~~~~
-   week.getQuantity(1.0)
-     → day.getQuantity(1.0 * 7 = 7.0)               # day = 24 hour
-       → hr.getQuantity(7.0 * 24 = 168.0)           # hr = 60 min
-         → min.getQuantity(168.0 * 60 = 10080.0)    # min = 60 s
-           → s.getQuantity(10080.0 * 60 = 604800.0) # primitive
+   week.toQuantity(1.0)
+     → day.toQuantity(1.0 * 7 = 7.0)               # day = 24 hour
+       → hr.toQuantity(7.0 * 24 = 168.0)           # hr = 60 min
+         → min.toQuantity(168.0 * 60 = 10080.0)    # min = 60 s
+           → s.toQuantity(10080.0 * 60 = 604800.0) # primitive
              → returns Quantity(604800.0, {s: 1})
    ~~~~
 

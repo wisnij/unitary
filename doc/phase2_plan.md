@@ -21,7 +21,7 @@ final quantity = parser.evaluate('5 ft');
 // quantity == Quantity(1.524, {m: 1})
 
 final feet = repo.getUnit('ft');
-final feetBase = feet.definition.getQuantity(1.0, repo);
+final feetBase = feet.definition.toQuantity(1.0, repo);
 final inFeet = quantity.value / feetBase.value;
 // inFeet ≈ 5.0
 ~~~~
@@ -53,7 +53,7 @@ These decisions were made during the Phase 2 design review:
    unit name, it resolves it to base units immediately via the repo.  By the
    time arithmetic happens, all operands are in primitive base units.
 
-3. **Recursive resolution at lookup time:** LinearDefinition.getQuantity() recurses
+3. **Recursive resolution at lookup time:** LinearDefinition.toQuantity() recurses
    through the definition chain each time.  No pre-flattening at repo load
    time.  Chain depths are small (typically 1 hop since definitions point
    directly to primitives).
@@ -154,7 +154,7 @@ abstract class UnitDefinition {
   ///
   /// Returns a Quantity whose value is the equivalent in base units and
   /// whose dimension is expressed in primitive unit IDs.
-  Quantity getQuantity(double value, UnitRepository repo);
+  Quantity toQuantity(double value, UnitRepository repo);
 
   /// Whether this is a primitive (base) unit definition.
   bool get isPrimitive;
@@ -178,7 +178,7 @@ class PrimitiveUnitDefinition extends UnitDefinition {
   void bind(String unitId) => _unitId = unitId;
 
   @override
-  Quantity getQuantity(double value, UnitRepository repo) =>
+  Quantity toQuantity(double value, UnitRepository repo) =>
       Quantity(value, Dimension({_unitId: 1}));
 
   @override
@@ -211,9 +211,9 @@ class LinearDefinition extends UnitDefinition {
   });
 
   @override
-  Quantity getQuantity(double value, UnitRepository repo) {
+  Quantity toQuantity(double value, UnitRepository repo) {
     final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.getQuantity(value * factor, repo);
+    return baseUnit.definition.toQuantity(value * factor, repo);
   }
 
   @override
@@ -229,12 +229,12 @@ constructor parameter, but `bind()` avoids requiring the ID in two places
 
 **Tests:** `test/core/domain/models/unit_test.dart` (same file as Unit)
 
-- PrimitiveUnitDefinition: after bind, getQuantity returns Quantity with
+- PrimitiveUnitDefinition: after bind, toQuantity returns Quantity with
   the input value and dimension `{unitId: 1}`.
-- LinearDefinition: getQuantity multiplies value by factor and recurses.
+- LinearDefinition: toQuantity multiplies value by factor and recurses.
 - Chain resolution: define yard = 3 ft, ft = 0.3048 m, m = primitive.
-  Verify `yard.getQuantity(1.0, repo)` = Quantity(0.9144, {m: 1}).
-- getQuantity returns primitive dimension regardless of chain depth.
+  Verify `yard.toQuantity(1.0, repo)` = Quantity(0.9144, {m: 1}).
+- toQuantity returns primitive dimension regardless of chain depth.
 
 
 ### Step 3: UnitRepository
@@ -337,7 +337,7 @@ aliases since stripping 's' gives "feet" → "fee" (wrong).
 - getUnit throws ArgumentError for unknown names.
 - allUnits returns all registered units.
 - factory `withBuiltinUnits()` creates a populated repository.
-- Primitive binding: after registration, primitive's getQuantity works.
+- Primitive binding: after registration, primitive's toQuantity works.
 
 
 ### Step 4: Built-in Unit Definitions
@@ -418,7 +418,7 @@ all hand-curated units.
   - "meters" → unit "m" (via "meter" + strip "s")
   - "inches" → unit "in" (via "inch" + strip "es")
   - "pounds" → unit "lb" (via "pound" + strip "s")
-- getQuantity dimension for each unit returns the correct primitive dimension:
+- toQuantity dimension for each unit returns the correct primitive dimension:
   - Length units → {m: 1}
   - Mass units → {kg: 1}
   - Time units → {s: 1}
@@ -434,7 +434,7 @@ all hand-curated units.
 /// Reduce a quantity to primitive base units.
 ///
 /// Each non-primitive unit name in the quantity's dimension is resolved
-/// through the repository using getQuantity(), and the resulting value
+/// through the repository using toQuantity(), and the resulting value
 /// and dimension are combined.
 ///
 /// If the dimension already contains only primitive unit names, the
@@ -459,8 +459,8 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
       continue;
     }
 
-    // Resolve to base units using getQuantity.
-    final baseQuantity = unit.definition.getQuantity(1.0, repo);
+    // Resolve to base units using toQuantity.
+    final baseQuantity = unit.definition.toQuantity(1.0, repo);
     value *= math.pow(baseQuantity.value, exponent);
 
     // Replace with primitive dimension entries.
@@ -527,8 +527,8 @@ class UnitNode extends ASTNode {
       return Quantity(1.0, Dimension({unitName: 1}));
     }
 
-    // Resolve to base units using getQuantity.
-    return unit.definition.getQuantity(1.0, repo);
+    // Resolve to base units using toQuantity.
+    return unit.definition.toQuantity(1.0, repo);
   }
 
   @override
@@ -603,13 +603,13 @@ test('Phase 2 deliverable: convert 5 feet to meters', () {
 
   // Convert to feet by dividing by the base quantity for 1 foot
   final feet = repo.getUnit('ft');
-  final feetBase = feet.definition.getQuantity(1.0, repo);
+  final feetBase = feet.definition.toQuantity(1.0, repo);
   final inFeet = quantity.value / feetBase.value;
   expect(inFeet, closeTo(5.0, 1e-10));
 
   // Convert to miles similarly
   final miles = repo.getUnit('mi');
-  final milesBase = miles.definition.getQuantity(1.0, repo);
+  final milesBase = miles.definition.toQuantity(1.0, repo);
   final inMiles = quantity.value / milesBase.value;
   expect(inMiles, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
 });

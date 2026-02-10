@@ -464,7 +464,7 @@ class Unit {
 abstract class UnitDefinition {
   /// Convert [value] in this unit to an equivalent Quantity in primitive
   /// base units.  May recurse through [repo] for chained definitions.
-  Quantity getQuantity(double value, UnitRepository repo);
+  Quantity toQuantity(double value, UnitRepository repo);
 
   /// Whether this is a primitive (base) unit definition.
   bool get isPrimitive;
@@ -479,7 +479,7 @@ class PrimitiveUnitDefinition extends UnitDefinition {
   void bind(String unitId) => _unitId = unitId;
 
   @override
-  Quantity getQuantity(double value, UnitRepository repo) =>
+  Quantity toQuantity(double value, UnitRepository repo) =>
       Quantity(value, Dimension({_unitId: 1}));
 
   @override
@@ -494,9 +494,9 @@ class LinearDefinition extends UnitDefinition {
   const LinearDefinition({required this.factor, required this.baseUnitId});
 
   @override
-  Quantity getQuantity(double value, UnitRepository repo) {
+  Quantity toQuantity(double value, UnitRepository repo) {
     final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.getQuantity(value * factor, repo);
+    return baseUnit.definition.toQuantity(value * factor, repo);
   }
 
   @override
@@ -512,9 +512,9 @@ class AffineDefinition extends UnitDefinition {
   const AffineDefinition(this.factor, this.offset, this.baseUnitId);
 
   @override
-  Quantity getQuantity(double value, UnitRepository repo) {
+  Quantity toQuantity(double value, UnitRepository repo) {
     final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.getQuantity((value + offset) * factor, repo);
+    return baseUnit.definition.toQuantity((value + offset) * factor, repo);
   }
 
   @override
@@ -528,7 +528,7 @@ class CompoundDefinition extends UnitDefinition {
   CompoundDefinition(this.expr);
 
   @override
-  Quantity getQuantity(double value, UnitRepository repo) {
+  Quantity toQuantity(double value, UnitRepository repo) {
     // Parse and evaluate the expression to get conversion factor
     // This requires the expression parser/evaluator
     throw UnimplementedError("Requires expression evaluator");

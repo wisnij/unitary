@@ -88,12 +88,12 @@ void main() {
       expect(quantity.dimension, Dimension({'m': 1}));
 
       // Convert to feet: divide base value by 1 ft in base units
-      final feetBase = repo.getUnit('ft').definition.getQuantity(1.0, repo);
+      final feetBase = repo.getUnit('ft').definition.toQuantity(1.0, repo);
       final inFeet = quantity.value / feetBase.value;
       expect(inFeet, closeTo(5.0, 1e-10));
 
       // Convert to miles: divide base value by 1 mi in base units
-      final milesBase = repo.getUnit('mi').definition.getQuantity(1.0, repo);
+      final milesBase = repo.getUnit('mi').definition.toQuantity(1.0, repo);
       final inMiles = quantity.value / milesBase.value;
       expect(inMiles, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
     });

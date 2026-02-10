@@ -32,7 +32,7 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
     }
 
     // Resolve to base units.
-    final baseQuantity = unit.definition.getQuantity(1.0, repo);
+    final baseQuantity = unit.definition.toQuantity(1.0, repo);
     value *= math.pow(baseQuantity.value, exponent);
 
     // Replace with primitive dimension entries.

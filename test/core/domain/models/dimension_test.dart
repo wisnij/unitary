@@ -21,7 +21,7 @@ void main() {
     });
 
     test('dimensionless constructor', () {
-      final d = Dimension.dimensionless();
+      final d = Dimension.dimensionless;
       expect(d.isDimensionless, isTrue);
       expect(d.units, isEmpty);
     });
@@ -39,7 +39,7 @@ void main() {
 
   group('Dimension.isDimensionless', () {
     test('true for empty map', () {
-      expect(Dimension.dimensionless().isDimensionless, isTrue);
+      expect(Dimension.dimensionless.isDimensionless, isTrue);
     });
 
     test('false for non-empty map', () {
@@ -68,7 +68,7 @@ void main() {
 
     test('multiply by dimensionless returns same', () {
       final a = Dimension({'m': 1, 's': -2});
-      final b = Dimension.dimensionless();
+      final b = Dimension.dimensionless;
       expect(a.multiply(b), equals(a));
     });
 
@@ -99,7 +99,7 @@ void main() {
 
     test('divide by dimensionless returns same', () {
       final a = Dimension({'m': 1});
-      expect(a.divide(Dimension.dimensionless()), equals(a));
+      expect(a.divide(Dimension.dimensionless), equals(a));
     });
   });
 
@@ -125,7 +125,7 @@ void main() {
     });
 
     test('dimensionless raised to any power is dimensionless', () {
-      final d = Dimension.dimensionless();
+      final d = Dimension.dimensionless;
       expect(d.power(5).isDimensionless, isTrue);
     });
   });
@@ -181,7 +181,7 @@ void main() {
     });
 
     test('dimensionless raised to any rational is dimensionless', () {
-      final d = Dimension.dimensionless();
+      final d = Dimension.dimensionless;
       expect(d.powerRational(Rational(3, 7)).isDimensionless, isTrue);
     });
 
@@ -213,14 +213,14 @@ void main() {
 
     test('dimensionless is conformable with dimensionless', () {
       expect(
-        Dimension.dimensionless().isConformableWith(Dimension.dimensionless()),
+        Dimension.dimensionless.isConformableWith(Dimension.dimensionless),
         isTrue,
       );
     });
 
     test('dimensionless is not conformable with dimensioned', () {
       expect(
-        Dimension.dimensionless().isConformableWith(Dimension({'m': 1})),
+        Dimension.dimensionless.isConformableWith(Dimension({'m': 1})),
         isFalse,
       );
     });
@@ -228,7 +228,7 @@ void main() {
 
   group('Dimension.canonicalRepresentation', () {
     test('dimensionless shows as 1', () {
-      expect(Dimension.dimensionless().canonicalRepresentation(), '1');
+      expect(Dimension.dimensionless.canonicalRepresentation(), '1');
     });
 
     test('single positive exponent', () {

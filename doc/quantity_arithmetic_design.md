@@ -102,7 +102,7 @@ class Quantity {
 
   // Convenience constructors
   Quantity.dimensionless(double value)
-    : value = value, dimension = Dimension.dimensionless(), displayUnit = null;
+    : value = value, dimension = Dimension.dimensionless, displayUnit = null;
 
   Quantity.fromUnit(double value, Unit unit, UnitRepository repo)
     : value = value,
@@ -231,7 +231,7 @@ class Quantity {
   Quantity(this.value, this.dimension, {this.displayUnit});
 
   Quantity.dimensionless(double value)
-    : value = value, dimension = Dimension.dimensionless(), displayUnit = null;
+    : value = value, dimension = Dimension.dimensionless, displayUnit = null;
 
   Quantity.fromUnit(double value, Unit unit, UnitRepository repo)
     : value = value,
@@ -434,7 +434,7 @@ final c = a / b;  // Quantity(5, Dimension({m: 1, s: -1}))
 
 // 10 m / 2 m = 5 (dimensionless)
 final d = Quantity(2, Dimension({m: 1}));
-final e = a / d;  // Quantity(5, Dimension.dimensionless())
+final e = a / d;  // Quantity(5, Dimension.dimensionless)
 
 // 10 m / 0 = ERROR
 final f = Quantity(0, Dimension({m: 1}));
@@ -489,7 +489,7 @@ Quantity power(num exponent) {
 
     return Quantity(
       pow(value, exponent).toDouble(),
-      Dimension.dimensionless(),
+      Dimension.dimensionless,
     );
   }
 
@@ -938,7 +938,7 @@ Quantity sqrt(Quantity q) {
     throw EvalException('Cannot take square root of negative number: ${q.value}');
   }
 
-  return Quantity(math.sqrt(q.value), Dimension.dimensionless());
+  return Quantity(math.sqrt(q.value), Dimension.dimensionless);
 }
 
 Quantity log(Quantity q) {
@@ -950,7 +950,7 @@ Quantity log(Quantity q) {
     throw EvalException('Cannot take logarithm of non-positive number: ${q.value}');
   }
 
-  return Quantity(math.log(q.value), Dimension.dimensionless());
+  return Quantity(math.log(q.value), Dimension.dimensionless);
 }
 
 Quantity asin(Quantity q) {
@@ -962,7 +962,7 @@ Quantity asin(Quantity q) {
     throw EvalException('asin requires argument in range [-1, 1], got ${q.value}');
   }
 
-  return Quantity(math.asin(q.value), Dimension.dimensionless());
+  return Quantity(math.asin(q.value), Dimension.dimensionless);
 }
 ~~~~
 
@@ -982,7 +982,7 @@ Quantity asin(Quantity q) {
 ~~~~ dart
 group('NaN handling', () {
   test('sqrt of negative throws error', () {
-    final neg = Quantity(-4, Dimension.dimensionless());
+    final neg = Quantity(-4, Dimension.dimensionless);
     expect(() => sqrt(neg),
            throwsA(isA<EvalException>().having(
              (e) => e.message, 'message', contains('square root of negative')
@@ -990,7 +990,7 @@ group('NaN handling', () {
   });
 
   test('log of zero throws error', () {
-    final zero = Quantity(0, Dimension.dimensionless());
+    final zero = Quantity(0, Dimension.dimensionless);
     expect(() => log(zero),
            throwsA(isA<EvalException>().having(
              (e) => e.message, 'message', contains('logarithm of non-positive')
@@ -998,7 +998,7 @@ group('NaN handling', () {
   });
 
   test('asin out of range throws error', () {
-    final outOfRange = Quantity(2, Dimension.dimensionless());
+    final outOfRange = Quantity(2, Dimension.dimensionless);
     expect(() => asin(outOfRange),
            throwsA(isA<EvalException>().having(
              (e) => e.message, 'message', contains('range [-1, 1]')
@@ -1015,7 +1015,7 @@ group('NaN handling', () {
   });
 
   test('infinity is allowed in results', () {
-    final big = Quantity(1e308, Dimension.dimensionless());
+    final big = Quantity(1e308, Dimension.dimensionless);
     final result = big * big;
     expect(result.value.isInfinite, true);
   });
@@ -1891,11 +1891,11 @@ class DimensionException extends Exception {
 
 ~~~~ dart
 // Repeated operations may accumulate error
-var x = Quantity(1.0/3.0, Dimension.dimensionless());  // 0.333333...
+var x = Quantity(1.0/3.0, Dimension.dimensionless);  // 0.333333...
 var y = x * 3;  // Should be 1.0, might be 0.999999...
 
 // Use epsilon comparison:
-expect(y.approximatelyEquals(Quantity(1.0, Dimension.dimensionless())), true);
+expect(y.approximatelyEquals(Quantity(1.0, Dimension.dimensionless)), true);
 ~~~~
 
 **Not Implemented for MVP**: Operation depth tracking. This adds complexity without clear benefit for most users. If precision becomes a concern in practice, we can add it later.
@@ -2033,7 +2033,7 @@ group('Quantity conversion', () {
 ~~~~ dart
 group('Quantity edge cases', () {
   test('very large numbers', () {
-    final big = Quantity(1e308, Dimension.dimensionless());
+    final big = Quantity(1e308, Dimension.dimensionless);
     final result = big * big;
     expect(result.value.isInfinite, true);
   });
@@ -2069,7 +2069,7 @@ group('Quantity edge cases', () {
   });
 
   test('NaN handling', () {
-    final nan = Quantity(double.nan, Dimension.dimensionless());
+    final nan = Quantity(double.nan, Dimension.dimensionless);
     expect(nan.format(DisplaySettings()), 'undefined');
   });
 });

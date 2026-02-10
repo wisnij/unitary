@@ -28,7 +28,7 @@ Files to Create (in order)
 ### Step 2: `test/core/domain/models/dimension_test.dart` THEN `lib/core/domain/models/dimension.dart`
 
 - `Dimension` with `Map<String, int> units` (unmodifiable, zeros stripped in constructor)
-- `Dimension.dimensionless()` — empty map
+- `Dimension.dimensionless` — empty map
 - `multiply(other)`, `divide(other)` — add/subtract exponent maps
 - `power(num)` — multiply exponents, validate results are integral, throw `DimensionException` if not
 - `isDimensionless`, `isConformableWith(other)`, `canonicalRepresentation()`

@@ -28,7 +28,7 @@ class Quantity {
   /// Creates a dimensionless quantity.
   Quantity.dimensionless(double value)
     : value = _validateValue(value),
-      dimension = Dimension.dimensionless();
+      dimension = Dimension.dimensionless;
 
   static double _validateValue(double value) {
     if (value.isNaN) {
@@ -38,6 +38,8 @@ class Quantity {
     }
     return value;
   }
+
+  static final Quantity unity = Quantity.dimensionless(1.0);
 
   // -- Query properties --
 
@@ -103,7 +105,7 @@ class Quantity {
   /// [DimensionException] if not.  Throws [EvalException] if the
   /// computation is invalid (e.g., negative base with fractional exponent).
   Quantity power(num exponent) {
-    if (exponent == 0) return Quantity.dimensionless(1.0);
+    if (exponent == 0) return Quantity.unity;
     if (exponent == 1) return Quantity(value, dimension);
 
     if (isDimensionless) {

@@ -24,7 +24,7 @@ class Dimension {
       );
 
   /// Creates a dimensionless dimension (empty units map).
-  Dimension.dimensionless() : units = const {};
+  static final Dimension dimensionless = Dimension({});
 
   /// Whether this dimension is dimensionless (empty units map).
   bool get isDimensionless => units.isEmpty;
@@ -52,7 +52,7 @@ class Dimension {
   /// Returns this dimension raised to an integer [exponent] (multiplies all
   /// exponents by the scalar).
   Dimension power(int exponent) {
-    if (exponent == 0) return Dimension.dimensionless();
+    if (exponent == 0) return Dimension.dimensionless;
     final result = <String, int>{};
     for (final entry in units.entries) {
       result[entry.key] = entry.value * exponent;
@@ -66,7 +66,7 @@ class Dimension {
   /// by its denominator.  Throws [DimensionException] if any result is not
   /// evenly divisible.
   Dimension powerRational(Rational exponent) {
-    if (isDimensionless) return Dimension.dimensionless();
+    if (isDimensionless) return Dimension.dimensionless;
 
     final result = <String, int>{};
     for (final entry in units.entries) {

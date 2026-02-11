@@ -2,8 +2,12 @@ config:
   blanks-around-headings:
     # Extra space above level 1/2 headings for better readability
     lines_above: [2, 2, 1, 1, 1, 1]
+  code-fence-style:
+    style: tilde
   fenced-code-language:
     severity: warning
+  heading-style:
+    style: setext_with_atx
   line-length:
     # Disabled since many doc files have long lines
     enabled: false

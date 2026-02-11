@@ -21,13 +21,13 @@ void main() {
 
     test('NaN value throws EvalException', () {
       expect(
-        () => Quantity(double.nan, Dimension.dimensionless()),
+        () => Quantity(double.nan, Dimension.dimensionless),
         throwsA(isA<EvalException>()),
       );
     });
 
     test('infinity is allowed', () {
-      final q = Quantity(double.infinity, Dimension.dimensionless());
+      final q = Quantity(double.infinity, Dimension.dimensionless);
       expect(q.value, double.infinity);
     });
 
@@ -43,6 +43,11 @@ void main() {
   });
 
   group('Quantity query properties', () {
+    test('unity', () {
+      expect(Quantity.unity.isDimensionless, isTrue);
+      expect(Quantity.unity.value, 1.0);
+    });
+
     test('isDimensionless', () {
       expect(Quantity.dimensionless(1.0).isDimensionless, isTrue);
       expect(Quantity(1.0, Dimension({'m': 1})).isDimensionless, isFalse);
@@ -304,14 +309,14 @@ void main() {
     });
 
     test('within tolerance', () {
-      final a = Quantity(1.0, Dimension.dimensionless());
-      final b = Quantity(1.0 + 1e-12, Dimension.dimensionless());
+      final a = Quantity(1.0, Dimension.dimensionless);
+      final b = Quantity(1.0 + 1e-12, Dimension.dimensionless);
       expect(a.approximatelyEquals(b), isTrue);
     });
 
     test('outside tolerance', () {
-      final a = Quantity(1.0, Dimension.dimensionless());
-      final b = Quantity(1.1, Dimension.dimensionless());
+      final a = Quantity(1.0, Dimension.dimensionless);
+      final b = Quantity(1.1, Dimension.dimensionless);
       expect(a.approximatelyEquals(b), isFalse);
     });
 
@@ -322,14 +327,14 @@ void main() {
     });
 
     test('relative tolerance for large values', () {
-      final a = Quantity(1e10, Dimension.dimensionless());
-      final b = Quantity(1e10 + 0.5, Dimension.dimensionless());
+      final a = Quantity(1e10, Dimension.dimensionless);
+      final b = Quantity(1e10 + 0.5, Dimension.dimensionless);
       expect(a.approximatelyEquals(b), isTrue);
     });
 
     test('small values use absolute tolerance', () {
-      final a = Quantity(1e-15, Dimension.dimensionless());
-      final b = Quantity(2e-15, Dimension.dimensionless());
+      final a = Quantity(1e-15, Dimension.dimensionless);
+      final b = Quantity(2e-15, Dimension.dimensionless);
       expect(a.approximatelyEquals(b), isTrue);
     });
 
@@ -342,14 +347,14 @@ void main() {
 
   group('Quantity overflow', () {
     test('very large multiplication produces infinity', () {
-      final big = Quantity(1e308, Dimension.dimensionless());
+      final big = Quantity(1e308, Dimension.dimensionless);
       final result = big * big;
       expect(result.value.isInfinite, isTrue);
     });
 
     test('infinity preserves dimension', () {
       final big = Quantity(1e308, Dimension({'m': 1}));
-      final result = big * Quantity(1e308, Dimension.dimensionless());
+      final result = big * Quantity(1e308, Dimension.dimensionless);
       expect(result.value, double.infinity);
       expect(result.dimension, Dimension({'m': 1}));
     });
@@ -395,18 +400,18 @@ void main() {
     });
 
     test('0 * infinity produces NaN and throws', () {
-      final a = Quantity(0.0, Dimension.dimensionless());
-      final b = Quantity(double.infinity, Dimension.dimensionless());
+      final a = Quantity(0.0, Dimension.dimensionless);
+      final b = Quantity(double.infinity, Dimension.dimensionless);
       expect(() => a * b, throwsA(isA<EvalException>()));
     });
 
     test('infinity - infinity produces NaN and throws', () {
-      final a = Quantity(double.infinity, Dimension.dimensionless());
+      final a = Quantity(double.infinity, Dimension.dimensionless);
       expect(() => a - a, throwsA(isA<EvalException>()));
     });
 
     test('power with large integer exponent', () {
-      final q = Quantity(2.0, Dimension.dimensionless());
+      final q = Quantity(2.0, Dimension.dimensionless);
       final result = q.power(10);
       expect(result.value, closeTo(1024.0, 1e-10));
     });

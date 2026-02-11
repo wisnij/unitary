@@ -1,4 +1,5 @@
-# Unitary
+Unitary
+=======
 
 A powerful, flexible unit conversion mobile application targeting scientific and
 technically-minded users.  Features both freeform calculator-style expression
@@ -6,19 +7,21 @@ evaluation and worksheet-based conversion modes, with support for custom
 user-defined units and dimensions.
 
 
-## Project Status
+Project Status
+--------------
 
-**Current Phase:** Phase 0 Complete, ready for Phase 1 (Expression Parser)\
-**Last Updated:** January 31, 2026
+**Current Phase:** Phase 2 Complete, ready for Phase 3 (Advanced Unit Features)\
+**Last Updated:** February 7, 2026
 
-Project setup is complete.  Core architecture and requirements have been
-defined, and the Flutter project is scaffolded with the full directory
-structure, linting, and test infrastructure in place.
+Phases 0-2 are complete.  The expression parser, evaluator, and unit system
+foundation are fully implemented with 492 passing tests.  Unit definitions
+for length, mass, and time are available with full conversion support.
 
 ---
 
 
-## Features (Planned)
+Features (Planned)
+------------------
 
 ### Core Functionality
 
@@ -42,7 +45,8 @@ structure, linting, and test infrastructure in place.
 ---
 
 
-## Documentation
+Documentation
+-------------
 
 ### Design Documents
 
@@ -64,7 +68,8 @@ structure, linting, and test infrastructure in place.
 ---
 
 
-## Technology Stack
+Technology Stack
+----------------
 
 **Framework:** Flutter (Dart)
 
@@ -86,9 +91,10 @@ structure, linting, and test infrastructure in place.
 ---
 
 
-## Project Structure
+Project Structure
+-----------------
 
-```
+~~~~
 unitary/
 ├── doc/                           # All design documentation
 │   ├── requirements.md
@@ -112,12 +118,13 @@ unitary/
 │   ├── units/
 │   └── currency/
 └── README.md                      # This file
-```
+~~~~
 
 ---
 
 
-## Architecture Highlights
+Architecture Highlights
+-----------------------
 
 ### Expression Parser & Evaluator
 
@@ -142,7 +149,8 @@ unitary/
 ---
 
 
-## Getting Started
+Getting Started
+---------------
 
 ### Prerequisites
 
@@ -152,7 +160,7 @@ unitary/
 
 ### Setup (When Implementation Begins)
 
-```bash
+~~~~ bash
 # Clone the repository
 git clone https://github.com/wisnij/unitary.git
 cd unitary
@@ -162,7 +170,7 @@ flutter pub get
 
 # Run the app
 flutter run
-```
+~~~~
 
 ### Development Workflow
 
@@ -175,11 +183,14 @@ flutter run
 ---
 
 
-## Current Progress
+Current Progress
+----------------
 
 ### Implementation
 
 - ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
+- ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
+- ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
 
 ### Design (ready for implementation)
 
@@ -201,7 +212,8 @@ See [Design Progress](design_progress.md) for full details.
 ---
 
 
-## Contributing
+Contributing
+------------
 
 This is currently a personal project in the design phase.  Once implementation
 begins, contributions will be welcome!
@@ -225,7 +237,8 @@ begins, contributions will be welcome!
 ---
 
 
-## Roadmap
+Roadmap
+-------
 
 ### Phase 1: MVP (Weeks 1-25)
 
@@ -255,7 +268,8 @@ See [Implementation Plan](implementation_plan.md) for detailed timeline.
 ---
 
 
-## Design Philosophy
+Design Philosophy
+-----------------
 
 ### For Users
 
@@ -274,7 +288,8 @@ See [Implementation Plan](implementation_plan.md) for detailed timeline.
 ---
 
 
-## License
+License
+-------
 
 Copyright © 2026 Jim Wisniewski <wisnij@gmail.com>
 
@@ -294,7 +309,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ---
 
 
-## Acknowledgments
+Acknowledgments
+---------------
 
 - GNU Units project for inspiration and unit database
 - Flutter and Dart communities

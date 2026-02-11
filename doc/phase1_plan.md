@@ -1,11 +1,13 @@
-# Phase 1: Core Domain - Expression Parser
+Phase 1: Core Domain - Expression Parser
+========================================
 
 > **Status: COMPLETE** (February 4, 2026)
 >
 > All components implemented with 372 passing tests. See implementation details below.
 
 
-## Overview
+Overview
+--------
 
 **Goal:** Build the expression parsing and evaluation engine: Lexer, Parser, AST,
 and Evaluator.
@@ -33,7 +35,8 @@ unit identifiers, e.g.:
 ---
 
 
-## Design Decisions
+Design Decisions
+----------------
 
 These decisions were made during the Phase 1 design review:
 
@@ -83,7 +86,8 @@ These decisions were made during the Phase 1 design review:
 ---
 
 
-## Operator Precedence
+Operator Precedence
+-------------------
 
 From lowest to highest binding:
 
@@ -100,7 +104,7 @@ From lowest to highest binding:
 
 **Precedence examples:**
 
-```
+~~~~
 5 + 3 * 2           = 5 + (3 * 2) = 11
 5 m / 2 s           = (5*m) / (2*s) = 2.5 m/s
 2^3^4               = 2^(3^4) = 2^81       (right-associative)
@@ -108,12 +112,13 @@ From lowest to highest binding:
 2^-3                = 2^(-3) = 0.125        (unary binds tighter than ^)
 1|2 m               = (1/2) * m = 0.5 m     (| binds tighter than implicit mult)
 3 m + 2 m           = (3*m) + (2*m) = 5 m
-```
+~~~~
 
 ---
 
 
-## Implementation Steps
+Implementation Steps
+--------------------
 
 
 ### Step 1: Exception Hierarchy
@@ -122,7 +127,7 @@ From lowest to highest binding:
 
 Define the base class and four subclasses:
 
-```dart
+~~~~ dart
 abstract class UnitaryException implements Exception {
   String get message;
   int? get line;
@@ -133,7 +138,7 @@ class LexException extends UnitaryException { ... }
 class ParseException extends UnitaryException { ... }
 class EvalException extends UnitaryException { ... }
 class DimensionException extends UnitaryException { ... }
-```
+~~~~
 
 - All have a `message` field and optional `line`/`column` for source position.
 - `DimensionException` additionally has optional `leftDimension` and
@@ -326,7 +331,7 @@ The core data structure combining a numeric value with dimensional information.
 
 **`TokenType` enum:**
 
-```dart
+~~~~ dart
 enum TokenType {
   // Literals
   number,         // 3.14, 1.5e-10, .5
@@ -351,11 +356,11 @@ enum TokenType {
   // Special
   eof,            // end of input
 }
-```
+~~~~
 
 **`Token` class:**
 
-```dart
+~~~~ dart
 class Token {
   final TokenType type;
   final String lexeme;      // original source text
@@ -366,7 +371,7 @@ class Token {
 
   Token(this.type, this.lexeme, this.literal, this.line, this.column);
 }
-```
+~~~~
 
 **Tests:** Tested indirectly through lexer tests.
 
@@ -379,7 +384,7 @@ Converts an input string to `List<Token>`.
 
 **Class structure:**
 
-```dart
+~~~~ dart
 class Lexer {
   final String source;
 
@@ -394,7 +399,7 @@ class Lexer {
 
   List<Token> scanTokens();
 }
-```
+~~~~
 
 **`scanTokens()` loop:**
 
@@ -499,13 +504,13 @@ source text) and the same line/column as the upcoming token.
 
 **File:** `lib/core/domain/parser/ast.dart`
 
-```dart
+~~~~ dart
 /// Base class for all AST nodes.
 abstract class ASTNode {
   /// Evaluate this node and return a Quantity.
   Quantity evaluate(EvalContext context);
 }
-```
+~~~~
 
 **Fully implemented for Phase 1:**
 
@@ -547,11 +552,11 @@ abstract class ASTNode {
 
 **`EvalContext` class:**
 
-```dart
+~~~~ dart
 class EvalContext {
   // Empty for Phase 1.  Will hold UnitRepository in Phase 2.
 }
-```
+~~~~
 
 **Tests:** AST nodes are tested indirectly through parser and evaluator tests.
 Direct tests can verify evaluation of individual nodes in isolation.
@@ -563,7 +568,7 @@ Direct tests can verify evaluation of individual nodes in isolation.
 
 Recursive descent parser consuming a `List<Token>` and producing an `ASTNode`.
 
-```dart
+~~~~ dart
 class Parser {
   final List<Token> _tokens;
   int _current = 0;
@@ -572,11 +577,11 @@ class Parser {
 
   ASTNode parse();
 }
-```
+~~~~
 
 **Grammar (recursive descent methods):**
 
-```
+~~~~
 parse()             → expression, expect EOF
 expression()        → addition
 addition()          → multiplication ( ('+' | '-') multiplication )*
@@ -593,7 +598,7 @@ call()              → primary ( '(' arguments ')' )?
                       // only consumes parens if primary produced a FunctionNode
                       // stub or if the token was TokenType.function
 primary()           → NUMBER | UNIT | '(' expression ')' | FUNCTION
-```
+~~~~
 
 **Implicit multiplication detail:**
 
@@ -628,11 +633,11 @@ grammar levels:
 This keeps the precedence distinction.  The lexer is responsible only for
 tokenizing; the parser handles all precedence.
 
-```
+~~~~
 multiplication()    → implicit ( ('*' | '/' | '÷') implicit )*
 implicit()          → exponentiation+
                       // multiple exponentiations in sequence = implicit multiply
-```
+~~~~
 
 In `implicit()`, after parsing the first `exponentiation()`, check if the next
 token is `number`, `unit`, `function`, or `leftParen`.  If so, parse another
@@ -775,7 +780,7 @@ Test via the full pipeline (parse string → evaluate → check result):
 
 Convenience class that ties the pipeline together:
 
-```dart
+~~~~ dart
 class ExpressionParser {
   /// Lex, parse, and evaluate an expression string.
   Quantity evaluate(String input) {
@@ -797,12 +802,13 @@ class ExpressionParser {
     return Lexer(input).scanTokens();
   }
 }
-```
+~~~~
 
 ---
 
 
-## File Summary
+File Summary
+------------
 
 ### Production code (`lib/core/domain/`)
 
@@ -833,7 +839,8 @@ class ExpressionParser {
 ---
 
 
-## Implementation Order
+Implementation Order
+--------------------
 
 The steps above are listed in dependency order.  Each step's tests should be
 written and passing before proceeding to the next:
@@ -852,7 +859,8 @@ written and passing before proceeding to the next:
 ---
 
 
-## Open Decisions for Phase 2
+Open Decisions for Phase 2
+--------------------------
 
 The following items are explicitly deferred to Phase 2 or later:
 

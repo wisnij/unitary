@@ -1,4 +1,5 @@
-# Unitary - Core Architecture
+Unitary - Core Architecture
+===========================
 
 This document describes the core technical architecture of Unitary, including data models, the expression parser/evaluator, and key subsystems.
 
@@ -9,7 +10,8 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 ---
 
 
-## Technology Stack Recommendation
+Technology Stack Recommendation
+-------------------------------
 
 ### Framework: Flutter
 
@@ -39,11 +41,12 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 - **provider** or **riverpod** - state management
 
 
-## Architecture Overview
+Architecture Overview
+---------------------
 
 ### Layered Architecture
 
-```
+~~~~
 ┌─────────────────────────────────────────┐
 │         Presentation Layer              │
 │  (UI Widgets, Screens, View Models)     │
@@ -63,25 +66,26 @@ For development practices, see [Development Best Practices](dev_best_practices.m
 │           Data Layer                    │
 │  (Repositories, Local DB, Preferences)  │
 └─────────────────────────────────────────┘
-```
+~~~~
 
 
-## Core Components Design
+Core Components Design
+----------------------
 
 ### 1. Expression Parser & Evaluator
 
 **Component Structure:**
 
-```
+~~~~
 Lexer → Parser → AST Builder → Evaluator
   ↓       ↓          ↓            ↓
 Token   AST      Validated     Result
 Stream  Nodes    Expression   + Units
-```
+~~~~
 
 **Token Types:**
 
-```dart
+~~~~ dart
 enum TokenType {
   // Literals
   number,        // 3.14, 1.5e-10, .5
@@ -116,7 +120,7 @@ class Token {
 
   Token(this.type, this.lexeme, this.literal, this.line, this.column);
 }
-```
+~~~~
 
 **Lexer (Tokenizer):**
 
@@ -146,7 +150,7 @@ class Token {
 
 **Lexer Implementation Notes:**
 
-```dart
+~~~~ dart
 void scanNumber() {
   // Handle leading decimal point (.5)
   if (previous() == '.' && isDigit(peek())) {
@@ -222,7 +226,7 @@ void handleImplicitMultiply() {
     }
   }
 }
-```
+~~~~
 
 **Parser:**
 
@@ -242,7 +246,7 @@ void handleImplicitMultiply() {
 
 **AST Node Types:**
 
-```dart
+~~~~ dart
 abstract class ASTNode {
   Quantity evaluate(Context context);
 }
@@ -252,7 +256,7 @@ class UnitNode extends ASTNode
 class BinaryOpNode extends ASTNode  // +, -, *, /, ^
 class UnaryOpNode extends ASTNode   // -, sqrt, etc.
 class FunctionNode extends ASTNode  // sin, cos, etc.
-```
+~~~~
 
 **Evaluator:**
 
@@ -264,7 +268,7 @@ class FunctionNode extends ASTNode  // sin, cos, etc.
 
 **Dimension Model:**
 
-```dart
+~~~~ dart
 // Represents a dimension as a product of primitive units with exponents
 class Dimension {
   // Map from primitive unit ID to exponent
@@ -441,11 +445,11 @@ class PrefixRegistry {
 
   List<UnitPrefix> getAllPrefixes() => _prefixes.values.toSet().toList();
 }
-```
+~~~~
 
 **Unit Definition:**
 
-```dart
+~~~~ dart
 class Unit {
   final String id;          // Primary symbol/name (e.g., "m", "meter", "kg")
   final List<String> aliases;  // Alternative names (e.g., ["metre"])
@@ -455,36 +459,31 @@ class Unit {
   // All recognized names for this unit (id + aliases)
   // Parser will also check plural forms automatically
   List<String> get allNames => [id, ...aliases];
-
-  // Lazy-computed dimension based on definition
-  Dimension getDimension(UnitRepository repo) => definition.getDimension(repo, id);
 }
 
 abstract class UnitDefinition {
-  double toBase(double value, UnitRepository repo, String unitId);
-  double fromBase(double value, UnitRepository repo, String unitId);
-  Dimension getDimension(UnitRepository repo, String unitId);
+  /// Convert [value] in this unit to an equivalent Quantity in primitive
+  /// base units.  May recurse through [repo] for chained definitions.
+  Quantity toQuantity(double value, UnitRepository repo);
+
+  /// Whether this is a primitive (base) unit definition.
+  bool get isPrimitive;
 }
 
 // For primitive units - these define fundamental dimensions
 class PrimitiveUnitDefinition extends UnitDefinition {
-  final bool isDimensionless;
+  late final String _unitId;
 
-  PrimitiveUnitDefinition({this.isDimensionless = false});
+  PrimitiveUnitDefinition();
 
-  @override
-  double toBase(double value, UnitRepository repo, String unitId) => value;  // identity
-
-  @override
-  double fromBase(double value, UnitRepository repo, String unitId) => value;  // identity
+  void bind(String unitId) => _unitId = unitId;
 
   @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    // The unit's ID becomes the dimension identifier
-    return isDimensionless
-      ? Dimension.dimensionless()
-      : Dimension({unitId: 1});
-  }
+  Quantity toQuantity(double value, UnitRepository repo) =>
+      Quantity(value, Dimension({_unitId: 1}));
+
+  @override
+  bool get isPrimitive => true;
 }
 
 // For units defined as linear multiples of another unit
@@ -492,80 +491,51 @@ class LinearDefinition extends UnitDefinition {
   final double factor;      // e.g., 1 mile = 1609.344 meters
   final String baseUnitId;  // ID of unit this is defined in terms of (e.g., "meter")
 
-  LinearDefinition(this.factor, this.baseUnitId);
+  const LinearDefinition({required this.factor, required this.baseUnitId});
 
   @override
-  double toBase(double value, UnitRepository repo, String unitId) {
-    // Recursively convert through the chain
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toBase(value * factor, repo, baseUnitId);
+  Quantity toQuantity(double value, UnitRepository repo) {
+    final baseUnit = repo.getUnit(baseUnitId);
+    return baseUnit.definition.toQuantity(value * factor, repo);
   }
 
   @override
-  double fromBase(double value, UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.fromBase(value, repo, baseUnitId) / factor;
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    // Get dimension from the unit we're based on
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.getDimension(repo);
-  }
+  bool get isPrimitive => false;
 }
 
-// For units with offset (like temperature)
+// For units with offset (like temperature) — planned for Phase 3
 class AffineDefinition extends UnitDefinition {
   final double factor;
   final double offset;      // e.g., Celsius = Kelvin - 273.15
   final String baseUnitId;
 
-  AffineDefinition(this.factor, this.offset, this.baseUnitId);
+  const AffineDefinition(this.factor, this.offset, this.baseUnitId);
 
   @override
-  double toBase(double value, UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toBase((value + offset) * factor, repo, baseUnitId);
+  Quantity toQuantity(double value, UnitRepository repo) {
+    final baseUnit = repo.getUnit(baseUnitId);
+    return baseUnit.definition.toQuantity((value + offset) * factor, repo);
   }
 
   @override
-  double fromBase(double value, UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return (baseUnit.definition.fromBase(value, repo, baseUnitId) / factor) - offset;
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    var baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.getDimension(repo);
-  }
+  bool get isPrimitive => false;
 }
 
-// For compound units defined as expressions
+// For compound units defined as expressions — planned for Phase 3
 class CompoundDefinition extends UnitDefinition {
   final String expr;  // e.g., "kg*m/s^2" for Newton
 
   CompoundDefinition(this.expr);
 
   @override
-  double toBase(double value, UnitRepository repo, String unitId) {
+  Quantity toQuantity(double value, UnitRepository repo) {
     // Parse and evaluate the expression to get conversion factor
     // This requires the expression parser/evaluator
     throw UnimplementedError("Requires expression evaluator");
   }
 
   @override
-  double fromBase(double value, UnitRepository repo, String unitId) {
-    throw UnimplementedError("Requires expression evaluator");
-  }
-
-  @override
-  Dimension getDimension(UnitRepository repo, String unitId) {
-    // Parse and evaluate the expression to get dimension
-    // This requires the expression parser/evaluator
-    throw UnimplementedError("Requires expression evaluator");
-  }
+  bool get isPrimitive => false;
 }
 
 // Examples of unit definitions:
@@ -589,11 +559,11 @@ class CompoundDefinition extends UnitDefinition {
 //   Unit(id: "N", aliases: ["newton", "newtons"],
 //        definition: CompoundDefinition("kg*m/s^2"))
 //   dimension: {kg: 1, m: 1, s: -2}
-```
+~~~~
 
 **Quantity Model:**
 
-```dart
+~~~~ dart
 class Quantity {
   final num value;
   final Dimension dimension;
@@ -605,7 +575,7 @@ class Quantity {
   Quantity power(num exponent);
   String format(DisplaySettings settings);
 }
-```
+~~~~
 
 ### 3. Unit Database
 
@@ -617,7 +587,7 @@ class Quantity {
 
 **Database Schema:**
 
-```sql
+~~~~ sql
 -- Units table (includes both primitive and derived units)
 CREATE TABLE units (
   id TEXT PRIMARY KEY,             -- Primary symbol/name (e.g., "m", "kg", "N")
@@ -727,13 +697,13 @@ CREATE TABLE custom_dimensions (
 --
 -- CompoundDefinition (newton):
 --   {"type": "compound", "expression": "kg*m/s^2"}
-```
+~~~~
 
 ### 4. Worksheet System
 
 **Worksheet Model:**
 
-```dart
+~~~~ dart
 class Worksheet {
   final String id;
   final String name;
@@ -749,7 +719,7 @@ class WorksheetField {
   String? lastValue;     // persisted
   bool isInput;          // which field is currently being edited
 }
-```
+~~~~
 
 **Worksheet State Management:**
 
@@ -762,14 +732,14 @@ class WorksheetField {
 
 **Currency Service:**
 
-```dart
+~~~~ dart
 class CurrencyService {
   Future<void> fetchRates();
   Future<Map<String, double>> getRates();
   DateTime getLastUpdateTime();
   bool needsUpdate();
 }
-```
+~~~~
 
 **Rate Storage:**
 
@@ -786,7 +756,8 @@ class CurrencyService {
 - Rate limiting respect
 
 
-## State Management Strategy
+State Management Strategy
+-------------------------
 
 ### Global State (Provider/Riverpod)
 
@@ -804,7 +775,7 @@ class CurrencyService {
 
 ### Persistence Layer
 
-```dart
+~~~~ dart
 class PreferencesRepository {
   Future<void> savePreference(String key, dynamic value);
   Future<T?> getPreference<T>(String key);
@@ -821,10 +792,11 @@ class UnitRepository {
   Future<Unit?> findUnit(String name);
   Future<void> saveCustomUnit(Unit unit);
 }
-```
+~~~~
 
 
-## Implementation Phases
+Implementation Phases
+---------------------
 
 ### Phase 0: Project Setup (Week 1)
 
@@ -1097,7 +1069,8 @@ class UnitRepository {
 ---
 
 
-## Future Enhancement Phases
+Future Enhancement Phases
+-------------------------
 
 ### Phase 11: Custom Units
 
@@ -1127,11 +1100,12 @@ class UnitRepository {
 ---
 
 
-## Development Best Practices
+Development Best Practices
+--------------------------
 
 ### Code Organization
 
-```
+~~~~
 lib/
 ├── main.dart
 ├── app.dart
@@ -1171,7 +1145,7 @@ lib/
 └── assets/
     ├── units/
     └── currency/
-```
+~~~~
 
 ### Testing Strategy
 
@@ -1197,7 +1171,8 @@ lib/
 ---
 
 
-## Risk Mitigation
+Risk Mitigation
+---------------
 
 ### Technical Risks
 
@@ -1229,7 +1204,8 @@ lib/
 ---
 
 
-## Success Metrics
+Success Metrics
+---------------
 
 ### MVP Success Criteria
 
@@ -1254,7 +1230,8 @@ lib/
 ---
 
 
-## Resources & References
+Resources & References
+----------------------
 
 ### Learning Resources
 

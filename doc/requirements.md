@@ -1,19 +1,23 @@
-# Unitary - Requirements Document
+Unitary - Requirements Document
+===============================
 
 
-## Project Overview
+Project Overview
+----------------
 
 Unitary is a powerful, flexible unit conversion application targeting scientific and technically-minded users. The app features both freeform expression evaluation (GNU Units-style) and worksheet-based conversion modes, with support for custom user-defined units and dimensions.
 
 
-## Target Platforms
+Target Platforms
+----------------
 
 - **Primary**: Android
 - **Secondary**: iOS (from same codebase)
 - **Framework**: Flutter (recommended for cross-platform support with native UI integration)
 
 
-## Core Feature Requirements
+Core Feature Requirements
+-------------------------
 
 ### 1. Unit Categories (Initial Release)
 
@@ -170,7 +174,8 @@ All conversions work completely offline:
 - Non-blocking errors (don't clear valid values)
 
 
-## Non-Functional Requirements
+Non-Functional Requirements
+---------------------------
 
 ### Performance
 
@@ -200,7 +205,8 @@ All conversions work completely offline:
 - Preserve user work across sessions
 
 
-## Project Scope
+Project Scope
+-------------
 
 **Timeline:** No fixed deadline; iterative development
 **Release:** Open source on GitHub at MVP stage
@@ -208,7 +214,8 @@ All conversions work completely offline:
 **Development:** Personal project, learning-oriented
 
 
-## Future Enhancements (Out of Scope for MVP)
+Future Enhancements (Out of Scope for MVP)
+------------------------------------------
 
 - Custom unit sharing between users
 - Multiple language support
@@ -221,7 +228,8 @@ All conversions work completely offline:
 - Cloud sync of preferences/custom units
 
 
-## Success Criteria
+Success Criteria
+----------------
 
 A successful MVP will:
 

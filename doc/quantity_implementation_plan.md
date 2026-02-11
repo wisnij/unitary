@@ -1,14 +1,17 @@
-# Plan: Implement Quantity Evaluation & Comparison Logic
+Plan: Implement Quantity Evaluation & Comparison Logic
+======================================================
 
 
-## Overview
+Overview
+--------
 
 Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefinition stubs, UnitRepository, and the Quantity class with full arithmetic, comparison, and conversion logic. All pure Dart — no Flutter dependency.
 
 **Workflow:** For each code step, write the unit tests FIRST, then implement the code to make them pass.
 
 
-## Files to Create (in order)
+Files to Create (in order)
+--------------------------
 
 ### Step 0: Project scaffold
 
@@ -25,7 +28,7 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 ### Step 2: `test/core/domain/models/dimension_test.dart` THEN `lib/core/domain/models/dimension.dart`
 
 - `Dimension` with `Map<String, int> units` (unmodifiable, zeros stripped in constructor)
-- `Dimension.dimensionless()` — empty map
+- `Dimension.dimensionless` — empty map
 - `multiply(other)`, `divide(other)` — add/subtract exponent maps
 - `power(num)` — multiply exponents, validate results are integral, throw `DimensionException` if not
 - `isDimensionless`, `isConformableWith(other)`, `canonicalRepresentation()`
@@ -47,10 +50,9 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 
 - `UnitLookup` abstract interface (breaks circular dep with repository)
 - `Unit` class (id, aliases, description, definition)
-- `UnitDefinition` abstract class with `reduce(repo)` returning a `Quantity` in primitive units
-  - `toBase(value, repo, unitId)` and `fromBase(value, repo, unitId)` derived from reduce
-- `PrimitiveUnitDefinition` — identity; reduce returns `Quantity(1, Dimension({unitId: 1}))`
-- `LinearDefinition` — holds an expression stub (`Quantity Function(UnitLookup)`) that evaluates to the unit's value in terms of other units. Until the parser exists, construct with a closure that returns a `Quantity` directly. `toBase`/`fromBase` use the reduced quantity's value as the conversion factor.
+- `UnitDefinition` abstract class with `toQuantity(value, repo)` returning a `Quantity` in primitive units
+- `PrimitiveUnitDefinition` — identity; `toQuantity` returns `Quantity(value, Dimension({unitId: 1}))`
+- `LinearDefinition` — factor-based conversion; `toQuantity` recurses through the definition chain to produce a `Quantity` in primitive units.
 - `AffineDefinition` — `(value + offset) * factor` for absolute temperature; offset + linear base
 - Tests use a simple `UnitLookup` stub built from a `Map<String, Unit>`
 
@@ -88,15 +90,15 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 
 **Conversion:**
 
-- `convertTo(targetUnit, repo)` — reduces to primitives internally, then converts to target
-- `reduceToPrimitives(repo)` — converts to primitive representation via displayUnit's toBase
+- `reduceToPrimitives(repo)` — converts to primitive representation via unit's `toQuantity`
 
 ### Step 8: `lib/core/domain/models/models.dart`
 
 - Barrel export of all model files
 
 
-## Key Design Decisions
+Key Design Decisions
+--------------------
 
 - **`+`/`-` reduce operands; `*`/`/` do not** — addition/subtraction need common base units for correctness; multiplication/division operate on raw values.  `^` reduces its left operand if it is not dimensionless and its right operand is a rational with denominator greater than 1.
 - **Tests first** — write test file before implementation for each step
@@ -108,7 +110,8 @@ Implement the core domain layer for Unitary: Dimension, Rational, Unit/UnitDefin
 - Errors extend `Exception` (not `Error`) per Dart exception semantics
 
 
-## Verification
+Verification
+------------
 
 1. `dart pub get` succeeds
 2. `dart test` — all tests pass

@@ -1,11 +1,13 @@
-# Unitary - Implementation Plan
+Unitary - Implementation Plan
+=============================
 
 This document outlines the phased approach to implementing Unitary, along with future enhancements, risk mitigation strategies, and success criteria.
 
 ---
 
 
-## Implementation Phases
+Implementation Phases
+---------------------
 
 ### Phase 0: Project Setup (Week 1) — COMPLETE
 
@@ -70,35 +72,57 @@ This document outlines the phased approach to implementing Unitary, along with f
 
 ---
 
-### Phase 2: Unit System Foundation (Weeks 5-7)
+### Phase 2: Unit System Foundation (Weeks 5-7) — COMPLETE
 
-**Goals:** Dimension system and unit definitions
+**Goals:** Build the unit definition system and integrate it with the evaluator
 
 **Tasks:**
 
-1. Implement Dimension class
-   - Primitive dimension representation
-   - Dimensional arithmetic
-   - Conformability checking
-   - Comprehensive unit tests
+- [x] Implement Unit class and UnitDefinition hierarchy
+  - [x] Unit class with id, aliases, description, definition
+  - [x] UnitDefinition base class with toQuantity contract
+  - [x] PrimitiveUnitDefinition (identity conversion, self-referencing dimension)
+  - [x] LinearDefinition (factor-based conversion with recursive resolution)
+  - [x] Unit tests for all definition types
 
-2. Implement Unit and Quantity classes
-   - Linear conversion definitions
-   - Quantity arithmetic with dimensional analysis
-   - Unit tests for conversions
+- [x] Implement UnitRepository
+  - [x] Registration with alias mapping and collision detection
+  - [x] Lookup by name/alias with plural stripping fallback
+  - [x] Factory constructor with built-in units
+  - [x] Unit tests for registration, lookup, and plural stripping
 
-3. Parse GNU Units database
-   - Write parser for GNU Units format
-   - Extract basic units (length, mass, time)
-   - Convert to internal JSON format
-   - Store as asset
+- [x] Implement built-in unit definitions
+  - [x] Length units (10): m, km, cm, mm, um, in, ft, yd, mi, nmi
+  - [x] Mass units (6): kg, g, mg, lb, oz, t
+  - [x] Time units (6): s, ms, min, hr, day, week
+  - [x] Unit tests for conversion factors, aliases, and dimensions
 
-4. Implement UnitRepository
-   - Load units from assets
-   - Unit lookup by name/alias
-   - Dimension filtering
+- [x] Implement reduce() utility
+  - [x] reduce(): resolve non-primitive dimensions to primitives
+  - [x] Unit tests for reduction and edge cases
 
-**Deliverable:** Can convert "5 feet" to meters programmatically
+- [x] Integrate with evaluator
+  - [x] Add nullable repo field to EvalContext (backward compatible)
+  - [x] UnitNode resolves to base units when repo is present
+  - [x] Fallback to raw dimension for null repo or unknown units
+  - [x] Unit tests for unit-aware evaluation
+  - [x] Verify all Phase 1 tests still pass
+
+- [x] Integrate with ExpressionParser
+  - [x] Add optional repo parameter to ExpressionParser
+  - [x] Wire repo through to EvalContext
+  - [x] Deliverable test: parse "5 ft" → evaluate → convert
+  - [x] End-to-end unit tests
+
+- [x] Update documentation
+
+**Deliverable:** Can convert "5 feet" to meters programmatically ✓
+
+**Test Coverage:** 506 tests passing
+
+**Completed:** February 7, 2026
+
+**Detailed Plan:** See [Phase 2 Plan](phase2_plan.md)
 
 ---
 
@@ -294,7 +318,8 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 
-## Future Enhancement Phases
+Future Enhancement Phases
+-------------------------
 
 ### Phase 11: Custom Units
 
@@ -327,10 +352,21 @@ This document outlines the phased approach to implementing Unitary, along with f
 - Convert from decimal to rational where beneficial
 - UI for displaying rational results
 
+### Future: Unit Resolution Caching
+
+- Cache the resulting base-unit Quantity the first time a unit is fully reduced
+  during evaluation, so subsequent evaluations skip the resolution chain
+- Invalidate the cache whenever unit definitions are added or edited (expected
+  to be infrequent, so the cache should remain valid for long periods)
+- Explore pre-warming the cache for all registered units as a background task
+  at initial app startup and after definition edits, to minimize user-visible
+  processing time
+
 ---
 
 
-## Risk Mitigation
+Risk Mitigation
+---------------
 
 ### Technical Risks
 
@@ -397,7 +433,8 @@ This document outlines the phased approach to implementing Unitary, along with f
 ---
 
 
-## Success Metrics
+Success Metrics
+---------------
 
 ### MVP Success Criteria
 

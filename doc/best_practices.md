@@ -1,15 +1,17 @@
-# Unitary - Development Best Practices
+Unitary - Development Best Practices
+====================================
 
 This document outlines coding standards, architecture patterns, and development workflows for Unitary.
 
 ---
 
 
-## Code Organization
+Code Organization
+-----------------
 
 ### Project Structure
 
-```
+~~~~
 lib/
 ├── main.dart
 ├── app.dart
@@ -72,7 +74,7 @@ lib/
     │   └── units_database.json
     └── currency/
         └── default_rates.json
-```
+~~~~
 
 ### File Naming Conventions
 
@@ -91,7 +93,8 @@ lib/
 ---
 
 
-## Architecture Patterns
+Architecture Patterns
+---------------------
 
 ### Layered Architecture
 
@@ -115,7 +118,7 @@ The app follows a layered architecture with clear separation of concerns:
 
 **Example:**
 
-```dart
+~~~~ dart
 final unitRepositoryProvider = Provider<UnitRepository>((ref) {
   return UnitRepository();
 });
@@ -123,7 +126,7 @@ final unitRepositoryProvider = Provider<UnitRepository>((ref) {
 final freeformInputProvider = StateNotifierProvider<FreeformInputNotifier, FreeformState>((ref) {
   return FreeformInputNotifier(ref.read(unitRepositoryProvider));
 });
-```
+~~~~
 
 ### Repository Pattern
 
@@ -135,18 +138,19 @@ All data access goes through repositories:
 
 **Example:**
 
-```dart
+~~~~ dart
 class UnitRepository {
   Future<Unit?> getUnit(String id);
   Future<List<Unit>> getUnitsInDimension(Dimension dimension);
   Future<void> saveCustomUnit(Unit unit);
 }
-```
+~~~~
 
 ---
 
 
-## Testing Strategy
+Testing Strategy
+----------------
 
 ### Unit Tests
 
@@ -162,7 +166,7 @@ class UnitRepository {
 
 **Test Structure**:
 
-```dart
+~~~~ dart
 group('Lexer', () {
   test('should tokenize simple number', () {
     // Arrange
@@ -177,7 +181,7 @@ group('Lexer', () {
     expect(tokens[0].literal, 5.0);
   });
 });
-```
+~~~~
 
 ### Widget Tests
 
@@ -189,7 +193,7 @@ group('Lexer', () {
 
 **Example**:
 
-```dart
+~~~~ dart
 testWidgets('freeform input should display result', (WidgetTester tester) async {
   await tester.pumpWidget(MyApp());
 
@@ -198,7 +202,7 @@ testWidgets('freeform input should display result', (WidgetTester tester) async 
 
   expect(find.text('8 m'), findsOneWidget);
 });
-```
+~~~~
 
 ### Integration Tests
 
@@ -219,18 +223,19 @@ testWidgets('freeform input should display result', (WidgetTester tester) async 
 ---
 
 
-## Error Handling
+Error Handling
+--------------
 
 ### Exception Types
 
 Define custom exception classes for different error categories:
 
-```dart
+~~~~ dart
 class LexException extends Exception { }
 class ParseException extends Exception { }
 class DimensionException extends Exception { }
 class EvalException extends Exception { }
-```
+~~~~
 
 ### Error Reporting
 
@@ -248,13 +253,13 @@ class EvalException extends Exception { }
 
 **Example**:
 
-```dart
+~~~~ dart
 // Internal
 throw LexException("Unexpected character: '$c'", line: 5, column: 12);
 
 // User-facing
 "Invalid input: unexpected character. Please check your expression."
-```
+~~~~
 
 ### Error Recovery
 
@@ -265,7 +270,8 @@ throw LexException("Unexpected character: '$c'", line: 5, column: 12);
 ---
 
 
-## Performance Guidelines
+Performance Guidelines
+----------------------
 
 ### Parser Optimization
 
@@ -290,7 +296,8 @@ throw LexException("Unexpected character: '$c'", line: 5, column: 12);
 ---
 
 
-## Version Control
+Version Control
+---------------
 
 ### Git Workflow
 
@@ -322,7 +329,8 @@ throw LexException("Unexpected character: '$c'", line: 5, column: 12);
 ---
 
 
-## Documentation
+Documentation
+-------------
 
 ### Code Comments
 
@@ -340,7 +348,7 @@ throw LexException("Unexpected character: '$c'", line: 5, column: 12);
 
 **Example**:
 
-```dart
+~~~~ dart
 // Good
 // Use binary search since units are sorted by ID
 final index = _binarySearch(units, targetId);
@@ -348,7 +356,7 @@ final index = _binarySearch(units, targetId);
 // Bad
 // Increment i by 1
 i++;
-```
+~~~~
 
 ### API Documentation
 
@@ -358,7 +366,7 @@ i++;
 
 **Example**:
 
-```dart
+~~~~ dart
 /// Converts a quantity to the specified target unit.
 ///
 /// The quantity and target unit must be conformable (same dimension).
@@ -370,12 +378,13 @@ i++;
 /// final feet = meters.convertTo(feetUnit); // ~16.4 feet
 /// ```
 Quantity convertTo(Unit targetUnit);
-```
+~~~~
 
 ---
 
 
-## Dependency Management
+Dependency Management
+---------------------
 
 ### Adding Dependencies
 
@@ -393,7 +402,8 @@ Quantity convertTo(Unit targetUnit);
 ---
 
 
-## Continuous Improvement
+Continuous Improvement
+----------------------
 
 ### Code Reviews
 

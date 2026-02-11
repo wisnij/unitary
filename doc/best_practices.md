@@ -326,6 +326,57 @@ Version Control
 - Self-review before requesting review
 - Keep PRs focused and reasonably sized
 
+### Release Process
+
+Use the release script to create new releases:
+
+~~~~ bash
+# Preview what a release would do (no changes made)
+dart run tool/release.dart patch --dry-run
+
+# Create a patch release (0.2.0 -> 0.2.1)
+dart run tool/release.dart patch
+
+# Create a minor release (0.2.0 -> 0.3.0)
+dart run tool/release.dart minor
+
+# Create a major release (0.2.0 -> 1.0.0)
+dart run tool/release.dart major
+~~~~
+
+The script will:
+
+1. Verify the working tree is clean
+2. Read the current version from `pubspec.yaml`
+3. Collect commits since the last tag
+4. Generate a changelog entry grouped by category
+5. Update `CHANGELOG.md` and `pubspec.yaml`
+6. Prompt for confirmation
+7. Commit and create an annotated tag
+
+After the script completes, push with `git push && git push --tags`.
+
+**Version numbering:**
+
+- **Major** (X.0.0): Breaking changes or major milestones
+- **Minor** (0.X.0): New features, phase completions
+- **Patch** (0.0.X): Bug fixes, minor improvements
+
+**Conventional commit prefixes and changelog mapping:**
+
+| Prefix       | Changelog Section |
+|--------------|-------------------|
+| `feat:`      | Added             |
+| `fix:`       | Fixed             |
+| `refactor:`  | Changed           |
+| `perf:`      | Changed           |
+| `docs:`      | Documentation     |
+| `test:`      | *(omitted)*       |
+| `chore:`     | *(omitted)*       |
+| `build:`     | *(omitted)*       |
+| `ci:`        | *(omitted)*       |
+| `style:`     | *(omitted)*       |
+
 ---
 
 

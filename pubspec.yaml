@@ -1,7 +1,7 @@
 name: unitary
 description: "A powerful, flexible unit conversion calculator with dimensional analysis"
 publish_to: 'none'
-version: 0.1.0+1
+version: 0.2.0
 
 environment:
   sdk: ^3.10.8

@@ -159,9 +159,23 @@ class AffineUnitNode extends ASTNode {
 
   @override
   Quantity evaluate(EvalContext context) {
-    throw UnimplementedError(
-      'AffineUnitNode evaluation requires unit definitions (Phase 2)',
-    );
+    final argValue = argument.evaluate(context);
+    if (!argValue.isDimensionless) {
+      throw DimensionException(
+        "Affine unit '$unitName' requires a dimensionless argument, got "
+        '${argValue.dimension.canonicalRepresentation()}',
+      );
+    }
+
+    final repo = context.repo;
+    if (repo == null) {
+      throw EvalException(
+        "Cannot evaluate affine unit '$unitName' without a unit repository",
+      );
+    }
+
+    final unit = repo.getUnit(unitName);
+    return unit.definition.toQuantity(argValue.value, repo);
   }
 
   @override

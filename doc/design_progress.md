@@ -260,13 +260,14 @@ When resuming design work, recommended order of priority:
 
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
 2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
-3. **Worksheet System** - Major user-facing feature
-4. **GNU Units Database Import** - Needed before implementation can begin
-5. **UI/UX Design** - Should be fleshed out before coding UI
-6. **State Management Details** - Needed early in implementation
-7. **Currency Rate Management** - Can be added after core features work
-8. **Testing Strategy** - Define before/during implementation
-9. **Error Handling Details** - Refine during implementation
+3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, compound units implemented (Phase 3)
+4. **Worksheet System** - Major user-facing feature
+5. **GNU Units Database Import** - Needed before implementation can begin
+6. **UI/UX Design** - Should be fleshed out before coding UI
+7. **State Management Details** - Needed early in implementation
+8. **Currency Rate Management** - Can be added after core features work
+9. **Testing Strategy** - Define before/during implementation
+10. **Error Handling Details** - Refine during implementation
 
 ---
 
@@ -287,7 +288,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 7, 2026*
+*Last Updated: February 13, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -304,3 +305,6 @@ Questions that arose during design but haven't been resolved:
 - *Phase 2: Unit System Foundation completed (February 7, 2026)*
   - 492 tests passing (119 new)
   - Unit, UnitDefinition, UnitRepository, built-in units, reduce, evaluator integration
+- *Phase 3: Advanced Unit Features completed (February 13, 2026)*
+  - 643 tests passing (151 new)
+  - AffineDefinition, ConstantDefinition, CompoundDefinition, SI base units, temperature, constants, affine syntax

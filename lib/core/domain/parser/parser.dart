@@ -1,4 +1,5 @@
 import '../errors.dart';
+import '../models/unit_repository.dart';
 import 'ast.dart';
 import 'token.dart';
 
@@ -25,9 +26,10 @@ import 'token.dart';
 /// as `(5*m) / (2*s)`.
 class Parser {
   final List<Token> _tokens;
+  final UnitRepository? _repo;
   int _current = 0;
 
-  Parser(this._tokens);
+  Parser(this._tokens, {UnitRepository? repo}) : _repo = repo;
 
   /// Parses the token list and returns the root AST node.
   ASTNode parse() {
@@ -211,6 +213,7 @@ class Parser {
     final token = _advance();
     final name = token.literal as String;
 
+    // Check for builtin functions first.
     if (_check(TokenType.leftParen) && isBuiltinFunction(name)) {
       _advance(); // consume '('
 
@@ -226,6 +229,28 @@ class Parser {
       final args = _arguments();
       _consume(TokenType.rightParen, "Expected ')' after function arguments");
       return FunctionNode(name, args);
+    }
+
+    // Check for affine units (require function-call syntax).
+    if (_repo != null) {
+      final unit = _repo.findUnit(name);
+      if (unit != null && unit.definition.isAffine) {
+        if (!_check(TokenType.leftParen)) {
+          throw ParseException(
+            "Affine unit '$name' requires function-call syntax: "
+            '$name(<value>)',
+            line: token.line,
+            column: token.column,
+          );
+        }
+        _advance(); // consume '('
+        final arg = _expression();
+        _consume(
+          TokenType.rightParen,
+          "Expected ')' after affine unit argument",
+        );
+        return AffineUnitNode(name, arg);
+      }
     }
 
     return UnitNode(name);

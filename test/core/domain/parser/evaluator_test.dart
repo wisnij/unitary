@@ -18,7 +18,7 @@ Quantity eval(String input) {
 
 Quantity evalWithRepo(String input, UnitRepository repo) {
   final tokens = Lexer(input).scanTokens();
-  final ast = Parser(tokens).parse();
+  final ast = Parser(tokens, repo: repo).parse();
   return ast.evaluate(EvalContext(repo: repo));
 }
 
@@ -449,6 +449,174 @@ void main() {
       // 60 * 1609.344 / 3600 = 26.8224 m/s
       expect(result.value, closeTo(26.8224, 1e-4));
       expect(result.dimension, Dimension({'m': 1, 's': -1}));
+    });
+  });
+
+  group('Evaluator: affine unit evaluation', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinUnits(repo);
+    });
+
+    test('tempF(212) = 373.15 K', () {
+      final result = evalWithRepo('tempF(212)', repo);
+      expect(result.value, closeTo(373.15, 1e-2));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+
+    test('tempC(100) = 373.15 K', () {
+      final result = evalWithRepo('tempC(100)', repo);
+      expect(result.value, closeTo(373.15, 1e-10));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+
+    test('tempK(373.15) = 373.15 K', () {
+      final result = evalWithRepo('tempK(373.15)', repo);
+      expect(result.value, closeTo(373.15, 1e-10));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+
+    test('tempR(671.67) ≈ 373.15 K', () {
+      final result = evalWithRepo('tempR(671.67)', repo);
+      expect(result.value, closeTo(373.15, 1e-2));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+
+    test('tempR(0) = 0 K', () {
+      final result = evalWithRepo('tempR(0)', repo);
+      expect(result.value, closeTo(0.0, 1e-10));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+
+    test('tempF(32) + 10 degC = 283.15 K', () {
+      final result = evalWithRepo('tempF(32) + 10 degC', repo);
+      expect(result.value, closeTo(283.15, 1e-2));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+
+    test('tempF(5 m) → DimensionException', () {
+      expect(
+        () => evalWithRepo('tempF(5 m)', repo),
+        throwsA(isA<DimensionException>()),
+      );
+    });
+
+    test('tempF(32 + 180) = 373.15 K (expression as argument)', () {
+      final result = evalWithRepo('tempF(32 + 180)', repo);
+      expect(result.value, closeTo(373.15, 1e-2));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+  });
+
+  group('Evaluator: constants', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinUnits(repo);
+    });
+
+    test('pi ≈ 3.14159', () {
+      final result = evalWithRepo('pi', repo);
+      expect(result.value, closeTo(math.pi, 1e-10));
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('2 pi ≈ 6.28318', () {
+      final result = evalWithRepo('2 pi', repo);
+      expect(result.value, closeTo(2 * math.pi, 1e-10));
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('sin(pi) ≈ 0', () {
+      final result = evalWithRepo('sin(pi)', repo);
+      expect(result.value, closeTo(0.0, 1e-10));
+    });
+
+    test('ln(euler) = 1', () {
+      final result = evalWithRepo('ln(euler)', repo);
+      expect(result.value, closeTo(1.0, 1e-10));
+    });
+
+    test('c = 299792458 m/s', () {
+      final result = evalWithRepo('c', repo);
+      expect(result.value, closeTo(299792458.0, 1e-2));
+      expect(result.dimension, Dimension({'m': 1, 's': -1}));
+    });
+
+    test('5e3 still parses as 5000.0 (not 5 * elementary_charge * 1000)', () {
+      final result = evalWithRepo('5e3', repo);
+      expect(result.value, closeTo(5000.0, 1e-10));
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('5 e = 5 * elementary_charge', () {
+      final result = evalWithRepo('5 e', repo);
+      expect(result.value, closeTo(5 * 1.602176634e-19, 1e-29));
+      expect(result.dimension, Dimension({'A': 1, 's': 1}));
+    });
+  });
+
+  group('Evaluator: compound units', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinUnits(repo);
+    });
+
+    test('5 N = Quantity(5, {kg:1, m:1, s:-2})', () {
+      final result = evalWithRepo('5 N', repo);
+      expect(result.value, closeTo(5.0, 1e-10));
+      expect(result.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
+    });
+
+    test('5 N + 3 kg*m/s^2 = 8 {kg:1, m:1, s:-2}', () {
+      final result = evalWithRepo('5 N + 3 kg*m/s^2', repo);
+      expect(result.value, closeTo(8.0, 1e-10));
+      expect(result.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
+    });
+
+    test('1 J = 1 N m (same dimension and value)', () {
+      final j = evalWithRepo('1 J', repo);
+      final nm = evalWithRepo('1 N m', repo);
+      expect(j.value, closeTo(nm.value, 1e-10));
+      expect(j.dimension, nm.dimension);
+    });
+
+    test('alias resolution: "newton" → N', () {
+      final result = evalWithRepo('5 newton', repo);
+      expect(result.value, closeTo(5.0, 1e-10));
+      expect(result.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
+    });
+
+    test('alias resolution: "joule" → J', () {
+      final result = evalWithRepo('1 joule', repo);
+      expect(result.value, closeTo(1.0, 1e-10));
+      expect(result.dimension, Dimension({'kg': 1, 'm': 2, 's': -2}));
+    });
+  });
+
+  group('Evaluator: Phase 3 deliverables', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinUnits(repo);
+    });
+
+    test('tempF(212) evaluates to 373.15 K', () {
+      final result = evalWithRepo('tempF(212)', repo);
+      expect(result.value, closeTo(373.15, 1e-2));
+      expect(result.dimension, Dimension({'K': 1}));
+    });
+
+    test('5 N + 3 kg*m/s^2 evaluates to 8 kg*m/s^2', () {
+      final result = evalWithRepo('5 N + 3 kg*m/s^2', repo);
+      expect(result.value, closeTo(8.0, 1e-10));
+      expect(result.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
     });
   });
 }

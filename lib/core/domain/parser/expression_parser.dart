@@ -21,7 +21,7 @@ class ExpressionParser {
   /// Lex and parse an expression string, returning the AST.
   ASTNode parse(String input) {
     final tokens = tokenize(input);
-    return Parser(tokens).parse();
+    return Parser(tokens, repo: repo).parse();
   }
 
   /// Lex an expression string, returning the token list.

@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/data/builtin_units.dart';
 import 'package:unitary/core/domain/errors.dart';
+import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
 import 'package:unitary/core/domain/parser/lexer.dart';
 import 'package:unitary/core/domain/parser/parser.dart';
@@ -8,6 +10,11 @@ import 'package:unitary/core/domain/parser/token.dart';
 ASTNode parse(String input) {
   final tokens = Lexer(input).scanTokens();
   return Parser(tokens).parse();
+}
+
+ASTNode parseWithRepo(String input, UnitRepository repo) {
+  final tokens = Lexer(input).scanTokens();
+  return Parser(tokens, repo: repo).parse();
 }
 
 void main() {
@@ -427,6 +434,95 @@ void main() {
 
     test('invalid numeric literal: 1e+', () {
       expect(() => parse('1e+'), throwsA(isA<ParseException>()));
+    });
+  });
+
+  group('Parser: affine unit syntax (with repo)', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinUnits(repo);
+    });
+
+    test('tempF(212) with repo → AffineUnitNode', () {
+      final node = parseWithRepo('tempF(212)', repo);
+      expect(node, isA<AffineUnitNode>());
+      final affine = node as AffineUnitNode;
+      expect(affine.unitName, 'tempF');
+      expect(affine.argument, isA<NumberNode>());
+      expect((affine.argument as NumberNode).value, 212.0);
+    });
+
+    test('tempC(100) with repo → AffineUnitNode', () {
+      final node = parseWithRepo('tempC(100)', repo);
+      expect(node, isA<AffineUnitNode>());
+      expect((node as AffineUnitNode).unitName, 'tempC');
+    });
+
+    test('tempF(32) + 10 degF with repo → BinaryOp(+)', () {
+      final node = parseWithRepo('tempF(32) + 10 degF', repo);
+      expect(node, isA<BinaryOpNode>());
+      final bin = node as BinaryOpNode;
+      expect(bin.operator, TokenType.plus);
+      expect(bin.left, isA<AffineUnitNode>());
+    });
+
+    test('60 tempF with repo → ParseException', () {
+      expect(
+        () => parseWithRepo('60 tempF', repo),
+        throwsA(isA<ParseException>()),
+      );
+    });
+
+    test(
+      'tempF 60 with repo → ParseException (implicit mult triggers error)',
+      () {
+        // tempF without ( should throw immediately.
+        expect(
+          () => parseWithRepo('tempF 60', repo),
+          throwsA(isA<ParseException>()),
+        );
+      },
+    );
+
+    test('tempF(212) without repo → UnitNode (backward compatible)', () {
+      // Without repo, tempF is just a unit identifier followed by implicit mult.
+      final node = parse('tempF(212)');
+      expect(node, isA<BinaryOpNode>());
+      final bin = node as BinaryOpNode;
+      expect(bin.operator, TokenType.multiply);
+      expect(bin.left, isA<UnitNode>());
+      expect((bin.left as UnitNode).unitName, 'tempF');
+    });
+
+    test('5 N with repo → UnitNode (compound, not affine)', () {
+      final node = parseWithRepo('5 N', repo);
+      expect(node, isA<BinaryOpNode>());
+      final bin = node as BinaryOpNode;
+      expect(bin.operator, TokenType.multiply);
+      expect(bin.right, isA<UnitNode>());
+      expect((bin.right as UnitNode).unitName, 'N');
+    });
+
+    test('all existing parser tests still pass with no repo', () {
+      // Smoke test: basic expressions still parse without repo.
+      expect(parse('5 + 3'), isA<BinaryOpNode>());
+      expect(parse('sin(0.5)'), isA<FunctionNode>());
+      expect(parse('5 m'), isA<BinaryOpNode>());
+    });
+
+    test('tempF(32 + 180) with repo → AffineUnitNode with expression arg', () {
+      final node = parseWithRepo('tempF(32 + 180)', repo);
+      expect(node, isA<AffineUnitNode>());
+      final affine = node as AffineUnitNode;
+      expect(affine.argument, isA<BinaryOpNode>());
+    });
+
+    test('5e3 still parses as 5000.0 with repo', () {
+      final node = parseWithRepo('5e3', repo);
+      expect(node, isA<NumberNode>());
+      expect((node as NumberNode).value, 5000.0);
     });
   });
 }

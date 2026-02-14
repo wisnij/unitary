@@ -1,10 +1,6 @@
-import 'dart:math' as math;
-
-import '../models/dimension.dart';
 import '../models/unit.dart';
 import '../models/unit_definition.dart';
 import '../models/unit_repository.dart';
-import '../parser/expression_parser.dart';
 
 /// Registers all built-in units into the given [repo].
 ///
@@ -34,63 +30,63 @@ void _registerLengthUnits(UnitRepository repo) {
     const Unit(
       id: 'km',
       aliases: ['kilometer', 'kilometre'],
-      definition: LinearDefinition(factor: 1000, baseUnitId: 'm'),
+      definition: CompoundDefinition(expression: '1000 m'),
     ),
   );
   repo.register(
     const Unit(
       id: 'cm',
       aliases: ['centimeter', 'centimetre'],
-      definition: LinearDefinition(factor: 0.01, baseUnitId: 'm'),
+      definition: CompoundDefinition(expression: '0.01 m'),
     ),
   );
   repo.register(
     const Unit(
       id: 'mm',
       aliases: ['millimeter', 'millimetre'],
-      definition: LinearDefinition(factor: 0.001, baseUnitId: 'm'),
+      definition: CompoundDefinition(expression: '0.001 m'),
     ),
   );
   repo.register(
     const Unit(
       id: 'um',
       aliases: ['micrometer', 'micrometre', 'micron'],
-      definition: LinearDefinition(factor: 1e-6, baseUnitId: 'm'),
+      definition: CompoundDefinition(expression: '1e-6 m'),
     ),
   );
   repo.register(
     const Unit(
       id: 'in',
       aliases: ['inch'],
-      definition: LinearDefinition(factor: 2.54, baseUnitId: 'cm'),
+      definition: CompoundDefinition(expression: '2.54 cm'),
     ),
   );
   repo.register(
     const Unit(
       id: 'ft',
       aliases: ['foot', 'feet'],
-      definition: LinearDefinition(factor: 12.0, baseUnitId: 'inch'),
+      definition: CompoundDefinition(expression: '12 inch'),
     ),
   );
   repo.register(
     const Unit(
       id: 'yd',
       aliases: ['yard'],
-      definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
+      definition: CompoundDefinition(expression: '3 ft'),
     ),
   );
   repo.register(
     const Unit(
       id: 'mi',
       aliases: ['mile'],
-      definition: LinearDefinition(factor: 1609.344, baseUnitId: 'm'),
+      definition: CompoundDefinition(expression: '1609.344 m'),
     ),
   );
   repo.register(
     const Unit(
       id: 'nmi',
       aliases: ['nautical_mile'],
-      definition: LinearDefinition(factor: 1852, baseUnitId: 'm'),
+      definition: CompoundDefinition(expression: '1852 m'),
     ),
   );
 }
@@ -108,35 +104,35 @@ void _registerMassUnits(UnitRepository repo) {
     const Unit(
       id: 'g',
       aliases: ['gram'],
-      definition: LinearDefinition(factor: 0.001, baseUnitId: 'kg'),
+      definition: CompoundDefinition(expression: '0.001 kg'),
     ),
   );
   repo.register(
     const Unit(
       id: 'mg',
       aliases: ['milligram'],
-      definition: LinearDefinition(factor: 1e-3, baseUnitId: 'g'),
+      definition: CompoundDefinition(expression: '1e-3 g'),
     ),
   );
   repo.register(
     const Unit(
       id: 'lb',
       aliases: ['pound'],
-      definition: LinearDefinition(factor: 453.59237, baseUnitId: 'g'),
+      definition: CompoundDefinition(expression: '453.59237 g'),
     ),
   );
   repo.register(
     const Unit(
       id: 'oz',
       aliases: ['ounce'],
-      definition: LinearDefinition(factor: 28.349523125, baseUnitId: 'g'),
+      definition: CompoundDefinition(expression: '28.349523125 g'),
     ),
   );
   repo.register(
     const Unit(
       id: 't',
       aliases: ['tonne', 'metric_ton'],
-      definition: LinearDefinition(factor: 1000, baseUnitId: 'kg'),
+      definition: CompoundDefinition(expression: '1000 kg'),
     ),
   );
 }
@@ -154,34 +150,34 @@ void _registerTimeUnits(UnitRepository repo) {
     const Unit(
       id: 'ms',
       aliases: ['millisecond'],
-      definition: LinearDefinition(factor: 0.001, baseUnitId: 's'),
+      definition: CompoundDefinition(expression: '0.001 s'),
     ),
   );
   repo.register(
     const Unit(
       id: 'min',
       aliases: ['minute'],
-      definition: LinearDefinition(factor: 60, baseUnitId: 's'),
+      definition: CompoundDefinition(expression: '60 s'),
     ),
   );
   repo.register(
     const Unit(
       id: 'hr',
       aliases: ['hour'],
-      definition: LinearDefinition(factor: 60, baseUnitId: 'min'),
+      definition: CompoundDefinition(expression: '60 min'),
     ),
   );
   repo.register(
     const Unit(
       id: 'day',
-      definition: LinearDefinition(factor: 24, baseUnitId: 'hour'),
+      definition: CompoundDefinition(expression: '24 hour'),
     ),
   );
   repo.register(
     const Unit(
       id: 'week',
       aliases: ['wk'],
-      definition: LinearDefinition(factor: 7, baseUnitId: 'day'),
+      definition: CompoundDefinition(expression: '7 day'),
     ),
   );
 }
@@ -197,33 +193,33 @@ void _registerTemperatureUnits(UnitRepository repo) {
     ),
   );
 
-  // Degree variants (linear — temperature differences).
+  // Degree variants (compound — temperature differences).
   repo.register(
     const Unit(
       id: 'degK',
       aliases: ['degkelvin'],
-      definition: LinearDefinition(factor: 1.0, baseUnitId: 'K'),
+      definition: CompoundDefinition(expression: 'K'),
     ),
   );
   repo.register(
     const Unit(
       id: 'degC',
       aliases: ['degcelsius'],
-      definition: LinearDefinition(factor: 1.0, baseUnitId: 'K'),
+      definition: CompoundDefinition(expression: 'K'),
     ),
   );
   repo.register(
     const Unit(
       id: 'degF',
       aliases: ['degfahrenheit'],
-      definition: LinearDefinition(factor: 5 / 9, baseUnitId: 'K'),
+      definition: CompoundDefinition(expression: '(5/9) K'),
     ),
   );
   repo.register(
     const Unit(
       id: 'degR',
       aliases: ['degrankine'],
-      definition: LinearDefinition(factor: 5 / 9, baseUnitId: 'K'),
+      definition: CompoundDefinition(expression: '(5/9) K'),
     ),
   );
 
@@ -300,126 +296,163 @@ void _registerOtherBaseUnits(UnitRepository repo) {
 void _registerConstants(UnitRepository repo) {
   // Mathematical constants (dimensionless).
   repo.register(
-    Unit(
+    const Unit(
       id: 'pi',
-      definition: ConstantDefinition(
-        constantValue: math.pi,
-        dimension: Dimension.dimensionless,
-      ),
+      definition: CompoundDefinition(expression: '3.141592653589793'),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'euler',
-      definition: ConstantDefinition(
-        constantValue: math.e,
-        dimension: Dimension.dimensionless,
-      ),
+      definition: CompoundDefinition(expression: '2.718281828459045'),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'tau',
-      definition: ConstantDefinition(
-        constantValue: 2 * math.pi,
-        dimension: Dimension.dimensionless,
-      ),
+      definition: CompoundDefinition(expression: '6.283185307179586'),
     ),
   );
 
   // Physical constants (dimensioned).
   repo.register(
-    Unit(
+    const Unit(
       id: 'c',
       aliases: ['speed_of_light'],
-      definition: ConstantDefinition(
-        constantValue: 299792458.0,
-        dimension: Dimension({'m': 1, 's': -1}),
-      ),
+      definition: CompoundDefinition(expression: '299792458 m / s'),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'gravity',
       aliases: ['g0'],
-      definition: ConstantDefinition(
-        constantValue: 9.80665,
-        dimension: Dimension({'m': 1, 's': -2}),
-      ),
+      definition: CompoundDefinition(expression: '9.80665 m / s^2'),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'h',
       aliases: ['planck'],
-      definition: ConstantDefinition(
-        constantValue: 6.62607015e-34,
-        dimension: Dimension({'kg': 1, 'm': 2, 's': -1}),
-      ),
+      definition: CompoundDefinition(expression: '6.62607015e-34 kg m^2 / s'),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'N_A',
       aliases: ['avogadro'],
-      definition: ConstantDefinition(
-        constantValue: 6.02214076e23,
-        dimension: Dimension({'mol': -1}),
-      ),
+      definition: CompoundDefinition(expression: '6.02214076e23 / mol'),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'k_B',
       aliases: ['boltzmann'],
-      definition: ConstantDefinition(
-        constantValue: 1.380649e-23,
-        dimension: Dimension({'kg': 1, 'm': 2, 's': -2, 'K': -1}),
+      definition: CompoundDefinition(
+        expression: '1.380649e-23 kg m^2 / (s^2 K)',
       ),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'e',
       aliases: ['elementary_charge'],
-      definition: ConstantDefinition(
-        constantValue: 1.602176634e-19,
-        dimension: Dimension({'A': 1, 's': 1}),
-      ),
+      definition: CompoundDefinition(expression: '1.602176634e-19 A s'),
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'R',
       aliases: ['gas_constant'],
-      definition: ConstantDefinition(
-        constantValue: 8.314462618,
-        dimension: Dimension({'kg': 1, 'm': 2, 's': -2, 'K': -1, 'mol': -1}),
+      definition: CompoundDefinition(
+        expression: '8.314462618 kg m^2 / (s^2 K mol)',
       ),
     ),
   );
 }
 
 void _registerCompoundUnits(UnitRepository repo) {
-  // Helper: parse an expression, register the unit, and resolve it.
-  void registerCompound(String id, List<String> aliases, String expression) {
-    final def = CompoundDefinition(expression: expression);
-    repo.register(Unit(id: id, aliases: aliases, definition: def));
-    final quantity = ExpressionParser(repo: repo).evaluate(expression);
-    def.resolve(quantity);
-  }
-
-  // Order matters: each unit can only reference already-registered units.
-  registerCompound('N', ['newton'], 'kg m / s^2');
-  registerCompound('Pa', ['pascal'], 'N / m^2');
-  registerCompound('J', ['joule'], 'N m');
-  registerCompound('W', ['watt'], 'J / s');
-  registerCompound('Hz', ['hertz'], '/ s');
-  registerCompound('C', ['coulomb'], 'A s');
-  registerCompound('V', ['volt'], 'W / A');
-  registerCompound('ohm', ['Ohm'], 'V / A');
-  registerCompound('F', ['farad'], 'C / V');
-  registerCompound('Wb', ['weber'], 'V s');
-  registerCompound('T', ['tesla'], 'Wb / m^2');
-  registerCompound('H', ['henry'], 'Wb / A');
+  repo.register(
+    const Unit(
+      id: 'N',
+      aliases: ['newton'],
+      definition: CompoundDefinition(expression: 'kg m / s^2'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'Pa',
+      aliases: ['pascal'],
+      definition: CompoundDefinition(expression: 'N / m^2'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'J',
+      aliases: ['joule'],
+      definition: CompoundDefinition(expression: 'N m'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'W',
+      aliases: ['watt'],
+      definition: CompoundDefinition(expression: 'J / s'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'Hz',
+      aliases: ['hertz'],
+      definition: CompoundDefinition(expression: '/ s'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'C',
+      aliases: ['coulomb'],
+      definition: CompoundDefinition(expression: 'A s'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'V',
+      aliases: ['volt'],
+      definition: CompoundDefinition(expression: 'W / A'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'ohm',
+      aliases: ['Ohm'],
+      definition: CompoundDefinition(expression: 'V / A'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'F',
+      aliases: ['farad'],
+      definition: CompoundDefinition(expression: 'C / V'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'Wb',
+      aliases: ['weber'],
+      definition: CompoundDefinition(expression: 'V s'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'T',
+      aliases: ['tesla'],
+      definition: CompoundDefinition(expression: 'Wb / m^2'),
+    ),
+  );
+  repo.register(
+    const Unit(
+      id: 'H',
+      aliases: ['henry'],
+      definition: CompoundDefinition(expression: 'Wb / A'),
+    ),
+  );
 }

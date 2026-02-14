@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
-import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_definition.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
@@ -42,7 +41,7 @@ void main() {
     });
 
     test('const construction works', () {
-      const def = LinearDefinition(factor: 0.3048, baseUnitId: 'm');
+      const def = CompoundDefinition(expression: '0.3048 m');
       const unit = Unit(id: 'ft', definition: def);
       expect(unit.id, 'ft');
     });
@@ -99,110 +98,6 @@ void main() {
       final def = repo2.getUnit('kg').definition;
       final q = def.toQuantity(1.0, repo2);
       expect(q.dimension, Dimension({'kg': 1}));
-    });
-  });
-
-  group('LinearDefinition', () {
-    late UnitRepository repo;
-
-    setUp(() {
-      repo = UnitRepository();
-      repo.register(
-        Unit(
-          id: 'm',
-          aliases: ['meter'],
-          definition: PrimitiveUnitDefinition(),
-        ),
-      );
-      repo.register(
-        const Unit(
-          id: 'ft',
-          aliases: ['foot', 'feet'],
-          definition: LinearDefinition(factor: 0.3048, baseUnitId: 'm'),
-        ),
-      );
-    });
-
-    test('isPrimitive is false', () {
-      expect(
-        const LinearDefinition(factor: 0.3048, baseUnitId: 'm').isPrimitive,
-        isFalse,
-      );
-    });
-
-    test('toQuantity converts value and returns primitive dimension', () {
-      final def = repo.getUnit('ft').definition;
-      final q = def.toQuantity(1.0, repo);
-      expect(q.value, closeTo(0.3048, 1e-10));
-      expect(q.dimension, Dimension({'m': 1}));
-    });
-
-    test('toQuantity with multiple units', () {
-      final def = repo.getUnit('ft').definition;
-      final q = def.toQuantity(5.0, repo);
-      expect(q.value, closeTo(1.524, 1e-10));
-      expect(q.dimension, Dimension({'m': 1}));
-    });
-
-    test('toQuantity with zero', () {
-      final def = repo.getUnit('ft').definition;
-      final q = def.toQuantity(0.0, repo);
-      expect(q.value, 0.0);
-      expect(q.dimension, Dimension({'m': 1}));
-    });
-
-    test('chain resolution: yard → ft → m', () {
-      repo.register(
-        const Unit(
-          id: 'yd',
-          aliases: ['yard'],
-          definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
-        ),
-      );
-      final def = repo.getUnit('yd').definition;
-
-      // 1 yard = 3 feet = 3 * 0.3048 m = 0.9144 m
-      final q = def.toQuantity(1.0, repo);
-      expect(q.value, closeTo(0.9144, 1e-10));
-      expect(q.dimension, Dimension({'m': 1}));
-    });
-
-    test('chain toQuantity returns primitive dimension', () {
-      repo.register(
-        const Unit(
-          id: 'yd',
-          aliases: ['yard'],
-          definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
-        ),
-      );
-      final def = repo.getUnit('yd').definition;
-      final q = def.toQuantity(1.0, repo);
-      expect(q.dimension, Dimension({'m': 1}));
-    });
-
-    test('toQuantity value matches reduce for derived units', () {
-      repo.register(
-        const Unit(
-          id: 'yd',
-          aliases: ['yard'],
-          definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
-        ),
-      );
-      final def = repo.getUnit('yd').definition;
-      for (final x in [0.0, 1.0, 5.0, -2.5, 100.0]) {
-        final q = def.toQuantity(x, repo);
-        expect(
-          q.value,
-          closeTo(x * 0.9144, 1e-10),
-          reason: 'toQuantity for $x yd',
-        );
-      }
-    });
-
-    test('const construction', () {
-      const def = LinearDefinition(factor: 1000.0, baseUnitId: 'm');
-      expect(def.factor, 1000.0);
-      expect(def.baseUnitId, 'm');
     });
   });
 }

@@ -43,34 +43,6 @@ class PrimitiveUnitDefinition extends UnitDefinition {
   bool get isPrimitive => true;
 }
 
-/// A unit defined as a linear multiple of another unit.
-///
-/// For example: 1 foot = 0.3048 meters, so feet has
-/// LinearDefinition(factor: 0.3048, baseUnitId: 'm').
-///
-/// Chains are supported: 1 yard = 3 feet could be
-/// LinearDefinition(factor: 3, baseUnitId: 'ft'), and resolution
-/// recurses through feet to meters.
-class LinearDefinition extends UnitDefinition {
-  /// How many of [baseUnitId] equal one of this unit.
-  /// i.e., `1 <this unit> = [factor] <baseUnit>`
-  final double factor;
-
-  /// The ID of the unit this is defined in terms of.
-  final String baseUnitId;
-
-  const LinearDefinition({required this.factor, required this.baseUnitId});
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toQuantity(value * factor, repo);
-  }
-
-  @override
-  bool get isPrimitive => false;
-}
-
 /// A unit defined by an affine transformation of another unit.
 ///
 /// Computes `(value + offset) * factor` and passes the result through the
@@ -107,61 +79,23 @@ class AffineDefinition extends UnitDefinition {
   bool get isAffine => true;
 }
 
-/// A named constant with a fixed value and dimension.
-///
-/// For example: pi = ConstantDefinition(constantValue: 3.14159...,
-/// dimension: dimensionless).  `toQuantity(2.0, repo)` returns 6.28318...
-class ConstantDefinition extends UnitDefinition {
-  /// The constant's numeric value.
-  final double constantValue;
-
-  /// The constant's fixed dimension.
-  final Dimension _dimension;
-
-  ConstantDefinition({
-    required this.constantValue,
-    required Dimension dimension,
-  }) : _dimension = dimension;
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) =>
-      Quantity(value * constantValue, _dimension);
-
-  @override
-  bool get isPrimitive => false;
-}
-
 /// A unit defined by an expression in terms of other units.
 ///
-/// The expression string is stored for reference.  Before use, `resolve()`
-/// must be called with the pre-computed base [Quantity] (parsed and evaluated
-/// by the caller).  `toQuantity()` then scales that cached quantity.
+/// The expression string is evaluated lazily via ExpressionParser when the
+/// unit is referenced during evaluation.  This class is immutable and
+/// const-constructible.
 class CompoundDefinition extends UnitDefinition {
-  /// The expression string (e.g., 'kg m / s^2').
+  /// The expression string (e.g., 'kg m / s^2', '1000 m', '3.141592653589793').
   final String expression;
 
-  Quantity? _baseQuantity;
-
-  CompoundDefinition({required this.expression});
-
-  /// Whether this definition has been resolved.
-  bool get isResolved => _baseQuantity != null;
-
-  /// Cache the pre-computed base quantity.  Must be called exactly once.
-  void resolve(Quantity baseQuantity) {
-    if (_baseQuantity != null) {
-      throw StateError('CompoundDefinition already resolved: $expression');
-    }
-    _baseQuantity = baseQuantity;
-  }
+  const CompoundDefinition({required this.expression});
 
   @override
   Quantity toQuantity(double value, UnitRepository repo) {
-    final base = _baseQuantity;
-    if (base == null) {
-      throw StateError('CompoundDefinition not yet resolved: $expression');
-    }
-    return Quantity(value * base.value, base.dimension);
+    throw UnsupportedError(
+      'CompoundDefinition.toQuantity() is not supported. '
+      'Use ExpressionParser to evaluate the expression instead.',
+    );
   }
 
   @override

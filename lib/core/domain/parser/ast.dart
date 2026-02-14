@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import '../errors.dart';
 import '../models/dimension.dart';
 import '../models/quantity.dart';
+import '../models/unit_definition.dart';
 import '../models/unit_repository.dart';
+import 'expression_parser.dart';
 import 'token.dart';
 
 /// Evaluation context passed to AST nodes during evaluation.
@@ -61,6 +63,10 @@ class UnitNode extends ASTNode {
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
+    if (unit.definition is CompoundDefinition) {
+      final expr = (unit.definition as CompoundDefinition).expression;
+      return ExpressionParser(repo: repo).evaluate(expr);
+    }
     return unit.definition.toQuantity(1.0, repo);
   }
 

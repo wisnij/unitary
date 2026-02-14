@@ -3,15 +3,22 @@ import 'dart:math' as math;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/data/builtin_units.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
+import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_definition.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/parser/expression_parser.dart';
 
 void main() {
   late UnitRepository repo;
+  late ExpressionParser parser;
+
+  /// Evaluate 1 of the given unit, returning the equivalent base Quantity.
+  Quantity evalUnit(String unitId) => parser.evaluate(unitId);
 
   setUp(() {
     repo = UnitRepository();
     registerBuiltinUnits(repo);
+    parser = ExpressionParser(repo: repo);
   });
 
   group('Registration', () {
@@ -53,119 +60,79 @@ void main() {
 
   group('Conversion factors', () {
     test('1 ft = 0.3048 m', () {
-      final ft = repo.getUnit('ft');
-      expect(ft.definition.toQuantity(1.0, repo).value, closeTo(0.3048, 1e-10));
+      expect(evalUnit('ft').value, closeTo(0.3048, 1e-10));
     });
 
     test('1 mi = 1609.344 m', () {
-      final mi = repo.getUnit('mi');
-      expect(
-        mi.definition.toQuantity(1.0, repo).value,
-        closeTo(1609.344, 1e-6),
-      );
+      expect(evalUnit('mi').value, closeTo(1609.344, 1e-6));
     });
 
     test('1 in = 0.0254 m', () {
-      final inch = repo.getUnit('in');
-      expect(
-        inch.definition.toQuantity(1.0, repo).value,
-        closeTo(0.0254, 1e-10),
-      );
+      expect(evalUnit('in').value, closeTo(0.0254, 1e-10));
     });
 
     test('1 yd = 0.9144 m', () {
-      final yd = repo.getUnit('yd');
-      expect(yd.definition.toQuantity(1.0, repo).value, closeTo(0.9144, 1e-10));
+      expect(evalUnit('yd').value, closeTo(0.9144, 1e-10));
     });
 
     test('1 km = 1000 m', () {
-      final km = repo.getUnit('km');
-      expect(km.definition.toQuantity(1.0, repo).value, closeTo(1000.0, 1e-10));
+      expect(evalUnit('km').value, closeTo(1000.0, 1e-10));
     });
 
     test('1 cm = 0.01 m', () {
-      final cm = repo.getUnit('cm');
-      expect(cm.definition.toQuantity(1.0, repo).value, closeTo(0.01, 1e-15));
+      expect(evalUnit('cm').value, closeTo(0.01, 1e-15));
     });
 
     test('1 mm = 0.001 m', () {
-      final mm = repo.getUnit('mm');
-      expect(mm.definition.toQuantity(1.0, repo).value, closeTo(0.001, 1e-15));
+      expect(evalUnit('mm').value, closeTo(0.001, 1e-15));
     });
 
     test('1 um = 1e-6 m', () {
-      final um = repo.getUnit('um');
-      expect(um.definition.toQuantity(1.0, repo).value, closeTo(1e-6, 1e-18));
+      expect(evalUnit('um').value, closeTo(1e-6, 1e-18));
     });
 
     test('1 nmi = 1852 m', () {
-      final nmi = repo.getUnit('nmi');
-      expect(
-        nmi.definition.toQuantity(1.0, repo).value,
-        closeTo(1852.0, 1e-10),
-      );
+      expect(evalUnit('nmi').value, closeTo(1852.0, 1e-10));
     });
 
     test('1 lb = 0.45359237 kg', () {
-      final lb = repo.getUnit('lb');
-      expect(
-        lb.definition.toQuantity(1.0, repo).value,
-        closeTo(0.45359237, 1e-10),
-      );
+      expect(evalUnit('lb').value, closeTo(0.45359237, 1e-10));
     });
 
     test('1 oz = 0.028349523125 kg', () {
-      final oz = repo.getUnit('oz');
-      expect(
-        oz.definition.toQuantity(1.0, repo).value,
-        closeTo(0.028349523125, 1e-14),
-      );
+      expect(evalUnit('oz').value, closeTo(0.028349523125, 1e-14));
     });
 
     test('1 g = 0.001 kg', () {
-      final g = repo.getUnit('g');
-      expect(g.definition.toQuantity(1.0, repo).value, closeTo(0.001, 1e-15));
+      expect(evalUnit('g').value, closeTo(0.001, 1e-15));
     });
 
     test('1 mg = 1e-6 kg', () {
-      final mg = repo.getUnit('mg');
-      expect(mg.definition.toQuantity(1.0, repo).value, closeTo(1e-6, 1e-18));
+      expect(evalUnit('mg').value, closeTo(1e-6, 1e-18));
     });
 
     test('1 t = 1000 kg', () {
-      final t = repo.getUnit('t');
-      expect(t.definition.toQuantity(1.0, repo).value, closeTo(1000.0, 1e-10));
+      expect(evalUnit('t').value, closeTo(1000.0, 1e-10));
     });
 
     test('1 hr = 3600 s', () {
-      final hr = repo.getUnit('hr');
-      expect(hr.definition.toQuantity(1.0, repo).value, closeTo(3600.0, 1e-10));
+      expect(evalUnit('hr').value, closeTo(3600.0, 1e-10));
     });
 
     test('1 min = 60 s', () {
-      final min = repo.getUnit('min');
-      expect(min.definition.toQuantity(1.0, repo).value, closeTo(60.0, 1e-10));
+      expect(evalUnit('min').value, closeTo(60.0, 1e-10));
     });
 
     test('1 day = 86400 s', () {
-      final day = repo.getUnit('day');
-      expect(
-        day.definition.toQuantity(1.0, repo).value,
-        closeTo(86400.0, 1e-10),
-      );
+      expect(evalUnit('day').value, closeTo(86400.0, 1e-10));
     });
 
     test('1 week = 604800 s', () {
-      final week = repo.getUnit('week');
-      expect(
-        week.definition.toQuantity(1.0, repo).value,
-        closeTo(604800.0, 1e-10),
-      );
+      expect(evalUnit('week').value, closeTo(604800.0, 1e-10));
     });
 
     test('1 ms = 0.001 s', () {
-      final ms = repo.getUnit('ms');
-      expect(ms.definition.toQuantity(1.0, repo).value, closeTo(0.001, 1e-15));
+      expect(evalUnit('ms').value, closeTo(0.001, 1e-15));
     });
   });
 
@@ -292,9 +259,8 @@ void main() {
         'mi',
         'nmi',
       ]) {
-        final unit = repo.getUnit(id);
         expect(
-          unit.definition.toQuantity(1.0, repo).dimension,
+          evalUnit(id).dimension,
           lengthDim,
           reason: '$id should have length dimension',
         );
@@ -304,9 +270,8 @@ void main() {
     test('mass units have dimension {kg: 1}', () {
       final massDim = Dimension({'kg': 1});
       for (final id in ['kg', 'g', 'mg', 'lb', 'oz', 't']) {
-        final unit = repo.getUnit(id);
         expect(
-          unit.definition.toQuantity(1.0, repo).dimension,
+          evalUnit(id).dimension,
           massDim,
           reason: '$id should have mass dimension',
         );
@@ -316,9 +281,8 @@ void main() {
     test('time units have dimension {s: 1}', () {
       final timeDim = Dimension({'s': 1});
       for (final id in ['s', 'ms', 'min', 'hr', 'day', 'week']) {
-        final unit = repo.getUnit(id);
         expect(
-          unit.definition.toQuantity(1.0, repo).dimension,
+          evalUnit(id).dimension,
           timeDim,
           reason: '$id should have time dimension',
         );
@@ -339,8 +303,12 @@ void main() {
         'tempR',
       ]) {
         final unit = repo.getUnit(id);
+        // Affine units use toQuantity directly; compound units go through parser.
+        final q = unit.definition is CompoundDefinition
+            ? evalUnit(id)
+            : unit.definition.toQuantity(1.0, repo);
         expect(
-          unit.definition.toQuantity(1.0, repo).dimension,
+          q.dimension,
           tempDim,
           reason: '$id should have temperature dimension',
         );
@@ -348,22 +316,10 @@ void main() {
     });
 
     test('new SI base units have correct dimensions', () {
-      expect(
-        repo.getUnit('K').definition.toQuantity(1.0, repo).dimension,
-        Dimension({'K': 1}),
-      );
-      expect(
-        repo.getUnit('A').definition.toQuantity(1.0, repo).dimension,
-        Dimension({'A': 1}),
-      );
-      expect(
-        repo.getUnit('mol').definition.toQuantity(1.0, repo).dimension,
-        Dimension({'mol': 1}),
-      );
-      expect(
-        repo.getUnit('cd').definition.toQuantity(1.0, repo).dimension,
-        Dimension({'cd': 1}),
-      );
+      expect(evalUnit('K').dimension, Dimension({'K': 1}));
+      expect(evalUnit('A').dimension, Dimension({'A': 1}));
+      expect(evalUnit('mol').dimension, Dimension({'mol': 1}));
+      expect(evalUnit('cd').dimension, Dimension({'cd': 1}));
     });
   });
 
@@ -437,23 +393,19 @@ void main() {
     });
 
     test('100 degF = 55.556 K', () {
-      final def = repo.getUnit('degF').definition;
-      expect(def.toQuantity(100.0, repo).value, closeTo(55.5556, 1e-3));
+      expect(parser.evaluate('100 degF').value, closeTo(55.5556, 1e-3));
     });
 
     test('100 degC = 100 K', () {
-      final def = repo.getUnit('degC').definition;
-      expect(def.toQuantity(100.0, repo).value, closeTo(100.0, 1e-10));
+      expect(parser.evaluate('100 degC').value, closeTo(100.0, 1e-10));
     });
 
     test('180 degR = 100 K', () {
-      final def = repo.getUnit('degR').definition;
-      expect(def.toQuantity(180.0, repo).value, closeTo(100.0, 1e-10));
+      expect(parser.evaluate('180 degR').value, closeTo(100.0, 1e-10));
     });
 
     test('1 degK = 1 K', () {
-      final def = repo.getUnit('degK').definition;
-      expect(def.toQuantity(1.0, repo).value, closeTo(1.0, 1e-10));
+      expect(evalUnit('degK').value, closeTo(1.0, 1e-10));
     });
 
     test('affine units are affine', () {
@@ -490,71 +442,61 @@ void main() {
 
   group('Constants', () {
     test('pi has correct value and is dimensionless', () {
-      final def = repo.getUnit('pi').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('pi');
       expect(q.value, closeTo(math.pi, 1e-15));
       expect(q.isDimensionless, isTrue);
     });
 
     test('euler has correct value and is dimensionless', () {
-      final def = repo.getUnit('euler').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('euler');
       expect(q.value, closeTo(math.e, 1e-15));
       expect(q.isDimensionless, isTrue);
     });
 
     test('tau = 2*pi', () {
-      final def = repo.getUnit('tau').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('tau');
       expect(q.value, closeTo(2 * math.pi, 1e-15));
       expect(q.isDimensionless, isTrue);
     });
 
     test('c = 299792458 m/s', () {
-      final def = repo.getUnit('c').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('c');
       expect(q.value, closeTo(299792458.0, 1e-2));
       expect(q.dimension, Dimension({'m': 1, 's': -1}));
     });
 
     test('gravity = 9.80665 m/s^2', () {
-      final def = repo.getUnit('gravity').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('gravity');
       expect(q.value, closeTo(9.80665, 1e-10));
       expect(q.dimension, Dimension({'m': 1, 's': -2}));
     });
 
     test('h = 6.62607015e-34 kg*m^2/s', () {
-      final def = repo.getUnit('h').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('h');
       expect(q.value, closeTo(6.62607015e-34, 1e-44));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -1}));
     });
 
     test('N_A = 6.02214076e23 /mol', () {
-      final def = repo.getUnit('N_A').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('N_A');
       expect(q.value, closeTo(6.02214076e23, 1e13));
       expect(q.dimension, Dimension({'mol': -1}));
     });
 
     test('k_B = 1.380649e-23 kg*m^2/(s^2*K)', () {
-      final def = repo.getUnit('k_B').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('k_B');
       expect(q.value, closeTo(1.380649e-23, 1e-33));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -2, 'K': -1}));
     });
 
     test('e = 1.602176634e-19 A*s', () {
-      final def = repo.getUnit('e').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('e');
       expect(q.value, closeTo(1.602176634e-19, 1e-29));
       expect(q.dimension, Dimension({'A': 1, 's': 1}));
     });
 
     test('R = 8.314462618 kg*m^2/(s^2*K*mol)', () {
-      final def = repo.getUnit('R').definition;
-      final q = def.toQuantity(1.0, repo);
+      final q = evalUnit('R');
       expect(q.value, closeTo(8.314462618, 1e-9));
       expect(
         q.dimension,
@@ -573,14 +515,13 @@ void main() {
     });
 
     test('2 pi ≈ 6.28318', () {
-      final def = repo.getUnit('pi').definition;
-      final q = def.toQuantity(2.0, repo);
+      final q = parser.evaluate('2 pi');
       expect(q.value, closeTo(2 * math.pi, 1e-10));
     });
   });
 
   group('Compound units', () {
-    test('all compound units are resolved', () {
+    test('all compound units use CompoundDefinition', () {
       for (final id in [
         'N',
         'Pa',
@@ -601,88 +542,83 @@ void main() {
           isA<CompoundDefinition>(),
           reason: '$id should be CompoundDefinition',
         );
-        expect(
-          (unit.definition as CompoundDefinition).isResolved,
-          isTrue,
-          reason: '$id should be resolved',
-        );
       }
     });
 
     test('N has dimension {kg:1, m:1, s:-2}', () {
-      final q = repo.getUnit('N').definition.toQuantity(1.0, repo);
+      final q = evalUnit('N');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
     });
 
     test('Pa has dimension {kg:1, m:-1, s:-2}', () {
-      final q = repo.getUnit('Pa').definition.toQuantity(1.0, repo);
+      final q = evalUnit('Pa');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': -1, 's': -2}));
     });
 
     test('J has dimension {kg:1, m:2, s:-2}', () {
-      final q = repo.getUnit('J').definition.toQuantity(1.0, repo);
+      final q = evalUnit('J');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -2}));
     });
 
     test('W has dimension {kg:1, m:2, s:-3}', () {
-      final q = repo.getUnit('W').definition.toQuantity(1.0, repo);
+      final q = evalUnit('W');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -3}));
     });
 
     test('Hz has dimension {s:-1}', () {
-      final q = repo.getUnit('Hz').definition.toQuantity(1.0, repo);
+      final q = evalUnit('Hz');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'s': -1}));
     });
 
     test('C (coulomb) has dimension {A:1, s:1}', () {
-      final q = repo.getUnit('C').definition.toQuantity(1.0, repo);
+      final q = evalUnit('C');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'A': 1, 's': 1}));
     });
 
     test('V has dimension {kg:1, m:2, s:-3, A:-1}', () {
-      final q = repo.getUnit('V').definition.toQuantity(1.0, repo);
+      final q = evalUnit('V');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -3, 'A': -1}));
     });
 
     test('ohm has dimension {kg:1, m:2, s:-3, A:-2}', () {
-      final q = repo.getUnit('ohm').definition.toQuantity(1.0, repo);
+      final q = evalUnit('ohm');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -3, 'A': -2}));
     });
 
     test('F (farad) has dimension {A:2, s:4, kg:-1, m:-2}', () {
-      final q = repo.getUnit('F').definition.toQuantity(1.0, repo);
+      final q = evalUnit('F');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'A': 2, 's': 4, 'kg': -1, 'm': -2}));
     });
 
     test('Wb has dimension {kg:1, m:2, s:-2, A:-1}', () {
-      final q = repo.getUnit('Wb').definition.toQuantity(1.0, repo);
+      final q = evalUnit('Wb');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -2, 'A': -1}));
     });
 
     test('T has dimension {kg:1, s:-2, A:-1}', () {
-      final q = repo.getUnit('T').definition.toQuantity(1.0, repo);
+      final q = evalUnit('T');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 's': -2, 'A': -1}));
     });
 
     test('H has dimension {kg:1, m:2, s:-2, A:-2}', () {
-      final q = repo.getUnit('H').definition.toQuantity(1.0, repo);
+      final q = evalUnit('H');
       expect(q.value, closeTo(1.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -2, 'A': -2}));
     });
 
     test('5 N = Quantity(5, {kg:1, m:1, s:-2})', () {
-      final q = repo.getUnit('N').definition.toQuantity(5.0, repo);
+      final q = parser.evaluate('5 N');
       expect(q.value, closeTo(5.0, 1e-10));
       expect(q.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
     });

@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import '../models/dimension.dart';
 import '../models/quantity.dart';
+import '../models/unit_definition.dart';
 import '../models/unit_repository.dart';
+import '../parser/expression_parser.dart';
 
 /// Reduce a quantity to primitive base units.
 ///
@@ -32,7 +34,13 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
     }
 
     // Resolve to base units.
-    final baseQuantity = unit.definition.toQuantity(1.0, repo);
+    final Quantity baseQuantity;
+    if (unit.definition is CompoundDefinition) {
+      final expr = (unit.definition as CompoundDefinition).expression;
+      baseQuantity = ExpressionParser(repo: repo).evaluate(expr);
+    } else {
+      baseQuantity = unit.definition.toQuantity(1.0, repo);
+    }
     value *= math.pow(baseQuantity.value, exponent);
 
     // Replace with primitive dimension entries.

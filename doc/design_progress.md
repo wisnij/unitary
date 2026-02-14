@@ -22,7 +22,7 @@ The following areas have been thoroughly designed and documented:
 - **Dimension**: Representation as map of primitive unit IDs to exponents
 - **Unit**: Structure with id, aliases, description, and definition
 - **Primitive Units**: Units that cannot be reduced further (dimensioned and dimensionless)
-- **Derived Units**: Linear, affine, and compound definitions
+- **Derived Units**: Affine and compound definitions
 - **Prefixes**: SI and other prefixes with multiplication factors
 - **DimensionRegistry**: Mapping dimensions to human-readable names for UI
 
@@ -307,4 +307,4 @@ Questions that arose during design but haven't been resolved:
   - Unit, UnitDefinition, UnitRepository, built-in units, reduce, evaluator integration
 - *Phase 3: Advanced Unit Features completed (February 13, 2026)*
   - 643 tests passing (151 new)
-  - AffineDefinition, ConstantDefinition, CompoundDefinition, SI base units, temperature, constants, affine syntax
+  - AffineDefinition, CompoundDefinition (unified from Linear/Constant/Compound), SI base units, temperature, constants, affine syntax

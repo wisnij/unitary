@@ -109,7 +109,7 @@ void main() {
         const Unit(
           id: 'in',
           aliases: ['inch'],
-          definition: LinearDefinition(factor: 0.0254, baseUnitId: 'm'),
+          definition: CompoundDefinition(expression: '0.0254 m'),
         ),
       );
       repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
@@ -125,7 +125,7 @@ void main() {
         const Unit(
           id: 'in',
           aliases: ['inch'],
-          definition: LinearDefinition(factor: 0.0254, baseUnitId: 'm'),
+          definition: CompoundDefinition(expression: '0.0254 m'),
         ),
       );
       expect(repo.findUnit('inches')?.id, 'in');
@@ -137,7 +137,7 @@ void main() {
         const Unit(
           id: 'hr',
           aliases: ['hour'],
-          definition: LinearDefinition(factor: 3600, baseUnitId: 's'),
+          definition: CompoundDefinition(expression: '3600 s'),
         ),
       );
       expect(repo.findUnit('hours')?.id, 'hr');
@@ -149,7 +149,7 @@ void main() {
         const Unit(
           id: 'ft',
           aliases: ['foot', 'feet'],
-          definition: LinearDefinition(factor: 0.3048, baseUnitId: 'm'),
+          definition: CompoundDefinition(expression: '0.3048 m'),
         ),
       );
       // "feet" is an explicit alias, not found via stripping
@@ -170,7 +170,7 @@ void main() {
       repo.register(
         const Unit(
           id: 'gas',
-          definition: LinearDefinition(factor: 1, baseUnitId: 'm'),
+          definition: CompoundDefinition(expression: '1 m'),
         ),
       );
       // "gas" should find 'gas' unit exactly, not strip 's' → "ga"

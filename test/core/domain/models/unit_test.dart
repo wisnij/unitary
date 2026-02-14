@@ -2,28 +2,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
-import 'package:unitary/core/domain/models/unit_definition.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 void main() {
-  group('Unit', () {
+  group('PrimitiveUnit', () {
     test('constructs with required fields', () {
-      const def = PrimitiveUnitDefinition();
-      const unit = Unit(id: 'm', definition: def);
+      const unit = PrimitiveUnit(id: 'm');
       expect(unit.id, 'm');
       expect(unit.aliases, isEmpty);
       expect(unit.description, isNull);
-      expect(unit.definition, def);
     });
 
     test('constructs with all fields', () {
-      const def = PrimitiveUnitDefinition();
-      const unit = Unit(
+      const unit = PrimitiveUnit(
         id: 'm',
         aliases: ['meter', 'metre'],
         description: 'SI base unit of length',
-        definition: def,
       );
       expect(unit.id, 'm');
       expect(unit.aliases, ['meter', 'metre']);
@@ -31,46 +26,85 @@ void main() {
     });
 
     test('allNames includes id and aliases', () {
-      const def = PrimitiveUnitDefinition();
-      const unit = Unit(id: 'ft', aliases: ['foot', 'feet'], definition: def);
+      const unit = PrimitiveUnit(id: 'ft', aliases: ['foot', 'feet']);
       expect(unit.allNames, ['ft', 'foot', 'feet']);
     });
 
     test('allNames with no aliases is just id', () {
-      const def = PrimitiveUnitDefinition();
-      const unit = Unit(id: 'kg', definition: def);
+      const unit = PrimitiveUnit(id: 'kg');
       expect(unit.allNames, ['kg']);
     });
 
-    test('const construction works', () {
-      const def = CompoundDefinition(expression: '0.3048 m');
-      const unit = Unit(id: 'ft', definition: def);
-      expect(unit.id, 'ft');
+    test('default aliases is empty list', () {
+      const unit = PrimitiveUnit(id: 'x');
+      expect(unit.aliases, const <String>[]);
     });
 
-    test('default aliases is empty list', () {
-      const def = PrimitiveUnitDefinition();
-      const unit = Unit(id: 'x', definition: def);
-      expect(unit.aliases, const <String>[]);
+    test('isPrimitive is true', () {
+      expect(const PrimitiveUnit(id: 'm').isPrimitive, isTrue);
+    });
+
+    test('isAffine is false', () {
+      expect(const PrimitiveUnit(id: 'm').isAffine, isFalse);
     });
   });
 
-  group('PrimitiveUnitDefinition', () {
+  group('AffineUnit', () {
+    test('isAffine is true', () {
+      const unit = AffineUnit(
+        id: 'tempC',
+        factor: 1.0,
+        offset: 273.15,
+        baseUnitId: 'K',
+      );
+      expect(unit.isAffine, isTrue);
+    });
+
+    test('isPrimitive is false', () {
+      const unit = AffineUnit(
+        id: 'tempC',
+        factor: 1.0,
+        offset: 273.15,
+        baseUnitId: 'K',
+      );
+      expect(unit.isPrimitive, isFalse);
+    });
+  });
+
+  group('CompoundUnit', () {
+    test('stores expression string', () {
+      const unit = CompoundUnit(id: 'N', expression: 'kg m / s^2');
+      expect(unit.expression, 'kg m / s^2');
+    });
+
+    test('const construction', () {
+      const unit = CompoundUnit(id: 'km', expression: '1000 m');
+      expect(unit.expression, '1000 m');
+    });
+
+    test('isPrimitive is false', () {
+      const unit = CompoundUnit(id: 'km', expression: '1000 m');
+      expect(unit.isPrimitive, isFalse);
+    });
+
+    test('isAffine is false', () {
+      const unit = CompoundUnit(id: 'km', expression: '1000 m');
+      expect(unit.isAffine, isFalse);
+    });
+  });
+
+  group('PrimitiveUnit resolution', () {
     late UnitRepository repo;
 
     setUp(() {
       repo = UnitRepository();
       repo.register(
-        const Unit(
+        const PrimitiveUnit(
           id: 'm',
           aliases: ['meter'],
-          definition: PrimitiveUnitDefinition(),
+          description: 'SI base unit of length',
         ),
       );
-    });
-
-    test('isPrimitive is true', () {
-      expect(const PrimitiveUnitDefinition().isPrimitive, isTrue);
     });
 
     test('resolveUnit returns 1 with self-dimension', () {
@@ -103,9 +137,7 @@ void main() {
 
     test('resolveUnit uses unit id as dimension key', () {
       final repo2 = UnitRepository();
-      repo2.register(
-        const Unit(id: 'kg', definition: PrimitiveUnitDefinition()),
-      );
+      repo2.register(const PrimitiveUnit(id: 'kg'));
       final unit = repo2.getUnit('kg');
       final q = resolveUnit(unit, repo2);
       expect(q.dimension, Dimension({'kg': 1}));

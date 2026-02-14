@@ -26,7 +26,7 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
     final exponent = entry.value;
 
     final unit = repo.findUnit(unitName);
-    if (unit == null || unit.definition.isPrimitive) {
+    if (unit == null || unit.isPrimitive) {
       // Already primitive or unknown — keep as-is.
       newDimension[unitName] = (newDimension[unitName] ?? 0) + exponent;
       continue;

@@ -234,7 +234,7 @@ class Parser {
     // Check for affine units (require function-call syntax).
     if (_repo != null) {
       final unit = _repo.findUnit(name);
-      if (unit != null && unit.definition.isAffine) {
+      if (unit != null && unit.isAffine) {
         if (!_check(TokenType.leftParen)) {
           throw ParseException(
             "Affine unit '$name' requires function-call syntax: "

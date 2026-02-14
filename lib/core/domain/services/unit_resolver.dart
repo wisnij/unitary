@@ -1,7 +1,6 @@
 import '../models/dimension.dart';
 import '../models/quantity.dart';
 import '../models/unit.dart';
-import '../models/unit_definition.dart';
 import '../models/unit_repository.dart';
 import '../parser/expression_parser.dart';
 
@@ -10,15 +9,14 @@ import '../parser/expression_parser.dart';
 /// Returns the Quantity equivalent to 1 of the given [unit] expressed
 /// in primitive base units.
 Quantity resolveUnit(Unit unit, UnitRepository repo) {
-  final def = unit.definition;
-  if (def is PrimitiveUnitDefinition) {
+  if (unit is PrimitiveUnit) {
     return Quantity(1.0, Dimension({unit.id: 1}));
-  } else if (def is AffineDefinition) {
-    final baseUnit = repo.getUnit(def.baseUnitId);
+  } else if (unit is AffineUnit) {
+    final baseUnit = repo.getUnit(unit.baseUnitId);
     final baseQuantity = resolveUnit(baseUnit, repo);
-    return Quantity(def.factor * baseQuantity.value, baseQuantity.dimension);
-  } else if (def is CompoundDefinition) {
-    return ExpressionParser(repo: repo).evaluate(def.expression);
+    return Quantity(unit.factor * baseQuantity.value, baseQuantity.dimension);
+  } else if (unit is CompoundUnit) {
+    return ExpressionParser(repo: repo).evaluate(unit.expression);
   }
-  throw UnsupportedError('Unknown UnitDefinition type: ${def.runtimeType}');
+  throw UnsupportedError('Unknown Unit type: ${unit.runtimeType}');
 }

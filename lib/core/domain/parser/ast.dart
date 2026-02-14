@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import '../errors.dart';
 import '../models/dimension.dart';
 import '../models/quantity.dart';
-import '../models/unit_definition.dart';
+import '../models/unit.dart';
 import '../models/unit_repository.dart';
 import '../services/unit_resolver.dart';
 import 'token.dart';
@@ -177,11 +177,10 @@ class AffineUnitNode extends ASTNode {
       );
     }
 
-    final unit = repo.getUnit(unitName);
-    final def = unit.definition as AffineDefinition;
-    final baseUnit = repo.getUnit(def.baseUnitId);
+    final unit = repo.getUnit(unitName) as AffineUnit;
+    final baseUnit = repo.getUnit(unit.baseUnitId);
     final baseQuantity = resolveUnit(baseUnit, repo);
-    final kelvin = (argValue.value + def.offset) * def.factor;
+    final kelvin = (argValue.value + unit.offset) * unit.factor;
     return Quantity(kelvin * baseQuantity.value, baseQuantity.dimension);
   }
 

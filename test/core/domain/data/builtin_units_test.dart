@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/data/builtin_units.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
-import 'package:unitary/core/domain/models/unit_definition.dart';
+import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
@@ -400,7 +400,7 @@ void main() {
     test('affine units are affine', () {
       for (final id in ['tempK', 'tempC', 'tempF', 'tempR']) {
         expect(
-          repo.getUnit(id).definition.isAffine,
+          repo.getUnit(id).isAffine,
           isTrue,
           reason: '$id should be affine',
         );
@@ -410,7 +410,7 @@ void main() {
     test('degree units are not affine', () {
       for (final id in ['degK', 'degC', 'degF', 'degR']) {
         expect(
-          repo.getUnit(id).definition.isAffine,
+          repo.getUnit(id).isAffine,
           isFalse,
           reason: '$id should not be affine',
         );
@@ -527,8 +527,8 @@ void main() {
       ]) {
         final unit = repo.getUnit(id);
         expect(
-          unit.definition,
-          isA<CompoundDefinition>(),
+          unit,
+          isA<CompoundUnit>(),
           reason: '$id should be CompoundDefinition',
         );
       }

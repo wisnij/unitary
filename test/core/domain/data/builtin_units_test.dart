@@ -7,6 +7,7 @@ import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_definition.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/expression_parser.dart';
+import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 void main() {
   late UnitRepository repo;
@@ -303,10 +304,7 @@ void main() {
         'tempR',
       ]) {
         final unit = repo.getUnit(id);
-        // Affine units use toQuantity directly; compound units go through parser.
-        final q = unit.definition is CompoundDefinition
-            ? evalUnit(id)
-            : unit.definition.toQuantity(1.0, repo);
+        final q = resolveUnit(unit, repo);
         expect(
           q.dimension,
           tempDim,
@@ -348,48 +346,39 @@ void main() {
 
   group('Temperature conversions', () {
     test('tempF(212) = 373.15 K', () {
-      final def = repo.getUnit('tempF').definition;
-      expect(def.toQuantity(212.0, repo).value, closeTo(373.15, 1e-2));
+      expect(parser.evaluate('tempF(212)').value, closeTo(373.15, 1e-2));
     });
 
     test('tempF(32) = 273.15 K', () {
-      final def = repo.getUnit('tempF').definition;
-      expect(def.toQuantity(32.0, repo).value, closeTo(273.15, 1e-2));
+      expect(parser.evaluate('tempF(32)').value, closeTo(273.15, 1e-2));
     });
 
     test('tempF(-40) = 233.15 K', () {
-      final def = repo.getUnit('tempF').definition;
-      expect(def.toQuantity(-40.0, repo).value, closeTo(233.15, 1e-2));
+      expect(parser.evaluate('tempF(-40)').value, closeTo(233.15, 1e-2));
     });
 
     test('tempC(100) = 373.15 K', () {
-      final def = repo.getUnit('tempC').definition;
-      expect(def.toQuantity(100.0, repo).value, closeTo(373.15, 1e-10));
+      expect(parser.evaluate('tempC(100)').value, closeTo(373.15, 1e-10));
     });
 
     test('tempC(0) = 273.15 K', () {
-      final def = repo.getUnit('tempC').definition;
-      expect(def.toQuantity(0.0, repo).value, closeTo(273.15, 1e-10));
+      expect(parser.evaluate('tempC(0)').value, closeTo(273.15, 1e-10));
     });
 
     test('tempC(-40) = 233.15 K', () {
-      final def = repo.getUnit('tempC').definition;
-      expect(def.toQuantity(-40.0, repo).value, closeTo(233.15, 1e-10));
+      expect(parser.evaluate('tempC(-40)').value, closeTo(233.15, 1e-10));
     });
 
     test('tempK(373.15) = 373.15 K', () {
-      final def = repo.getUnit('tempK').definition;
-      expect(def.toQuantity(373.15, repo).value, closeTo(373.15, 1e-10));
+      expect(parser.evaluate('tempK(373.15)').value, closeTo(373.15, 1e-10));
     });
 
     test('tempR(671.67) ≈ 373.15 K', () {
-      final def = repo.getUnit('tempR').definition;
-      expect(def.toQuantity(671.67, repo).value, closeTo(373.15, 1e-2));
+      expect(parser.evaluate('tempR(671.67)').value, closeTo(373.15, 1e-2));
     });
 
     test('tempR(0) = 0 K', () {
-      final def = repo.getUnit('tempR').definition;
-      expect(def.toQuantity(0.0, repo).value, closeTo(0.0, 1e-10));
+      expect(parser.evaluate('tempR(0)').value, closeTo(0.0, 1e-10));
     });
 
     test('100 degF = 55.556 K', () {

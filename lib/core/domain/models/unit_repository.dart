@@ -1,6 +1,5 @@
 import '../data/builtin_units.dart';
 import 'unit.dart';
-import 'unit_definition.dart';
 
 /// Registry for unit definitions.  Provides lookup by name/alias with
 /// automatic plural stripping fallback.
@@ -25,10 +24,6 @@ class UnitRepository {
   /// lookup map.  Throws [ArgumentError] if any name collides with
   /// an existing entry.
   void register(Unit unit) {
-    if (unit.definition is PrimitiveUnitDefinition) {
-      (unit.definition as PrimitiveUnitDefinition).bind(unit.id);
-    }
-
     _units[unit.id] = unit;
 
     for (final name in unit.allNames) {

@@ -1,17 +1,10 @@
-import 'dimension.dart';
-import 'quantity.dart';
-import 'unit_repository.dart';
-
 /// Base class for unit definitions.
 ///
-/// Provides the conversion contract: every definition can convert a value
-/// to a [Quantity] expressed in primitive base units.
+/// Each subclass is a pure data class describing how a unit relates to
+/// primitive base units.  Actual resolution to a [Quantity] is handled
+/// by `resolveUnit()` in `unit_resolver.dart`.
 abstract class UnitDefinition {
   const UnitDefinition();
-
-  /// Convert [value] in this unit to an equivalent [Quantity] in primitive
-  /// base units.  May recurse through [repo] for chained definitions.
-  Quantity toQuantity(double value, UnitRepository repo);
 
   /// Whether this is a primitive (base) unit definition.
   bool get isPrimitive;
@@ -24,20 +17,9 @@ abstract class UnitDefinition {
 /// A primitive (base) unit that defines a fundamental dimension.
 ///
 /// The unit's ID becomes its own dimension key.  For example, the meter
-/// unit (id: 'm') has dimension {m: 1}.  toQuantity returns the value
-/// unchanged with dimension {unitId: 1}.
+/// unit (id: 'm') has dimension {m: 1}.
 class PrimitiveUnitDefinition extends UnitDefinition {
-  /// The unit ID, used as the dimension key.  Set during registration.
-  late final String _unitId;
-
-  PrimitiveUnitDefinition();
-
-  /// Called by UnitRepository during registration to bind the unit ID.
-  void bind(String unitId) => _unitId = unitId;
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) =>
-      Quantity(value, Dimension({_unitId: 1}));
+  const PrimitiveUnitDefinition();
 
   @override
   bool get isPrimitive => true;
@@ -67,12 +49,6 @@ class AffineDefinition extends UnitDefinition {
   });
 
   @override
-  Quantity toQuantity(double value, UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toQuantity((value + offset) * factor, repo);
-  }
-
-  @override
   bool get isPrimitive => false;
 
   @override
@@ -89,14 +65,6 @@ class CompoundDefinition extends UnitDefinition {
   final String expression;
 
   const CompoundDefinition({required this.expression});
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) {
-    throw UnsupportedError(
-      'CompoundDefinition.toQuantity() is not supported. '
-      'Use ExpressionParser to evaluate the expression instead.',
-    );
-  }
 
   @override
   bool get isPrimitive => false;

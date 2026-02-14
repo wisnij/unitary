@@ -19,7 +19,7 @@ void registerBuiltinUnits(UnitRepository repo) {
 
 void _registerLengthUnits(UnitRepository repo) {
   repo.register(
-    Unit(
+    const Unit(
       id: 'm',
       aliases: ['meter', 'metre'],
       description: 'SI base unit of length',
@@ -93,7 +93,7 @@ void _registerLengthUnits(UnitRepository repo) {
 
 void _registerMassUnits(UnitRepository repo) {
   repo.register(
-    Unit(
+    const Unit(
       id: 'kg',
       aliases: ['kilogram'],
       description: 'SI base unit of mass',
@@ -139,7 +139,7 @@ void _registerMassUnits(UnitRepository repo) {
 
 void _registerTimeUnits(UnitRepository repo) {
   repo.register(
-    Unit(
+    const Unit(
       id: 's',
       aliases: ['second', 'sec'],
       description: 'SI base unit of time',
@@ -185,7 +185,7 @@ void _registerTimeUnits(UnitRepository repo) {
 void _registerTemperatureUnits(UnitRepository repo) {
   // K is the SI base primitive for temperature.
   repo.register(
-    Unit(
+    const Unit(
       id: 'K',
       aliases: ['kelvin'],
       description: 'SI base unit of temperature',
@@ -265,7 +265,7 @@ void _registerTemperatureUnits(UnitRepository repo) {
 
 void _registerElectricalBaseUnit(UnitRepository repo) {
   repo.register(
-    Unit(
+    const Unit(
       id: 'A',
       aliases: ['ampere', 'amp'],
       description: 'SI base unit of electric current',
@@ -276,7 +276,7 @@ void _registerElectricalBaseUnit(UnitRepository repo) {
 
 void _registerOtherBaseUnits(UnitRepository repo) {
   repo.register(
-    Unit(
+    const Unit(
       id: 'mol',
       aliases: ['mole'],
       description: 'SI base unit of amount of substance',
@@ -284,7 +284,7 @@ void _registerOtherBaseUnits(UnitRepository repo) {
     ),
   );
   repo.register(
-    Unit(
+    const Unit(
       id: 'cd',
       aliases: ['candela'],
       description: 'SI base unit of luminous intensity',

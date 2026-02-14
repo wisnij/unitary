@@ -3,6 +3,7 @@ import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_definition.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 void main() {
   late UnitRepository repo;
@@ -13,7 +14,7 @@ void main() {
 
   group('UnitRepository.register', () {
     test('registers a unit and looks up by id', () {
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       final unit = repo.findUnit('m');
       expect(unit, isNotNull);
       expect(unit!.id, 'm');
@@ -21,7 +22,7 @@ void main() {
 
     test('looks up by alias', () {
       repo.register(
-        Unit(
+        const Unit(
           id: 'm',
           aliases: ['meter', 'metre'],
           definition: PrimitiveUnitDefinition(),
@@ -32,17 +33,18 @@ void main() {
     });
 
     test('throws on name collision with existing id', () {
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       expect(
-        () =>
-            repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition())),
+        () => repo.register(
+          const Unit(id: 'm', definition: PrimitiveUnitDefinition()),
+        ),
         throwsA(isA<ArgumentError>()),
       );
     });
 
     test('throws on alias collision with existing name', () {
       repo.register(
-        Unit(
+        const Unit(
           id: 'm',
           aliases: ['meter'],
           definition: PrimitiveUnitDefinition(),
@@ -50,7 +52,7 @@ void main() {
       );
       expect(
         () => repo.register(
-          Unit(
+          const Unit(
             id: 'x',
             aliases: ['meter'],
             definition: PrimitiveUnitDefinition(),
@@ -61,10 +63,14 @@ void main() {
     });
 
     test('collision error message includes conflicting unit id', () {
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       expect(
         () => repo.register(
-          Unit(id: 'x', aliases: ['m'], definition: PrimitiveUnitDefinition()),
+          const Unit(
+            id: 'x',
+            aliases: ['m'],
+            definition: PrimitiveUnitDefinition(),
+          ),
         ),
         throwsA(
           isA<ArgumentError>().having(
@@ -76,11 +82,18 @@ void main() {
       );
     });
 
-    test('binds PrimitiveUnitDefinition on registration', () {
-      final def = PrimitiveUnitDefinition();
-      repo.register(Unit(id: 'kg', definition: def));
-      expect(def.toQuantity(1.0, repo).dimension, Dimension({'kg': 1}));
-    });
+    test(
+      'primitive unit resolves with correct dimension after registration',
+      () {
+        repo.register(
+          const Unit(id: 'kg', definition: PrimitiveUnitDefinition()),
+        );
+        expect(
+          resolveUnit(repo.getUnit('kg'), repo).dimension,
+          Dimension({'kg': 1}),
+        );
+      },
+    );
   });
 
   group('UnitRepository.findUnit', () {
@@ -94,7 +107,7 @@ void main() {
 
     test('plural stripping: removes trailing s', () {
       repo.register(
-        Unit(
+        const Unit(
           id: 'm',
           aliases: ['meter'],
           definition: PrimitiveUnitDefinition(),
@@ -112,7 +125,7 @@ void main() {
           definition: CompoundDefinition(expression: '0.0254 m'),
         ),
       );
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       // "inches" → strip 'es' → "inch" → found
       expect(repo.findUnit('inches')?.id, 'in');
     });
@@ -120,7 +133,7 @@ void main() {
     test('plural stripping: tries es before s', () {
       // Register a unit with alias "inch" — "inches" should find it via
       // stripping 'es' → "inch", not via stripping 's' → "inche"
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       repo.register(
         const Unit(
           id: 'in',
@@ -132,7 +145,7 @@ void main() {
     });
 
     test('plural stripping: hours → hour', () {
-      repo.register(Unit(id: 's', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 's', definition: PrimitiveUnitDefinition()));
       repo.register(
         const Unit(
           id: 'hr',
@@ -144,7 +157,7 @@ void main() {
     });
 
     test('irregular plural via explicit alias: feet', () {
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       repo.register(
         const Unit(
           id: 'ft',
@@ -157,7 +170,7 @@ void main() {
     });
 
     test('plural stripping does not match too-short strings', () {
-      repo.register(Unit(id: 's', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 's', definition: PrimitiveUnitDefinition()));
       // "s" should not be stripped further (length 1)
       expect(repo.findUnit('s')?.id, 's');
       // "es" has length 2, stripping 'es' gives empty string — should not crash
@@ -165,7 +178,7 @@ void main() {
     });
 
     test('exact match takes priority over plural stripping', () {
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       // Register a unit whose id ends with 's'
       repo.register(
         const Unit(
@@ -180,7 +193,7 @@ void main() {
 
   group('UnitRepository.getUnit', () {
     test('returns unit for known name', () {
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
       expect(repo.getUnit('m').id, 'm');
     });
 
@@ -208,15 +221,17 @@ void main() {
     });
 
     test('returns all registered units', () {
-      repo.register(Unit(id: 'm', definition: PrimitiveUnitDefinition()));
-      repo.register(Unit(id: 'kg', definition: PrimitiveUnitDefinition()));
+      repo.register(const Unit(id: 'm', definition: PrimitiveUnitDefinition()));
+      repo.register(
+        const Unit(id: 'kg', definition: PrimitiveUnitDefinition()),
+      );
       final ids = repo.allUnits.map((u) => u.id).toSet();
       expect(ids, {'m', 'kg'});
     });
 
     test('does not include duplicate entries for aliases', () {
       repo.register(
-        Unit(
+        const Unit(
           id: 'm',
           aliases: ['meter', 'metre'],
           definition: PrimitiveUnitDefinition(),

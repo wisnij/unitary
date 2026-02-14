@@ -5,7 +5,7 @@ import '../models/dimension.dart';
 import '../models/quantity.dart';
 import '../models/unit_definition.dart';
 import '../models/unit_repository.dart';
-import 'expression_parser.dart';
+import '../services/unit_resolver.dart';
 import 'token.dart';
 
 /// Evaluation context passed to AST nodes during evaluation.
@@ -63,11 +63,7 @@ class UnitNode extends ASTNode {
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
-    if (unit.definition is CompoundDefinition) {
-      final expr = (unit.definition as CompoundDefinition).expression;
-      return ExpressionParser(repo: repo).evaluate(expr);
-    }
-    return unit.definition.toQuantity(1.0, repo);
+    return resolveUnit(unit, repo);
   }
 
   @override
@@ -166,6 +162,7 @@ class AffineUnitNode extends ASTNode {
   @override
   Quantity evaluate(EvalContext context) {
     final argValue = argument.evaluate(context);
+
     if (!argValue.isDimensionless) {
       throw DimensionException(
         "Affine unit '$unitName' requires a dimensionless argument, got "
@@ -181,7 +178,11 @@ class AffineUnitNode extends ASTNode {
     }
 
     final unit = repo.getUnit(unitName);
-    return unit.definition.toQuantity(argValue.value, repo);
+    final def = unit.definition as AffineDefinition;
+    final baseUnit = repo.getUnit(def.baseUnitId);
+    final baseQuantity = resolveUnit(baseUnit, repo);
+    final kelvin = (argValue.value + def.offset) * def.factor;
+    return Quantity(kelvin * baseQuantity.value, baseQuantity.dimension);
   }
 
   @override

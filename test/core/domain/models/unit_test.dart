@@ -47,6 +47,32 @@ void main() {
     test('isAffine is false', () {
       expect(const PrimitiveUnit(id: 'm').isAffine, isFalse);
     });
+
+    test('isDimensionless defaults to false', () {
+      const unit = PrimitiveUnit(id: 'm');
+      expect(unit.isDimensionless, isFalse);
+    });
+
+    test('isDimensionless can be set to true', () {
+      const unit = PrimitiveUnit(id: 'rad', isDimensionless: true);
+      expect(unit.isDimensionless, isTrue);
+    });
+
+    test('isDimensionless true still has isPrimitive true', () {
+      const unit = PrimitiveUnit(id: 'rad', isDimensionless: true);
+      expect(unit.isPrimitive, isTrue);
+    });
+
+    test('isDimensionless unit is const-constructible', () {
+      const unit = PrimitiveUnit(
+        id: 'rad',
+        aliases: ['radian'],
+        description: 'Plane angle',
+        isDimensionless: true,
+      );
+      expect(unit.id, 'rad');
+      expect(unit.isDimensionless, isTrue);
+    });
   });
 
   group('AffineUnit', () {

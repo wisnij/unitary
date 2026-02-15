@@ -34,7 +34,17 @@ abstract class Unit {
 /// The unit's ID becomes its own dimension key.  For example, the meter
 /// unit (id: 'm') has dimension {m: 1}.
 class PrimitiveUnit extends Unit {
-  const PrimitiveUnit({required super.id, super.aliases, super.description});
+  /// Whether this unit is dimensionless in the SI sense (e.g., radian,
+  /// steradian).  Dimensionless units carry a dimension during evaluation
+  /// but can be stripped for conversion conformability checking.
+  final bool isDimensionless;
+
+  const PrimitiveUnit({
+    required super.id,
+    super.aliases,
+    super.description,
+    this.isDimensionless = false,
+  });
 
   @override
   bool get isPrimitive => true;

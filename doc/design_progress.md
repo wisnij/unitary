@@ -288,7 +288,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 13, 2026*
+*Last Updated: February 14, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -311,3 +311,6 @@ Questions that arose during design but haven't been resolved:
 - *Phase 3 cleanup: Removed UnitDefinition.toQuantity, decoupled models from UnitRepository (February 14, 2026)*
   - 618 tests passing (removed 25 redundant toQuantity-based tests now covered through parser/resolveUnit paths)
   - All UnitDefinition subclasses now pure const data classes; unit resolution centralized in resolveUnit()
+- *Dimensionless units: radian/steradian, PrimitiveUnit.isDimensionless, Dimension.removeDimensions (February 14, 2026)*
+  - 643 tests passing (25 new)
+  - Design document: dimensionless_units_design.md

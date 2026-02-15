@@ -163,6 +163,46 @@ void main() {
     });
   });
 
+  group('UnitRepository.dimensionlessIds', () {
+    test('empty repo has no dimensionless ids', () {
+      expect(repo.dimensionlessIds, isEmpty);
+    });
+
+    test('non-dimensionless primitive units are not tracked', () {
+      repo.register(const PrimitiveUnit(id: 'm'));
+      expect(repo.dimensionlessIds, isEmpty);
+    });
+
+    test('dimensionless primitive units are tracked', () {
+      repo.register(const PrimitiveUnit(id: 'rad', isDimensionless: true));
+      expect(repo.dimensionlessIds, {'rad'});
+    });
+
+    test('tracks multiple dimensionless units', () {
+      repo.register(const PrimitiveUnit(id: 'rad', isDimensionless: true));
+      repo.register(const PrimitiveUnit(id: 'sr', isDimensionless: true));
+      expect(repo.dimensionlessIds, {'rad', 'sr'});
+    });
+
+    test('mixes dimensionless and non-dimensionless primitives', () {
+      repo.register(const PrimitiveUnit(id: 'm'));
+      repo.register(const PrimitiveUnit(id: 'rad', isDimensionless: true));
+      repo.register(const PrimitiveUnit(id: 'kg'));
+      expect(repo.dimensionlessIds, {'rad'});
+    });
+
+    test('non-primitive units are not tracked', () {
+      repo.register(const PrimitiveUnit(id: 'm'));
+      repo.register(const CompoundUnit(id: 'km', expression: '1000 m'));
+      expect(repo.dimensionlessIds, isEmpty);
+    });
+
+    test('returned set is unmodifiable', () {
+      repo.register(const PrimitiveUnit(id: 'rad', isDimensionless: true));
+      expect(() => repo.dimensionlessIds.add('x'), throwsUnsupportedError);
+    });
+  });
+
   group('UnitRepository.allUnits', () {
     test('empty repo has no units', () {
       expect(repo.allUnits, isEmpty);

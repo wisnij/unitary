@@ -10,6 +10,9 @@ class UnitRepository {
   /// All registered units by their primary ID.
   final Map<String, Unit> _units = {};
 
+  /// IDs of all dimensionless primitive units (radian, steradian, etc.).
+  final Set<String> _dimensionlessIds = {};
+
   /// Creates an empty repository.
   UnitRepository();
 
@@ -25,6 +28,9 @@ class UnitRepository {
   /// an existing entry.
   void register(Unit unit) {
     _units[unit.id] = unit;
+    if (unit is PrimitiveUnit && unit.isDimensionless) {
+      _dimensionlessIds.add(unit.id);
+    }
 
     for (final name in unit.allNames) {
       if (_lookup.containsKey(name)) {
@@ -72,4 +78,7 @@ class UnitRepository {
 
   /// All registered units (by primary ID).
   Iterable<Unit> get allUnits => _units.values;
+
+  /// IDs of all registered dimensionless primitive units.
+  Set<String> get dimensionlessIds => Set.unmodifiable(_dimensionlessIds);
 }

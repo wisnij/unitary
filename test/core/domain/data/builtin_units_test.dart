@@ -25,8 +25,9 @@ void main() {
   group('Registration', () {
     test('all units register without collision', () {
       // If we get here, registerBuiltinUnits() didn't throw.
-      // 22 (Phase 2) + 4 primitives + 8 temp + 10 constants + 12 compound = 56
-      expect(repo.allUnits.length, 56);
+      // 22 (Phase 2) + 4 primitives + 8 temp + 10 constants
+      // + 12 compound + 2 dimensionless = 58
+      expect(repo.allUnits.length, 58);
     });
 
     test('registers 10 length units', () {
@@ -55,6 +56,57 @@ void main() {
     test('registers 6 time units', () {
       for (final id in ['s', 'ms', 'min', 'hr', 'day', 'week']) {
         expect(repo.findUnit(id), isNotNull, reason: 'unit $id should exist');
+      }
+    });
+  });
+
+  group('Dimensionless units', () {
+    test('radian is registered with correct id and aliases', () {
+      expect(repo.findUnit('radian')?.id, 'radian');
+    });
+
+    test('steradian is registered with correct id and aliases', () {
+      expect(repo.findUnit('sr')?.id, 'sr');
+      expect(repo.findUnit('steradian')?.id, 'sr');
+    });
+
+    test('radian is a dimensionless primitive', () {
+      final unit = repo.getUnit('radian');
+      expect(unit, isA<PrimitiveUnit>());
+      expect(unit.isPrimitive, isTrue);
+      expect((unit as PrimitiveUnit).isDimensionless, isTrue);
+    });
+
+    test('steradian is a dimensionless primitive', () {
+      final unit = repo.getUnit('sr');
+      expect(unit, isA<PrimitiveUnit>());
+      expect(unit.isPrimitive, isTrue);
+      expect((unit as PrimitiveUnit).isDimensionless, isTrue);
+    });
+
+    test('radian has dimension {radian: 1}', () {
+      final q = evalUnit('radian');
+      expect(q.value, closeTo(1.0, 1e-10));
+      expect(q.dimension, Dimension({'radian': 1}));
+    });
+
+    test('steradian has dimension {sr: 1}', () {
+      final q = evalUnit('sr');
+      expect(q.value, closeTo(1.0, 1e-10));
+      expect(q.dimension, Dimension({'sr': 1}));
+    });
+
+    test('dimensionlessIds includes radian and steradian', () {
+      expect(repo.dimensionlessIds, containsAll(['radian', 'sr']));
+    });
+
+    test('SI base units are not in dimensionlessIds', () {
+      for (final id in ['m', 'kg', 's', 'K', 'A', 'mol', 'cd']) {
+        expect(
+          repo.dimensionlessIds.contains(id),
+          isFalse,
+          reason: '$id should not be dimensionless',
+        );
       }
     });
   });

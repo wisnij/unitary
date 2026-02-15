@@ -85,6 +85,16 @@ class Dimension {
     return Dimension(result);
   }
 
+  /// Returns a new dimension with the specified unit IDs removed.
+  ///
+  /// Used for conversion conformability checking where dimensionless
+  /// units (like radian and steradian) are stripped before comparing.
+  Dimension removeDimensions(Set<String> idsToRemove) {
+    final filtered = Map<String, int>.from(units);
+    filtered.removeWhere((id, _) => idsToRemove.contains(id));
+    return Dimension(filtered);
+  }
+
   /// Whether this dimension is the same as [other] (same units with same
   /// exponents), meaning quantities with these dimensions are conformable.
   bool isConformableWith(Dimension other) => this == other;

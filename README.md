@@ -14,9 +14,10 @@ Project Status
 **Last Updated:** February 14, 2026
 
 Phases 0-3 are complete.  The expression parser, evaluator, unit system
-foundation, and advanced unit features are fully implemented with 618 passing
-tests.  Unit definitions include all 7 SI base units, temperature units with
-affine syntax, physical constants, and compound units like Newton and Pascal.
+foundation, and advanced unit features are fully implemented with 643 passing
+tests.  Unit definitions include all 7 SI base units, dimensionless units
+(radian, steradian), temperature units with affine syntax, physical constants,
+and compound units like Newton and Pascal.
 
 ---
 
@@ -57,6 +58,7 @@ Documentation
 - **[Quantity Arithmetic Design](doc/quantity_arithmetic_design.md)** - Detailed design for Quantity class, arithmetic operations, and conversion algorithms
 - **[Implementation Plan](doc/implementation_plan.md)** - Phased development roadmap, risks, and success metrics
 - **[Development Best Practices](doc/best_practices.md)** - Coding standards and workflow guidelines
+- **[Dimensionless Units Design](doc/dimensionless_units_design.md)** - Design for radian/steradian handling in conversions
 - **[Design Progress](doc/design_progress.md)** - Tracker for completed and in-progress design work
 
 ### Quick Links
@@ -192,7 +194,7 @@ Current Progress
 - ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
 - ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
 - ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
-- ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, compound units, affine syntax (618 tests)
+- ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, compound units, affine syntax, dimensionless units (643 tests)
 
 ### Design (ready for implementation)
 

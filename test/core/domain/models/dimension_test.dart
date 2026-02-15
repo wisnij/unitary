@@ -192,6 +192,55 @@ void main() {
     });
   });
 
+  group('Dimension.removeDimensions', () {
+    test('removes specified dimensions', () {
+      final d = Dimension({'m': 1, 'rad': 1, 's': -1});
+      final result = d.removeDimensions({'rad'});
+      expect(result, equals(Dimension({'m': 1, 's': -1})));
+    });
+
+    test('removes multiple specified dimensions', () {
+      final d = Dimension({'m': 1, 'rad': 1, 'sr': 2, 's': -1});
+      final result = d.removeDimensions({'rad', 'sr'});
+      expect(result, equals(Dimension({'m': 1, 's': -1})));
+    });
+
+    test('removes regardless of exponent value', () {
+      final d = Dimension({'rad': 2, 's': -1});
+      final result = d.removeDimensions({'rad'});
+      expect(result, equals(Dimension({'s': -1})));
+    });
+
+    test('removes negative exponent entries', () {
+      final d = Dimension({'rad': -1, 's': 1});
+      final result = d.removeDimensions({'rad'});
+      expect(result, equals(Dimension({'s': 1})));
+    });
+
+    test('returns dimensionless when all dimensions removed', () {
+      final d = Dimension({'rad': 1});
+      final result = d.removeDimensions({'rad'});
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('no-op when ids not present', () {
+      final d = Dimension({'m': 1, 's': -1});
+      final result = d.removeDimensions({'rad'});
+      expect(result, equals(d));
+    });
+
+    test('no-op with empty id set', () {
+      final d = Dimension({'m': 1, 'rad': 1});
+      final result = d.removeDimensions({});
+      expect(result, equals(d));
+    });
+
+    test('dimensionless input returns dimensionless', () {
+      final result = Dimension.dimensionless.removeDimensions({'rad'});
+      expect(result.isDimensionless, isTrue);
+    });
+  });
+
   group('Dimension.isConformableWith', () {
     test('same dimensions are conformable', () {
       final a = Dimension({'m': 1, 's': -2});

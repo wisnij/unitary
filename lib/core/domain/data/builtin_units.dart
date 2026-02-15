@@ -4,7 +4,8 @@ import '../models/unit_repository.dart';
 /// Registers all built-in units into the given [repo].
 ///
 /// Includes length (10), mass (6), time (6), temperature (9),
-/// other SI base units (3), constants (10), and compound units (12).
+/// other SI base units (3), dimensionless units (2), constants (10),
+/// and compound units (12).
 void registerBuiltinUnits(UnitRepository repo) {
   _registerLengthUnits(repo);
   _registerMassUnits(repo);
@@ -12,6 +13,7 @@ void registerBuiltinUnits(UnitRepository repo) {
   _registerTemperatureUnits(repo);
   _registerElectricalBaseUnit(repo);
   _registerOtherBaseUnits(repo);
+  _registerDimensionlessUnits(repo);
   _registerConstants(repo);
   _registerCompoundUnits(repo);
 }
@@ -232,6 +234,24 @@ void _registerOtherBaseUnits(UnitRepository repo) {
       id: 'cd',
       aliases: ['candela'],
       description: 'SI base unit of luminous intensity',
+    ),
+  );
+}
+
+void _registerDimensionlessUnits(UnitRepository repo) {
+  repo.register(
+    const PrimitiveUnit(
+      id: 'radian',
+      description: 'SI dimensionless unit of plane angle',
+      isDimensionless: true,
+    ),
+  );
+  repo.register(
+    const PrimitiveUnit(
+      id: 'sr',
+      aliases: ['steradian'],
+      description: 'SI dimensionless unit of solid angle',
+      isDimensionless: true,
     ),
   );
 }

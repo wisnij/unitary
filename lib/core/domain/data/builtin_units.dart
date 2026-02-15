@@ -3,10 +3,11 @@ import '../models/unit_repository.dart';
 
 /// Registers all built-in units into the given [repo].
 ///
-/// Includes length (10), mass (6), time (6), temperature (9),
-/// other SI base units (3), dimensionless units (2), constants (10),
-/// and compound units (12).
+/// Includes 24 SI prefixes, length (7), mass (5), time (5),
+/// temperature (9), other SI base units (3), dimensionless units (2),
+/// constants (10), and compound units (12).
 void registerBuiltinUnits(UnitRepository repo) {
+  _registerPrefixes(repo);
   _registerLengthUnits(repo);
   _registerMassUnits(repo);
   _registerTimeUnits(repo);
@@ -18,6 +19,40 @@ void registerBuiltinUnits(UnitRepository repo) {
   _registerCompoundUnits(repo);
 }
 
+void _registerPrefixes(UnitRepository repo) {
+  // SI prefixes: 24 total, from quecto (10^-30) to quetta (10^30).
+  // Long name as id, short symbol as alias.
+  const prefixes = [
+    PrefixUnit(id: 'quetta', aliases: ['Q'], expression: '1e30'),
+    PrefixUnit(id: 'ronna', aliases: ['R'], expression: '1e27'),
+    PrefixUnit(id: 'yotta', aliases: ['Y'], expression: '1e24'),
+    PrefixUnit(id: 'zetta', aliases: ['Z'], expression: '1e21'),
+    PrefixUnit(id: 'exa', aliases: ['E'], expression: '1e18'),
+    PrefixUnit(id: 'peta', aliases: ['P'], expression: '1e15'),
+    PrefixUnit(id: 'tera', aliases: ['T'], expression: '1e12'),
+    PrefixUnit(id: 'giga', aliases: ['G'], expression: '1e9'),
+    PrefixUnit(id: 'mega', aliases: ['M'], expression: '1e6'),
+    PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1000'),
+    PrefixUnit(id: 'hecto', aliases: ['h'], expression: '100'),
+    PrefixUnit(id: 'deca', aliases: ['da'], expression: '10'),
+    PrefixUnit(id: 'deci', aliases: ['d'], expression: '0.1'),
+    PrefixUnit(id: 'centi', aliases: ['c'], expression: '0.01'),
+    PrefixUnit(id: 'milli', aliases: ['m'], expression: '0.001'),
+    PrefixUnit(id: 'micro', aliases: ['u'], expression: '1e-6'),
+    PrefixUnit(id: 'nano', aliases: ['n'], expression: '1e-9'),
+    PrefixUnit(id: 'pico', aliases: ['p'], expression: '1e-12'),
+    PrefixUnit(id: 'femto', aliases: ['f'], expression: '1e-15'),
+    PrefixUnit(id: 'atto', aliases: ['a'], expression: '1e-18'),
+    PrefixUnit(id: 'zepto', aliases: ['z'], expression: '1e-21'),
+    PrefixUnit(id: 'yocto', aliases: ['y'], expression: '1e-24'),
+    PrefixUnit(id: 'ronto', aliases: ['r'], expression: '1e-27'),
+    PrefixUnit(id: 'quecto', aliases: ['q'], expression: '1e-30'),
+  ];
+  for (final prefix in prefixes) {
+    repo.registerPrefix(prefix);
+  }
+}
+
 void _registerLengthUnits(UnitRepository repo) {
   repo.register(
     const PrimitiveUnit(
@@ -26,34 +61,9 @@ void _registerLengthUnits(UnitRepository repo) {
       description: 'SI base unit of length',
     ),
   );
-  repo.register(
-    const CompoundUnit(
-      id: 'km',
-      aliases: ['kilometer', 'kilometre'],
-      expression: '1000 m',
-    ),
-  );
-  repo.register(
-    const CompoundUnit(
-      id: 'cm',
-      aliases: ['centimeter', 'centimetre'],
-      expression: '0.01 m',
-    ),
-  );
-  repo.register(
-    const CompoundUnit(
-      id: 'mm',
-      aliases: ['millimeter', 'millimetre'],
-      expression: '0.001 m',
-    ),
-  );
-  repo.register(
-    const CompoundUnit(
-      id: 'um',
-      aliases: ['micrometer', 'micrometre', 'micron'],
-      expression: '1e-6 m',
-    ),
-  );
+  // km, cm, mm are derivable via prefix splitting (kilo/centi/milli + meter).
+  // um (micrometer) is also derivable, but 'micron' is a non-prefix alias.
+  repo.register(const CompoundUnit(id: 'micron', expression: 'micrometer'));
   repo.register(
     const CompoundUnit(id: 'in', aliases: ['inch'], expression: '2.54 cm'),
   );
@@ -91,9 +101,6 @@ void _registerMassUnits(UnitRepository repo) {
     const CompoundUnit(id: 'g', aliases: ['gram'], expression: '0.001 kg'),
   );
   repo.register(
-    const CompoundUnit(id: 'mg', aliases: ['milligram'], expression: '1e-3 g'),
-  );
-  repo.register(
     const CompoundUnit(id: 'lb', aliases: ['pound'], expression: '453.59237 g'),
   );
   repo.register(
@@ -118,13 +125,6 @@ void _registerTimeUnits(UnitRepository repo) {
       id: 's',
       aliases: ['second', 'sec'],
       description: 'SI base unit of time',
-    ),
-  );
-  repo.register(
-    const CompoundUnit(
-      id: 'ms',
-      aliases: ['millisecond'],
-      expression: '0.001 s',
     ),
   );
   repo.register(

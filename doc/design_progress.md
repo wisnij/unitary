@@ -288,7 +288,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 14, 2026*
+*Last Updated: February 15, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -314,3 +314,6 @@ Questions that arose during design but haven't been resolved:
 - *Dimensionless units: radian/steradian, PrimitiveUnit.isDimensionless, Dimension.removeDimensions (February 14, 2026)*
   - 643 tests passing (25 new)
   - Design document: dimensionless_units_design.md
+- *SI prefix support: 24 prefixes from quecto (10^-30) to quetta (10^30) with prefix-aware unit lookup (February 15, 2026)*
+  - 703 tests passing (60 new)
+  - Prefix, PrefixRepository, UnitRepository.lookupUnit with automatic prefix+unit combination

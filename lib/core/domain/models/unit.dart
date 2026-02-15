@@ -21,6 +21,9 @@ abstract class Unit {
   /// Whether this is a primitive (base) unit.
   bool get isPrimitive => false;
 
+  /// Whether this is a prefix (e.g., kilo, milli).
+  bool get isPrefix => false;
+
   /// Whether this is an affine (temperature-style offset) unit.
   /// Affine units require function-call syntax: `tempF(212)` not `212 tempF`.
   bool get isAffine => false;
@@ -95,4 +98,21 @@ class CompoundUnit extends Unit {
     super.description,
     required this.expression,
   });
+}
+
+/// A unit prefix defined by a numeric expression (e.g., kilo = 1000).
+///
+/// Prefixes are stored separately in the repository and combined with
+/// base units during lookup. For example, "kilometer" splits into
+/// prefix "kilo" (1000) + base unit "meter".
+class PrefixUnit extends CompoundUnit {
+  const PrefixUnit({
+    required super.id,
+    super.aliases,
+    super.description,
+    required super.expression,
+  });
+
+  @override
+  bool get isPrefix => true;
 }

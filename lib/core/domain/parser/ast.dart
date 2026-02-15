@@ -56,14 +56,19 @@ class UnitNode extends ASTNode {
       return Quantity(1.0, Dimension({unitName: 1}));
     }
 
-    final unit = repo.findUnit(unitName);
-    if (unit == null) {
+    final result = repo.findUnitWithPrefix(unitName);
+    if (result.unit == null) {
       // Unknown unit: fall back to raw dimension.
       return Quantity(1.0, Dimension({unitName: 1}));
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
-    return resolveUnit(unit, repo);
+    final unitQuantity = resolveUnit(result.unit!, repo);
+    if (result.prefix != null) {
+      final prefixQuantity = resolveUnit(result.prefix!, repo);
+      return prefixQuantity.multiply(unitQuantity);
+    }
+    return unitQuantity;
   }
 
   @override

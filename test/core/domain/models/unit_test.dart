@@ -119,6 +119,81 @@ void main() {
     });
   });
 
+  group('PrefixUnit', () {
+    test('isPrefix is true', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit.isPrefix, isTrue);
+    });
+
+    test('isPrimitive is false', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit.isPrimitive, isFalse);
+    });
+
+    test('isAffine is false', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit.isAffine, isFalse);
+    });
+
+    test('is a CompoundUnit', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit, isA<CompoundUnit>());
+    });
+
+    test('stores expression string', () {
+      const unit = PrefixUnit(id: 'milli', expression: '0.001');
+      expect(unit.expression, '0.001');
+    });
+
+    test('const construction with all fields', () {
+      const unit = PrefixUnit(
+        id: 'kilo',
+        aliases: ['k'],
+        description: 'SI prefix for 10^3',
+        expression: '1000',
+      );
+      expect(unit.id, 'kilo');
+      expect(unit.aliases, ['k']);
+      expect(unit.description, 'SI prefix for 10^3');
+      expect(unit.expression, '1000');
+    });
+
+    test('resolves via resolveUnit', () {
+      final repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'm'));
+      repo.registerPrefix(
+        const PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1000'),
+      );
+      final prefix = repo.allPrefixes.first;
+      final q = resolveUnit(prefix, repo);
+      expect(q.value, closeTo(1000.0, 1e-10));
+      expect(q.isDimensionless, isTrue);
+    });
+  });
+
+  group('isPrefix on other unit types', () {
+    test('PrimitiveUnit.isPrefix is false', () {
+      expect(const PrimitiveUnit(id: 'm').isPrefix, isFalse);
+    });
+
+    test('CompoundUnit.isPrefix is false', () {
+      expect(
+        const CompoundUnit(id: 'km', expression: '1000 m').isPrefix,
+        isFalse,
+      );
+    });
+
+    test('AffineUnit.isPrefix is false', () {
+      const unit = AffineUnit(
+        id: 'tempC',
+        factor: 1.0,
+        offset: 273.15,
+        baseUnitId: 'K',
+      );
+      expect(unit.isPrefix, isFalse);
+    });
+  });
+
   group('PrimitiveUnit resolution', () {
     late UnitRepository repo;
 

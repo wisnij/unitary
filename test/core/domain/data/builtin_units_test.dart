@@ -25,36 +25,26 @@ void main() {
   group('Registration', () {
     test('all units register without collision', () {
       // If we get here, registerBuiltinUnits() didn't throw.
-      // 22 (Phase 2) + 4 primitives + 8 temp + 10 constants
-      // + 12 compound + 2 dimensionless = 58
-      expect(repo.allUnits.length, 58);
+      // 7 length + 5 mass + 5 time + 9 temp + 3 other base
+      // + 2 dimensionless + 10 constants + 12 compound = 53 units + 24 prefixes
+      expect(repo.allUnits.length, 53);
+      expect(repo.allPrefixes.length, 24);
     });
 
-    test('registers 10 length units', () {
-      for (final id in [
-        'm',
-        'km',
-        'cm',
-        'mm',
-        'um',
-        'in',
-        'ft',
-        'yd',
-        'mi',
-        'nmi',
-      ]) {
+    test('registers 7 length units', () {
+      for (final id in ['m', 'micron', 'in', 'ft', 'yd', 'mi', 'nmi']) {
         expect(repo.findUnit(id), isNotNull, reason: 'unit $id should exist');
       }
     });
 
-    test('registers 6 mass units', () {
-      for (final id in ['kg', 'g', 'mg', 'lb', 'oz', 't']) {
+    test('registers 5 mass units', () {
+      for (final id in ['kg', 'g', 'lb', 'oz', 't']) {
         expect(repo.findUnit(id), isNotNull, reason: 'unit $id should exist');
       }
     });
 
-    test('registers 6 time units', () {
-      for (final id in ['s', 'ms', 'min', 'hr', 'day', 'week']) {
+    test('registers 5 time units', () {
+      for (final id in ['s', 'min', 'hr', 'day', 'week']) {
         expect(repo.findUnit(id), isNotNull, reason: 'unit $id should exist');
       }
     });
@@ -262,8 +252,8 @@ void main() {
       expect(repo.findUnit('nautical_mile')?.id, 'nmi');
     });
 
-    test('"micron" resolves to um', () {
-      expect(repo.findUnit('micron')?.id, 'um');
+    test('"micron" resolves to micron', () {
+      expect(repo.findUnit('micron')?.id, 'micron');
     });
   });
 
@@ -284,8 +274,10 @@ void main() {
       expect(repo.findUnit('hours')?.id, 'hr');
     });
 
-    test('"kilometres" resolves to km (via "kilometre" + strip s)', () {
-      expect(repo.findUnit('kilometres')?.id, 'km');
+    test('"kilometres" resolves to m (via "kilometre" + strip s)', () {
+      final result = repo.findUnitWithPrefix('kilometres');
+      expect(result.prefix?.id, 'kilo');
+      expect(result.unit?.id, 'm');
     });
 
     test('"ounces" resolves to oz (via "ounce" + strip s)', () {
@@ -677,6 +669,257 @@ void main() {
       expect(repo.findUnit('weber')?.id, 'Wb');
       expect(repo.findUnit('tesla')?.id, 'T');
       expect(repo.findUnit('henry')?.id, 'H');
+    });
+  });
+
+  group('SI prefixes', () {
+    test('registers all 24 SI prefixes', () {
+      expect(repo.allPrefixes.length, 24);
+    });
+
+    test('all prefixes resolve by long name', () {
+      const names = [
+        'quetta',
+        'ronna',
+        'yotta',
+        'zetta',
+        'exa',
+        'peta',
+        'tera',
+        'giga',
+        'mega',
+        'kilo',
+        'hecto',
+        'deca',
+        'deci',
+        'centi',
+        'milli',
+        'micro',
+        'nano',
+        'pico',
+        'femto',
+        'atto',
+        'zepto',
+        'yocto',
+        'ronto',
+        'quecto',
+      ];
+      for (final name in names) {
+        // Use 'newton' as base unit since no prefix+newton is pre-registered.
+        final result = repo.findUnitWithPrefix('${name}newton');
+        expect(result.prefix, isNotNull, reason: '$name should be a prefix');
+        expect(
+          result.prefix!.id,
+          name,
+          reason: '$name prefix should have id $name',
+        );
+        expect(result.unit?.id, 'N', reason: '$name+newton should find newton');
+      }
+    });
+
+    test('all prefixes resolve by short symbol', () {
+      const symbols = {
+        'Q': 'quetta',
+        'R': 'ronna',
+        'Y': 'yotta',
+        'Z': 'zetta',
+        'E': 'exa',
+        'P': 'peta',
+        'T': 'tera',
+        'G': 'giga',
+        'M': 'mega',
+        'k': 'kilo',
+        'h': 'hecto',
+        'da': 'deca',
+        'd': 'deci',
+        'c': 'centi',
+        'm': 'milli',
+        'u': 'micro',
+        'n': 'nano',
+        'p': 'pico',
+        'f': 'femto',
+        'a': 'atto',
+        'z': 'zepto',
+        'y': 'yocto',
+        'r': 'ronto',
+        'q': 'quecto',
+      };
+      for (final entry in symbols.entries) {
+        // Use 'newton' as base since no symbol+newton is pre-registered.
+        final result = repo.findUnitWithPrefix('${entry.key}newton');
+        expect(
+          result.prefix,
+          isNotNull,
+          reason: '${entry.key} (${entry.value}) should be a prefix',
+        );
+        expect(
+          result.prefix!.id,
+          entry.value,
+          reason: '${entry.key} should map to ${entry.value}',
+        );
+      }
+    });
+
+    test('standalone colliding symbols resolve to regular units', () {
+      // "m" should be meter, not milli
+      expect(repo.findUnit('m')?.id, 'm');
+      // "c" should be speed of light
+      expect(repo.findUnit('c')?.id, 'c');
+      // "h" should be planck constant
+      expect(repo.findUnit('h')?.id, 'h');
+    });
+
+    test('prefixed units split correctly', () {
+      // "mm" splits as milli + meter
+      final mm = repo.findUnitWithPrefix('mm');
+      expect(mm.prefix?.id, 'milli');
+      expect(mm.unit?.id, 'm');
+
+      // "cm" splits as centi + meter
+      final cm = repo.findUnitWithPrefix('cm');
+      expect(cm.prefix?.id, 'centi');
+      expect(cm.unit?.id, 'm');
+
+      // "millimeter" splits as milli + meter
+      final result = repo.findUnitWithPrefix('millimeter');
+      expect(result.prefix?.id, 'milli');
+      expect(result.unit?.id, 'm');
+
+      // "millinewton" is not registered, so prefix splitting applies
+      final mn = repo.findUnitWithPrefix('millinewton');
+      expect(mn.prefix?.id, 'milli');
+      expect(mn.unit?.id, 'N');
+
+      // "centinewton" is not registered, so prefix splitting applies
+      final cn = repo.findUnitWithPrefix('centinewton');
+      expect(cn.prefix?.id, 'centi');
+      expect(cn.unit?.id, 'N');
+
+      // megawatt
+      final mw = repo.findUnitWithPrefix('megawatt');
+      expect(mw.prefix?.id, 'mega');
+      expect(mw.unit?.id, 'W');
+
+      // nanometer
+      final nm = repo.findUnitWithPrefix('nanometer');
+      expect(nm.prefix?.id, 'nano');
+      expect(nm.unit?.id, 'm');
+
+      // gigahertz
+      final ghz = repo.findUnitWithPrefix('gigahertz');
+      expect(ghz.prefix?.id, 'giga');
+      expect(ghz.unit?.id, 'Hz');
+    });
+  });
+
+  group('Prefix evaluation', () {
+    test('kilometer = 1000 m', () {
+      final q = parser.evaluate('kilometer');
+      expect(q.value, closeTo(1000.0, 1e-10));
+      expect(q.dimension, Dimension({'m': 1}));
+    });
+
+    test('milligram = 1e-6 kg', () {
+      final q = parser.evaluate('milligram');
+      expect(q.value, closeTo(1e-6, 1e-18));
+      expect(q.dimension, Dimension({'kg': 1}));
+    });
+
+    test('kilometer^2 = 1e6 m^2 (prefix binds tight)', () {
+      final q = parser.evaluate('kilometer^2');
+      expect(q.value, closeTo(1e6, 1e-4));
+      expect(q.dimension, Dimension({'m': 2}));
+    });
+
+    test('kilo meter^2 = 1000 m^2 (separate tokens)', () {
+      final q = parser.evaluate('kilo meter^2');
+      expect(q.value, closeTo(1e3, 1e-4));
+      expect(q.dimension, Dimension({'m': 2}));
+    });
+
+    test('standalone prefix is dimensionless', () {
+      final q = parser.evaluate('kilo');
+      expect(q.value, closeTo(1000.0, 1e-10));
+      expect(q.isDimensionless, isTrue);
+    });
+
+    test('standalone prefix by alias', () {
+      final q = parser.evaluate('k');
+      expect(q.value, closeTo(1000.0, 1e-10));
+      expect(q.isDimensionless, isTrue);
+    });
+
+    test('standalone milli', () {
+      final q = parser.evaluate('milli');
+      expect(q.value, closeTo(0.001, 1e-15));
+      expect(q.isDimensionless, isTrue);
+    });
+
+    test('standalone prefix in arithmetic', () {
+      // "2 * mega" = 2_000_000
+      final q = parser.evaluate('2 * mega');
+      expect(q.value, closeTo(2e6, 1e-4));
+      expect(q.isDimensionless, isTrue);
+    });
+
+    test('5 kilometers = 5000 m', () {
+      final q = parser.evaluate('5 kilometers');
+      expect(q.value, closeTo(5000.0, 1e-8));
+      expect(q.dimension, Dimension({'m': 1}));
+    });
+
+    test('kilogram exact match (not prefix split)', () {
+      final q = parser.evaluate('kilogram');
+      expect(q.value, closeTo(1.0, 1e-10));
+      expect(q.dimension, Dimension({'kg': 1}));
+    });
+
+    test('km = 1000 m (via prefix split)', () {
+      final q = parser.evaluate('km');
+      expect(q.value, closeTo(1000.0, 1e-10));
+      expect(q.dimension, Dimension({'m': 1}));
+    });
+
+    test('megawatt evaluation', () {
+      final q = parser.evaluate('megawatt');
+      expect(q.value, closeTo(1e6, 1e-4));
+      expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -3}));
+    });
+
+    test('nanometer evaluation', () {
+      final q = parser.evaluate('nanometer');
+      expect(q.value, closeTo(1e-9, 1e-21));
+      expect(q.dimension, Dimension({'m': 1}));
+    });
+
+    test('gigahertz evaluation', () {
+      final q = parser.evaluate('gigahertz');
+      expect(q.value, closeTo(1e9, 1e-1));
+      expect(q.dimension, Dimension({'s': -1}));
+    });
+
+    test('microampere evaluation', () {
+      final q = parser.evaluate('microampere');
+      expect(q.value, closeTo(1e-6, 1e-18));
+      expect(q.dimension, Dimension({'A': 1}));
+    });
+
+    test('millimole evaluation', () {
+      final q = parser.evaluate('millimole');
+      expect(q.value, closeTo(0.001, 1e-15));
+      expect(q.dimension, Dimension({'mol': 1}));
+    });
+
+    test('kilojoule evaluation', () {
+      final q = parser.evaluate('kilojoule');
+      expect(q.value, closeTo(1000.0, 1e-8));
+      expect(q.dimension, Dimension({'kg': 1, 'm': 2, 's': -2}));
+    });
+
+    test('megapascal evaluation', () {
+      final q = parser.evaluate('megapascal');
+      expect(q.value, closeTo(1e6, 1e-4));
+      expect(q.dimension, Dimension({'kg': 1, 'm': -1, 's': -2}));
     });
   });
 }

@@ -31,15 +31,15 @@ class Lexer {
   }
 
   /// ```
-  /// PLUS   = "+"
-  /// MINUS  = "-"
-  /// TIMES  = ("*" !"*") / "×" / "·"
-  /// DIVIDE = "/" / "÷" / "per"
-  /// POWER  = "^" / "**"
-  /// LPAR   = "("
-  /// RPAR   = ")"
-  /// NUMDIV = "|"
-  /// COMMA  = ","
+  /// PLUS      = "+"
+  /// MINUS     = "-" / "‒" / "–" / "−"
+  /// TIMES     = ("*" !"*") / "·" / "×" / "⋅" / "⨉"
+  /// DIVIDE    = "/" / "÷" / "per"
+  /// DIVIDENUM = "|" / "⁄"
+  /// POWER     = "^" / "**"
+  /// LPAR      = "("
+  /// RPAR      = ")"
+  /// COMMA     = ","
   /// ```
   void _scanToken() {
     final startLine = _line;
@@ -50,26 +50,38 @@ class Lexer {
       case '+':
         _tokens.add(Token(TokenType.plus, '+', null, startLine, startColumn));
       case '-':
-        _tokens.add(Token(TokenType.minus, '-', null, startLine, startColumn));
+      case '\u2012': // ‒ figure dash
+      case '\u2013': // – en dash
+      case '\u2212': // − minus sign
+        _tokens.add(Token(TokenType.minus, c, null, startLine, startColumn));
       case '*':
         if (!_isAtEnd() && _peek() == '*') {
           _advance();
           _tokens.add(
-            Token(TokenType.power, '**', null, startLine, startColumn),
+            Token(TokenType.exponent, '**', null, startLine, startColumn),
           );
         } else {
           _tokens.add(
-            Token(TokenType.multiply, '*', null, startLine, startColumn),
+            Token(TokenType.times, '*', null, startLine, startColumn),
           );
         }
+      case '\u00B7': // · middle dot
+      case '\u00D7': // × multiplication sign
+      case '\u22C5': // ⋅ dot operator
+      case '\u2A09': // ⨉ N-ary times operator
+        _tokens.add(Token(TokenType.times, c, null, startLine, startColumn));
       case '/':
-        _tokens.add(Token(TokenType.divide, '/', null, startLine, startColumn));
+      case '\u00F7': // ÷ division sign
+        _tokens.add(Token(TokenType.divide, c, null, startLine, startColumn));
       case '|':
+      case '\u2044': // ⁄ fraction slash
         _tokens.add(
-          Token(TokenType.divideHigh, '|', null, startLine, startColumn),
+          Token(TokenType.divideNum, c, null, startLine, startColumn),
         );
       case '^':
-        _tokens.add(Token(TokenType.power, '^', null, startLine, startColumn));
+        _tokens.add(
+          Token(TokenType.exponent, '^', null, startLine, startColumn),
+        );
       case '(':
         _tokens.add(
           Token(TokenType.leftParen, '(', null, startLine, startColumn),
@@ -80,18 +92,6 @@ class Lexer {
         );
       case ',':
         _tokens.add(Token(TokenType.comma, ',', null, startLine, startColumn));
-      case '\u00D7': // ×
-        _tokens.add(
-          Token(TokenType.multiply, '\u00D7', null, startLine, startColumn),
-        );
-      case '\u00B7': // ·
-        _tokens.add(
-          Token(TokenType.multiply, '\u00B7', null, startLine, startColumn),
-        );
-      case '\u00F7': // ÷
-        _tokens.add(
-          Token(TokenType.divide, '\u00F7', null, startLine, startColumn),
-        );
       case '.':
         if (!_isAtEnd() && _isDigit(_peek())) {
           _scanNumber(startLine, startColumn);

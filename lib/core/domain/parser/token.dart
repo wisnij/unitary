@@ -6,10 +6,10 @@ enum TokenType {
   // Operators
   plus, // +
   minus, // -
-  multiply, // *, ×, ·
+  times, // *, ×, ·, etc.
   divide, // /, ÷, per
-  divideHigh, // |
-  power, // ^, **
+  divideNum, // |, ⁄
+  exponent, // ^, **
   // Grouping
   leftParen, // (
   rightParen, // )

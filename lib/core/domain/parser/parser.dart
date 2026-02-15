@@ -15,7 +15,7 @@ import 'token.dart';
 /// unary       = ( PLUS / MINUS )? power
 /// power       = primary ( EXPONENT unary )*  [folded right-to-left]
 /// primary     = numexpr / LPAR expression RPAR / function / unit
-/// numexpr     = NUMBER ( NUMDIV NUMBER )*
+/// numexpr     = NUMBER ( DIVIDENUM NUMBER )*
 /// function    = IDENTIFIER LPAR arguments RPAR  [if known builtin function]
 /// unit        = IDENTIFIER                      [fallback if not function]
 /// arguments   = expression ( COMMA expression )*
@@ -81,7 +81,7 @@ class Parser {
   ASTNode _opProduct() {
     var left = _listProduct();
 
-    while (_match(TokenType.multiply) || _match(TokenType.divide)) {
+    while (_match(TokenType.times) || _match(TokenType.divide)) {
       final op = _previous().type;
       final right = _listProduct();
       left = BinaryOpNode(left, op, right);
@@ -103,7 +103,7 @@ class Parser {
 
     while (_startsImplicitMultiply()) {
       final right = _power();
-      left = BinaryOpNode(left, TokenType.multiply, right);
+      left = BinaryOpNode(left, TokenType.times, right);
     }
 
     return left;
@@ -136,14 +136,14 @@ class Parser {
   ASTNode _power() {
     final operands = <ASTNode>[_primary()];
 
-    while (_match(TokenType.power)) {
+    while (_match(TokenType.exponent)) {
       operands.add(_unary());
     }
 
     // Fold right-to-left
     var result = operands.last;
     for (var i = operands.length - 2; i >= 0; i--) {
-      result = BinaryOpNode(operands[i], TokenType.power, result);
+      result = BinaryOpNode(operands[i], TokenType.exponent, result);
     }
 
     return result;
@@ -176,7 +176,7 @@ class Parser {
   }
 
   /// ```
-  /// numexpr = NUMBER ( NUMDIV NUMBER )*
+  /// numexpr = NUMBER ( DIVIDENUM NUMBER )*
   /// ```
   ///
   /// Both operands of `|` must be bare NUMBER literals.
@@ -184,7 +184,7 @@ class Parser {
     final numberToken = _advance();
     var left = NumberNode(numberToken.literal as double) as ASTNode;
 
-    while (_match(TokenType.divideHigh)) {
+    while (_match(TokenType.divideNum)) {
       final opToken = _previous();
       if (!_check(TokenType.number)) {
         throw ParseException(
@@ -195,7 +195,7 @@ class Parser {
       }
       final rightToken = _advance();
       final right = NumberNode(rightToken.literal as double);
-      left = BinaryOpNode(left, TokenType.divideHigh, right);
+      left = BinaryOpNode(left, TokenType.divideNum, right);
     }
 
     return left;

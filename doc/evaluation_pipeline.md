@@ -76,7 +76,7 @@ BinaryOpNode(divide,
 ~~~~
 
 Note: implicit multiplication produces the same `BinaryOpNode` with
-`TokenType.multiply` as an explicit `*` would.  The distinction only exists at
+`TokenType.times` as an explicit `*` would.  The distinction only exists at
 parse time (different precedence level), not in the AST.
 
 

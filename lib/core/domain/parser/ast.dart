@@ -88,11 +88,11 @@ class BinaryOpNode extends ASTNode {
         return leftVal.add(rightVal);
       case TokenType.minus:
         return leftVal.subtract(rightVal);
-      case TokenType.multiply:
+      case TokenType.times:
         return leftVal.multiply(rightVal);
-      case TokenType.divide || TokenType.divideHigh:
+      case TokenType.divide || TokenType.divideNum:
         return leftVal.divide(rightVal);
-      case TokenType.power:
+      case TokenType.exponent:
         if (!rightVal.isDimensionless) {
           throw DimensionException(
             'Exponent must be dimensionless, got '

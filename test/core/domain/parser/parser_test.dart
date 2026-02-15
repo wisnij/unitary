@@ -49,7 +49,7 @@ void main() {
     test('multiplication', () {
       final node = parse('2 * 3');
       expect(node, isA<BinaryOpNode>());
-      expect((node as BinaryOpNode).operator, TokenType.multiply);
+      expect((node as BinaryOpNode).operator, TokenType.times);
     });
 
     test('division', () {
@@ -71,7 +71,7 @@ void main() {
       expect(node.operator, TokenType.plus);
       expect(node.left, isA<NumberNode>());
       expect(node.right, isA<BinaryOpNode>());
-      expect((node.right as BinaryOpNode).operator, TokenType.multiply);
+      expect((node.right as BinaryOpNode).operator, TokenType.times);
     });
 
     test('multiplication before subtraction: 5 - 2 * 3 = 5 - (2 * 3)', () {
@@ -82,7 +82,7 @@ void main() {
 
     test('parentheses override precedence: (1 + 2) * 3', () {
       final node = parse('(1 + 2) * 3') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
       expect(node.left, isA<BinaryOpNode>());
       expect((node.left as BinaryOpNode).operator, TokenType.plus);
     });
@@ -106,38 +106,38 @@ void main() {
   group('Parser: exponentiation', () {
     test('basic exponent: 2^3', () {
       final node = parse('2^3') as BinaryOpNode;
-      expect(node.operator, TokenType.power);
+      expect(node.operator, TokenType.exponent);
     });
 
     test('** as exponent: 2**3', () {
       final node = parse('2**3') as BinaryOpNode;
-      expect(node.operator, TokenType.power);
+      expect(node.operator, TokenType.exponent);
     });
 
     test('right-associative: 2^3^4 = 2^(3^4)', () {
       final node = parse('2^3^4') as BinaryOpNode;
-      expect(node.operator, TokenType.power);
+      expect(node.operator, TokenType.exponent);
       expect(node.left, isA<NumberNode>());
       // Right should be another power
       expect(node.right, isA<BinaryOpNode>());
-      expect((node.right as BinaryOpNode).operator, TokenType.power);
+      expect((node.right as BinaryOpNode).operator, TokenType.exponent);
     });
 
     test('exponent higher than multiply: 2*3^4 = 2 * (3^4)', () {
       // Should parse as 2 * (3^4)
       final node = parse('2*3^4') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
       expect(node.left, isA<NumberNode>());
       expect(node.right, isA<BinaryOpNode>());
-      expect((node.right as BinaryOpNode).operator, TokenType.power);
+      expect((node.right as BinaryOpNode).operator, TokenType.exponent);
     });
 
     test('exponent higher than multiply: 2^3*4 = (2^3) * 4', () {
       // Should parse as (2^3) * 4
       final node = parse('2^3*4') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
       expect(node.left, isA<BinaryOpNode>());
-      expect((node.left as BinaryOpNode).operator, TokenType.power);
+      expect((node.left as BinaryOpNode).operator, TokenType.exponent);
       expect(node.right, isA<NumberNode>());
     });
   });
@@ -173,12 +173,12 @@ void main() {
       final node = parse('-2^3') as UnaryOpNode;
       expect(node.operator, TokenType.minus);
       expect(node.operand, isA<BinaryOpNode>());
-      expect((node.operand as BinaryOpNode).operator, TokenType.power);
+      expect((node.operand as BinaryOpNode).operator, TokenType.exponent);
     });
 
     test('2^-3 = 2^(-3)', () {
       final node = parse('2^-3') as BinaryOpNode;
-      expect(node.operator, TokenType.power);
+      expect(node.operator, TokenType.exponent);
       expect(node.left, isA<NumberNode>());
       expect(node.right, isA<UnaryOpNode>());
     });
@@ -187,7 +187,7 @@ void main() {
   group('Parser: high-precedence division |', () {
     test('basic: 1|2', () {
       final node = parse('1|2') as BinaryOpNode;
-      expect(node.operator, TokenType.divideHigh);
+      expect(node.operator, TokenType.divideNum);
       expect(node.left, isA<NumberNode>());
       expect(node.right, isA<NumberNode>());
     });
@@ -195,7 +195,7 @@ void main() {
     test('chained: 1|2|3', () {
       // Left-associative: (1|2)|3
       final node = parse('1|2|3') as BinaryOpNode;
-      expect(node.operator, TokenType.divideHigh);
+      expect(node.operator, TokenType.divideNum);
       expect(node.left, isA<BinaryOpNode>());
       expect(node.right, isA<NumberNode>());
     });
@@ -204,9 +204,9 @@ void main() {
       // | is in numexpr which is parsed as primary, so 1|2 is one unit
       // Then ^3 is applied: (1|2)^3
       final node = parse('1|2^3') as BinaryOpNode;
-      expect(node.operator, TokenType.power);
+      expect(node.operator, TokenType.exponent);
       expect(node.left, isA<BinaryOpNode>());
-      expect((node.left as BinaryOpNode).operator, TokenType.divideHigh);
+      expect((node.left as BinaryOpNode).operator, TokenType.divideNum);
     });
 
     test('non-numeric left operand throws', () {
@@ -227,38 +227,38 @@ void main() {
       final node = parse('-1|2') as UnaryOpNode;
       expect(node.operator, TokenType.minus);
       expect(node.operand, isA<BinaryOpNode>());
-      expect((node.operand as BinaryOpNode).operator, TokenType.divideHigh);
+      expect((node.operand as BinaryOpNode).operator, TokenType.divideNum);
     });
   });
 
   group('Parser: implicit multiplication', () {
     test('number unit: 5 m', () {
       final node = parse('5 m') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
       expect(node.left, isA<NumberNode>());
       expect(node.right, isA<UnitNode>());
     });
 
     test('number number: 2 3', () {
       final node = parse('2 3') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
     });
 
     test('unit unit: m s', () {
       final node = parse('m s') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
       expect(node.left, isA<UnitNode>());
       expect(node.right, isA<UnitNode>());
     });
 
     test('number no-space unit: 5m', () {
       final node = parse('5m') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
     });
 
     test('implicit multiply with parens: (2)(3)', () {
       final node = parse('(2)(3)') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
     });
 
     test(
@@ -269,16 +269,16 @@ void main() {
         final node = parse('5 m / 2 s') as BinaryOpNode;
         expect(node.operator, TokenType.divide);
         expect(node.left, isA<BinaryOpNode>());
-        expect((node.left as BinaryOpNode).operator, TokenType.multiply);
+        expect((node.left as BinaryOpNode).operator, TokenType.times);
         expect(node.right, isA<BinaryOpNode>());
-        expect((node.right as BinaryOpNode).operator, TokenType.multiply);
+        expect((node.right as BinaryOpNode).operator, TokenType.times);
       },
     );
 
     test('m(5) is implicit multiply: m * 5', () {
       // Non-function identifier followed by ( is implicit multiply
       final node = parse('m(5)') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
       expect(node.left, isA<UnitNode>());
       expect((node.left as UnitNode).unitName, 'm');
       expect(node.right, isA<NumberNode>());
@@ -367,7 +367,7 @@ void main() {
       () {
         // foo(5) where foo is not a builtin should be foo * 5
         final node = parse('foo(5)') as BinaryOpNode;
-        expect(node.operator, TokenType.multiply);
+        expect(node.operator, TokenType.times);
         expect(node.left, isA<UnitNode>());
         expect((node.left as UnitNode).unitName, 'foo');
       },
@@ -379,15 +379,15 @@ void main() {
       final node = parse('5 * 3 + 2') as BinaryOpNode;
       expect(node.operator, TokenType.plus);
       expect(node.left, isA<BinaryOpNode>());
-      expect((node.left as BinaryOpNode).operator, TokenType.multiply);
+      expect((node.left as BinaryOpNode).operator, TokenType.times);
     });
 
     test('1|2 m', () {
       // 1|2 parsed as numexpr, then implicit multiply with m
       final node = parse('1|2 m') as BinaryOpNode;
-      expect(node.operator, TokenType.multiply);
+      expect(node.operator, TokenType.times);
       expect(node.left, isA<BinaryOpNode>());
-      expect((node.left as BinaryOpNode).operator, TokenType.divideHigh);
+      expect((node.left as BinaryOpNode).operator, TokenType.divideNum);
       expect(node.right, isA<UnitNode>());
     });
 
@@ -491,7 +491,7 @@ void main() {
       final node = parse('tempF(212)');
       expect(node, isA<BinaryOpNode>());
       final bin = node as BinaryOpNode;
-      expect(bin.operator, TokenType.multiply);
+      expect(bin.operator, TokenType.times);
       expect(bin.left, isA<UnitNode>());
       expect((bin.left as UnitNode).unitName, 'tempF');
     });
@@ -500,7 +500,7 @@ void main() {
       final node = parseWithRepo('5 N', repo);
       expect(node, isA<BinaryOpNode>());
       final bin = node as BinaryOpNode;
-      expect(bin.operator, TokenType.multiply);
+      expect(bin.operator, TokenType.times);
       expect(bin.right, isA<UnitNode>());
       expect((bin.right as UnitNode).unitName, 'N');
     });

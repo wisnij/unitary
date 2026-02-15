@@ -641,8 +641,8 @@ implicit()          → exponentiation+
 
 In `implicit()`, after parsing the first `exponentiation()`, check if the next
 token is `number`, `unit`, `function`, or `leftParen`.  If so, parse another
-`exponentiation()` and combine with `BinaryOpNode(TokenType.multiply, ...)`.
-Repeat.  The `multiply` and `divide` tokens with `×`, `·` are handled at
+`exponentiation()` and combine with `BinaryOpNode(TokenType.times, ...)`.
+Repeat.  The `times` and `divide` tokens with `×`, `·` are handled at
 level 2.
 
 **High-precedence division validation:**

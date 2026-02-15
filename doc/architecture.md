@@ -222,7 +222,7 @@ void handleImplicitMultiply() {
       if (last.type == TokenType.unit && peek() == '(') {
         return; // This might be a function call, let parser handle it
       }
-      addToken(TokenType.multiply);
+      addToken(TokenType.times);
     }
   }
 }

@@ -2,27 +2,23 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
-import 'package:unitary/core/domain/models/unit_definition.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 void main() {
-  group('Unit', () {
+  group('PrimitiveUnit', () {
     test('constructs with required fields', () {
-      final def = PrimitiveUnitDefinition();
-      final unit = Unit(id: 'm', definition: def);
+      const unit = PrimitiveUnit(id: 'm');
       expect(unit.id, 'm');
       expect(unit.aliases, isEmpty);
       expect(unit.description, isNull);
-      expect(unit.definition, def);
     });
 
     test('constructs with all fields', () {
-      final def = PrimitiveUnitDefinition();
-      final unit = Unit(
+      const unit = PrimitiveUnit(
         id: 'm',
         aliases: ['meter', 'metre'],
         description: 'SI base unit of length',
-        definition: def,
       );
       expect(unit.id, 'm');
       expect(unit.aliases, ['meter', 'metre']);
@@ -30,179 +26,222 @@ void main() {
     });
 
     test('allNames includes id and aliases', () {
-      final def = PrimitiveUnitDefinition();
-      final unit = Unit(id: 'ft', aliases: ['foot', 'feet'], definition: def);
+      const unit = PrimitiveUnit(id: 'ft', aliases: ['foot', 'feet']);
       expect(unit.allNames, ['ft', 'foot', 'feet']);
     });
 
     test('allNames with no aliases is just id', () {
-      final def = PrimitiveUnitDefinition();
-      final unit = Unit(id: 'kg', definition: def);
+      const unit = PrimitiveUnit(id: 'kg');
       expect(unit.allNames, ['kg']);
     });
 
-    test('const construction works', () {
-      const def = LinearDefinition(factor: 0.3048, baseUnitId: 'm');
-      const unit = Unit(id: 'ft', definition: def);
-      expect(unit.id, 'ft');
-    });
-
     test('default aliases is empty list', () {
-      final def = PrimitiveUnitDefinition();
-      final unit = Unit(id: 'x', definition: def);
+      const unit = PrimitiveUnit(id: 'x');
       expect(unit.aliases, const <String>[]);
-    });
-  });
-
-  group('PrimitiveUnitDefinition', () {
-    late UnitRepository repo;
-
-    setUp(() {
-      repo = UnitRepository();
-      repo.register(
-        Unit(
-          id: 'm',
-          aliases: ['meter'],
-          definition: PrimitiveUnitDefinition(),
-        ),
-      );
     });
 
     test('isPrimitive is true', () {
-      expect(PrimitiveUnitDefinition().isPrimitive, isTrue);
+      expect(const PrimitiveUnit(id: 'm').isPrimitive, isTrue);
     });
 
-    test('toQuantity returns value with self-dimension', () {
-      final def = repo.getUnit('m').definition;
-      final q = def.toQuantity(5.0, repo);
-      expect(q.value, 5.0);
-      expect(q.dimension, Dimension({'m': 1}));
+    test('isAffine is false', () {
+      expect(const PrimitiveUnit(id: 'm').isAffine, isFalse);
     });
 
-    test('toQuantity with zero', () {
-      final def = repo.getUnit('m').definition;
-      final q = def.toQuantity(0.0, repo);
-      expect(q.value, 0.0);
-      expect(q.dimension, Dimension({'m': 1}));
+    test('isDimensionless defaults to false', () {
+      const unit = PrimitiveUnit(id: 'm');
+      expect(unit.isDimensionless, isFalse);
     });
 
-    test('toQuantity with negative value', () {
-      final def = repo.getUnit('m').definition;
-      final q = def.toQuantity(-3.14, repo);
-      expect(q.value, -3.14);
-      expect(q.dimension, Dimension({'m': 1}));
+    test('isDimensionless can be set to true', () {
+      const unit = PrimitiveUnit(id: 'rad', isDimensionless: true);
+      expect(unit.isDimensionless, isTrue);
     });
 
-    test('toQuantity uses bound id', () {
-      final repo2 = UnitRepository();
-      repo2.register(Unit(id: 'kg', definition: PrimitiveUnitDefinition()));
-      final def = repo2.getUnit('kg').definition;
-      final q = def.toQuantity(1.0, repo2);
-      expect(q.dimension, Dimension({'kg': 1}));
+    test('isDimensionless true still has isPrimitive true', () {
+      const unit = PrimitiveUnit(id: 'rad', isDimensionless: true);
+      expect(unit.isPrimitive, isTrue);
+    });
+
+    test('isDimensionless unit is const-constructible', () {
+      const unit = PrimitiveUnit(
+        id: 'rad',
+        aliases: ['radian'],
+        description: 'Plane angle',
+        isDimensionless: true,
+      );
+      expect(unit.id, 'rad');
+      expect(unit.isDimensionless, isTrue);
     });
   });
 
-  group('LinearDefinition', () {
-    late UnitRepository repo;
-
-    setUp(() {
-      repo = UnitRepository();
-      repo.register(
-        Unit(
-          id: 'm',
-          aliases: ['meter'],
-          definition: PrimitiveUnitDefinition(),
-        ),
+  group('AffineUnit', () {
+    test('isAffine is true', () {
+      const unit = AffineUnit(
+        id: 'tempC',
+        factor: 1.0,
+        offset: 273.15,
+        baseUnitId: 'K',
       );
-      repo.register(
-        const Unit(
-          id: 'ft',
-          aliases: ['foot', 'feet'],
-          definition: LinearDefinition(factor: 0.3048, baseUnitId: 'm'),
-        ),
-      );
+      expect(unit.isAffine, isTrue);
     });
 
     test('isPrimitive is false', () {
+      const unit = AffineUnit(
+        id: 'tempC',
+        factor: 1.0,
+        offset: 273.15,
+        baseUnitId: 'K',
+      );
+      expect(unit.isPrimitive, isFalse);
+    });
+  });
+
+  group('DerivedUnit', () {
+    test('stores expression string', () {
+      const unit = DerivedUnit(id: 'N', expression: 'kg m / s^2');
+      expect(unit.expression, 'kg m / s^2');
+    });
+
+    test('const construction', () {
+      const unit = DerivedUnit(id: 'km', expression: '1000 m');
+      expect(unit.expression, '1000 m');
+    });
+
+    test('isPrimitive is false', () {
+      const unit = DerivedUnit(id: 'km', expression: '1000 m');
+      expect(unit.isPrimitive, isFalse);
+    });
+
+    test('isAffine is false', () {
+      const unit = DerivedUnit(id: 'km', expression: '1000 m');
+      expect(unit.isAffine, isFalse);
+    });
+  });
+
+  group('PrefixUnit', () {
+    test('isPrefix is true', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit.isPrefix, isTrue);
+    });
+
+    test('isPrimitive is false', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit.isPrimitive, isFalse);
+    });
+
+    test('isAffine is false', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit.isAffine, isFalse);
+    });
+
+    test('is a DerivedUnit', () {
+      const unit = PrefixUnit(id: 'kilo', expression: '1000');
+      expect(unit, isA<DerivedUnit>());
+    });
+
+    test('stores expression string', () {
+      const unit = PrefixUnit(id: 'milli', expression: '0.001');
+      expect(unit.expression, '0.001');
+    });
+
+    test('const construction with all fields', () {
+      const unit = PrefixUnit(
+        id: 'kilo',
+        aliases: ['k'],
+        description: 'SI prefix for 10^3',
+        expression: '1000',
+      );
+      expect(unit.id, 'kilo');
+      expect(unit.aliases, ['k']);
+      expect(unit.description, 'SI prefix for 10^3');
+      expect(unit.expression, '1000');
+    });
+
+    test('resolves via resolveUnit', () {
+      final repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'm'));
+      repo.registerPrefix(
+        const PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1000'),
+      );
+      final prefix = repo.allPrefixes.first;
+      final q = resolveUnit(prefix, repo);
+      expect(q.value, closeTo(1000.0, 1e-10));
+      expect(q.isDimensionless, isTrue);
+    });
+  });
+
+  group('isPrefix on other unit types', () {
+    test('PrimitiveUnit.isPrefix is false', () {
+      expect(const PrimitiveUnit(id: 'm').isPrefix, isFalse);
+    });
+
+    test('DerivedUnit.isPrefix is false', () {
       expect(
-        const LinearDefinition(factor: 0.3048, baseUnitId: 'm').isPrimitive,
+        const DerivedUnit(id: 'km', expression: '1000 m').isPrefix,
         isFalse,
       );
     });
 
-    test('toQuantity converts value and returns primitive dimension', () {
-      final def = repo.getUnit('ft').definition;
-      final q = def.toQuantity(1.0, repo);
-      expect(q.value, closeTo(0.3048, 1e-10));
+    test('AffineUnit.isPrefix is false', () {
+      const unit = AffineUnit(
+        id: 'tempC',
+        factor: 1.0,
+        offset: 273.15,
+        baseUnitId: 'K',
+      );
+      expect(unit.isPrefix, isFalse);
+    });
+  });
+
+  group('PrimitiveUnit resolution', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      repo.register(
+        const PrimitiveUnit(
+          id: 'm',
+          aliases: ['meter'],
+          description: 'SI base unit of length',
+        ),
+      );
+    });
+
+    test('resolveUnit returns 1 with self-dimension', () {
+      final unit = repo.getUnit('m');
+      final q = resolveUnit(unit, repo);
+      expect(q.value, 1.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('toQuantity with multiple units', () {
-      final def = repo.getUnit('ft').definition;
-      final q = def.toQuantity(5.0, repo);
-      expect(q.value, closeTo(1.524, 1e-10));
+    test('resolveUnit scaled by value', () {
+      final unit = repo.getUnit('m');
+      final q = resolveUnit(unit, repo).multiply(Quantity.dimensionless(5.0));
+      expect(q.value, 5.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('toQuantity with zero', () {
-      final def = repo.getUnit('ft').definition;
-      final q = def.toQuantity(0.0, repo);
+    test('resolveUnit scaled by zero', () {
+      final unit = repo.getUnit('m');
+      final q = resolveUnit(unit, repo).multiply(Quantity.dimensionless(0.0));
       expect(q.value, 0.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('chain resolution: yard → ft → m', () {
-      repo.register(
-        const Unit(
-          id: 'yd',
-          aliases: ['yard'],
-          definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
-        ),
-      );
-      final def = repo.getUnit('yd').definition;
-
-      // 1 yard = 3 feet = 3 * 0.3048 m = 0.9144 m
-      final q = def.toQuantity(1.0, repo);
-      expect(q.value, closeTo(0.9144, 1e-10));
+    test('resolveUnit scaled by negative value', () {
+      final unit = repo.getUnit('m');
+      final q = resolveUnit(unit, repo).multiply(Quantity.dimensionless(-3.14));
+      expect(q.value, -3.14);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
-    test('chain toQuantity returns primitive dimension', () {
-      repo.register(
-        const Unit(
-          id: 'yd',
-          aliases: ['yard'],
-          definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
-        ),
-      );
-      final def = repo.getUnit('yd').definition;
-      final q = def.toQuantity(1.0, repo);
-      expect(q.dimension, Dimension({'m': 1}));
-    });
-
-    test('toQuantity value matches reduce for derived units', () {
-      repo.register(
-        const Unit(
-          id: 'yd',
-          aliases: ['yard'],
-          definition: LinearDefinition(factor: 3.0, baseUnitId: 'ft'),
-        ),
-      );
-      final def = repo.getUnit('yd').definition;
-      for (final x in [0.0, 1.0, 5.0, -2.5, 100.0]) {
-        final q = def.toQuantity(x, repo);
-        expect(
-          q.value,
-          closeTo(x * 0.9144, 1e-10),
-          reason: 'toQuantity for $x yd',
-        );
-      }
-    });
-
-    test('const construction', () {
-      const def = LinearDefinition(factor: 1000.0, baseUnitId: 'm');
-      expect(def.factor, 1000.0);
-      expect(def.baseUnitId, 'm');
+    test('resolveUnit uses unit id as dimension key', () {
+      final repo2 = UnitRepository();
+      repo2.register(const PrimitiveUnit(id: 'kg'));
+      final unit = repo2.getUnit('kg');
+      final q = resolveUnit(unit, repo2);
+      expect(q.dimension, Dimension({'kg': 1}));
     });
   });
 }

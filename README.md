@@ -10,12 +10,15 @@ user-defined units and dimensions.
 Project Status
 --------------
 
-**Current Phase:** Phase 2 Complete, ready for Phase 3 (Advanced Unit Features)\
-**Last Updated:** February 7, 2026
+**Current Phase:** Phase 3 Complete, ready for Phase 4 (Basic UI - Freeform Mode)\
+**Last Updated:** February 15, 2026
 
-Phases 0-2 are complete.  The expression parser, evaluator, and unit system
-foundation are fully implemented with 492 passing tests.  Unit definitions
-for length, mass, and time are available with full conversion support.
+Phases 0-3 are complete.  The expression parser, evaluator, unit system
+foundation, and advanced unit features are fully implemented with 703 passing
+tests.  Unit definitions include all 7 SI base units, dimensionless units
+(radian, steradian), temperature units with affine syntax, physical constants,
+derived units like Newton and Pascal, and SI prefix support (24 prefixes from
+quecto to quetta with prefix-aware unit lookup).
 
 ---
 
@@ -56,6 +59,7 @@ Documentation
 - **[Quantity Arithmetic Design](doc/quantity_arithmetic_design.md)** - Detailed design for Quantity class, arithmetic operations, and conversion algorithms
 - **[Implementation Plan](doc/implementation_plan.md)** - Phased development roadmap, risks, and success metrics
 - **[Development Best Practices](doc/best_practices.md)** - Coding standards and workflow guidelines
+- **[Dimensionless Units Design](doc/dimensionless_units_design.md)** - Design for radian/steradian handling in conversions
 - **[Design Progress](doc/design_progress.md)** - Tracker for completed and in-progress design work
 
 ### Quick Links
@@ -191,6 +195,7 @@ Current Progress
 - ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
 - ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
 - ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
+- ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, derived units, affine syntax, dimensionless units, SI prefixes (703 tests)
 
 ### Design (ready for implementation)
 

@@ -1,4 +1,5 @@
 import '../errors.dart';
+import '../models/unit_repository.dart';
 import 'ast.dart';
 import 'token.dart';
 
@@ -14,7 +15,7 @@ import 'token.dart';
 /// unary       = ( PLUS / MINUS )? power
 /// power       = primary ( EXPONENT unary )*  [folded right-to-left]
 /// primary     = numexpr / LPAR expression RPAR / function / unit
-/// numexpr     = NUMBER ( NUMDIV NUMBER )*
+/// numexpr     = NUMBER ( DIVIDENUM NUMBER )*
 /// function    = IDENTIFIER LPAR arguments RPAR  [if known builtin function]
 /// unit        = IDENTIFIER                      [fallback if not function]
 /// arguments   = expression ( COMMA expression )*
@@ -25,9 +26,10 @@ import 'token.dart';
 /// as `(5*m) / (2*s)`.
 class Parser {
   final List<Token> _tokens;
+  final UnitRepository? _repo;
   int _current = 0;
 
-  Parser(this._tokens);
+  Parser(this._tokens, {UnitRepository? repo}) : _repo = repo;
 
   /// Parses the token list and returns the root AST node.
   ASTNode parse() {
@@ -79,7 +81,7 @@ class Parser {
   ASTNode _opProduct() {
     var left = _listProduct();
 
-    while (_match(TokenType.multiply) || _match(TokenType.divide)) {
+    while (_match(TokenType.times) || _match(TokenType.divide)) {
       final op = _previous().type;
       final right = _listProduct();
       left = BinaryOpNode(left, op, right);
@@ -101,7 +103,7 @@ class Parser {
 
     while (_startsImplicitMultiply()) {
       final right = _power();
-      left = BinaryOpNode(left, TokenType.multiply, right);
+      left = BinaryOpNode(left, TokenType.times, right);
     }
 
     return left;
@@ -134,14 +136,14 @@ class Parser {
   ASTNode _power() {
     final operands = <ASTNode>[_primary()];
 
-    while (_match(TokenType.power)) {
+    while (_match(TokenType.exponent)) {
       operands.add(_unary());
     }
 
     // Fold right-to-left
     var result = operands.last;
     for (var i = operands.length - 2; i >= 0; i--) {
-      result = BinaryOpNode(operands[i], TokenType.power, result);
+      result = BinaryOpNode(operands[i], TokenType.exponent, result);
     }
 
     return result;
@@ -174,7 +176,7 @@ class Parser {
   }
 
   /// ```
-  /// numexpr = NUMBER ( NUMDIV NUMBER )*
+  /// numexpr = NUMBER ( DIVIDENUM NUMBER )*
   /// ```
   ///
   /// Both operands of `|` must be bare NUMBER literals.
@@ -182,7 +184,7 @@ class Parser {
     final numberToken = _advance();
     var left = NumberNode(numberToken.literal as double) as ASTNode;
 
-    while (_match(TokenType.divideHigh)) {
+    while (_match(TokenType.divideNum)) {
       final opToken = _previous();
       if (!_check(TokenType.number)) {
         throw ParseException(
@@ -193,7 +195,7 @@ class Parser {
       }
       final rightToken = _advance();
       final right = NumberNode(rightToken.literal as double);
-      left = BinaryOpNode(left, TokenType.divideHigh, right);
+      left = BinaryOpNode(left, TokenType.divideNum, right);
     }
 
     return left;
@@ -211,6 +213,7 @@ class Parser {
     final token = _advance();
     final name = token.literal as String;
 
+    // Check for builtin functions first.
     if (_check(TokenType.leftParen) && isBuiltinFunction(name)) {
       _advance(); // consume '('
 
@@ -226,6 +229,28 @@ class Parser {
       final args = _arguments();
       _consume(TokenType.rightParen, "Expected ')' after function arguments");
       return FunctionNode(name, args);
+    }
+
+    // Check for affine units (require function-call syntax).
+    if (_repo != null) {
+      final unit = _repo.findUnit(name);
+      if (unit != null && unit.isAffine) {
+        if (!_check(TokenType.leftParen)) {
+          throw ParseException(
+            "Affine unit '$name' requires function-call syntax: "
+            '$name(<value>)',
+            line: token.line,
+            column: token.column,
+          );
+        }
+        _advance(); // consume '('
+        final arg = _expression();
+        _consume(
+          TokenType.rightParen,
+          "Expected ')' after affine unit argument",
+        );
+        return AffineUnitNode(name, arg);
+      }
     }
 
     return UnitNode(name);
@@ -253,12 +278,16 @@ class Parser {
   }
 
   bool _check(TokenType type) {
-    if (_isAtEnd()) return false;
+    if (_isAtEnd()) {
+      return false;
+    }
     return _peek().type == type;
   }
 
   Token _advance() {
-    if (!_isAtEnd()) _current++;
+    if (!_isAtEnd()) {
+      _current++;
+    }
     return _previous();
   }
 
@@ -269,7 +298,9 @@ class Parser {
   bool _isAtEnd() => _peek().type == TokenType.eof;
 
   Token _consume(TokenType type, String message) {
-    if (_check(type)) return _advance();
+    if (_check(type)) {
+      return _advance();
+    }
 
     final token = _peek();
     throw ParseException(message, line: token.line, column: token.column);

@@ -125,20 +125,9 @@ Implementation Steps
 
 **File:** `lib/core/domain/errors.dart`
 
-Define the base class and four subclasses:
-
-~~~~ dart
-abstract class UnitaryException implements Exception {
-  String get message;
-  int? get line;
-  int? get column;
-}
-
-class LexException extends UnitaryException { ... }
-class ParseException extends UnitaryException { ... }
-class EvalException extends UnitaryException { ... }
-class DimensionException extends UnitaryException { ... }
-~~~~
+Define `UnitaryException` base class with `message`, `line`, and `column`
+fields, and four subclasses: `LexException`, `ParseException`,
+`EvalException`, `DimensionException`.
 
 - All have a `message` field and optional `line`/`column` for source position.
 - `DimensionException` additionally has optional `leftDimension` and
@@ -329,49 +318,13 @@ The core data structure combining a numeric value with dimensional information.
 
 **File:** `lib/core/domain/parser/token.dart`
 
-**`TokenType` enum:**
+**`TokenType` enum:** `number`, `unit`, `plus`, `minus`, `multiply`, `divide`,
+`divideHigh` (`|`), `power` (`^`/`**`), `leftParen`, `rightParen`, `comma`,
+`function`, `eof`.
 
-~~~~ dart
-enum TokenType {
-  // Literals
-  number,         // 3.14, 1.5e-10, .5
-  unit,           // any identifier not followed by '('
-
-  // Operators
-  plus,           // +
-  minus,          // -
-  multiply,       // *, ×, ·  (also inserted for implicit multiplication)
-  divide,         // /, ÷
-  divideHigh,     // |
-  power,          // ^, **
-
-  // Grouping
-  leftParen,      // (
-  rightParen,     // )
-  comma,          // ,
-
-  // Functions
-  function,       // identifier followed by '('
-
-  // Special
-  eof,            // end of input
-}
-~~~~
-
-**`Token` class:**
-
-~~~~ dart
-class Token {
-  final TokenType type;
-  final String lexeme;      // original source text
-  final Object? literal;    // parsed value: double for numbers, String for
-                            // unit/function identifiers
-  final int line;
-  final int column;
-
-  Token(this.type, this.lexeme, this.literal, this.line, this.column);
-}
-~~~~
+**`Token` class:** Fields: `type` (TokenType), `lexeme` (original source text),
+`literal` (parsed value — `double` for numbers, `String` for identifiers),
+`line`, `column`.
 
 **Tests:** Tested indirectly through lexer tests.
 
@@ -382,24 +335,9 @@ class Token {
 
 Converts an input string to `List<Token>`.
 
-**Class structure:**
-
-~~~~ dart
-class Lexer {
-  final String source;
-
-  // Scanning state
-  int _start = 0;     // start of current lexeme
-  int _current = 0;   // current character position
-  int _line = 1;
-  int _column = 1;
-  List<Token> _tokens = [];
-
-  Lexer(this.source);
-
-  List<Token> scanTokens();
-}
-~~~~
+**Class structure:** `Lexer` takes a source string and maintains scanning state
+(`_start`, `_current`, `_line`, `_column`, `_tokens`).  Entry point is
+`scanTokens()` which returns `List<Token>`.
 
 **`scanTokens()` loop:**
 
@@ -504,13 +442,8 @@ source text) and the same line/column as the upcoming token.
 
 **File:** `lib/core/domain/parser/ast.dart`
 
-~~~~ dart
-/// Base class for all AST nodes.
-abstract class ASTNode {
-  /// Evaluate this node and return a Quantity.
-  Quantity evaluate(EvalContext context);
-}
-~~~~
+All AST nodes extend `ASTNode`, which defines a single method
+`evaluate(EvalContext context)` returning a `Quantity`.
 
 **Fully implemented for Phase 1:**
 
@@ -550,13 +483,8 @@ abstract class ASTNode {
 - **`FunctionDefinitionRequestNode`** — holds function name string.
   `evaluate()` throws `UnimplementedError`.
 
-**`EvalContext` class:**
-
-~~~~ dart
-class EvalContext {
-  // Empty for Phase 1.  Will hold UnitRepository in Phase 2.
-}
-~~~~
+**`EvalContext` class:** Empty for Phase 1.  Will hold `UnitRepository` in
+Phase 2.
 
 **Tests:** AST nodes are tested indirectly through parser and evaluator tests.
 Direct tests can verify evaluation of individual nodes in isolation.
@@ -567,17 +495,7 @@ Direct tests can verify evaluation of individual nodes in isolation.
 **File:** `lib/core/domain/parser/parser.dart`
 
 Recursive descent parser consuming a `List<Token>` and producing an `ASTNode`.
-
-~~~~ dart
-class Parser {
-  final List<Token> _tokens;
-  int _current = 0;
-
-  Parser(this._tokens);
-
-  ASTNode parse();
-}
-~~~~
+Maintains a `_current` index into the token list.  Entry point is `parse()`.
 
 **Grammar (recursive descent methods):**
 
@@ -641,8 +559,8 @@ implicit()          → exponentiation+
 
 In `implicit()`, after parsing the first `exponentiation()`, check if the next
 token is `number`, `unit`, `function`, or `leftParen`.  If so, parse another
-`exponentiation()` and combine with `BinaryOpNode(TokenType.multiply, ...)`.
-Repeat.  The `multiply` and `divide` tokens with `×`, `·` are handled at
+`exponentiation()` and combine with `BinaryOpNode(TokenType.times, ...)`.
+Repeat.  The `times` and `divide` tokens with `×`, `·` are handled at
 level 2.
 
 **High-precedence division validation:**
@@ -778,31 +696,13 @@ Test via the full pipeline (parse string → evaluate → check result):
 
 **File:** `lib/core/domain/parser/expression_parser.dart`
 
-Convenience class that ties the pipeline together:
+Convenience class that ties the pipeline together.  Provides three methods:
 
-~~~~ dart
-class ExpressionParser {
-  /// Lex, parse, and evaluate an expression string.
-  Quantity evaluate(String input) {
-    final tokens = Lexer(input).scanTokens();
-    final ast = Parser(tokens).parse();
-    return ast.evaluate(EvalContext());
-  }
-
-  /// Lex and parse an expression string, returning the AST.
-  /// Useful for testing parser output without evaluation.
-  ASTNode parse(String input) {
-    final tokens = Lexer(input).scanTokens();
-    return Parser(tokens).parse();
-  }
-
-  /// Lex an expression string, returning the token list.
-  /// Useful for testing lexer output.
-  List<Token> tokenize(String input) {
-    return Lexer(input).scanTokens();
-  }
-}
-~~~~
+- `evaluate(String input)` — lex, parse, and evaluate, returning a `Quantity`.
+- `parse(String input)` — lex and parse, returning the `ASTNode` (useful for
+  testing parser output without evaluation).
+- `tokenize(String input)` — lex only, returning `List<Token>` (useful for
+  testing lexer output).
 
 ---
 

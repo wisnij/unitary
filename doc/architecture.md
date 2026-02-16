@@ -85,42 +85,11 @@ Stream  Nodes    Expression   + Units
 
 **Token Types:**
 
-~~~~ dart
-enum TokenType {
-  // Literals
-  number,        // 3.14, 1.5e-10, .5
-  unit,          // meter, kg, newton (includes constants like pi, c)
-
-  // Operators
-  plus,          // +
-  minus,         // -
-  multiply,      // *, ×, ⋅
-  divide,        // /, ÷
-  divideHigh,    // | (high precedence division)
-  power,         // ^
-
-  // Grouping
-  leftParen,     // (
-  rightParen,    // )
-  comma,         // , (for function arguments)
-
-  // Functions
-  function,      // sin, cos, sqrt, etc.
-
-  // Special
-  eof,           // End of input
-}
-
-class Token {
-  final TokenType type;
-  final String lexeme;     // Original text
-  final Object? literal;   // Parsed value (for numbers, UnitMatch for units, etc.)
-  final int line;          // Line number (for error reporting)
-  final int column;        // Column number (for error reporting)
-
-  Token(this.type, this.lexeme, this.literal, this.line, this.column);
-}
-~~~~
+Token types include: `number` (3.14, 1.5e-10, .5), `identifier` (unit names
+and constants), operators (`plus`, `minus`, `times`, `divide`, `divideNum`,
+`exponent`), grouping (`leftParen`, `rightParen`, `comma`), and `eof`.  Each
+token carries its type, lexeme text, optional parsed literal value, and
+line/column for error reporting.
 
 **Lexer (Tokenizer):**
 
@@ -148,86 +117,6 @@ class Token {
   - Supports scientific notation: 1.5e-10, 3e8
 - Physical constants are just defined units (e.g., "c" = 299792458 m/s)
 
-**Lexer Implementation Notes:**
-
-~~~~ dart
-void scanNumber() {
-  // Handle leading decimal point (.5)
-  if (previous() == '.' && isDigit(peek())) {
-    // Already consumed '.', now get digits
-    while (isDigit(peek())) advance();
-  } else {
-    // Regular number (integer or decimal)
-    while (isDigit(peek())) advance();
-
-    // Decimal part
-    if (peek() == '.' && isDigit(peekNext())) {
-      advance(); // consume '.'
-      while (isDigit(peek())) advance();
-    }
-  }
-
-  // Scientific notation (e.g., 1.5e-10)
-  if (peek() == 'e' || peek() == 'E') {
-    advance();
-    if (peek() == '+' || peek() == '-') advance();
-    if (!isDigit(peek())) throw LexException("Invalid scientific notation");
-    while (isDigit(peek())) advance();
-  }
-
-  String numberStr = source.substring(start, current);
-  addToken(TokenType.number, double.parse(numberStr));
-}
-
-void scanIdentifier() {
-  // Read alphanumeric characters
-  while (isAlphaNumeric(peek())) advance();
-
-  String text = source.substring(start, current);
-
-  // Check if it's a function
-  if (isFunction(text)) {
-    addToken(TokenType.function, text);
-    return;
-  }
-
-  // Everything else is a unit (including physical constants)
-  var unitMatch = tryParseUnit(text);
-  if (unitMatch != null) {
-    addToken(TokenType.unit, unitMatch);
-    return;
-  }
-
-  throw LexException("Unknown identifier: $text", line, column);
-}
-
-void handleImplicitMultiply() {
-  // Insert implicit multiply token when appropriate
-  if (tokens.isNotEmpty) {
-    var last = tokens.last;
-
-    // Cases where we insert implicit multiply:
-    // - number followed by unit: "5m"
-    // - number followed by identifier: "5 x"
-    // - closing paren followed by number/unit/paren: ")5", ")(", ")x"
-    // - unit followed by number/unit/paren: "m 5", "m kg", "m("
-
-    if ((last.type == TokenType.number ||
-         last.type == TokenType.rightParen ||
-         last.type == TokenType.unit) &&
-        !isAtEnd() &&
-        (isDigit(peek()) || peek() == '.' || isAlpha(peek()) || peek() == '(')) {
-      // Don't insert multiply if next char starts a function call
-      // (handled separately in parser)
-      if (last.type == TokenType.unit && peek() == '(') {
-        return; // This might be a function call, let parser handle it
-      }
-      addToken(TokenType.multiply);
-    }
-  }
-}
-~~~~
-
 **Parser:**
 
 - Builds Abstract Syntax Tree (AST) from tokens
@@ -246,17 +135,11 @@ void handleImplicitMultiply() {
 
 **AST Node Types:**
 
-~~~~ dart
-abstract class ASTNode {
-  Quantity evaluate(Context context);
-}
-
-class NumberNode extends ASTNode
-class UnitNode extends ASTNode
-class BinaryOpNode extends ASTNode  // +, -, *, /, ^
-class UnaryOpNode extends ASTNode   // -, sqrt, etc.
-class FunctionNode extends ASTNode  // sin, cos, etc.
-~~~~
+- `NumberNode` — numeric literal
+- `UnitNode` — unit identifier (resolved via UnitRepository at evaluation time)
+- `BinaryOpNode` — binary operators (+, -, *, /, ^) including implicit multiplication
+- `UnaryOpNode` — unary minus
+- `FunctionNode` — built-in functions (sin, cos, sqrt, etc.) and affine units (tempF, tempC)
 
 **Evaluator:**
 
@@ -268,314 +151,95 @@ class FunctionNode extends ASTNode  // sin, cos, etc.
 
 **Dimension Model:**
 
-~~~~ dart
-// Represents a dimension as a product of primitive units with exponents
-class Dimension {
-  // Map from primitive unit ID to exponent
-  // e.g., {m: 1, s: -1} represents velocity
-  // e.g., {m: 1, s: -2} represents acceleration
-  final Map<String, num> units;
+`Dimension` represents a physical dimension as a map from primitive unit IDs to
+integer exponents.  For example, velocity is `{m: 1, s: -1}` and force is
+`{kg: 1, m: 1, s: -2}`.  A dimensionless quantity has an empty map.
 
-  // Constructor for dimensionless quantities
-  Dimension.dimensionless() : units = {};
+Operations:
 
-  // Constructor from primitive exponents
-  Dimension(this.units);
+- `multiply(other)` — adds exponents (for multiplication)
+- `divide(other)` — subtracts exponents (for division)
+- `power(n)` — multiplies all exponents by n
+- `powerRational(r)` — multiplies by rational exponent, validates divisibility
+- `isConformableWith(other)` — checks dimensional equality
+- `canonicalRepresentation()` — human-readable string like `kg m / s^2`
 
-  // Check if two dimensions are the same (for conformability check)
-  bool isConformableWith(Dimension other) {
-    if (units.length != other.units.length) return false;
-    for (var entry in units.entries) {
-      if (other.units[entry.key] != entry.value) return false;
-    }
-    return true;
-  }
+Zero exponents are stripped automatically.  Two dimensions are equal iff they
+have the same unit-exponent pairs.
 
-  // Multiply dimensions: add exponents
-  Dimension multiply(Dimension other) {
-    final result = Map<String, num>.from(units);
-    for (var entry in other.units.entries) {
-      result[entry.key] = (result[entry.key] ?? 0) + entry.value;
-    }
-    // Remove zero exponents
-    result.removeWhere((key, value) => value == 0);
-    return Dimension(result);
-  }
+**DimensionRegistry** (planned for UI) maps dimensions to human-readable
+category names (e.g., `{m: 1, s: -2}` → "Acceleration").
 
-  // Divide dimensions: subtract exponents
-  Dimension divide(Dimension other) {
-    final result = Map<String, num>.from(units);
-    for (var entry in other.units.entries) {
-      result[entry.key] = (result[entry.key] ?? 0) - entry.value;
-    }
-    result.removeWhere((key, value) => value == 0);
-    return Dimension(result);
-  }
+**Prefix Support:**
 
-  // Raise dimension to a power: multiply all exponents
-  Dimension power(num exponent) {
-    final result = <String, num>{};
-    for (var entry in units.entries) {
-      result[entry.key] = entry.value * exponent;
-    }
-    return Dimension(result);
-  }
+Unit prefixes (kilo, mega, milli, etc.) are implemented as `PrefixUnit`
+instances, a subclass of `DerivedUnit` with `isPrefix => true`.  Prefixes are
+stored separately in `UnitRepository` via `registerPrefix()`, so prefix symbols
+(like `m` for milli) can coexist with regular unit IDs (like `m` for meter).
 
-  bool get isDimensionless => units.isEmpty;
+The `findUnitWithPrefix(name)` method resolves names using this priority order:
 
-  // Canonical string representation: primitives with positive exponents / primitives with negative exponents
-  // e.g., "m / s^2" for acceleration, "kg * m / s^2" for force, "1 / s" for frequency
-  String canonicalRepresentation() {
-    if (isDimensionless) return "1";
+1. Exact match in regular units (including plural stripping)
+2. Prefix splitting — longest prefix first, remainder looked up as a regular
+   unit (with plural stripping)
+3. Standalone prefix match (prefix name with no remainder)
+4. No match → returns empty `UnitMatch`
 
-    final positive = <String>[];
-    final negative = <String>[];
+This means standalone `"m"` resolves to meter (step 1), while `"mm"` splits
+into milli + meter (step 2).  All 24 SI prefixes from quecto (10^-30) to
+quetta (10^30) are registered.
 
-    // Sort primitives alphabetically by their ID
-    final sortedEntries = units.entries.toList()
-      ..sort((a, b) => a.key.compareTo(b.key));
+**Unit Model:**
 
-    for (var entry in sortedEntries) {
-      if (entry.value > 0) {
-        if (entry.value == 1) {
-          positive.add(entry.key);
-        } else {
-          positive.add('${entry.key}^${entry.value}');
-        }
-      } else if (entry.value < 0) {
-        final posExp = -entry.value;
-        if (posExp == 1) {
-          negative.add(entry.key);
-        } else {
-          negative.add('${entry.key}^$posExp');
-        }
-      }
-    }
+Each `Unit` has a primary `id`, a list of `aliases`, and a `description`.
+The `allNames` getter returns id + aliases.  Plural forms (trailing "s", "es",
+"ies") are handled automatically by the repository's plural stripping, so only
+irregular plurals (like "feet" for "foot") need to be listed as explicit aliases.
 
-    // Build the representation
-    String numerator = positive.isEmpty ? "1" : positive.join(' * ');
+Unit subclasses define how units convert to primitive base units:
 
-    if (negative.isEmpty) {
-      return numerator;
-    } else {
-      String denominator = negative.join(' * ');
-      return '$numerator / $denominator';
-    }
-  }
+- **`PrimitiveUnit`** — fundamental units that define their own dimension
+  (e.g., meter → `{m: 1}`).  Optionally `isDimensionless` for units like
+  radian and steradian.
+- **`AffineUnit`** — units with a scale factor and offset relative to a base
+  unit (e.g., tempC: `(value + 273.15) * 1.0` → kelvin).  Used for absolute
+  temperature conversions.
+- **`DerivedUnit`** — units defined by an expression string that is parsed
+  and evaluated through the full pipeline (e.g., newton: `"kg m/s^2"`,
+  mile: `"5280 ft"`).
+- **`PrefixUnit`** — a `DerivedUnit` subclass for SI prefixes
+  (e.g., kilo: `"1000"`, milli: `"0.001"`).
 
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! Dimension) return false;
+Unit resolution is handled by `resolveUnit(unit, repo)`, which returns a
+`Quantity` representing 1 of that unit in primitive base units.  For derived
+units, resolution evaluates the expression string through the full
+lexer/parser/evaluator pipeline, which may recurse through other unit
+definitions.
 
-    if (units.length != other.units.length) return false;
+Examples of unit definitions:
 
-    for (var entry in units.entries) {
-      if (other.units[entry.key] != entry.value) return false;
-    }
-    return true;
-  }
-
-  @override
-  int get hashCode {
-    // Combine hashes of all entries
-    int hash = 0;
-    for (var entry in units.entries) {
-      hash ^= entry.key.hashCode ^ entry.value.hashCode;
-    }
-    return hash;
-  }
-}
-
-// Registry mapping dimensions to human-readable category names (for UI)
-class DimensionRegistry {
-  // Map from canonical dimension to metadata
-  final Map<Dimension, DimensionInfo> _dimensions = {};
-
-  void registerDimension(Dimension dimension, String name, String? description) {
-    _dimensions[dimension] = DimensionInfo(dimension, name, description);
-  }
-
-  DimensionInfo? getDimensionInfo(Dimension dimension) => _dimensions[dimension];
-
-  // Get category name for UI display
-  String getCategoryName(Dimension dimension) {
-    return _dimensions[dimension]?.name ?? dimension.canonicalRepresentation();
-  }
-}
-
-class DimensionInfo {
-  final Dimension dimension;
-  final String name;          // e.g., "Acceleration", "Force", "Energy"
-  final String? description;  // optional longer description
-
-  DimensionInfo(this.dimension, this.name, this.description);
-}
-
-// Unit prefixes (e.g., kilo, mega, milli)
-class UnitPrefix {
-  final String id;             // Primary symbol (e.g., "k", "M", "m")
-  final List<String> aliases;  // Alternative names (e.g., ["kilo"], ["mega"], ["milli"])
-  final double factor;         // Multiplication factor (e.g., 1000, 1000000, 0.001)
-  final String? description;   // Human-readable details
-
-  UnitPrefix({
-    required this.id,
-    required this.aliases,
-    required this.factor,
-    this.description,
-  });
-
-  // All recognized names for this prefix (id + aliases)
-  List<String> get allNames => [id, ...aliases];
-}
-
-// Registry of unit prefixes
-class PrefixRegistry {
-  final Map<String, UnitPrefix> _prefixes = {};
-
-  void registerPrefix(UnitPrefix prefix) {
-    _prefixes[prefix.id] = prefix;
-    for (var alias in prefix.aliases) {
-      _prefixes[alias] = prefix;
-    }
-  }
-
-  UnitPrefix? findPrefix(String name) => _prefixes[name];
-
-  List<UnitPrefix> getAllPrefixes() => _prefixes.values.toSet().toList();
-}
 ~~~~
-
-**Unit Definition:**
-
-~~~~ dart
-class Unit {
-  final String id;          // Primary symbol/name (e.g., "m", "meter", "kg")
-  final List<String> aliases;  // Alternative names (e.g., ["metre"])
-  final String? description;   // Human-readable details about the unit
-  final UnitDefinition definition;
-
-  // All recognized names for this unit (id + aliases)
-  // Parser will also check plural forms automatically
-  List<String> get allNames => [id, ...aliases];
-}
-
-abstract class UnitDefinition {
-  /// Convert [value] in this unit to an equivalent Quantity in primitive
-  /// base units.  May recurse through [repo] for chained definitions.
-  Quantity toQuantity(double value, UnitRepository repo);
-
-  /// Whether this is a primitive (base) unit definition.
-  bool get isPrimitive;
-}
-
-// For primitive units - these define fundamental dimensions
-class PrimitiveUnitDefinition extends UnitDefinition {
-  late final String _unitId;
-
-  PrimitiveUnitDefinition();
-
-  void bind(String unitId) => _unitId = unitId;
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) =>
-      Quantity(value, Dimension({_unitId: 1}));
-
-  @override
-  bool get isPrimitive => true;
-}
-
-// For units defined as linear multiples of another unit
-class LinearDefinition extends UnitDefinition {
-  final double factor;      // e.g., 1 mile = 1609.344 meters
-  final String baseUnitId;  // ID of unit this is defined in terms of (e.g., "meter")
-
-  const LinearDefinition({required this.factor, required this.baseUnitId});
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toQuantity(value * factor, repo);
-  }
-
-  @override
-  bool get isPrimitive => false;
-}
-
-// For units with offset (like temperature) — planned for Phase 3
-class AffineDefinition extends UnitDefinition {
-  final double factor;
-  final double offset;      // e.g., Celsius = Kelvin - 273.15
-  final String baseUnitId;
-
-  const AffineDefinition(this.factor, this.offset, this.baseUnitId);
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toQuantity((value + offset) * factor, repo);
-  }
-
-  @override
-  bool get isPrimitive => false;
-}
-
-// For compound units defined as expressions — planned for Phase 3
-class CompoundDefinition extends UnitDefinition {
-  final String expr;  // e.g., "kg*m/s^2" for Newton
-
-  CompoundDefinition(this.expr);
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) {
-    // Parse and evaluate the expression to get conversion factor
-    // This requires the expression parser/evaluator
-    throw UnimplementedError("Requires expression evaluator");
-  }
-
-  @override
-  bool get isPrimitive => false;
-}
-
-// Examples of unit definitions:
-//
-// Primitive unit (meter):
-//   Unit(id: "m", aliases: ["meter", "meters", "metre", "metres"],
-//        definition: PrimitiveUnitDefinition())
-//   dimension: {m: 1}
-//
-// Derived unit referencing base (kilometer):
-//   Unit(id: "km", aliases: ["kilometer", "kilometers", "kilometre", "kilometres"],
-//        definition: LinearDefinition(1000, "m"))
-//   dimension: {m: 1}
-//
-// Derived unit referencing derived (mile):
-//   Unit(id: "mi", aliases: ["mile", "miles"],
-//        definition: LinearDefinition(1.609344, "km"))
-//   dimension: {m: 1} (calculated through km → m)
-//
-// Compound unit (newton):
-//   Unit(id: "N", aliases: ["newton", "newtons"],
-//        definition: CompoundDefinition("kg*m/s^2"))
-//   dimension: {kg: 1, m: 1, s: -2}
+Primitive:  m (meter)           → Quantity(1.0, {m: 1})
+Derived:    mi (mile)           → "5280 ft" → Quantity(1609.344, {m: 1})
+Derived:    N (newton)          → "kg m/s^2" → Quantity(1.0, {kg: 1, m: 1, s: -2})
+Affine:     tempF (Fahrenheit)  → (value - 32) * 5/9 + 273.15 K
+Prefix:     kilo                → "1000" → Quantity(1000.0, dimensionless)
 ~~~~
 
 **Quantity Model:**
 
-~~~~ dart
-class Quantity {
-  final num value;
-  final Dimension dimension;
-  final Unit? displayUnit;  // preferred display unit
+`Quantity` represents a physical quantity: a numeric `value` (double) combined
+with a `Dimension`.  All arithmetic operations maintain dimensional consistency:
 
-  Quantity convertTo(Unit targetUnit);
-  Quantity add(Quantity other);      // requires same dimension
-  Quantity multiply(Quantity other);
-  Quantity power(num exponent);
-  String format(DisplaySettings settings);
-}
-~~~~
+- `add`/`subtract` — requires conformable dimensions, throws `DimensionException` if not
+- `multiply`/`divide` — combines dimensions (adds/subtracts exponents)
+- `power(exponent)` — for dimensioned quantities, requires rational exponent with
+  integer-valued result dimensions; uses continued fractions to recover rational
+  approximation from double exponents
+- `negate`/`abs` — preserves dimension
+
+NaN values are rejected at construction time (fail-fast).  Division by zero
+throws `EvalException`.
 
 ### 3. Unit Database
 
@@ -585,141 +249,22 @@ class Quantity {
 - Parse into internal format
 - Store in embedded database (asset bundle)
 
-**Database Schema:**
+**Database Schema (planned):**
 
-~~~~ sql
--- Units table (includes both primitive and derived units)
-CREATE TABLE units (
-  id TEXT PRIMARY KEY,             -- Primary symbol/name (e.g., "m", "kg", "N")
-  description TEXT,                 -- Human-readable details about the unit
-  definition_type TEXT NOT NULL,   -- 'primitive', 'linear', 'affine', 'compound'
-  definition_data TEXT,             -- JSON with conversion parameters
-  is_dimensionless INTEGER DEFAULT 0  -- only relevant for primitive units
-);
-
--- Unit aliases table (stores alternative names)
--- Plurals are handled automatically at parse time, not stored
-CREATE TABLE unit_aliases (
-  unit_id TEXT,
-  alias TEXT,
-  PRIMARY KEY (unit_id, alias),
-  FOREIGN KEY (unit_id) REFERENCES units(id)
-);
-
--- Unit prefixes table (e.g., kilo, mega, milli)
-CREATE TABLE prefixes (
-  id TEXT PRIMARY KEY,      -- Primary symbol (e.g., "k", "M", "m")
-  description TEXT,          -- Human-readable details
-  factor REAL NOT NULL       -- Multiplication factor (e.g., 1000, 1000000, 0.001)
-);
-
--- Prefix aliases table
-CREATE TABLE prefix_aliases (
-  prefix_id TEXT,
-  alias TEXT,
-  PRIMARY KEY (prefix_id, alias),
-  FOREIGN KEY (prefix_id) REFERENCES prefixes(id)
-);
-
--- Dimension metadata (for UI display)
-CREATE TABLE dimensions (
-  dimension_key TEXT PRIMARY KEY,  -- JSON representation of dimension map
-  name TEXT NOT NULL,              -- e.g., "Acceleration", "Force"
-  description TEXT
-);
-
--- Constants table
-CREATE TABLE constants (
-  name TEXT PRIMARY KEY,
-  value REAL,
-  definition TEXT  -- expression defining the constant with units
-);
-
--- Custom user units
-CREATE TABLE custom_units (
-  id TEXT PRIMARY KEY,
-  description TEXT,
-  definition_type TEXT NOT NULL,
-  definition_data TEXT,
-  is_dimensionless INTEGER DEFAULT 0,
-  created_at INTEGER
-);
-
--- Custom user prefixes
-CREATE TABLE custom_prefixes (
-  id TEXT PRIMARY KEY,
-  description TEXT,
-  factor REAL NOT NULL,
-  created_at INTEGER
-);
-
--- Custom user dimension metadata
-CREATE TABLE custom_dimensions (
-  dimension_key TEXT PRIMARY KEY,
-  name TEXT NOT NULL,
-  description TEXT,
-  created_at INTEGER
-);
-
--- Examples of stored data:
---
--- Meter (primitive unit):
---   units: {id: "m", description: "SI unit of length", definition_type: "primitive", is_dimensionless: 0}
---   unit_aliases: {unit_id: "m", alias: "meter"}, {unit_id: "m", alias: "metre"}
---   Parser will also recognize: "meters", "metres" (automatic plural handling)
---
--- Kilo prefix:
---   prefixes: {id: "k", description: "SI prefix meaning 1000", factor: 1000}
---   prefix_aliases: {prefix_id: "k", alias: "kilo"}
---   Parser will recognize: "km" → 1000 * m, "kilogram" → 1000 * gram (if gram exists)
---
--- Mega prefix:
---   prefixes: {id: "M", description: "SI prefix meaning 1,000,000", factor: 1000000}
---   prefix_aliases: {prefix_id: "M", alias: "mega"}
---   Parser will recognize: "MW" → 1000000 * W, "megawatt" → 1000000 * watt
---
--- Mile (derived):
---   units: {id: "mi", description: "Imperial unit of length, commonly used in the United States",
---           definition_type: "linear", definition_data: '{"factor": 1609.344, "baseUnitId": "m"}'}
---   unit_aliases: {unit_id: "mi", alias: "mile"}
---   Parser will also recognize: "miles" (automatic plural handling)
---
--- Examples of definition_data JSON:
---
--- PrimitiveUnitDefinition:
---   {"type": "primitive", "isDimensionless": false}
---
--- LinearDefinition (mile = 1609.344 meters):
---   {"type": "linear", "factor": 1609.344, "baseUnitId": "m"}
---
--- AffineDefinition (Celsius):
---   {"type": "affine", "factor": 1.0, "offset": 273.15, "baseUnitId": "K"}
---
--- CompoundDefinition (newton):
---   {"type": "compound", "expression": "kg*m/s^2"}
-~~~~
+Currently units are registered via hand-curated Dart code in
+`registerBuiltinUnits()`.  For future persistence, the database would include
+tables for units (with definition type and parameters), unit aliases, prefixes,
+prefix aliases, dimension metadata (for UI category names), constants, and
+custom user-defined units.  Plurals are handled automatically at parse time and
+not stored.
 
 ### 4. Worksheet System
 
-**Worksheet Model:**
+**Worksheet Model (planned):**
 
-~~~~ dart
-class Worksheet {
-  final String id;
-  final String name;
-  final String category;
-  final List<WorksheetField> fields;
-  final bool isBuiltIn;
-  final bool isModified;
-}
-
-class WorksheetField {
-  final String id;
-  final Unit unit;
-  String? lastValue;     // persisted
-  bool isInput;          // which field is currently being edited
-}
-~~~~
+A `Worksheet` has a name, category, and list of `WorksheetField`s.  Each field
+references a unit and stores the last entered value.  Worksheets can be built-in
+or user-customized.
 
 **Worksheet State Management:**
 
@@ -730,16 +275,11 @@ class WorksheetField {
 
 ### 5. Currency Rate Management
 
-**Currency Service:**
+**Currency Service (planned):**
 
-~~~~ dart
-class CurrencyService {
-  Future<void> fetchRates();
-  Future<Map<String, double>> getRates();
-  DateTime getLastUpdateTime();
-  bool needsUpdate();
-}
-~~~~
+A `CurrencyService` will handle fetching exchange rates, storing them locally,
+and providing rate lookups.  It tracks last update time and auto-refreshes when
+stale.
 
 **Rate Storage:**
 
@@ -773,26 +313,11 @@ State Management Strategy
 - Input validation errors
 - UI ephemeral state (dropdowns, dialogs)
 
-### Persistence Layer
+### Persistence Layer (planned)
 
-~~~~ dart
-class PreferencesRepository {
-  Future<void> savePreference(String key, dynamic value);
-  Future<T?> getPreference<T>(String key);
-}
-
-class WorksheetRepository {
-  Future<List<Worksheet>> getWorksheets();
-  Future<void> saveWorksheet(Worksheet worksheet);
-  Future<void> updateFieldValue(String worksheetId, String fieldId, String value);
-}
-
-class UnitRepository {
-  Future<List<Unit>> getUnitsInCategory(String category);
-  Future<Unit?> findUnit(String name);
-  Future<void> saveCustomUnit(Unit unit);
-}
-~~~~
+Repositories for preferences (key-value), worksheets (load/save with field
+values), and custom units (user-defined units with persistence).  Currently
+the unit repository is in-memory only.
 
 
 Implementation Phases
@@ -884,7 +409,7 @@ Implementation Phases
 **Tasks:**
 
 1. Implement offset conversions (temperature)
-2. Implement compound units (Newton, Pascal, etc.)
+2. Implement derived units (Newton, Pascal, etc.)
 3. Add mathematical functions (sqrt, etc.)
 4. Add trigonometric functions
 5. Add constants (pi, e, c, etc.)

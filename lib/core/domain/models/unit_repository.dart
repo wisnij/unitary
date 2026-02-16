@@ -1,15 +1,34 @@
 import '../data/builtin_units.dart';
 import 'unit.dart';
-import 'unit_definition.dart';
+
+/// Result of a unit lookup that may include a prefix.
+class UnitMatch {
+  /// The prefix unit, if the name was split into prefix + base.
+  final PrefixUnit? prefix;
+
+  /// The matched unit.
+  final Unit? unit;
+
+  const UnitMatch({this.prefix, this.unit});
+}
 
 /// Registry for unit definitions.  Provides lookup by name/alias with
 /// automatic plural stripping fallback.
 class UnitRepository {
-  /// Maps every recognized name (id + aliases) to its Unit.
-  final Map<String, Unit> _lookup = {};
-
   /// All registered units by their primary ID.
   final Map<String, Unit> _units = {};
+
+  /// Maps every recognized name (id + aliases) to its Unit.
+  final Map<String, Unit> _unitLookup = {};
+
+  /// Prefix units by their primary ID.
+  final Map<String, PrefixUnit> _prefixes = {};
+
+  /// All prefix names (ids + aliases) mapped to the prefix.
+  final Map<String, PrefixUnit> _prefixLookup = {};
+
+  /// IDs of all dimensionless primitive units (radian, steradian, etc.).
+  final Set<String> _dimensionlessIds = {};
 
   /// Creates an empty repository.
   UnitRepository();
@@ -25,45 +44,113 @@ class UnitRepository {
   /// lookup map.  Throws [ArgumentError] if any name collides with
   /// an existing entry.
   void register(Unit unit) {
-    if (unit.definition is PrimitiveUnitDefinition) {
-      (unit.definition as PrimitiveUnitDefinition).bind(unit.id);
-    }
-
     _units[unit.id] = unit;
+    if (unit is PrimitiveUnit && unit.isDimensionless) {
+      _dimensionlessIds.add(unit.id);
+    }
 
     for (final name in unit.allNames) {
-      if (_lookup.containsKey(name)) {
+      if (_unitLookup.containsKey(name)) {
         throw ArgumentError(
           "Unit name '$name' is already registered "
-          "(for unit '${_lookup[name]!.id}')",
+          "(for unit '${_unitLookup[name]!.id}')",
         );
       }
-      _lookup[name] = unit;
+      _unitLookup[name] = unit;
     }
+  }
+
+  /// Register a prefix unit.  Prefixes are stored separately from regular
+  /// units so that prefix symbols (like 'm' for milli) can coexist with
+  /// regular unit IDs (like 'm' for meter).
+  void registerPrefix(PrefixUnit prefix) {
+    _prefixes[prefix.id] = prefix;
+    for (final name in prefix.allNames) {
+      if (_prefixLookup.containsKey(name)) {
+        throw ArgumentError(
+          "Prefix name '$name' is already registered "
+          "(for prefix '${_prefixLookup[name]!.id}')",
+        );
+      }
+      _prefixLookup[name] = prefix;
+    }
+  }
+
+  /// Exact lookup in regular units only.
+  Unit? _findExact(String name) => _unitLookup[name];
+
+  /// Plural-stripping lookup in regular units only.
+  Unit? _findPlural(String name) {
+    if (name.length > 4 && name.endsWith('ies')) {
+      final found = _findExact('${name.substring(0, name.length - 3)}y');
+      if (found != null) {
+        return found;
+      }
+    }
+    if (name.length > 3 && name.endsWith('es')) {
+      final found = _findExact(name.substring(0, name.length - 2));
+      if (found != null) {
+        return found;
+      }
+    }
+    if (name.length > 2 && name.endsWith('s')) {
+      final found = _findExact(name.substring(0, name.length - 1));
+      if (found != null) {
+        return found;
+      }
+    }
+    return null;
   }
 
   /// Look up a unit by any recognized name.
   ///
   /// Tries exact match first, then falls back to plural stripping
-  /// (removes trailing 'es' or 's').  Returns null if not found.
+  /// (removes trailing 'ies', 'es', or 's').  Returns null if not found.
   Unit? findUnit(String name) {
-    // Exact match.
-    final exact = _lookup[name];
-    if (exact != null) return exact;
+    return _findExact(name) ?? _findPlural(name);
+  }
 
-    // Plural stripping: try 'es' first, then 's'.
-    if (name.length > 2 && name.endsWith('es')) {
-      final stripped = name.substring(0, name.length - 2);
-      final found = _lookup[stripped];
-      if (found != null) return found;
-    }
-    if (name.length > 1 && name.endsWith('s')) {
-      final stripped = name.substring(0, name.length - 1);
-      final found = _lookup[stripped];
-      if (found != null) return found;
+  /// Look up a unit by name, with automatic prefix splitting.
+  ///
+  /// 1. Exact match in regular units → UnitMatch(unit: found)
+  /// 2. Try each prefix (longest first): if name starts with prefix and
+  ///    the remainder matches a regular unit, return both.
+  /// 3. Standalone prefix match → UnitMatch(unit: prefix)
+  /// 4. Plural stripping fallback → UnitMatch(unit: found)
+  /// 5. No match → UnitMatch() (both null)
+  ///
+  /// Prefix splitting is tried before plural stripping so that names like
+  /// "ms" resolve as milli + second rather than plural-stripping to "m".
+  UnitMatch findUnitWithPrefix(String name) {
+    // Try exact or plural match first.
+    final found = findUnit(name);
+    if (found != null) {
+      return UnitMatch(unit: found);
     }
 
-    return null;
+    // Try prefix splitting (longest prefix first).
+    // Uses findUnit for the remainder so that plurals of the base unit
+    // still work (e.g., "kilometers" → kilo + meters → kilo + meter).
+    for (var len = name.length; len > 0; --len) {
+      final prefixName = name.substring(0, len);
+      final prefix = _prefixLookup[prefixName];
+      if (prefix != null) {
+        if (len == name.length) {
+          // If the prefix is the entire name, return just the prefix
+          return UnitMatch(unit: prefix);
+        } else {
+          // Otherwise, only return successfully if the remainder of the name
+          // matches a unit
+          final baseName = name.substring(prefixName.length);
+          final baseUnit = findUnit(baseName);
+          if (baseUnit != null) {
+            return UnitMatch(prefix: prefix, unit: baseUnit);
+          }
+        }
+      }
+    }
+
+    return const UnitMatch();
   }
 
   /// Look up a unit by any recognized name, throwing if not found.
@@ -77,4 +164,10 @@ class UnitRepository {
 
   /// All registered units (by primary ID).
   Iterable<Unit> get allUnits => _units.values;
+
+  /// All registered prefix units (by primary ID).
+  Iterable<PrefixUnit> get allPrefixes => _prefixes.values;
+
+  /// IDs of all registered dimensionless primitive units.
+  Set<String> get dimensionlessIds => Set.unmodifiable(_dimensionlessIds);
 }

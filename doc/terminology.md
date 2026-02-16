@@ -90,7 +90,7 @@ Usage Examples
 ### Reducing Expressions
 
 - "5 km" reduces to "5000 m" (expressing in terms of the primitive)
-- "3 N" reduces to "3 kg m / s^2" (expanding the compound unit)
+- "3 N" reduces to "3 kg m / s^2" (expanding the derived unit)
 - "60 mph" reduces to approximately "26.8224 m / s"
 
 ---

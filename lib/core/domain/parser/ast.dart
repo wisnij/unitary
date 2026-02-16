@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import '../errors.dart';
 import '../models/dimension.dart';
 import '../models/quantity.dart';
+import '../models/unit.dart';
 import '../models/unit_repository.dart';
+import '../services/unit_resolver.dart';
 import 'token.dart';
 
 /// Evaluation context passed to AST nodes during evaluation.
@@ -54,14 +56,19 @@ class UnitNode extends ASTNode {
       return Quantity(1.0, Dimension({unitName: 1}));
     }
 
-    final unit = repo.findUnit(unitName);
-    if (unit == null) {
+    final result = repo.findUnitWithPrefix(unitName);
+    if (result.unit == null) {
       // Unknown unit: fall back to raw dimension.
       return Quantity(1.0, Dimension({unitName: 1}));
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
-    return unit.definition.toQuantity(1.0, repo);
+    final unitQuantity = resolveUnit(result.unit!, repo);
+    if (result.prefix != null) {
+      final prefixQuantity = resolveUnit(result.prefix!, repo);
+      return prefixQuantity.multiply(unitQuantity);
+    }
+    return unitQuantity;
   }
 
   @override
@@ -86,11 +93,11 @@ class BinaryOpNode extends ASTNode {
         return leftVal.add(rightVal);
       case TokenType.minus:
         return leftVal.subtract(rightVal);
-      case TokenType.multiply:
+      case TokenType.times:
         return leftVal.multiply(rightVal);
-      case TokenType.divide || TokenType.divideHigh:
+      case TokenType.divide || TokenType.divideNum:
         return leftVal.divide(rightVal);
-      case TokenType.power:
+      case TokenType.exponent:
         if (!rightVal.isDimensionless) {
           throw DimensionException(
             'Exponent must be dimensionless, got '
@@ -159,9 +166,27 @@ class AffineUnitNode extends ASTNode {
 
   @override
   Quantity evaluate(EvalContext context) {
-    throw UnimplementedError(
-      'AffineUnitNode evaluation requires unit definitions (Phase 2)',
-    );
+    final argValue = argument.evaluate(context);
+
+    if (!argValue.isDimensionless) {
+      throw DimensionException(
+        "Affine unit '$unitName' requires a dimensionless argument, got "
+        '${argValue.dimension.canonicalRepresentation()}',
+      );
+    }
+
+    final repo = context.repo;
+    if (repo == null) {
+      throw EvalException(
+        "Cannot evaluate affine unit '$unitName' without a unit repository",
+      );
+    }
+
+    final unit = repo.getUnit(unitName) as AffineUnit;
+    final baseUnit = repo.getUnit(unit.baseUnitId);
+    final baseQuantity = resolveUnit(baseUnit, repo);
+    final kelvin = (argValue.value + unit.offset) * unit.factor;
+    return Quantity(kelvin * baseQuantity.value, baseQuantity.dimension);
   }
 
   @override

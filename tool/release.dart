@@ -83,7 +83,9 @@ void main(List<String> args) {
   final commits = <ParsedCommit>[];
   for (final line in logLines) {
     final commit = ParsedCommit.parse(line);
-    if (commit != null) commits.add(commit);
+    if (commit != null) {
+      commits.add(commit);
+    }
   }
 
   // Generate changelog section.
@@ -137,11 +139,9 @@ $changelogSection''');
   stdout.writeln();
   stdout.writeln('Changelog entry:');
   stdout.writeln(changelogSection);
-  stdout.write('Proceed? [y/N] ');
+  stdout.write('Proceed with commit and tag? [y/N] ');
   final answer = stdin.readLineSync()?.trim().toLowerCase();
   if (answer != 'y') {
-    // Restore files.
-    Process.runSync('git', ['checkout', 'CHANGELOG.md', 'pubspec.yaml']);
     stdout.writeln('Aborted.');
     return;
   }

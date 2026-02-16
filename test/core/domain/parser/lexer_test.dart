@@ -277,12 +277,12 @@ void main() {
     });
 
     test('star', () {
-      expect(types(lex('*')), [TokenType.multiply]);
+      expect(types(lex('*')), [TokenType.times]);
     });
 
     test('double star is power', () {
       final tokens = lex('**');
-      expect(types(tokens), [TokenType.power]);
+      expect(types(tokens), [TokenType.exponent]);
       expect(tokens[0].lexeme, '**');
     });
 
@@ -295,11 +295,11 @@ void main() {
     });
 
     test('pipe', () {
-      expect(types(lex('|')), [TokenType.divideHigh]);
+      expect(types(lex('|')), [TokenType.divideNum]);
     });
 
     test('caret', () {
-      expect(types(lex('^')), [TokenType.power]);
+      expect(types(lex('^')), [TokenType.exponent]);
     });
 
     test('left paren', () {
@@ -316,16 +316,40 @@ void main() {
   });
 
   group('Lexer: Unicode operators', () {
-    test('multiplication sign ×', () {
-      expect(types(lex('\u00D7')), [TokenType.multiply]);
+    test('multiplication sign U+00D7', () {
+      expect(types(lex('\u00D7')), [TokenType.times]);
     });
 
-    test('middle dot ·', () {
-      expect(types(lex('\u00B7')), [TokenType.multiply]);
+    test('middle dot U+00B7', () {
+      expect(types(lex('\u00B7')), [TokenType.times]);
     });
 
-    test('division sign ÷', () {
+    test('dot operator U+22C5', () {
+      expect(types(lex('\u22C5')), [TokenType.times]);
+    });
+
+    test('N-ary times operator U+2A09', () {
+      expect(types(lex('\u2A09')), [TokenType.times]);
+    });
+
+    test('division sign U+00F7', () {
       expect(types(lex('\u00F7')), [TokenType.divide]);
+    });
+
+    test('figure dash U+2012', () {
+      expect(types(lex('\u2012')), [TokenType.minus]);
+    });
+
+    test('en dash U+2013', () {
+      expect(types(lex('\u2013')), [TokenType.minus]);
+    });
+
+    test('minus sign U+2212', () {
+      expect(types(lex('\u2212')), [TokenType.minus]);
+    });
+
+    test('fraction slash U+2044', () {
+      expect(types(lex('\u2044')), [TokenType.divideNum]);
     });
   });
 
@@ -524,7 +548,7 @@ void main() {
     test('5 * 3 + 2', () {
       expect(types(lex('5 * 3 + 2')), [
         TokenType.number,
-        TokenType.multiply,
+        TokenType.times,
         TokenType.number,
         TokenType.plus,
         TokenType.number,
@@ -548,7 +572,7 @@ void main() {
     test('1|2 m', () {
       expect(types(lex('1|2 m')), [
         TokenType.number,
-        TokenType.divideHigh,
+        TokenType.divideNum,
         TokenType.number,
         TokenType.identifier,
       ]);
@@ -557,7 +581,7 @@ void main() {
     test('2^-3', () {
       expect(types(lex('2^-3')), [
         TokenType.number,
-        TokenType.power,
+        TokenType.exponent,
         TokenType.minus,
         TokenType.number,
       ]);
@@ -566,7 +590,7 @@ void main() {
     test('2**3', () {
       expect(types(lex('2**3')), [
         TokenType.number,
-        TokenType.power,
+        TokenType.exponent,
         TokenType.number,
       ]);
     });
@@ -577,7 +601,7 @@ void main() {
         TokenType.leftParen,
         TokenType.number,
         TokenType.identifier,
-        TokenType.power,
+        TokenType.exponent,
         TokenType.number,
         TokenType.rightParen,
       ]);

@@ -22,7 +22,7 @@ The following areas have been thoroughly designed and documented:
 - **Dimension**: Representation as map of primitive unit IDs to exponents
 - **Unit**: Structure with id, aliases, description, and definition
 - **Primitive Units**: Units that cannot be reduced further (dimensioned and dimensionless)
-- **Derived Units**: Linear, affine, and compound definitions
+- **Derived Units**: Affine and compound definitions
 - **Prefixes**: SI and other prefixes with multiplication factors
 - **DimensionRegistry**: Mapping dimensions to human-readable names for UI
 
@@ -40,7 +40,7 @@ The following areas have been thoroughly designed and documented:
 - **Number Representation**: Use `double` for MVP with rational recovery via continued fractions (maxDenominator = 100)
 - **Arithmetic Operations**: Complete design for +, -, *, /, ^, abs, negate with dimensional analysis
 - **Dimensional Exponentiation**: Validation that base dimensions are divisible by rational denominator
-- **Unit Conversion**: Algorithm for converting between conformable units, handling chains and compound units
+- **Unit Conversion**: Algorithm for converting between conformable units, handling chains and derived units
 - **Unit Reduction**: Algorithm to express quantities in primitive units
 - **Temperature Handling**: GNU Units approach with separate absolute (tempF/tempC) and difference (degF/degC) units
 - **Function/Affine Syntax**: Parentheses required for functions and affine units except when standalone (definition lookup/conversion target)
@@ -260,13 +260,14 @@ When resuming design work, recommended order of priority:
 
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
 2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
-3. **Worksheet System** - Major user-facing feature
-4. **GNU Units Database Import** - Needed before implementation can begin
-5. **UI/UX Design** - Should be fleshed out before coding UI
-6. **State Management Details** - Needed early in implementation
-7. **Currency Rate Management** - Can be added after core features work
-8. **Testing Strategy** - Define before/during implementation
-9. **Error Handling Details** - Refine during implementation
+3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
+4. **Worksheet System** - Major user-facing feature
+5. **GNU Units Database Import** - Needed before implementation can begin
+6. **UI/UX Design** - Should be fleshed out before coding UI
+7. **State Management Details** - Needed early in implementation
+8. **Currency Rate Management** - Can be added after core features work
+9. **Testing Strategy** - Define before/during implementation
+10. **Error Handling Details** - Refine during implementation
 
 ---
 
@@ -287,7 +288,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 7, 2026*
+*Last Updated: February 15, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -304,3 +305,17 @@ Questions that arose during design but haven't been resolved:
 - *Phase 2: Unit System Foundation completed (February 7, 2026)*
   - 492 tests passing (119 new)
   - Unit, UnitDefinition, UnitRepository, built-in units, reduce, evaluator integration
+- *Phase 3: Advanced Unit Features completed (February 13, 2026)*
+  - 643 tests passing (151 new)
+  - AffineDefinition, CompoundDefinition (unified from Linear/Constant/Compound), SI base units, temperature, constants, affine syntax
+- *Phase 3 cleanup: Removed UnitDefinition.toQuantity, decoupled models from UnitRepository (February 14, 2026)*
+  - 618 tests passing (removed 25 redundant toQuantity-based tests now covered through parser/resolveUnit paths)
+  - All UnitDefinition subclasses now pure const data classes; unit resolution centralized in resolveUnit()
+- *Dimensionless units: radian/steradian, PrimitiveUnit.isDimensionless, Dimension.removeDimensions (February 14, 2026)*
+  - 643 tests passing (25 new)
+  - Design document: dimensionless_units_design.md
+- *SI prefix support: 24 prefixes from quecto (10^-30) to quetta (10^30) with prefix-aware unit lookup (February 15, 2026)*
+  - 703 tests passing (60 new)
+  - PrefixUnit subclass of DerivedUnit; prefixes stored separately in UnitRepository via registerPrefix()
+  - findUnitWithPrefix() method with prefix-aware lookup ordering: exact match → prefix splitting (longest first) → standalone prefix → plural stripping
+  - Prefix splitting: "kilometers" → kilo + meters → kilo + meter; "ms" → milli + second

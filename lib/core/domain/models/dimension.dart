@@ -52,7 +52,9 @@ class Dimension {
   /// Returns this dimension raised to an integer [exponent] (multiplies all
   /// exponents by the scalar).
   Dimension power(int exponent) {
-    if (exponent == 0) return Dimension.dimensionless;
+    if (exponent == 0) {
+      return Dimension.dimensionless;
+    }
     final result = <String, int>{};
     for (final entry in units.entries) {
       result[entry.key] = entry.value * exponent;
@@ -66,7 +68,9 @@ class Dimension {
   /// by its denominator.  Throws [DimensionException] if any result is not
   /// evenly divisible.
   Dimension powerRational(Rational exponent) {
-    if (isDimensionless) return Dimension.dimensionless;
+    if (isDimensionless) {
+      return Dimension.dimensionless;
+    }
 
     final result = <String, int>{};
     for (final entry in units.entries) {
@@ -85,6 +89,16 @@ class Dimension {
     return Dimension(result);
   }
 
+  /// Returns a new dimension with the specified unit IDs removed.
+  ///
+  /// Used for conversion conformability checking where dimensionless
+  /// units (like radian and steradian) are stripped before comparing.
+  Dimension removeDimensions(Set<String> idsToRemove) {
+    final filtered = Map<String, int>.from(units);
+    filtered.removeWhere((id, _) => idsToRemove.contains(id));
+    return Dimension(filtered);
+  }
+
   /// Whether this dimension is the same as [other] (same units with same
   /// exponents), meaning quantities with these dimensions are conformable.
   bool isConformableWith(Dimension other) => this == other;
@@ -95,7 +109,9 @@ class Dimension {
   /// the numerator, negative in the denominator.  Returns `'1'` for
   /// dimensionless.
   String canonicalRepresentation() {
-    if (isDimensionless) return '1';
+    if (isDimensionless) {
+      return '1';
+    }
 
     final positive = <String>[];
     final negative = <String>[];
@@ -115,19 +131,27 @@ class Dimension {
     }
 
     final numerator = positive.isEmpty ? '1' : positive.join(' ');
-    if (negative.isEmpty) return numerator;
+    if (negative.isEmpty) {
+      return numerator;
+    }
     return '$numerator / ${negative.join(' ')}';
   }
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! Dimension) return false;
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Dimension) {
+      return false;
+    }
     if (units.length != other.units.length) {
       return false;
     }
     for (final entry in units.entries) {
-      if (other.units[entry.key] != entry.value) return false;
+      if (other.units[entry.key] != entry.value) {
+        return false;
+      }
     }
     return true;
   }

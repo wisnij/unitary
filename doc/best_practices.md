@@ -313,7 +313,7 @@ Version Control
 - Use conventional commits format
 - Examples:
   - `feat: add trigonometric functions to parser`
-  - `fix: correct dimension calculation for compound units`
+  - `fix: correct dimension calculation for derived units`
   - `docs: update README with installation instructions`
   - `refactor: simplify lexer token generation`
   - `test: add unit tests for quantity arithmetic`

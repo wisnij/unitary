@@ -105,8 +105,12 @@ class Quantity {
   /// [DimensionException] if not.  Throws [EvalException] if the
   /// computation is invalid (e.g., negative base with fractional exponent).
   Quantity power(num exponent) {
-    if (exponent == 0) return Quantity.unity;
-    if (exponent == 1) return Quantity(value, dimension);
+    if (exponent == 0) {
+      return Quantity.unity;
+    }
+    if (exponent == 1) {
+      return Quantity(value, dimension);
+    }
 
     if (isDimensionless) {
       _checkNegativeBaseFractional(exponent);
@@ -156,7 +160,9 @@ class Quantity {
   /// Uses relative tolerance for large values and absolute tolerance for
   /// small values.  Returns `false` if dimensions differ.
   bool approximatelyEquals(Quantity other, {double tolerance = epsilon}) {
-    if (!dimension.isConformableWith(other.dimension)) return false;
+    if (!dimension.isConformableWith(other.dimension)) {
+      return false;
+    }
 
     final maxVal = math.max(value.abs(), other.value.abs());
     final effectiveTolerance = maxVal > 1.0 ? tolerance * maxVal : tolerance;

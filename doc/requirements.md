@@ -78,7 +78,7 @@ All conversions work completely offline:
 **Built-in Units:**
 
 - Based on GNU Units database for comprehensive coverage and compatibility
-- Compound unit support (e.g., `kg m/s^2` for Newton)
+- Derived unit support (e.g., `kg m/s^2` for Newton)
 - Offset conversion support (e.g., Celsius ↔ Fahrenheit)
 
 **Aliases and Naming:**

@@ -93,13 +93,17 @@ class ParsedCommit {
   /// Returns null for merge commits.
   static ParsedCommit? parse(String line) {
     final spaceIndex = line.indexOf(' ');
-    if (spaceIndex < 0) return null;
+    if (spaceIndex < 0) {
+      return null;
+    }
 
     final hash = line.substring(0, spaceIndex);
     final subject = line.substring(spaceIndex + 1);
 
     // Skip merge commits.
-    if (subject.startsWith('Merge ')) return null;
+    if (subject.startsWith('Merge ')) {
+      return null;
+    }
 
     final match = _conventionalPattern.firstMatch(subject);
     if (match != null) {
@@ -144,7 +148,9 @@ String formatChangelogSection(
 
   for (final commit in commits) {
     final section = commit.changelogSection;
-    if (section == null) continue;
+    if (section == null) {
+      continue;
+    }
     sections.putIfAbsent(section, () => []).add(commit.message);
   }
 
@@ -155,7 +161,9 @@ String formatChangelogSection(
 
   for (final section in _sectionOrder) {
     final entries = sections[section];
-    if (entries == null || entries.isEmpty) continue;
+    if (entries == null || entries.isEmpty) {
+      continue;
+    }
     buffer.writeln();
     buffer.writeln('### $section');
     buffer.writeln();

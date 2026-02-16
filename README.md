@@ -1,6 +1,9 @@
 Unitary
 =======
 
+[![CI](https://github.com/wisnij/unitary/actions/workflows/ci.yml/badge.svg)](https://github.com/wisnij/unitary/actions/workflows/ci.yml)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
+
 A powerful, flexible unit conversion mobile application targeting scientific and
 technically-minded users.  Features both freeform calculator-style expression
 evaluation and worksheet-based conversion modes, with support for custom

@@ -34,25 +34,30 @@ about the original units.
 ---
 
 
-Worked Example: `3e6 yard/week`
--------------------------------
+Worked Example: `3e4 kilometers/week`
+-------------------------------------
+
+This example demonstrates prefix resolution (kilo), plural stripping
+(kilometers → kilometer → kilo + meter), compound unit evaluation (week → days
+→ seconds), and dimensional analysis throughout.
+
 
 ### Step 1: Lexing
 
 The `Lexer` scans character-by-character and produces tokens:
 
 ~~~~
-"3e6"   → Token(number, 3000000.0)
-" "     → whitespace consumed (not a token)
-"yard"  → Token(identifier, "yard")
-"/"     → Token(divide)
-"week"  → Token(identifier, "week")
-        → Token(eof)
+"3e4"        → Token(number, 30000.0)
+" "          → whitespace consumed (not a token)
+"kilometers" → Token(identifier, "kilometers")
+"/"          → Token(divide)
+"week"       → Token(identifier, "week")
+             → Token(eof)
 ~~~~
 
-`3e6` is parsed as scientific notation during number scanning.  `yard` and
-`week` are scanned as identifier tokens (not recognized as built-in functions,
-so they are unit names).
+`3e4` is parsed as scientific notation during number scanning: the `e` is
+consumed as part of the number because it is immediately followed by digits.
+`kilometers` and `week` are scanned as identifier tokens.
 
 
 ### Step 2: Parsing
@@ -60,8 +65,8 @@ so they are unit names).
 The `Parser` builds an AST using recursive descent with 6 precedence levels.
 The key decisions:
 
-1. `3e6 yard` — a number followed by an identifier with no operator between
-   them triggers **implicit multiplication**, which binds tighter than
+1. `3e4 kilometers` — a number followed by an identifier with no operator
+   between them triggers **implicit multiplication**, which binds tighter than
    explicit `/`.
 2. `/ week` is explicit division at a lower precedence level.
 
@@ -70,8 +75,8 @@ Resulting AST:
 ~~~~
 BinaryOpNode(divide,
   BinaryOpNode(multiply,       ← implicit multiplication
-    NumberNode(3000000.0),
-    UnitNode("yard")),
+    NumberNode(30000.0),
+    UnitNode("kilometers")),
   UnitNode("week"))
 ~~~~
 
@@ -85,53 +90,65 @@ parse time (different precedence level), not in the AST.
 The evaluator walks the tree bottom-up, with `EvalContext` carrying the
 `UnitRepository`.
 
-#### 3a: `NumberNode(3000000.0)`
+#### 3a: `NumberNode(30000.0)`
 
-Returns `Quantity(3000000.0, dimensionless)`.
+Returns `Quantity(30000.0, dimensionless)`.
 
-#### 3b: `UnitNode("yard")`
+#### 3b: `UnitNode("kilometers")`
 
-This is where unit resolution happens:
+This is where prefix-aware unit resolution happens.  The evaluator calls
+`repo.findUnitWithPrefix("kilometers")`, which tries several strategies in
+order:
 
-1. `repo.findUnit("yard")` — exact lookup in the alias map finds unit `yd`.
-2. `yd`'s definition is `LinearDefinition(factor: 3.0, baseUnitId: 'ft')`.
-3. `definition.toQuantity(1.0, repo)` **recurses** through the definition
-   chain, computing both the base value and dimension in a single pass:
+1. **Exact match:** `findUnit("kilometers")` — checks the unit lookup map for
+   an exact match on `"kilometers"`.  Not found.  Tries plural stripping:
+   removes trailing `"s"` → `findUnit("kilometer")`.  Not found either (no
+   unit is registered with id or alias `"kilometer"`).
 
-   ~~~~
-   yd.toQuantity(1.0)
-     → ft.toQuantity(1.0 * 3.0 = 3.0)            # ft = 12 inch
-       → in.toQuantity(3.0 * 12.0 = 36.0)        # in = 2.54 cm
-         → cm.toQuantity(36.0 * 2.54 = 91.44)    # cm = 0.01 m
-           → m.toQuantity(91.44 * 0.01 = 0.9144) # m is primitive
-             → returns Quantity(0.9144, {m: 1})
-   ~~~~
+2. **Prefix splitting** (longest prefix first): iterates over possible prefix
+   lengths from longest to shortest.  Eventually tries prefix `"kilo"` with
+   remainder `"meters"`:
+   - Looks up `"kilo"` in the prefix map → finds the `PrefixUnit(id: 'kilo',
+     expression: '1000')`.
+   - Calls `findUnit("meters")` for the remainder → exact match fails, but
+     plural stripping removes trailing `"s"` → `findUnit("meter")` finds the
+     alias for primitive unit `m`.
+   - Returns `UnitMatch(prefix: kilo, unit: m)`.
 
-Result: **`Quantity(0.9144, {m: 1})`**
+3. The evaluator resolves both parts via `resolveUnit`:
+   - `resolveUnit(kilo)` — kilo is a `CompoundUnit` with expression `"1000"`,
+     so the expression is evaluated through the parser: `Quantity(1000.0,
+     dimensionless)`.
+   - `resolveUnit(m)` — m is a `PrimitiveUnit`, so: `Quantity(1.0, {m: 1})`.
+   - Multiply: `1000.0 × 1.0 = 1000.0` with dimension `{m: 1}`.
+
+Result: **`Quantity(1000.0, {m: 1})`**
 
 #### 3c: Implicit multiplication
 
 ~~~~
-Quantity(3000000.0, dimensionless) * Quantity(0.9144, {m: 1})
-  → values multiply: 3000000.0 * 0.9144 = 2743200.0
-  → dimensions combine: {} * {m: 1} = {m: 1}
+Quantity(30000.0, dimensionless) × Quantity(1000.0, {m: 1})
+  → values multiply: 30000.0 × 1000.0 = 30000000.0
+  → dimensions combine: {} × {m: 1} = {m: 1}
 ~~~~
 
-Result: **`Quantity(2743200.0, {m: 1})`**
+Result: **`Quantity(30000000.0, {m: 1})`**
 
 #### 3d: `UnitNode("week")`
 
-1. `repo.findUnit("week")` — exact match on id `week`.
-2. Definition: `LinearDefinition(factor: 7, baseUnitId: 'day')`.
-3. Chain resolution via `toQuantity(1.0, repo)`:
+1. `repo.findUnitWithPrefix("week")` — `findUnit("week")` finds an exact
+   match on the unit id `week`.
+2. `week` is a `CompoundUnit` with expression `"7 day"`.
+3. `resolveUnit` evaluates the expression through the parser, which recurses
+   through the definition chain:
 
    ~~~~
-   week.toQuantity(1.0)
-     → day.toQuantity(1.0 * 7 = 7.0)               # day = 24 hour
-       → hr.toQuantity(7.0 * 24 = 168.0)           # hr = 60 min
-         → min.toQuantity(168.0 * 60 = 10080.0)    # min = 60 s
-           → s.toQuantity(10080.0 * 60 = 604800.0) # primitive
-             → returns Quantity(604800.0, {s: 1})
+   week: "7 day"
+     → 7 × day: "24 hour"
+       → 7 × 24 × hour: "60 min"
+         → 7 × 24 × 60 × min: "60 s"
+           → 7 × 24 × 60 × 60 × s (primitive)
+             → 604800.0, {s: 1}
    ~~~~
 
 Result: **`Quantity(604800.0, {s: 1})`**
@@ -139,10 +156,10 @@ Result: **`Quantity(604800.0, {s: 1})`**
 #### 3e: Division
 
 ~~~~
-Quantity(2743200.0, {m: 1}) / Quantity(604800.0, {s: 1})
-  → values divide: 2743200.0 / 604800.0 ≈ 4.5357
+Quantity(30000000.0, {m: 1}) / Quantity(604800.0, {s: 1})
+  → values divide: 30000000.0 / 604800.0 ≈ 49.603
   → dimensions: {m: 1} / {s: 1} = {m: 1, s: -1}
 ~~~~
 
-**Final result: `Quantity(4.5357..., {m: 1, s: -1})`** — about 4.54 meters
-per second.
+**Final result: `Quantity(49.603..., {m: 1, s: -1})`** — about 49.6 meters
+per second (~111 mph).

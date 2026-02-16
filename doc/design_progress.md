@@ -316,4 +316,6 @@ Questions that arose during design but haven't been resolved:
   - Design document: dimensionless_units_design.md
 - *SI prefix support: 24 prefixes from quecto (10^-30) to quetta (10^30) with prefix-aware unit lookup (February 15, 2026)*
   - 703 tests passing (60 new)
-  - Prefix, PrefixRepository, UnitRepository.lookupUnit with automatic prefix+unit combination
+  - PrefixUnit subclass of CompoundUnit; prefixes stored separately in UnitRepository via registerPrefix()
+  - findUnitWithPrefix() method with prefix-aware lookup ordering: exact match → prefix splitting (longest first) → standalone prefix → plural stripping
+  - Prefix splitting: "kilometers" → kilo + meters → kilo + meter; "ms" → milli + second

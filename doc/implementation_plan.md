@@ -141,16 +141,20 @@ Implementation Phases
 - [x] Add compound units (N, Pa, J, W, Hz, C, V, ohm, F, Wb, T, H)
 - [x] Integrate affine syntax with parser (tempF(212) required, 212 tempF rejected)
 - [x] Add AffineUnitNode evaluation
+- [x] Add dimensionless primitive units (radian, steradian)
+- [x] Implement SI prefix support (24 prefixes from quecto to quetta)
+- [x] Implement PrefixUnit subclass and prefix-aware unit lookup
 - [x] Comprehensive testing
 
 **Deliverables:**
 
 - `tempF(212)` evaluates to 373.15 K ✓
 - `5 N + 3 kg*m/s^2` evaluates to 8 kg*m/s^2 ✓
+- `3e4 kilometers/week` evaluates to ~49.6 m/s ✓
 
-**Test Coverage:** 643 tests passing (151 new)
+**Test Coverage:** 703 tests passing
 
-**Completed:** February 13, 2026
+**Completed:** February 15, 2026
 
 ---
 

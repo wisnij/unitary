@@ -412,38 +412,43 @@ class DimensionInfo {
   DimensionInfo(this.dimension, this.name, this.description);
 }
 
-// Unit prefixes (e.g., kilo, mega, milli)
-class UnitPrefix {
-  final String id;             // Primary symbol (e.g., "k", "M", "m")
-  final List<String> aliases;  // Alternative names (e.g., ["kilo"], ["mega"], ["milli"])
-  final double factor;         // Multiplication factor (e.g., 1000, 1000000, 0.001)
-  final String? description;   // Human-readable details
+~~~~
 
-  UnitPrefix({
-    required this.id,
-    required this.aliases,
-    required this.factor,
-    this.description,
+**Prefix Support:**
+
+Unit prefixes (kilo, mega, milli, etc.) are implemented as PrefixUnit instances, which are a subclass of CompoundUnit. Prefixes are stored separately in UnitRepository via the `registerPrefix()` method and are combined with base units during lookup.
+
+~~~~ dart
+// A unit prefix defined by a numeric expression (e.g., kilo = 1000)
+class PrefixUnit extends CompoundUnit {
+  const PrefixUnit({
+    required super.id,
+    super.aliases,
+    super.description,
+    required super.expression,  // e.g., "1000" for kilo
   });
 
-  // All recognized names for this prefix (id + aliases)
-  List<String> get allNames => [id, ...aliases];
+  @override
+  bool get isPrefix => true;
 }
 
-// Registry of unit prefixes
-class PrefixRegistry {
-  final Map<String, UnitPrefix> _prefixes = {};
+// Prefixes are stored in UnitRepository:
+class UnitRepository {
+  final Map<String, PrefixUnit> _prefixes = {};
+  final Map<String, PrefixUnit> _prefixLookup = {};
 
-  void registerPrefix(UnitPrefix prefix) {
-    _prefixes[prefix.id] = prefix;
-    for (var alias in prefix.aliases) {
-      _prefixes[alias] = prefix;
-    }
+  void registerPrefix(PrefixUnit prefix) {
+    // Stores prefix and all its aliases for lookup
   }
 
-  UnitPrefix? findPrefix(String name) => _prefixes[name];
-
-  List<UnitPrefix> getAllPrefixes() => _prefixes.values.toSet().toList();
+  // Look up a unit by name, with automatic prefix splitting
+  UnitMatch findUnitWithPrefix(String name) {
+    // 1. Try exact match in regular units
+    // 2. Try prefix splitting (longest prefix first)
+    // 3. Try standalone prefix match
+    // 4. Try plural stripping
+    // 5. Return UnitMatch with prefix and/or unit
+  }
 }
 ~~~~
 

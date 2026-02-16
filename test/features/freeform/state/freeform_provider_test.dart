@@ -104,5 +104,32 @@ void main() {
       notifier.evaluateSingle('   ');
       expect(container.read(freeformProvider), isA<EvaluationIdle>());
     });
+
+    test(
+      'evaluateConversion strips dimensionless units for conformability',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // radian has dimension {radian: 1}, but radian is dimensionless,
+        // so "1 radian" should be convertible to a plain number.
+        notifier.evaluateConversion('1 radian', '1');
+        final state = container.read(freeformProvider);
+        expect(state, isA<ConversionSuccess>());
+        final success = state as ConversionSuccess;
+        expect(success.convertedValue, closeTo(1.0, 1e-10));
+      },
+    );
+
+    test(
+      'evaluateConversion strips dimensionless units from both sides',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // Both sides have radians — should still be conformable.
+        notifier.evaluateConversion('3 radian', 'radian');
+        final state = container.read(freeformProvider);
+        expect(state, isA<ConversionSuccess>());
+        final success = state as ConversionSuccess;
+        expect(success.convertedValue, closeTo(3.0, 1e-10));
+      },
+    );
   });
 }

@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/errors.dart';
+import '../../../core/domain/models/quantity.dart';
+import '../../../core/domain/parser/expression_parser.dart';
 import '../../../shared/utils/quantity_formatter.dart';
 import '../../settings/state/settings_provider.dart';
 import 'freeform_state.dart';
@@ -53,7 +55,7 @@ class FreeformNotifier extends StateNotifier<EvaluationResult> {
       final inputQty = parser.evaluate(input);
       final outputQty = parser.evaluate(output);
 
-      if (!inputQty.isConformableWith(outputQty)) {
+      if (!_isConversionConformable(parser, inputQty, outputQty)) {
         state = EvaluationError(
           message:
               'Cannot convert ${inputQty.dimension.canonicalRepresentation()} '
@@ -77,6 +79,27 @@ class FreeformNotifier extends StateNotifier<EvaluationResult> {
     } on UnitaryException catch (e) {
       state = EvaluationError(message: e.message);
     }
+  }
+
+  /// Checks whether two quantities are conformable for conversion, stripping
+  /// dimensionless units (like radian and steradian) before comparing.
+  bool _isConversionConformable(
+    ExpressionParser parser,
+    Quantity inputQty,
+    Quantity outputQty,
+  ) {
+    if (inputQty.isConformableWith(outputQty)) {
+      return true;
+    }
+    final dimensionlessIds = parser.repo?.dimensionlessIds;
+    if (dimensionlessIds == null || dimensionlessIds.isEmpty) {
+      return false;
+    }
+    final strippedInput = inputQty.dimension.removeDimensions(dimensionlessIds);
+    final strippedOutput = outputQty.dimension.removeDimensions(
+      dimensionlessIds,
+    );
+    return strippedInput.isConformableWith(strippedOutput);
   }
 
   /// Resets to idle state.

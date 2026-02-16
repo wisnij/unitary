@@ -82,16 +82,22 @@ class UnitRepository {
   /// Plural-stripping lookup in regular units only.
   Unit? _findPlural(String name) {
     if (name.length > 4 && name.endsWith('ies')) {
-      final found = _findExact(name.substring(0, name.length - 3) + 'y');
-      if (found != null) return found;
+      final found = _findExact('${name.substring(0, name.length - 3)}y');
+      if (found != null) {
+        return found;
+      }
     }
     if (name.length > 3 && name.endsWith('es')) {
       final found = _findExact(name.substring(0, name.length - 2));
-      if (found != null) return found;
+      if (found != null) {
+        return found;
+      }
     }
     if (name.length > 2 && name.endsWith('s')) {
       final found = _findExact(name.substring(0, name.length - 1));
-      if (found != null) return found;
+      if (found != null) {
+        return found;
+      }
     }
     return null;
   }
@@ -118,7 +124,9 @@ class UnitRepository {
   UnitMatch findUnitWithPrefix(String name) {
     // Try exact or plural match first.
     final found = findUnit(name);
-    if (found != null) return UnitMatch(unit: found);
+    if (found != null) {
+      return UnitMatch(unit: found);
+    }
 
     // Try prefix splitting (longest prefix first).
     // Uses findUnit for the remainder so that plurals of the base unit

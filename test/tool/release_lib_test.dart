@@ -333,7 +333,7 @@ void main() {
         '- Initial release\n';
 
     test('inserts new section after header', () {
-      final content = header + existingEntry;
+      const content = header + existingEntry;
       const newSection =
           '[0.2.0] - 2026-02-01\n'
           '---------------------\n'
@@ -350,7 +350,7 @@ void main() {
     });
 
     test('preserves existing entries', () {
-      final content = header + existingEntry;
+      const content = header + existingEntry;
       const newSection =
           '[0.2.0] - 2026-02-01\n---------------------\n\n- New stuff\n';
       final result = updateChangelog(content, newSection);

@@ -21,7 +21,9 @@ class Lexer {
   List<Token> scanTokens() {
     while (!_isAtEnd()) {
       _skipWhitespace();
-      if (_isAtEnd()) break;
+      if (_isAtEnd()) {
+        break;
+      }
       _start = _current;
       _scanToken();
     }

@@ -278,12 +278,16 @@ class Parser {
   }
 
   bool _check(TokenType type) {
-    if (_isAtEnd()) return false;
+    if (_isAtEnd()) {
+      return false;
+    }
     return _peek().type == type;
   }
 
   Token _advance() {
-    if (!_isAtEnd()) _current++;
+    if (!_isAtEnd()) {
+      _current++;
+    }
     return _previous();
   }
 
@@ -294,7 +298,9 @@ class Parser {
   bool _isAtEnd() => _peek().type == TokenType.eof;
 
   Token _consume(TokenType type, String message) {
-    if (_check(type)) return _advance();
+    if (_check(type)) {
+      return _advance();
+    }
 
     final token = _peek();
     throw ParseException(message, line: token.line, column: token.column);

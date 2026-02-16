@@ -1,17 +1,37 @@
 include: package:flutter_lints/flutter.yaml
 
-linter:
-  rules:
-    prefer_single_quotes: true
-    prefer_final_locals: true
-    prefer_const_constructors: true
-    prefer_const_declarations: true
-    sort_child_properties_last: true
-    use_super_parameters: true
-    avoid_print: true
-    prefer_relative_imports: true
-
 analyzer:
   exclude:
     - "**/*.g.dart"
     - "**/*.freezed.dart"
+
+linter:
+  rules:
+    always_put_control_body_on_new_line: true
+    combinators_ordering: true
+    directives_ordering: true
+    document_ignores: true
+    eol_at_end_of_file: true
+    matching_super_parameters: true
+    missing_whitespace_between_adjacent_strings: true
+    no_adjacent_strings_in_list: true
+    parameter_assignments: true
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_in_for_each: true
+    prefer_final_locals: true
+    prefer_relative_imports: true
+    prefer_single_quotes: true
+    require_trailing_commas: true
+    sort_pub_dependencies: true
+    sort_unnamed_constructors_first: true
+    test_types_in_equals: true
+    unnecessary_ignore: true
+    unnecessary_raw_strings: true
+    unnecessary_statements: true
+    use_is_even_rather_than_modulo: true
+    use_to_and_as_if_applicable: true
+    use_truncating_division: true
+
+formatter:
+  trailing_commas: preserve

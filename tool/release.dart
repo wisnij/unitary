@@ -83,7 +83,9 @@ void main(List<String> args) {
   final commits = <ParsedCommit>[];
   for (final line in logLines) {
     final commit = ParsedCommit.parse(line);
-    if (commit != null) commits.add(commit);
+    if (commit != null) {
+      commits.add(commit);
+    }
   }
 
   // Generate changelog section.

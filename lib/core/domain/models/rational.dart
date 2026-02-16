@@ -94,14 +94,20 @@ class Rational {
 
   @override
   String toString() {
-    if (denominator == 1) return '$numerator';
+    if (denominator == 1) {
+      return '$numerator';
+    }
     return '$numerator/$denominator';
   }
 
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) return true;
-    if (other is! Rational) return false;
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other is! Rational) {
+      return false;
+    }
     return numerator == other.numerator && denominator == other.denominator;
   }
 

@@ -24,11 +24,13 @@ void main() {
     test('ConversionSuccess holds converted value and output unit', () {
       const state = ConversionSuccess(
         convertedValue: 8.04672,
-        formattedResult: '8.04672 km',
+        formattedResult: '= 8.04672 km',
+        formattedReciprocal: '= (1 / 0.12427424) km',
         outputUnit: 'km',
       );
       expect(state.convertedValue, 8.04672);
-      expect(state.formattedResult, '8.04672 km');
+      expect(state.formattedResult, '= 8.04672 km');
+      expect(state.formattedReciprocal, '= (1 / 0.12427424) km');
       expect(state.outputUnit, 'km');
     });
 
@@ -46,7 +48,8 @@ void main() {
         ),
         const ConversionSuccess(
           convertedValue: 1,
-          formattedResult: '1 m',
+          formattedResult: '= 1 m',
+          formattedReciprocal: '= (1 / 1) m',
           outputUnit: 'm',
         ),
         const EvaluationError(message: 'error'),

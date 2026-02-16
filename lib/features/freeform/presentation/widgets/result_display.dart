@@ -35,17 +35,35 @@ class ResultDisplay extends StatelessWidget {
         ),
         colorScheme.primary,
       ),
-      ConversionSuccess(:final formattedResult) => (
-        Text(
-          formattedResult,
-          style: TextStyle(
-            color: colorScheme.primary,
-            fontSize: 20,
-            fontWeight: FontWeight.w500,
+      ConversionSuccess(
+        :final formattedResult,
+        :final formattedReciprocal,
+      ) =>
+        (
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                formattedResult,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                formattedReciprocal,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 16,
+                ),
+              ),
+            ],
           ),
+          colorScheme.primary,
         ),
-        colorScheme.primary,
-      ),
       EvaluationError(:final message) => (
         Row(
           children: [

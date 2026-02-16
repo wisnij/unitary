@@ -28,14 +28,18 @@ void main() {
       expect(find.text('1609.344 m'), findsOneWidget);
     });
 
-    testWidgets('renders conversion result text', (tester) async {
+    testWidgets('renders conversion result with forward and reciprocal', (
+      tester,
+    ) async {
       const state = ConversionSuccess(
         convertedValue: 8.04672,
-        formattedResult: '8.04672 km',
+        formattedResult: '= 8.04672 km',
+        formattedReciprocal: '= (1 / 0.12427424) km',
         outputUnit: 'km',
       );
       await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
-      expect(find.text('8.04672 km'), findsOneWidget);
+      expect(find.text('= 8.04672 km'), findsOneWidget);
+      expect(find.text('= (1 / 0.12427424) km'), findsOneWidget);
     });
 
     testWidgets('renders error with icon', (tester) async {

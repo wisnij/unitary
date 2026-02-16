@@ -25,11 +25,13 @@ class EvaluationSuccess extends EvaluationResult {
 class ConversionSuccess extends EvaluationResult {
   final double convertedValue;
   final String formattedResult;
+  final String formattedReciprocal;
   final String outputUnit;
 
   const ConversionSuccess({
     required this.convertedValue,
     required this.formattedResult,
+    required this.formattedReciprocal,
     required this.outputUnit,
   });
 }

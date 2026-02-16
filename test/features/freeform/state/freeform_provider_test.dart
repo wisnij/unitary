@@ -57,8 +57,19 @@ void main() {
       expect(state, isA<ConversionSuccess>());
       final success = state as ConversionSuccess;
       expect(success.convertedValue, closeTo(8.04672, 1e-4));
+      expect(success.formattedResult, startsWith('= '));
       expect(success.formattedResult, contains('km'));
       expect(success.outputUnit, 'km');
+    });
+
+    test('evaluateConversion includes reciprocal result', () {
+      final notifier = container.read(freeformProvider.notifier);
+      notifier.evaluateConversion('5 miles', 'km');
+      final state = container.read(freeformProvider);
+      expect(state, isA<ConversionSuccess>());
+      final success = state as ConversionSuccess;
+      expect(success.formattedReciprocal, startsWith('= (1 / '));
+      expect(success.formattedReciprocal, endsWith(') km'));
     });
 
     test('evaluateConversion fails for non-conformable expressions', () {

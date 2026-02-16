@@ -159,12 +159,13 @@ $changelogSection''');
     exit(1);
   }
 
+  final tagMessage = formatTagMessage('$newVersion', changelogSection);
   final tagResult = Process.runSync('git', [
     'tag',
     '-a',
     'v$newVersion',
     '-m',
-    'Release v$newVersion',
+    tagMessage,
   ]);
   if (tagResult.exitCode != 0) {
     stderr.writeln('Error: git tag failed.');

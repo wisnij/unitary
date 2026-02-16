@@ -175,6 +175,40 @@ String formatChangelogSection(
   return buffer.toString();
 }
 
+/// Formats the tag message for an annotated git tag.
+///
+/// Includes the version as the first line, followed by a blank line and
+/// the changelog section body (everything after the heading and dashes).
+String formatTagMessage(String version, String changelogSection) {
+  final lines = changelogSection.split('\n');
+
+  // Skip the heading line and the dashes line.
+  var bodyStart = 0;
+  for (var i = 0; i < lines.length; i++) {
+    if (RegExp(r'^-+\s*$').hasMatch(lines[i])) {
+      bodyStart = i + 1;
+      break;
+    }
+  }
+
+  // Skip leading blank lines in the body.
+  while (bodyStart < lines.length && lines[bodyStart].trim().isEmpty) {
+    bodyStart++;
+  }
+
+  // Trim trailing blank lines.
+  var bodyEnd = lines.length;
+  while (bodyEnd > bodyStart && lines[bodyEnd - 1].trim().isEmpty) {
+    bodyEnd--;
+  }
+
+  final body = lines.sublist(bodyStart, bodyEnd).join('\n');
+  if (body.isEmpty) {
+    return 'Release v$version';
+  }
+  return 'Release v$version\n\n$body';
+}
+
 /// Replaces the version line in pubspec.yaml content.
 /// Handles versions with or without +build suffixes.
 String updatePubspecVersion(String content, String newVersion) {

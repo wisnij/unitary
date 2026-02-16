@@ -284,6 +284,43 @@ void main() {
     });
   });
 
+  group('formatTagMessage', () {
+    test('includes version and changelog body', () {
+      final commits = [
+        ParsedCommit.parse('aaa feat: add feature A')!,
+        ParsedCommit.parse('bbb fix: fix bug B')!,
+      ];
+      final section = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final result = formatTagMessage('1.0.0', section);
+      expect(result, startsWith('Release v1.0.0\n\n'));
+      expect(result, contains('### Added'));
+      expect(result, contains('- add feature A'));
+      expect(result, contains('### Fixed'));
+      expect(result, contains('- fix bug B'));
+    });
+
+    test('strips heading and dashes from changelog section', () {
+      final commits = [ParsedCommit.parse('aaa feat: add feature')!];
+      final section = formatChangelogSection('2.0.0', '2026-03-01', commits);
+      final result = formatTagMessage('2.0.0', section);
+      expect(result, isNot(contains('[2.0.0] - 2026-03-01')));
+      expect(result, isNot(contains('-----')));
+    });
+
+    test('does not have trailing blank lines', () {
+      final commits = [ParsedCommit.parse('aaa feat: add feature')!];
+      final section = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final result = formatTagMessage('1.0.0', section);
+      expect(result, isNot(endsWith('\n')));
+    });
+
+    test('falls back to simple message with no commits', () {
+      final section = formatChangelogSection('1.0.0', '2026-01-01', []);
+      final result = formatTagMessage('1.0.0', section);
+      expect(result, 'Release v1.0.0');
+    });
+  });
+
   group('updatePubspecVersion', () {
     test('replaces version line', () {
       const content = 'name: myapp\nversion: 0.1.0\n\nenvironment:\n';

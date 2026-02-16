@@ -173,7 +173,7 @@ category names (e.g., `{m: 1, s: -2}` → "Acceleration").
 **Prefix Support:**
 
 Unit prefixes (kilo, mega, milli, etc.) are implemented as `PrefixUnit`
-instances, a subclass of `CompoundUnit` with `isPrefix => true`.  Prefixes are
+instances, a subclass of `DerivedUnit` with `isPrefix => true`.  Prefixes are
 stored separately in `UnitRepository` via `registerPrefix()`, so prefix symbols
 (like `m` for milli) can coexist with regular unit IDs (like `m` for meter).
 
@@ -204,14 +204,14 @@ Unit subclasses define how units convert to primitive base units:
 - **`AffineUnit`** — units with a scale factor and offset relative to a base
   unit (e.g., tempC: `(value + 273.15) * 1.0` → kelvin).  Used for absolute
   temperature conversions.
-- **`CompoundUnit`** — units defined by an expression string that is parsed
+- **`DerivedUnit`** — units defined by an expression string that is parsed
   and evaluated through the full pipeline (e.g., newton: `"kg m/s^2"`,
   mile: `"5280 ft"`).
-- **`PrefixUnit`** — a `CompoundUnit` subclass for SI prefixes
+- **`PrefixUnit`** — a `DerivedUnit` subclass for SI prefixes
   (e.g., kilo: `"1000"`, milli: `"0.001"`).
 
 Unit resolution is handled by `resolveUnit(unit, repo)`, which returns a
-`Quantity` representing 1 of that unit in primitive base units.  For compound
+`Quantity` representing 1 of that unit in primitive base units.  For derived
 units, resolution evaluates the expression string through the full
 lexer/parser/evaluator pipeline, which may recurse through other unit
 definitions.
@@ -220,8 +220,8 @@ Examples of unit definitions:
 
 ~~~~
 Primitive:  m (meter)           → Quantity(1.0, {m: 1})
-Compound:   mi (mile)           → "5280 ft" → Quantity(1609.344, {m: 1})
-Compound:   N (newton)          → "kg m/s^2" → Quantity(1.0, {kg: 1, m: 1, s: -2})
+Derived:    mi (mile)           → "5280 ft" → Quantity(1609.344, {m: 1})
+Derived:    N (newton)          → "kg m/s^2" → Quantity(1.0, {kg: 1, m: 1, s: -2})
 Affine:     tempF (Fahrenheit)  → (value - 32) * 5/9 + 273.15 K
 Prefix:     kilo                → "1000" → Quantity(1000.0, dimensionless)
 ~~~~
@@ -409,7 +409,7 @@ Implementation Phases
 **Tasks:**
 
 1. Implement offset conversions (temperature)
-2. Implement compound units (Newton, Pascal, etc.)
+2. Implement derived units (Newton, Pascal, etc.)
 3. Add mathematical functions (sqrt, etc.)
 4. Add trigonometric functions
 5. Add constants (pi, e, c, etc.)

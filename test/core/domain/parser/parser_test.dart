@@ -496,7 +496,7 @@ void main() {
       expect((bin.left as UnitNode).unitName, 'tempF');
     });
 
-    test('5 N with repo → UnitNode (compound, not affine)', () {
+    test('5 N with repo → UnitNode (derived, not affine)', () {
       final node = parseWithRepo('5 N', repo);
       expect(node, isA<BinaryOpNode>());
       final bin = node as BinaryOpNode;

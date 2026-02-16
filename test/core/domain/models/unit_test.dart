@@ -97,24 +97,24 @@ void main() {
     });
   });
 
-  group('CompoundUnit', () {
+  group('DerivedUnit', () {
     test('stores expression string', () {
-      const unit = CompoundUnit(id: 'N', expression: 'kg m / s^2');
+      const unit = DerivedUnit(id: 'N', expression: 'kg m / s^2');
       expect(unit.expression, 'kg m / s^2');
     });
 
     test('const construction', () {
-      const unit = CompoundUnit(id: 'km', expression: '1000 m');
+      const unit = DerivedUnit(id: 'km', expression: '1000 m');
       expect(unit.expression, '1000 m');
     });
 
     test('isPrimitive is false', () {
-      const unit = CompoundUnit(id: 'km', expression: '1000 m');
+      const unit = DerivedUnit(id: 'km', expression: '1000 m');
       expect(unit.isPrimitive, isFalse);
     });
 
     test('isAffine is false', () {
-      const unit = CompoundUnit(id: 'km', expression: '1000 m');
+      const unit = DerivedUnit(id: 'km', expression: '1000 m');
       expect(unit.isAffine, isFalse);
     });
   });
@@ -135,9 +135,9 @@ void main() {
       expect(unit.isAffine, isFalse);
     });
 
-    test('is a CompoundUnit', () {
+    test('is a DerivedUnit', () {
       const unit = PrefixUnit(id: 'kilo', expression: '1000');
-      expect(unit, isA<CompoundUnit>());
+      expect(unit, isA<DerivedUnit>());
     });
 
     test('stores expression string', () {
@@ -176,9 +176,9 @@ void main() {
       expect(const PrimitiveUnit(id: 'm').isPrefix, isFalse);
     });
 
-    test('CompoundUnit.isPrefix is false', () {
+    test('DerivedUnit.isPrefix is false', () {
       expect(
-        const CompoundUnit(id: 'km', expression: '1000 m').isPrefix,
+        const DerivedUnit(id: 'km', expression: '1000 m').isPrefix,
         isFalse,
       );
     });

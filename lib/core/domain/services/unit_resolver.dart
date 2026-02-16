@@ -15,7 +15,7 @@ Quantity resolveUnit(Unit unit, UnitRepository repo) {
     final baseUnit = repo.getUnit(unit.baseUnitId);
     final baseQuantity = resolveUnit(baseUnit, repo);
     return Quantity(unit.factor * baseQuantity.value, baseQuantity.dimension);
-  } else if (unit is CompoundUnit) {
+  } else if (unit is DerivedUnit) {
     return ExpressionParser(repo: repo).evaluate(unit.expression);
   }
   throw UnsupportedError('Unknown Unit type: ${unit.runtimeType}');

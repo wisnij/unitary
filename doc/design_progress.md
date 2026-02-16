@@ -40,7 +40,7 @@ The following areas have been thoroughly designed and documented:
 - **Number Representation**: Use `double` for MVP with rational recovery via continued fractions (maxDenominator = 100)
 - **Arithmetic Operations**: Complete design for +, -, *, /, ^, abs, negate with dimensional analysis
 - **Dimensional Exponentiation**: Validation that base dimensions are divisible by rational denominator
-- **Unit Conversion**: Algorithm for converting between conformable units, handling chains and compound units
+- **Unit Conversion**: Algorithm for converting between conformable units, handling chains and derived units
 - **Unit Reduction**: Algorithm to express quantities in primitive units
 - **Temperature Handling**: GNU Units approach with separate absolute (tempF/tempC) and difference (degF/degC) units
 - **Function/Affine Syntax**: Parentheses required for functions and affine units except when standalone (definition lookup/conversion target)
@@ -260,7 +260,7 @@ When resuming design work, recommended order of priority:
 
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
 2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
-3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, compound units implemented (Phase 3)
+3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
 4. **Worksheet System** - Major user-facing feature
 5. **GNU Units Database Import** - Needed before implementation can begin
 6. **UI/UX Design** - Should be fleshed out before coding UI
@@ -316,6 +316,6 @@ Questions that arose during design but haven't been resolved:
   - Design document: dimensionless_units_design.md
 - *SI prefix support: 24 prefixes from quecto (10^-30) to quetta (10^30) with prefix-aware unit lookup (February 15, 2026)*
   - 703 tests passing (60 new)
-  - PrefixUnit subclass of CompoundUnit; prefixes stored separately in UnitRepository via registerPrefix()
+  - PrefixUnit subclass of DerivedUnit; prefixes stored separately in UnitRepository via registerPrefix()
   - findUnitWithPrefix() method with prefix-aware lookup ordering: exact match → prefix splitting (longest first) → standalone prefix → plural stripping
   - Prefix splitting: "kilometers" → kilo + meters → kilo + meter; "ms" → milli + second

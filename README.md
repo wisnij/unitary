@@ -17,7 +17,7 @@ Phases 0-3 are complete.  The expression parser, evaluator, unit system
 foundation, and advanced unit features are fully implemented with 703 passing
 tests.  Unit definitions include all 7 SI base units, dimensionless units
 (radian, steradian), temperature units with affine syntax, physical constants,
-compound units like Newton and Pascal, and SI prefix support (24 prefixes from
+derived units like Newton and Pascal, and SI prefix support (24 prefixes from
 quecto to quetta with prefix-aware unit lookup).
 
 ---
@@ -195,7 +195,7 @@ Current Progress
 - ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
 - ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
 - ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
-- ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, compound units, affine syntax, dimensionless units, SI prefixes (703 tests)
+- ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, derived units, affine syntax, dimensionless units, SI prefixes (703 tests)
 
 ### Design (ready for implementation)
 

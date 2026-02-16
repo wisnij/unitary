@@ -5,7 +5,7 @@ import '../models/unit_repository.dart';
 ///
 /// Includes 24 SI prefixes, length (7), mass (5), time (5),
 /// temperature (9), other SI base units (3), dimensionless units (2),
-/// constants (10), and compound units (12).
+/// constants (10), and derived units (12).
 void registerBuiltinUnits(UnitRepository repo) {
   _registerPrefixes(repo);
   _registerLengthUnits(repo);
@@ -16,7 +16,7 @@ void registerBuiltinUnits(UnitRepository repo) {
   _registerOtherBaseUnits(repo);
   _registerDimensionlessUnits(repo);
   _registerConstants(repo);
-  _registerCompoundUnits(repo);
+  _registerDerivedUnits(repo);
 }
 
 void _registerPrefixes(UnitRepository repo) {
@@ -64,41 +64,41 @@ void _registerLengthUnits(UnitRepository repo) {
   repo.register(
     // km, cm, mm are derivable via prefix splitting (kilo/centi/milli + meter).
     // um (micrometer) is also derivable, but 'micron' is a non-prefix alias.
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'micron',
       expression: 'micrometer',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'in',
       aliases: ['inch'],
       expression: '2.54 cm',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'ft',
       aliases: ['foot', 'feet'],
       expression: '12 inch',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'yd',
       aliases: ['yard'],
       expression: '3 ft',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'mi',
       aliases: ['mile'],
       expression: '5280 ft',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'nmi',
       aliases: ['nautical_mile'],
       expression: '1852 m',
@@ -115,28 +115,28 @@ void _registerMassUnits(UnitRepository repo) {
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'g',
       aliases: ['gram'],
       expression: '0.001 kg',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'lb',
       aliases: ['pound'],
       expression: '453.59237 g',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'oz',
       aliases: ['ounce'],
       expression: '1|16 lb',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 't',
       aliases: ['tonne', 'metric_ton'],
       expression: '1000 kg',
@@ -153,27 +153,27 @@ void _registerTimeUnits(UnitRepository repo) {
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'min',
       aliases: ['minute'],
       expression: '60 s',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'hr',
       aliases: ['hour'],
       expression: '60 min',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'day',
       expression: '24 hour',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'week',
       aliases: ['wk'],
       expression: '7 day',
@@ -191,30 +191,30 @@ void _registerTemperatureUnits(UnitRepository repo) {
     ),
   );
 
-  // Degree variants (compound — temperature differences).
+  // Degree variants (derived — temperature differences).
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'degK',
       aliases: ['degkelvin'],
       expression: 'K',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'degC',
       aliases: ['degcelsius'],
       expression: 'K',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'degF',
       aliases: ['degfahrenheit'],
       expression: '5|9 K',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'degR',
       aliases: ['degrankine'],
       expression: '5|9 K',
@@ -309,19 +309,19 @@ void _registerDimensionlessUnits(UnitRepository repo) {
 void _registerConstants(UnitRepository repo) {
   // Mathematical constants (dimensionless).
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'pi',
       expression: '3.141592653589793',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'euler',
       expression: '2.718281828459045',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'tau',
       expression: '2 pi',
     ),
@@ -329,49 +329,49 @@ void _registerConstants(UnitRepository repo) {
 
   // Physical constants (dimensioned).
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'c',
       aliases: ['speed_of_light'],
       expression: '299792458 m/s',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'gravity',
       aliases: ['g0'],
       expression: '9.80665 m/s^2',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'h',
       aliases: ['planck'],
       expression: '6.62607015e-34 J s',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'N_A',
       aliases: ['avogadro'],
       expression: '6.02214076e23 / mol',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'k',
       aliases: ['boltzmann'],
       expression: '1.380649e-23 J/K',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'e',
       aliases: ['elementary_charge'],
       expression: '1.602176634e-19 C',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'R',
       aliases: ['gas_constant'],
       expression: 'k N_A',
@@ -379,85 +379,85 @@ void _registerConstants(UnitRepository repo) {
   );
 }
 
-void _registerCompoundUnits(UnitRepository repo) {
+void _registerDerivedUnits(UnitRepository repo) {
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'N',
       aliases: ['newton'],
       expression: 'kg m / s^2',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'Pa',
       aliases: ['pascal'],
       expression: 'N / m^2',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'J',
       aliases: ['joule'],
       expression: 'N m',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'W',
       aliases: ['watt'],
       expression: 'J / s',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'Hz',
       aliases: ['hertz'],
       expression: '/ s',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'C',
       aliases: ['coulomb'],
       expression: 'A s',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'V',
       aliases: ['volt'],
       expression: 'W / A',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'ohm',
       expression: 'V / A',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'F',
       aliases: ['farad'],
       expression: 'C / V',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'Wb',
       aliases: ['weber'],
       expression: 'V s',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'T',
       aliases: ['tesla'],
       expression: 'Wb / m^2',
     ),
   );
   repo.register(
-    const CompoundUnit(
+    const DerivedUnit(
       id: 'H',
       aliases: ['henry'],
       expression: 'Wb / A',

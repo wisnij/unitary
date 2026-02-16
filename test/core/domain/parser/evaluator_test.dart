@@ -559,7 +559,7 @@ void main() {
     });
   });
 
-  group('Evaluator: compound units', () {
+  group('Evaluator: derived units', () {
     late UnitRepository repo;
 
     setUp(() {

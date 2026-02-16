@@ -26,7 +26,7 @@ void main() {
     test('all units register without collision', () {
       // If we get here, registerBuiltinUnits() didn't throw.
       // 7 length + 5 mass + 5 time + 9 temp + 3 other base
-      // + 2 dimensionless + 10 constants + 12 compound = 53 units + 24 prefixes
+      // + 2 dimensionless + 10 constants + 12 derived = 53 units + 24 prefixes
       expect(repo.allUnits.length, 53);
       expect(repo.allPrefixes.length, 24);
     });
@@ -553,8 +553,8 @@ void main() {
     });
   });
 
-  group('Compound units', () {
-    test('all compound units use CompoundDefinition', () {
+  group('Derived units', () {
+    test('all derived units use DerivedUnit', () {
       for (final id in [
         'N',
         'Pa',
@@ -572,8 +572,8 @@ void main() {
         final unit = repo.getUnit(id);
         expect(
           unit,
-          isA<CompoundUnit>(),
-          reason: '$id should be CompoundDefinition',
+          isA<DerivedUnit>(),
+          reason: '$id should be DerivedUnit',
         );
       }
     });
@@ -656,7 +656,7 @@ void main() {
       expect(q.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
     });
 
-    test('compound unit aliases resolve correctly', () {
+    test('derived unit aliases resolve correctly', () {
       expect(repo.findUnit('newton')?.id, 'N');
       expect(repo.findUnit('pascal')?.id, 'Pa');
       expect(repo.findUnit('joule')?.id, 'J');

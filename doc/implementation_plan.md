@@ -138,7 +138,7 @@ Implementation Phases
 - [x] Add all 7 SI base unit primitives (m, kg, s, K, A, mol, cd)
 - [x] Add temperature units (degK/tempK, degC/tempC, degF/tempF, degR/tempR)
 - [x] Add physical constants (pi, euler, tau, c, gravity, h, N_A, k_B, e, R)
-- [x] Add compound units (N, Pa, J, W, Hz, C, V, ohm, F, Wb, T, H)
+- [x] Add derived units (N, Pa, J, W, Hz, C, V, ohm, F, Wb, T, H)
 - [x] Integrate affine syntax with parser (tempF(212) required, 212 tempF rejected)
 - [x] Add AffineUnitNode evaluation
 - [x] Add dimensionless primitive units (radian, steradian)

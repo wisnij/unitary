@@ -262,7 +262,7 @@ primitive units, this is simply `value / resolveUnit(target).value`.
 Temperature units with offsets (like Celsius/Fahrenheit) require special handling:
 
 Affine conversions apply `(value + offset) * factor` and are only valid for
-absolute temperature values, not for differences or in compound units.  This is
+absolute temperature values, not for differences or in derived units.  This is
 handled by using separate `degC`/`degF` (linear, no offset) units for
 differences and rates vs. `tempC`/`tempF` (affine, function syntax required)
 for absolute temperatures.
@@ -288,7 +288,7 @@ to primitive base units.  The evaluator does this eagerly at UnitNode evaluation
 time, so quantities are typically already in primitive form by the time
 arithmetic operations run.
 
-Compound units (e.g., newton = `"kg m/s^2"`) are resolved by parsing and
+Derived units (e.g., newton = `"kg m/s^2"`) are resolved by parsing and
 evaluating their expression string through the full pipeline.
 
 Examples: 5 miles → 8046.72 m; 10 newtons → 10 {kg: 1, m: 1, s: -2}.
@@ -400,7 +400,7 @@ Two types of temperature units are defined for each scale:
 
 - Absolute (affine): `tempF` uses `AffineUnit` with factor 5/9, offset -32,
   base K.  `tempC` uses factor 1, offset 273.15, base K.
-- Difference (linear): `degF` and `degC` are `CompoundUnit`s with no offset,
+- Difference (linear): `degF` and `degC` are `DerivedUnit`s with no offset,
   just the scale factor relative to K.
 - Similar pairs for Rankine (tempR/degR).
 
@@ -411,7 +411,7 @@ distinction (absolute vs. difference) is semantic, in which unit name is used.
 
 1. **Absolute temperature**: Use `tempF`, `tempC`, `tempK` for single temperature values
 2. **Temperature differences**: Use `degF`, `degC`, `degK` when subtracting temperatures or in rates
-3. **Compound units**: Always use degree units (degF, degC) not absolute (tempF, tempC)
+3. **Derived units**: Always use degree units (degF, degC) not absolute (tempF, tempC)
    - `10 degC/s` (temperature rate) — correct
    - `10 tempC/s` (meaningless) — incorrect
 
@@ -579,7 +579,7 @@ Key test cases for function/affine syntax:
 - Prefixes allowed on linear units (`kilometer`)
 - Affine argument must be dimensionless (`tempF(60 m)` → DimensionException)
 
-### Warning About Temperature in Compound Units
+### Warning About Temperature in Compound Expressions
 
 When parsing expressions, detect if `tempF` or `tempC` appears in the numerator
 of a compound expression (e.g., `tempC/hour`) and issue a warning suggesting the
@@ -642,7 +642,7 @@ Performance Considerations
 
 ### Optimization Strategies
 
-1. **Lazy Dimension Computation**: For compound units, cache the computed dimension
+1. **Lazy Dimension Computation**: For derived units, cache the computed dimension
 2. **Conversion Factor Caching**: Cache frequently-used conversion factors
 3. **Avoid Repeated Lookups**: Pass `UnitRepository` once, cache needed units
 4. **Efficient Dimension Operations**: Dimension multiplication/division are simple map operations
@@ -653,7 +653,7 @@ Performance Considerations
    - Mitigation: Flatten definitions during database load
    - Cache base conversion factors
 
-2. **Expression Parsing for Compound Units**: Parsing happens on first use
+2. **Expression Parsing for Derived Units**: Parsing happens on first use
    - Mitigation: Pre-parse during unit database initialization
 
 3. **Repeated Conversions in UI**: Worksheet mode may trigger many conversions
@@ -711,7 +711,7 @@ This design provides:
 
 1. **Simple, efficient numeric representation** using `double` for MVP with rational recovery for exponents
 2. **Complete arithmetic operations** with proper dimensional analysis including rational exponent validation
-3. **Robust conversion algorithm** handling unit chains and compound units
+3. **Robust conversion algorithm** handling unit chains and derived units
 4. **GNU Units-compatible temperature handling** with separate absolute (tempF/tempC) and difference (degF/degC) units
 5. **Unambiguous function and affine syntax** with special handling for standalone tokens
 6. **Fail-fast error handling** that throws immediately with clear messages

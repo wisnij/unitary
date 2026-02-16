@@ -84,7 +84,7 @@ void main() {
 
     test('plural stripping: removes trailing es', () {
       repo.register(
-        const CompoundUnit(id: 'in', aliases: ['inch'], expression: '0.0254 m'),
+        const DerivedUnit(id: 'in', aliases: ['inch'], expression: '0.0254 m'),
       );
       repo.register(const PrimitiveUnit(id: 'm'));
       // "inches" → strip 'es' → "inch" → found
@@ -96,7 +96,7 @@ void main() {
       // stripping 'es' → "inch", not via stripping 's' → "inche"
       repo.register(const PrimitiveUnit(id: 'm'));
       repo.register(
-        const CompoundUnit(id: 'in', aliases: ['inch'], expression: '0.0254 m'),
+        const DerivedUnit(id: 'in', aliases: ['inch'], expression: '0.0254 m'),
       );
       expect(repo.findUnit('inches')?.id, 'in');
     });
@@ -104,7 +104,7 @@ void main() {
     test('plural stripping: hours → hour', () {
       repo.register(const PrimitiveUnit(id: 's'));
       repo.register(
-        const CompoundUnit(id: 'hr', aliases: ['hour'], expression: '3600 s'),
+        const DerivedUnit(id: 'hr', aliases: ['hour'], expression: '3600 s'),
       );
       expect(repo.findUnit('hours')?.id, 'hr');
     });
@@ -112,7 +112,7 @@ void main() {
     test('irregular plural via explicit alias: feet', () {
       repo.register(const PrimitiveUnit(id: 'm'));
       repo.register(
-        const CompoundUnit(
+        const DerivedUnit(
           id: 'ft',
           aliases: ['foot', 'feet'],
           expression: '0.3048 m',
@@ -133,7 +133,7 @@ void main() {
     test('exact match takes priority over plural stripping', () {
       repo.register(const PrimitiveUnit(id: 'm'));
       // Register a unit whose id ends with 's'
-      repo.register(const CompoundUnit(id: 'gas', expression: '1 m'));
+      repo.register(const DerivedUnit(id: 'gas', expression: '1 m'));
       // "gas" should find 'gas' unit exactly, not strip 's' → "ga"
       expect(repo.findUnit('gas')?.id, 'gas');
     });
@@ -141,7 +141,7 @@ void main() {
     test('plural stripping: removes trailing ies → y', () {
       repo.register(const PrimitiveUnit(id: 'm'));
       repo.register(
-        const CompoundUnit(
+        const DerivedUnit(
           id: 'Jy',
           aliases: ['jansky'],
           expression: '1e-26 m',
@@ -154,7 +154,7 @@ void main() {
     test('plural stripping: tries ies before es and s', () {
       repo.register(const PrimitiveUnit(id: 'm'));
       // A unit ending in 'y' whose ies-plural could also be mis-stripped.
-      repo.register(const CompoundUnit(id: 'henry', expression: '1 m'));
+      repo.register(const DerivedUnit(id: 'henry', expression: '1 m'));
       // "henries" → strip 'ies' + 'y' → "henry" → found
       // (not strip 'es' → "henri" or strip 's' → "henrie")
       expect(repo.findUnit('henries')?.id, 'henry');
@@ -174,7 +174,7 @@ void main() {
 
     test('plural stripping: es works for unit names ending in s', () {
       repo.register(const PrimitiveUnit(id: 'm'));
-      repo.register(const CompoundUnit(id: 'gauss', expression: '1 m'));
+      repo.register(const DerivedUnit(id: 'gauss', expression: '1 m'));
       // "gausses" → strip 'es' → "gauss" → found
       expect(repo.findUnit('gausses')?.id, 'gauss');
     });
@@ -234,7 +234,7 @@ void main() {
 
     test('non-primitive units are not tracked', () {
       repo.register(const PrimitiveUnit(id: 'm'));
-      repo.register(const CompoundUnit(id: 'km', expression: '1000 m'));
+      repo.register(const DerivedUnit(id: 'km', expression: '1000 m'));
       expect(repo.dimensionlessIds, isEmpty);
     });
 
@@ -279,7 +279,7 @@ void main() {
       repo.register(const PrimitiveUnit(id: 'm', aliases: ['meter']));
       repo.register(const PrimitiveUnit(id: 'kg', aliases: ['kilogram']));
       repo.register(
-        const CompoundUnit(id: 'g', aliases: ['gram'], expression: '0.001 kg'),
+        const DerivedUnit(id: 'g', aliases: ['gram'], expression: '0.001 kg'),
       );
       repo.registerPrefix(
         const PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1000'),
@@ -371,7 +371,7 @@ void main() {
     });
 
     test('prefix + ies-plural base works', () {
-      repo.register(const CompoundUnit(id: 'henry', expression: '1 m'));
+      repo.register(const DerivedUnit(id: 'henry', expression: '1 m'));
       // "millihenries" → milli + "henries" → "henry" via ies stripping
       final result = repo.findUnitWithPrefix('millihenries');
       expect(result.prefix, isNotNull);

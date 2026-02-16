@@ -88,11 +88,11 @@ class AffineUnit extends Unit {
 /// The expression string is evaluated lazily via ExpressionParser when the
 /// unit is referenced during evaluation.  This class is immutable and
 /// const-constructible.
-class CompoundUnit extends Unit {
+class DerivedUnit extends Unit {
   /// The expression string (e.g., 'kg m / s^2', '1000 m', '3.141592653589793').
   final String expression;
 
-  const CompoundUnit({
+  const DerivedUnit({
     required super.id,
     super.aliases,
     super.description,
@@ -105,7 +105,7 @@ class CompoundUnit extends Unit {
 /// Prefixes are stored separately in the repository and combined with
 /// base units during lookup. For example, "kilometer" splits into
 /// prefix "kilo" (1000) + base unit "meter".
-class PrefixUnit extends CompoundUnit {
+class PrefixUnit extends DerivedUnit {
   const PrefixUnit({
     required super.id,
     super.aliases,

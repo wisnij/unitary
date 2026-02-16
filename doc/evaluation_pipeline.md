@@ -38,7 +38,7 @@ Worked Example: `3e4 kilometers/week`
 -------------------------------------
 
 This example demonstrates prefix resolution (kilo), plural stripping
-(kilometers → kilometer → kilo + meter), compound unit evaluation (week → days
+(kilometers → kilometer → kilo + meter), derived unit evaluation (week → days
 → seconds), and dimensional analysis throughout.
 
 
@@ -116,7 +116,7 @@ order:
    - Returns `UnitMatch(prefix: kilo, unit: m)`.
 
 3. The evaluator resolves both parts via `resolveUnit`:
-   - `resolveUnit(kilo)` — kilo is a `CompoundUnit` with expression `"1000"`,
+   - `resolveUnit(kilo)` — kilo is a `DerivedUnit` with expression `"1000"`,
      so the expression is evaluated through the parser: `Quantity(1000.0,
      dimensionless)`.
    - `resolveUnit(m)` — m is a `PrimitiveUnit`, so: `Quantity(1.0, {m: 1})`.
@@ -138,7 +138,7 @@ Result: **`Quantity(30000000.0, {m: 1})`**
 
 1. `repo.findUnitWithPrefix("week")` — `findUnit("week")` finds an exact
    match on the unit id `week`.
-2. `week` is a `CompoundUnit` with expression `"7 day"`.
+2. `week` is a `DerivedUnit` with expression `"7 day"`.
 3. `resolveUnit` evaluates the expression through the parser, which recurses
    through the definition chain:
 

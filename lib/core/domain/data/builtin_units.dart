@@ -61,11 +61,20 @@ void _registerLengthUnits(UnitRepository repo) {
       description: 'SI base unit of length',
     ),
   );
-  // km, cm, mm are derivable via prefix splitting (kilo/centi/milli + meter).
-  // um (micrometer) is also derivable, but 'micron' is a non-prefix alias.
-  repo.register(const CompoundUnit(id: 'micron', expression: 'micrometer'));
   repo.register(
-    const CompoundUnit(id: 'in', aliases: ['inch'], expression: '2.54 cm'),
+    // km, cm, mm are derivable via prefix splitting (kilo/centi/milli + meter).
+    // um (micrometer) is also derivable, but 'micron' is a non-prefix alias.
+    const CompoundUnit(
+      id: 'micron',
+      expression: 'micrometer',
+    ),
+  );
+  repo.register(
+    const CompoundUnit(
+      id: 'in',
+      aliases: ['inch'],
+      expression: '2.54 cm',
+    ),
   );
   repo.register(
     const CompoundUnit(
@@ -75,10 +84,18 @@ void _registerLengthUnits(UnitRepository repo) {
     ),
   );
   repo.register(
-    const CompoundUnit(id: 'yd', aliases: ['yard'], expression: '3 ft'),
+    const CompoundUnit(
+      id: 'yd',
+      aliases: ['yard'],
+      expression: '3 ft',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'mi', aliases: ['mile'], expression: '1609.344 m'),
+    const CompoundUnit(
+      id: 'mi',
+      aliases: ['mile'],
+      expression: '5280 ft',
+    ),
   );
   repo.register(
     const CompoundUnit(
@@ -98,16 +115,24 @@ void _registerMassUnits(UnitRepository repo) {
     ),
   );
   repo.register(
-    const CompoundUnit(id: 'g', aliases: ['gram'], expression: '0.001 kg'),
+    const CompoundUnit(
+      id: 'g',
+      aliases: ['gram'],
+      expression: '0.001 kg',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'lb', aliases: ['pound'], expression: '453.59237 g'),
+    const CompoundUnit(
+      id: 'lb',
+      aliases: ['pound'],
+      expression: '453.59237 g',
+    ),
   );
   repo.register(
     const CompoundUnit(
       id: 'oz',
       aliases: ['ounce'],
-      expression: '28.349523125 g',
+      expression: '1|16 lb',
     ),
   );
   repo.register(
@@ -128,14 +153,31 @@ void _registerTimeUnits(UnitRepository repo) {
     ),
   );
   repo.register(
-    const CompoundUnit(id: 'min', aliases: ['minute'], expression: '60 s'),
+    const CompoundUnit(
+      id: 'min',
+      aliases: ['minute'],
+      expression: '60 s',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'hr', aliases: ['hour'], expression: '60 min'),
+    const CompoundUnit(
+      id: 'hr',
+      aliases: ['hour'],
+      expression: '60 min',
+    ),
   );
-  repo.register(const CompoundUnit(id: 'day', expression: '24 hour'));
   repo.register(
-    const CompoundUnit(id: 'week', aliases: ['wk'], expression: '7 day'),
+    const CompoundUnit(
+      id: 'day',
+      expression: '24 hour',
+    ),
+  );
+  repo.register(
+    const CompoundUnit(
+      id: 'week',
+      aliases: ['wk'],
+      expression: '7 day',
+    ),
   );
 }
 
@@ -151,23 +193,31 @@ void _registerTemperatureUnits(UnitRepository repo) {
 
   // Degree variants (compound — temperature differences).
   repo.register(
-    const CompoundUnit(id: 'degK', aliases: ['degkelvin'], expression: 'K'),
+    const CompoundUnit(
+      id: 'degK',
+      aliases: ['degkelvin'],
+      expression: 'K',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'degC', aliases: ['degcelsius'], expression: 'K'),
+    const CompoundUnit(
+      id: 'degC',
+      aliases: ['degcelsius'],
+      expression: 'K',
+    ),
   );
   repo.register(
     const CompoundUnit(
       id: 'degF',
       aliases: ['degfahrenheit'],
-      expression: '(5/9) K',
+      expression: '5|9 K',
     ),
   );
   repo.register(
     const CompoundUnit(
       id: 'degR',
       aliases: ['degrankine'],
-      expression: '(5/9) K',
+      expression: '5|9 K',
     ),
   );
 
@@ -258,32 +308,45 @@ void _registerDimensionlessUnits(UnitRepository repo) {
 
 void _registerConstants(UnitRepository repo) {
   // Mathematical constants (dimensionless).
-  repo.register(const CompoundUnit(id: 'pi', expression: '3.141592653589793'));
   repo.register(
-    const CompoundUnit(id: 'euler', expression: '2.718281828459045'),
+    const CompoundUnit(
+      id: 'pi',
+      expression: '3.141592653589793',
+    ),
   );
-  repo.register(const CompoundUnit(id: 'tau', expression: '6.283185307179586'));
+  repo.register(
+    const CompoundUnit(
+      id: 'euler',
+      expression: '2.718281828459045',
+    ),
+  );
+  repo.register(
+    const CompoundUnit(
+      id: 'tau',
+      expression: '2 pi',
+    ),
+  );
 
   // Physical constants (dimensioned).
   repo.register(
     const CompoundUnit(
       id: 'c',
       aliases: ['speed_of_light'],
-      expression: '299792458 m / s',
+      expression: '299792458 m/s',
     ),
   );
   repo.register(
     const CompoundUnit(
       id: 'gravity',
       aliases: ['g0'],
-      expression: '9.80665 m / s^2',
+      expression: '9.80665 m/s^2',
     ),
   );
   repo.register(
     const CompoundUnit(
       id: 'h',
       aliases: ['planck'],
-      expression: '6.62607015e-34 kg m^2 / s',
+      expression: '6.62607015e-34 J s',
     ),
   );
   repo.register(
@@ -295,62 +358,109 @@ void _registerConstants(UnitRepository repo) {
   );
   repo.register(
     const CompoundUnit(
-      id: 'k_B',
+      id: 'k',
       aliases: ['boltzmann'],
-      expression: '1.380649e-23 kg m^2 / (s^2 K)',
+      expression: '1.380649e-23 J/K',
     ),
   );
   repo.register(
     const CompoundUnit(
       id: 'e',
       aliases: ['elementary_charge'],
-      expression: '1.602176634e-19 A s',
+      expression: '1.602176634e-19 C',
     ),
   );
   repo.register(
     const CompoundUnit(
       id: 'R',
       aliases: ['gas_constant'],
-      expression: '8.314462618 kg m^2 / (s^2 K mol)',
+      expression: 'k N_A',
     ),
   );
 }
 
 void _registerCompoundUnits(UnitRepository repo) {
   repo.register(
-    const CompoundUnit(id: 'N', aliases: ['newton'], expression: 'kg m / s^2'),
+    const CompoundUnit(
+      id: 'N',
+      aliases: ['newton'],
+      expression: 'kg m / s^2',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'Pa', aliases: ['pascal'], expression: 'N / m^2'),
+    const CompoundUnit(
+      id: 'Pa',
+      aliases: ['pascal'],
+      expression: 'N / m^2',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'J', aliases: ['joule'], expression: 'N m'),
+    const CompoundUnit(
+      id: 'J',
+      aliases: ['joule'],
+      expression: 'N m',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'W', aliases: ['watt'], expression: 'J / s'),
+    const CompoundUnit(
+      id: 'W',
+      aliases: ['watt'],
+      expression: 'J / s',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'Hz', aliases: ['hertz'], expression: '/ s'),
+    const CompoundUnit(
+      id: 'Hz',
+      aliases: ['hertz'],
+      expression: '/ s',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'C', aliases: ['coulomb'], expression: 'A s'),
+    const CompoundUnit(
+      id: 'C',
+      aliases: ['coulomb'],
+      expression: 'A s',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'V', aliases: ['volt'], expression: 'W / A'),
+    const CompoundUnit(
+      id: 'V',
+      aliases: ['volt'],
+      expression: 'W / A',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'ohm', aliases: ['Ohm'], expression: 'V / A'),
+    const CompoundUnit(
+      id: 'ohm',
+      expression: 'V / A',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'F', aliases: ['farad'], expression: 'C / V'),
+    const CompoundUnit(
+      id: 'F',
+      aliases: ['farad'],
+      expression: 'C / V',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'Wb', aliases: ['weber'], expression: 'V s'),
+    const CompoundUnit(
+      id: 'Wb',
+      aliases: ['weber'],
+      expression: 'V s',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'T', aliases: ['tesla'], expression: 'Wb / m^2'),
+    const CompoundUnit(
+      id: 'T',
+      aliases: ['tesla'],
+      expression: 'Wb / m^2',
+    ),
   );
   repo.register(
-    const CompoundUnit(id: 'H', aliases: ['henry'], expression: 'Wb / A'),
+    const CompoundUnit(
+      id: 'H',
+      aliases: ['henry'],
+      expression: 'Wb / A',
+    ),
   );
 }

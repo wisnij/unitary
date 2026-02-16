@@ -16,7 +16,11 @@ abstract class Unit {
   /// Human-readable description (e.g., 'SI base unit of length').
   final String? description;
 
-  const Unit({required this.id, this.aliases = const [], this.description});
+  const Unit({
+    required this.id,
+    this.aliases = const [],
+    this.description,
+  });
 
   /// Whether this is a primitive (base) unit.
   bool get isPrimitive => false;

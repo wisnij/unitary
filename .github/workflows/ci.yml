@@ -7,8 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  analyze:
-    name: Static analysis
+  lint-analyze:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -20,8 +19,7 @@ jobs:
       - run: flutter pub get
       - run: flutter analyze
 
-  lint:
-    name: Lint with pre-commit hooks
+  lint-precommit:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -37,7 +35,6 @@ jobs:
       - uses: pre-commit/action@v3.0.1
 
   test:
-    name: Run tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

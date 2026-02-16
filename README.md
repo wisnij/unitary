@@ -13,15 +13,15 @@ user-defined units and dimensions.
 Project Status
 --------------
 
-**Current Phase:** Phase 3 Complete, ready for Phase 4 (Basic UI - Freeform Mode)\
-**Last Updated:** February 15, 2026
+**Current Phase:** Phase 4 In Progress (Basic UI - Freeform Mode)\
+**Last Updated:** February 16, 2026
 
-Phases 0-3 are complete.  The expression parser, evaluator, unit system
-foundation, and advanced unit features are fully implemented with 703 passing
-tests.  Unit definitions include all 7 SI base units, dimensionless units
-(radian, steradian), temperature units with affine syntax, physical constants,
-derived units like Newton and Pascal, and SI prefix support (24 prefixes from
-quecto to quetta with prefix-aware unit lookup).
+Phases 0-3 are complete and Phase 4 (Basic UI) is in progress with 845 passing
+tests.  The expression parser, evaluator, unit system foundation, and advanced
+unit features are fully implemented.  Phase 4 adds the first working UI:
+freeform expression evaluation with two-field conversion, settings screen
+(precision, notation, dark mode, evaluation mode), and drawer-based navigation.
+State management uses Riverpod with SharedPreferences for persistence.
 
 ---
 
@@ -84,12 +84,15 @@ Technology Stack
 - Native performance and UI
 - Single codebase for both platforms
 
-**Key Dependencies** (Planned):
+**Key Dependencies:**
 
-- `sqflite` or `hive` - Local database for persistence
-- `shared_preferences` - Simple key-value storage
-- `http` or `dio` - HTTP client for currency rates
-- `provider` or `riverpod` - State management
+- `flutter_riverpod` - State management
+- `shared_preferences` - Simple key-value storage for user settings
+
+**Planned Dependencies:**
+
+- `sqflite` or `hive` - Local database for persistence (Phase 6)
+- `http` or `dio` - HTTP client for currency rates (Phase 7)
 
 **Data Source:**
 
@@ -199,6 +202,7 @@ Current Progress
 - ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
 - ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
 - ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, derived units, affine syntax, dimensionless units, SI prefixes (703 tests)
+- 🔨 **Phase 4: Basic UI - Freeform Mode** — Freeform evaluation UI, settings, drawer navigation, Riverpod state management (845 tests)
 
 ### Design (ready for implementation)
 
@@ -206,14 +210,13 @@ Current Progress
 - ✅ Expression parser and evaluator architecture
 - ✅ Terminology and conventions
 - ✅ **Quantity arithmetic and conversion algorithms** (see quantity_arithmetic_design.md)
+- ✅ **Basic UI - Freeform Mode** (see phase4_plan.md)
 
 ### Design (still needs detail)
 
 - ⏳ Worksheet system details
 - ⏳ GNU Units database import strategy
 - ⏳ Currency rate management
-- ⏳ UI/UX design specifications
-- ⏳ State management patterns
 
 See [Design Progress](design_progress.md) for full details.
 

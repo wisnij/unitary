@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+[0.3.0] - 2026-02-16
+--------------------
+
+Phase 3: Advanced Unit Features.
+
+- All 7 SI base unit primitives (m, kg, s, K, A, mol, cd)
+- Temperature units with affine conversions (tempF, tempC, tempK, tempR) and
+  linear degree units (degF, degC, degK, degR)
+- Affine unit syntax: function-call form required (e.g., `tempF(212)`)
+- 12 SI derived compound units (N, Pa, J, W, Hz, C, V, ohm, F, Wb, T, H)
+- 10 physical and mathematical constants (pi, euler, tau, c, gravity, h, etc.)
+- Dimensionless primitive units (radian, steradian) with conformability stripping
+- SI prefix system: 24 prefixes from quecto to quetta, with prefix-aware unit
+  lookup (longest-match-first, separate storage to avoid collisions)
+- Refactored Unit hierarchy: Unit subclasses (`PrimitiveUnit`, `CompoundUnit`,
+  `AffineUnit`, `PrefixUnit`) replace separate `UnitDefinition` classes
+- Standalone `resolveUnit` helper replaces `UnitDefinition.toQuantity`
+- Lexer recognizes additional operator characters (Unicode multiply/divide)
+- 703 passing tests
+
+
 [0.2.0] - 2026-02-11
 ---------------------
 

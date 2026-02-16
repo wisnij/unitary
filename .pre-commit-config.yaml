@@ -4,6 +4,7 @@ repos:
     hooks:
       - id: markdownlint-cli2
         args: [--fix]
+        exclude: LICENSE.md
         verbose: false
   - repo: https://github.com/Cretezy/dart-format-pre-commit
     rev: f728adc8b9ba2b414959cc8beb892e480425cf60

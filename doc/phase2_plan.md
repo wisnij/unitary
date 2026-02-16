@@ -96,39 +96,11 @@ Implementation Steps
 
 **File:** `lib/core/domain/models/unit.dart`
 
-~~~~ dart
-/// Represents a unit of measurement.
-///
-/// Each unit has a unique [id] (its primary short name), a list of [aliases]
-/// (alternative names), and a [definition] that describes how to convert
-/// values of this unit to/from primitive base units.
-class Unit {
-  /// Primary identifier (e.g., 'm', 'ft', 'kg').
-  final String id;
-
-  /// Alternative names (e.g., ['meter', 'metre'] for 'm').
-  /// Does NOT need to include regular plurals — those are handled by
-  /// the repo's plural stripping fallback.  Irregular plurals (e.g.,
-  /// 'feet' for 'foot') must be listed explicitly.
-  final List<String> aliases;
-
-  /// Human-readable description (e.g., 'SI base unit of length').
-  final String? description;
-
-  /// How this unit converts to/from base units.
-  final UnitDefinition definition;
-
-  const Unit({
-    required this.id,
-    this.aliases = const [],
-    this.description,
-    required this.definition,
-  });
-
-  /// All recognized names for this unit: id + aliases.
-  List<String> get allNames => [id, ...aliases];
-}
-~~~~
+`Unit` has a primary `id`, a list of `aliases`, a `description`, and a
+`definition` that describes how to convert to/from base units.  The `allNames`
+getter returns id + aliases.  Regular plurals are handled by the repo's plural
+stripping; irregular plurals (like "feet") must be explicit aliases.  Units are
+const-constructible.
 
 **Tests:** `test/core/domain/models/unit_test.dart`
 
@@ -141,91 +113,19 @@ class Unit {
 
 **File:** `lib/core/domain/models/unit_definition.dart`
 
-~~~~ dart
-/// Base class for unit definitions.
-///
-/// Provides the conversion contract: every definition can produce a Quantity
-/// representing the given value in this unit, reduced to primitive base units.
-abstract class UnitDefinition {
-  const UnitDefinition();
+`UnitDefinition` is the base class providing the conversion contract: every
+definition can produce a `Quantity` representing the given value reduced to
+primitive base units.
 
-  /// Convert [value] in this unit to a Quantity in primitive base units.
-  /// May recurse through [repo] for chained definitions.
-  ///
-  /// Returns a Quantity whose value is the equivalent in base units and
-  /// whose dimension is expressed in primitive unit IDs.
-  Quantity toQuantity(double value, UnitRepository repo);
+- **`PrimitiveUnitDefinition`** — the unit's ID becomes its own dimension key
+  (e.g., meter → `{m: 1}`).  The repo calls `bind(unitId)` during registration
+  to set the dimension key, avoiding requiring the ID in two places (Unit.id
+  and definition constructor).
 
-  /// Whether this is a primitive (base) unit definition.
-  bool get isPrimitive;
-}
-~~~~
-
-**PrimitiveUnitDefinition:**
-
-~~~~ dart
-/// A primitive (base) unit that defines a fundamental dimension.
-///
-/// The unit's ID becomes its own dimension key.  For example, the meter
-/// unit (id: 'm') has dimension {m: 1}.  The value is returned unchanged.
-class PrimitiveUnitDefinition extends UnitDefinition {
-  /// The unit ID, used as the dimension key.  Set during registration.
-  late final String _unitId;
-
-  PrimitiveUnitDefinition();
-
-  /// Called by UnitRepository during registration to bind the unit ID.
-  void bind(String unitId) => _unitId = unitId;
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) =>
-      Quantity(value, Dimension({_unitId: 1}));
-
-  @override
-  bool get isPrimitive => true;
-}
-~~~~
-
-**LinearDefinition:**
-
-~~~~ dart
-/// A unit defined as a linear multiple of another unit.
-///
-/// For example: 1 foot = 0.3048 meters, so feet has
-/// LinearDefinition(factor: 0.3048, baseUnitId: 'm').
-///
-/// Chains are supported: 1 yard = 3 feet could be
-/// LinearDefinition(factor: 3, baseUnitId: 'ft'), and resolution
-/// recurses through feet to meters.
-class LinearDefinition extends UnitDefinition {
-  /// How many of [baseUnitId] equal one of this unit.
-  /// i.e., 1 <this unit> = [factor] <baseUnit>
-  final double factor;
-
-  /// The ID of the unit this is defined in terms of.
-  final String baseUnitId;
-
-  const LinearDefinition({
-    required this.factor,
-    required this.baseUnitId,
-  });
-
-  @override
-  Quantity toQuantity(double value, UnitRepository repo) {
-    final baseUnit = repo.getUnit(baseUnitId);
-    return baseUnit.definition.toQuantity(value * factor, repo);
-  }
-
-  @override
-  bool get isPrimitive => false;
-}
-~~~~
-
-**Design note on `bind()`:** PrimitiveUnitDefinition needs its unit's ID to
-produce the correct dimension (e.g., `{m: 1}` for meters).  The repo calls
-`bind(unitId)` during registration.  An alternative is passing unitId as a
-constructor parameter, but `bind()` avoids requiring the ID in two places
-(Unit.id and definition constructor).
+- **`LinearDefinition`** — a unit defined as a linear multiple of another unit,
+  with a `factor` and `baseUnitId`.  Resolution recurses through the chain:
+  e.g., yard (factor 3, base ft) → foot (factor 0.3048, base m) → meter
+  (primitive).
 
 **Tests:** `test/core/domain/models/unit_test.dart` (same file as Unit)
 
@@ -241,89 +141,21 @@ constructor parameter, but `bind()` avoids requiring the ID in two places
 
 **File:** `lib/core/domain/models/unit_repository.dart`
 
-~~~~ dart
-/// Registry for unit definitions.  Provides lookup by name/alias with
-/// automatic plural stripping fallback.
-class UnitRepository {
-  /// Maps every recognized name (id + aliases) to its Unit.
-  final Map<String, Unit> _lookup = {};
+`UnitRepository` is the registry for unit definitions.  It maintains a lookup
+map keyed by every recognized name (id + aliases).  Registration binds
+primitive units and checks for name collisions.
 
-  /// All registered units by their primary ID.
-  final Map<String, Unit> _units = {};
+`findUnit(name)` tries exact match first, then falls back to plural stripping:
+"ies" → "y", then "es", then "s" (with minimum length guards).  This handles
+"inches" → "inch" and "meters" → "meter" automatically.  Irregular plurals
+like "feet" must be explicit aliases.
 
-  /// Creates an empty repository.
-  UnitRepository();
+`findUnitWithPrefix(name)` extends this with prefix-aware lookup (see
+architecture.md for the full resolution order).
 
-  /// Creates a repository pre-loaded with the built-in unit set.
-  factory UnitRepository.withBuiltinUnits() {
-    final repo = UnitRepository();
-    registerBuiltinUnits(repo);
-    return repo;
-  }
+`getUnit(name)` is a throwing variant of `findUnit`.
 
-  /// Register a unit.  Adds the unit's id and all aliases to the
-  /// lookup map.  Throws [ArgumentError] if any name collides with
-  /// an existing entry.
-  void register(Unit unit) {
-    if (unit.definition is PrimitiveUnitDefinition) {
-      (unit.definition as PrimitiveUnitDefinition).bind(unit.id);
-    }
-
-    _units[unit.id] = unit;
-
-    for (final name in unit.allNames) {
-      if (_lookup.containsKey(name)) {
-        throw ArgumentError(
-          "Unit name '$name' is already registered "
-          "(for unit '${_lookup[name]!.id}')",
-        );
-      }
-      _lookup[name] = unit;
-    }
-  }
-
-  /// Look up a unit by any recognized name.
-  ///
-  /// Tries exact match first, then falls back to plural stripping
-  /// (removes trailing 'es' or 's').  Returns null if not found.
-  Unit? findUnit(String name) {
-    // Exact match.
-    final exact = _lookup[name];
-    if (exact != null) return exact;
-
-    // Plural stripping: try 'es' first, then 's'.
-    if (name.length > 2 && name.endsWith('es')) {
-      final stripped = name.substring(0, name.length - 2);
-      final found = _lookup[stripped];
-      if (found != null) return found;
-    }
-    if (name.length > 1 && name.endsWith('s')) {
-      final stripped = name.substring(0, name.length - 1);
-      final found = _lookup[stripped];
-      if (found != null) return found;
-    }
-
-    return null;
-  }
-
-  /// Look up a unit by any recognized name, throwing if not found.
-  Unit getUnit(String name) {
-    final unit = findUnit(name);
-    if (unit == null) {
-      throw ArgumentError("Unknown unit: '$name'");
-    }
-    return unit;
-  }
-
-  /// All registered units (by primary ID).
-  Iterable<Unit> get allUnits => _units.values;
-}
-~~~~
-
-**Plural stripping order:** 'es' before 's'.  This handles "inches" → "inch"
-correctly before trying "inche".  Regular plurals like "meters" → "meter" are
-handled by the 's' fallback.  Irregular plurals like "feet" must be explicit
-aliases since stripping 's' gives "feet" → "fee" (wrong).
+A factory `UnitRepository.withBuiltinUnits()` creates a pre-loaded repository.
 
 **Tests:** `test/core/domain/models/unit_repository_test.dart`
 
@@ -430,50 +262,13 @@ all hand-curated units.
 
 **`reduce(Quantity, UnitRepository)`:**
 
-~~~~ dart
-/// Reduce a quantity to primitive base units.
-///
-/// Each non-primitive unit name in the quantity's dimension is resolved
-/// through the repository using toQuantity(), and the resulting value
-/// and dimension are combined.
-///
-/// If the dimension already contains only primitive unit names, the
-/// quantity is returned unchanged.  Unknown unit names are kept as-is.
-///
-/// Example:
-///   reduce(Quantity(5.0, Dimension({ft: 1})), repo)
-///   → Quantity(1.524, Dimension({m: 1}))
-Quantity reduce(Quantity quantity, UnitRepository repo) {
-  double value = quantity.value;
-  final newDimension = <String, int>{};
+Reduces a quantity to primitive base units.  For each non-primitive unit name
+in the dimension, resolves it through the repository's `toQuantity()` chain,
+adjusting the value by `pow(baseValue, exponent)` and replacing the dimension
+entry with the resolved primitive entries.  Primitive and unknown unit names
+are kept as-is.
 
-  for (final entry in quantity.dimension.units.entries) {
-    final unitName = entry.key;
-    final exponent = entry.value;
-
-    final unit = repo.findUnit(unitName);
-    if (unit == null || unit.definition.isPrimitive) {
-      // Already primitive or unknown — keep as-is.
-      newDimension[unitName] =
-          (newDimension[unitName] ?? 0) + exponent;
-      continue;
-    }
-
-    // Resolve to base units using toQuantity.
-    final baseQuantity = unit.definition.toQuantity(1.0, repo);
-    value *= math.pow(baseQuantity.value, exponent);
-
-    // Replace with primitive dimension entries.
-    for (final baseEntry in baseQuantity.dimension.units.entries) {
-      newDimension[baseEntry.key] =
-          (newDimension[baseEntry.key] ?? 0) +
-          baseEntry.value * exponent;
-    }
-  }
-
-  return Quantity(value, Dimension(newDimension));
-}
-~~~~
+Example: `reduce(Quantity(5.0, {ft: 1}), repo)` → `Quantity(1.524, {m: 1})`
 
 **Tests:** `test/core/domain/services/unit_service_test.dart`
 
@@ -495,50 +290,13 @@ reduce() tests:
 
 **EvalContext changes:**
 
-~~~~ dart
-class EvalContext {
-  /// Unit repository for resolving unit names.  Null means Phase 1
-  /// behavior (all identifiers treated as raw dimensions).
-  final UnitRepository? repo;
+`EvalContext` gains a nullable `repo` field.  When null, `UnitNode` falls back
+to Phase 1 behavior (raw dimension `{unitName: 1}`).  When a repo is present,
+`UnitNode.evaluate()` resolves the unit name through the repository and returns
+the base-unit quantity.  Unknown unit names also fall back to raw dimension.
 
-  const EvalContext({this.repo});
-}
-~~~~
-
-**UnitNode.evaluate() changes:**
-
-~~~~ dart
-class UnitNode extends ASTNode {
-  final String unitName;
-
-  const UnitNode(this.unitName);
-
-  @override
-  Quantity evaluate(EvalContext context) {
-    final repo = context.repo;
-    if (repo == null) {
-      // No repo: Phase 1 behavior (raw dimension).
-      return Quantity(1.0, Dimension({unitName: 1}));
-    }
-
-    final unit = repo.findUnit(unitName);
-    if (unit == null) {
-      // Unknown unit: fall back to raw dimension.
-      return Quantity(1.0, Dimension({unitName: 1}));
-    }
-
-    // Resolve to base units using toQuantity.
-    return unit.definition.toQuantity(1.0, repo);
-  }
-
-  @override
-  String toString() => 'UnitNode($unitName)';
-}
-~~~~
-
-**Backward compatibility:** When repo is null, the behavior is identical to
-Phase 1.  `const EvalContext()` produces null repo.  All 372 existing tests
-use `const EvalContext()` implicitly through ExpressionParser and are unaffected.
+**Backward compatibility:** `const EvalContext()` produces null repo.  All 372
+existing Phase 1 tests are unaffected.
 
 **Tests in** `test/core/domain/parser/evaluator_test.dart` (add new group):
 
@@ -557,63 +315,17 @@ use `const EvalContext()` implicitly through ExpressionParser and are unaffected
 
 **Modified file:** `lib/core/domain/parser/expression_parser.dart`
 
-~~~~ dart
-class ExpressionParser {
-  /// Optional unit repository for unit-aware evaluation.
-  final UnitRepository? repo;
-
-  ExpressionParser({this.repo});
-
-  /// Lex, parse, and evaluate an expression string.
-  Quantity evaluate(String input) {
-    final ast = parse(input);
-    return ast.evaluate(EvalContext(repo: repo));
-  }
-
-  /// Lex and parse an expression string, returning the AST.
-  ASTNode parse(String input) {
-    final tokens = tokenize(input);
-    return Parser(tokens).parse();
-  }
-
-  /// Lex an expression string, returning the token list.
-  List<Token> tokenize(String input) {
-    return Lexer(input).scanTokens();
-  }
-}
-~~~~
+`ExpressionParser` gains an optional `repo` parameter.  It provides `evaluate`
+(lex → parse → evaluate), `parse` (lex → parse → AST), and `tokenize`
+(lex → tokens) methods.
 
 **Tests:** `test/core/domain/parser/expression_parser_test.dart` (add or extend)
 
 - End-to-end with repo: `ExpressionParser(repo: repo).evaluate('5 ft')`.
 - End-to-end without repo: `ExpressionParser().evaluate('5 m')` → Phase 1
   behavior.
-
-**Deliverable test:**
-
-~~~~ dart
-test('Phase 2 deliverable: convert 5 feet to meters', () {
-  final repo = UnitRepository.withBuiltinUnits();
-  final parser = ExpressionParser(repo: repo);
-
-  // Evaluate "5 ft" — produces Quantity in base units (meters)
-  final quantity = parser.evaluate('5 ft');
-  expect(quantity.value, closeTo(1.524, 1e-10));
-  expect(quantity.dimension, Dimension({'m': 1}));
-
-  // Convert to feet by dividing by the base quantity for 1 foot
-  final feet = repo.getUnit('ft');
-  final feetBase = feet.definition.toQuantity(1.0, repo);
-  final inFeet = quantity.value / feetBase.value;
-  expect(inFeet, closeTo(5.0, 1e-10));
-
-  // Convert to miles similarly
-  final miles = repo.getUnit('mi');
-  final milesBase = miles.definition.toQuantity(1.0, repo);
-  final inMiles = quantity.value / milesBase.value;
-  expect(inMiles, closeTo(5.0 * 0.3048 / 1609.344, 1e-10));
-});
-~~~~
+- Deliverable test: evaluate `'5 ft'` → `Quantity(1.524, {m: 1})`, then
+  convert back to feet and miles by dividing by the base quantity.
 
 
 ### Step 8: Update Documentation

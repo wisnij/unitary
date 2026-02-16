@@ -87,38 +87,9 @@ Recommended Approach
 Add a boolean flag to `PrimitiveUnit` indicating that the unit is a
 dimensionless unit:
 
-~~~~ dart
-class PrimitiveUnit extends Unit {
-  final bool isDimensionless;
-
-  const PrimitiveUnit({
-    required super.id,
-    super.aliases,
-    super.description,
-    this.isDimensionless = false,
-  });
-
-  @override
-  bool get isPrimitive => true;
-}
-~~~~
-
-Register radian and steradian with this flag:
-
-~~~~ dart
-PrimitiveUnit(
-  id: 'radian',
-  description: 'SI dimensionless unit of plane angle',
-  isDimensionless: true,
-)
-
-PrimitiveUnit(
-  id: 'sr',
-  aliases: ['steradian'],
-  description: 'SI dimensionless unit of solid angle',
-  isDimensionless: true,
-)
-~~~~
+`PrimitiveUnit` gains an `isDimensionless` field (default `false`).  Register
+`radian` and `sr` (steradian) as dimensionless primitives with this flag set to
+`true`.
 
 ### 2. `Dimension.removeDimensions()` method
 
@@ -126,40 +97,19 @@ Add a method to `Dimension` that returns a new `Dimension` with the specified
 dimension entries removed.  This is used to strip dimensionless units when
 checking conformability for conversion:
 
-~~~~ dart
-class Dimension {
-  /// Returns this dimension with the specified dimension entries removed.
-  ///
-  /// Used for conversion conformability checking, where dimensionless
-  /// units like radian and steradian are stripped before comparing.
-  Dimension removeDimensions(Set<String> idsToRemove) {
-    final filtered = Map<String, int>.from(components);
-    filtered.removeWhere((id, _) => idsToRemove.contains(id));
-    return Dimension(filtered);
-  }
-}
-~~~~
+`Dimension.removeDimensions(Set<String> idsToRemove)` returns a new `Dimension`
+with the specified entries removed.  Used for conversion conformability
+checking, where dimensionless units like radian and steradian are stripped
+before comparing.
 
 ### 3. Repository exposes dimensionless unit ID set
 
 `UnitRepository` provides a set of dimensionless unit IDs, computed once at
 registration time:
 
-~~~~ dart
-class UnitRepository {
-  final Set<String> _dimensionlessIds = {};
-
-  void register(Unit unit) {
-    // ... existing registration logic ...
-    if (unit is PrimitiveUnit && unit.isDimensionless) {
-      _dimensionlessIds.add(unit.id);
-    }
-  }
-
-  /// IDs of all dimensionless primitive units (radian, steradian, etc.).
-  Set<String> get dimensionlessIds => Set.unmodifiable(_dimensionlessIds);
-}
-~~~~
+`UnitRepository` tracks dimensionless unit IDs in a private set, populated
+during registration when a `PrimitiveUnit` has `isDimensionless == true`.
+Exposes an unmodifiable `dimensionlessIds` property.
 
 ### 4. Conversion service uses stripped dimension
 
@@ -167,15 +117,10 @@ The conversion path (currently the `reduce` function in `unit_service.dart`)
 uses `removeDimensions()` when checking whether two quantities are conformable
 for conversion, but NOT during normal arithmetic:
 
-~~~~ dart
-/// Check whether [from] can be converted to [targetUnit].
-bool canConvert(Quantity from, Unit targetUnit, UnitRepository repo) {
-  final targetQty = resolveUnit(targetUnit, repo);
-  final dlIds = repo.dimensionlessIds;
-  return from.dimension.removeDimensions(dlIds)
-      == targetQty.dimension.removeDimensions(dlIds);
-}
-~~~~
+When checking conversion conformability, both the source and target dimensions
+have their dimensionless entries stripped via `removeDimensions()` before
+comparison.  This allows `radian/s` to convert to `Hz` (both reduce to
+`{s: -1}` after stripping).
 
 ---
 

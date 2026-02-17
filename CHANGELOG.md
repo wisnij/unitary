@@ -7,6 +7,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+[0.4.0] - 2026-02-16
+--------------------
+
+Phase 4: Basic UI - Freeform Mode.
+
+- Freeform expression evaluation screen with two-field input (expression +
+    optional conversion target) and real-time result display
+- Result display widget with four states: idle, success, conversion, and error
+- Drawer-based navigation with Freeform and Settings destinations
+- Settings screen: precision (2-10), notation
+    (decimal/scientific/engineering), dark mode (system/dark/light), evaluation
+    mode (real-time/on-submit)
+- Riverpod state management with debounced evaluation (500ms, configurable)
+- SharedPreferences persistence for user settings
+- Quantity formatter supporting decimal, scientific, and engineering notation
+- Dimensionless unit stripping in conversion factor computation
+- Reciprocal display for unit conversions
+- Web platform support
+- 848 passing tests
+
+
 [0.3.0] - 2026-02-16
 --------------------
 

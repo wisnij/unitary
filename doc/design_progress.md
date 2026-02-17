@@ -250,7 +250,7 @@ When resuming design work, recommended order of priority:
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
 2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
 3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
-4. ✅ ~~**Basic UI - Freeform Mode**~~ - **DESIGNED** (see phase4_plan.md) — ready for implementation
+4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see phase4_plan.md) — design and implementation done
 5. **Worksheet System** - Major user-facing feature
 6. **GNU Units Database Import** - Needed before implementation can begin
 7. **Currency Rate Management** - Can be added after core features work
@@ -308,3 +308,9 @@ Questions that arose during design but haven't been resolved:
   - PrefixUnit subclass of DerivedUnit; prefixes stored separately in UnitRepository via registerPrefix()
   - findUnitWithPrefix() method with prefix-aware lookup ordering: exact match → prefix splitting (longest first) → standalone prefix → plural stripping
   - Prefix splitting: "kilometers" → kilo + meters → kilo + meter; "ms" → milli + second
+- *Phase 4: Basic UI - Freeform Mode completed (February 16, 2026)*
+  - 845 tests passing (142 new)
+  - Freeform evaluation screen with two-field conversion, result display, drawer navigation
+  - Settings screen with precision, notation, dark mode, evaluation mode
+  - Riverpod state management with SharedPreferences persistence
+  - Quantity formatting (decimal/scientific/engineering notation)

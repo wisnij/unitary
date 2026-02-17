@@ -166,6 +166,7 @@ $changelogSection''');
     'v$newVersion',
     '-m',
     tagMessage,
+    '--cleanup=whitespace',
   ]);
   if (tagResult.exitCode != 0) {
     stderr.writeln('Error: git tag failed.');

@@ -158,36 +158,47 @@ Implementation Phases
 
 ---
 
-### Phase 4: Basic UI - Freeform Mode (Weeks 10-12)
+### Phase 4: Basic UI - Freeform Mode (Weeks 10-12) — COMPLETE
 
 **Goals:** First working UI for expression evaluation
 
 **Tasks:**
 
 1. Create app structure
-   - Main navigation
-   - Freeform input screen
-   - Material Design theme
-   - Dark mode support
+   - [x] Main navigation (drawer-based)
+   - [x] Freeform input screen
+   - [x] Material Design theme
+   - [x] Dark mode support (three-state: system/dark/light)
 
 2. Build freeform input UI
-   - Input text field
-   - Output text field (optional)
-   - Result display
-   - Error display
-   - Real-time evaluation
+   - [x] Input text field (expression)
+   - [x] Output text field (optional, for conversion target)
+   - [x] Result display widget (idle/success/conversion/error states)
+   - [x] Real-time evaluation with 500ms debounce (configurable)
 
 3. Integrate parser with UI
-   - Connect input to parser
-   - Display results
-   - Handle errors gracefully
+   - [x] Riverpod state management
+   - [x] Connect input to ExpressionParser
+   - [x] Two-expression conversion support
+   - [x] Quantity formatting (decimal/scientific/engineering notation)
+   - [x] Handle errors gracefully
 
-4. Settings screen (basic)
-   - Precision selector
-   - Notation selector
-   - Dark mode toggle
+4. Settings screen
+   - [x] Precision selector (2-10, default 6)
+   - [x] Notation selector (decimal/scientific/engineering)
+   - [x] Dark mode toggle
+   - [x] Evaluation mode (real-time / on-submit)
 
-**Deliverable:** Working app that evaluates expressions in freeform mode
+5. Persistence
+   - [x] SharedPreferences for user settings
+
+**Deliverable:** Working app that evaluates expressions in freeform mode ✓
+
+**Test Coverage:** 845 tests passing
+
+**Completed:** February 16, 2026
+
+**Detailed Plan:** See [Phase 4 Plan](phase4_plan.md)
 
 ---
 

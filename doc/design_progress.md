@@ -56,6 +56,18 @@ The following areas have been thoroughly designed and documented:
 - Consistent vocabulary established for codebase
 - Clear distinctions between values, quantities, units, dimensions, etc.
 
+### Phase 4: Basic UI - Freeform Mode
+
+- **State management**: Riverpod with StateNotifierProvider for mutable state, Provider for singletons
+- **Persistence**: SharedPreferences for user settings (precision, notation, dark mode, evaluation mode)
+- **Navigation**: Drawer-based with Freeform (active), Worksheet (disabled), Settings
+- **Two-field conversion**: Input expression + output unit field; result = converted value with unit label
+- **Evaluation modes**: Real-time (500ms debounce) and on-submit; user-configurable
+- **Result formatting**: Value + canonical unit string; decimal/scientific/engineering notation
+- **Dark mode**: Three-state (system/dark/light) mapping to Flutter ThemeMode
+- **Settings model**: precision (2-10, default 6), notation, darkMode, evaluationMode
+- **Document**: [phase4_plan.md](phase4_plan.md)
+
 ---
 
 
@@ -143,48 +155,25 @@ The following areas have been identified but need deeper design work:
 
 ### 4. User Preferences & State Management
 
-**Current State**: List of what needs to persist, state management framework chosen (Provider/Riverpod)
+**Current State**: Basic settings model designed for Phase 4 (precision, notation, darkMode, evaluationMode).  Riverpod chosen for state management; SharedPreferences for persistence.  See [phase4_plan.md](phase4_plan.md).
 
-**Needs Detail On**:
+**Needs Detail On** (for later phases):
 
-- Complete preference model
-  - All user settings and their data types
-  - Default values
-  - Validation rules
-- State management architecture
-  - Provider/Riverpod structure and patterns
-  - Which state is global vs. local
-  - State update flow diagrams
-- Persistence implementation
-  - Storage mechanism (SharedPreferences, SQLite, Hive, etc.)
-  - Serialization format
-  - Read/write patterns
 - Data migration
   - Strategy for schema changes between versions
   - Backwards compatibility
   - Migration testing approach
 - State restoration
-  - What happens on app restart
   - Handling corrupted preferences
   - Reset to defaults functionality
+- Additional preferences for worksheet mode, currency, custom units
 
 ### 5. UI/UX Design
 
-**Current State**: Minimalist interface, Material Design, dark mode support identified
+**Current State**: Freeform mode UI fully designed for Phase 4 (screen layouts, navigation, input/output fields, result display, settings screen).  See [phase4_plan.md](phase4_plan.md).
 
 **Needs Detail On**:
 
-- Screen layouts and navigation
-  - Main screen structure
-  - Navigation between freeform and worksheet modes
-  - Category/dimension browsing
-  - Settings screen layout
-- Freeform input UI
-  - Input field design
-  - Output field design
-  - Error display
-  - Result formatting options
-  - History/suggestions
 - Worksheet UI
   - Multi-field layout
   - Unit selector per field
@@ -261,13 +250,12 @@ When resuming design work, recommended order of priority:
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
 2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
 3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
-4. **Worksheet System** - Major user-facing feature
-5. **GNU Units Database Import** - Needed before implementation can begin
-6. **UI/UX Design** - Should be fleshed out before coding UI
-7. **State Management Details** - Needed early in implementation
-8. **Currency Rate Management** - Can be added after core features work
-9. **Testing Strategy** - Define before/during implementation
-10. **Error Handling Details** - Refine during implementation
+4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see phase4_plan.md) — design and implementation done
+5. **Worksheet System** - Major user-facing feature
+6. **GNU Units Database Import** - Needed before implementation can begin
+7. **Currency Rate Management** - Can be added after core features work
+8. **Testing Strategy** - Define before/during implementation
+9. **Error Handling Details** - Refine during implementation
 
 ---
 
@@ -282,19 +270,20 @@ Questions that arose during design but haven't been resolved:
 3. Should worksheet field reordering be supported?
 4. Do we need undo/redo functionality?
 5. Should conversion history be searchable/filterable?
-6. How many decimal places should be shown by default?
+6. ~~How many decimal places should be shown by default?~~ → **RESOLVED**: 6 decimal places, configurable 2-10 (Phase 4)
 7. Should the app support landscape orientation?
 8. Do we need tutorial/onboarding screens for first-time users?
 
 ---
 
-*Last Updated: February 15, 2026*
+*Last Updated: February 16, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
 - *Quantity Class & Arithmetic (January 30, 2026)*
 - *Lexer/Parser Grammar Redesign (February 1, 2026)*
 - *Phase 2: Unit System Foundation (February 6, 2026)*
+- *Phase 4: Basic UI - Freeform Mode (February 16, 2026)*
 
 *Implementation Progress:*
 
@@ -319,3 +308,9 @@ Questions that arose during design but haven't been resolved:
   - PrefixUnit subclass of DerivedUnit; prefixes stored separately in UnitRepository via registerPrefix()
   - findUnitWithPrefix() method with prefix-aware lookup ordering: exact match → prefix splitting (longest first) → standalone prefix → plural stripping
   - Prefix splitting: "kilometers" → kilo + meters → kilo + meter; "ms" → milli + second
+- *Phase 4: Basic UI - Freeform Mode completed (February 16, 2026)*
+  - 845 tests passing (142 new)
+  - Freeform evaluation screen with two-field conversion, result display, drawer navigation
+  - Settings screen with precision, notation, dark mode, evaluation mode
+  - Riverpod state management with SharedPreferences persistence
+  - Quantity formatting (decimal/scientific/engineering notation)

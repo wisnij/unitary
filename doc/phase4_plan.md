@@ -206,7 +206,7 @@ HomeScreen (Scaffold)
 ~~~~
 FreeformScreen (Column, scrollable)
 ├── Input TextField
-│   ├── Label: "Expression"
+│   ├── Label: "Convert from"
 │   ├── Hint: "5 miles + 3 km"
 │   ├── OutlineInputBorder
 │   └── onChanged / onSubmitted handlers

@@ -29,7 +29,7 @@ void main() {
   group('FreeformScreen', () {
     testWidgets('renders input and output fields', (tester) async {
       await tester.pumpWidget(buildApp());
-      expect(find.widgetWithText(TextField, 'Expression'), findsOneWidget);
+      expect(find.widgetWithText(TextField, 'Convert from'), findsOneWidget);
       expect(
         find.widgetWithText(TextField, 'Convert to (optional)'),
         findsOneWidget,
@@ -46,7 +46,10 @@ void main() {
     ) async {
       await tester.pumpWidget(buildApp());
 
-      await tester.enterText(find.widgetWithText(TextField, 'Expression'), '5');
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5',
+      );
       await tester.pump();
       // Before debounce fires, should still show idle.
       expect(find.text('Enter an expression'), findsOneWidget);
@@ -60,7 +63,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '2 + 3',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -72,7 +75,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -91,7 +94,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5 miles',
       );
       await tester.enterText(
@@ -141,7 +144,7 @@ void main() {
       );
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5',
       );
       await tester.pump(const Duration(milliseconds: 600));
@@ -169,7 +172,7 @@ void main() {
       );
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '2 + 3',
       );
       await tester.pump();
@@ -189,7 +192,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5 +',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);

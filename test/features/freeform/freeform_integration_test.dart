@@ -28,7 +28,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5 ft',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -45,7 +45,7 @@ void main() {
         await tester.pumpWidget(buildApp());
 
         await tester.enterText(
-          find.widgetWithText(TextField, 'Expression'),
+          find.widgetWithText(TextField, 'Convert from'),
           '5 miles',
         );
         await tester.enterText(
@@ -65,7 +65,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5 ft + 3 kg',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -78,7 +78,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5 * *',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -94,7 +94,7 @@ void main() {
 
       // Evaluate something first.
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '1 mile',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -120,7 +120,7 @@ void main() {
 
       // Re-evaluate.
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '1 mile',
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -173,7 +173,7 @@ void main() {
 
       // Type something.
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5',
       );
       await tester.pump(const Duration(milliseconds: 600));
@@ -191,7 +191,7 @@ void main() {
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
-        find.widgetWithText(TextField, 'Expression'),
+        find.widgetWithText(TextField, 'Convert from'),
         '5 ft',
       );
       await tester.enterText(

@@ -96,7 +96,7 @@ void main() {
     testWidgets('body contains FreeformScreen', (tester) async {
       await tester.pumpWidget(buildApp());
       // FreeformScreen renders input/output fields.
-      expect(find.text('Expression'), findsOneWidget);
+      expect(find.text('Convert from'), findsOneWidget);
     });
   });
 }

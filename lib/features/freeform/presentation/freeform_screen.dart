@@ -85,7 +85,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
           TextField(
             controller: _inputController,
             decoration: InputDecoration(
-              labelText: 'Expression',
+              labelText: 'Convert from',
               hintText: '5 miles + 3 km',
               border: const OutlineInputBorder(),
               suffixIcon: _inputController.text.isNotEmpty

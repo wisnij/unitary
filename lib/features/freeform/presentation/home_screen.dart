@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: [
             const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.deepPurple),
+              decoration: BoxDecoration(color: Colors.blue),
               child: Text(
                 'Unitary',
                 style: TextStyle(color: Colors.white, fontSize: 24),

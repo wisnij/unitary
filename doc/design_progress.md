@@ -276,7 +276,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 16, 2026*
+*Last Updated: February 18, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -314,3 +314,10 @@ Questions that arose during design but haven't been resolved:
   - Settings screen with precision, notation, dark mode, evaluation mode
   - Riverpod state management with SharedPreferences persistence
   - Quantity formatting (decimal/scientific/engineering notation)
+- *Build metadata in Settings version display (February 18, 2026)*
+  - 847 tests passing (2 new)
+  - package_info_plus dependency for reading app version from pubspec.yaml at runtime
+  - packageInfoProvider (FutureProvider) wraps PackageInfo.fromPlatform()
+  - Settings "About > Version" tile now shows dynamic version (e.g. "0.4.0")
+  - Optional build suffix when `--dart-define=BUILD_METADATA=...` is set at build time (e.g. "0.4.0 (build 20260218-143022.abc1234)")
+  - CI deploy-web job computes BUILD_METADATA (timestamp + short SHA) and passes it as dart-define

@@ -251,8 +251,8 @@ When resuming design work, recommended order of priority:
 2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
 3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
 4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see phase4_plan.md) — design and implementation done
-5. **Worksheet System** - Major user-facing feature
-6. **GNU Units Database Import** - Needed before implementation can begin
+5. **GNU Units Database Import** - Needed before implementation can begin
+6. **Worksheet System** - Major user-facing feature
 7. **Currency Rate Management** - Can be added after core features work
 8. **Testing Strategy** - Define before/during implementation
 9. **Error Handling Details** - Refine during implementation

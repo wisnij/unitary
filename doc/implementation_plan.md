@@ -202,7 +202,25 @@ Implementation Phases
 
 ---
 
-### Phase 5: Worksheet Mode (Weeks 13-15)
+### Phase 5: Complete Unit Database (Weeks 13-14)
+
+**Goals:** Import all unit categories
+
+**Tasks:**
+
+1. Complete GNU Units database import
+   - All categories from requirements
+   - Verify accuracy of conversions
+
+2. Add unit aliases and plurals
+3. Organize into dimensions
+4. Test coverage for all categories
+
+**Deliverable:** All required unit categories available
+
+---
+
+### Phase 6: Worksheet Mode (Weeks 15-17)
 
 **Goals:** Multi-unit worksheet interface
 
@@ -228,7 +246,7 @@ Implementation Phases
 
 ---
 
-### Phase 6: Persistence (Weeks 16-17)
+### Phase 7: Persistence (Weeks 18-19)
 
 **Goals:** Save user data and preferences
 
@@ -249,7 +267,7 @@ Implementation Phases
 
 ---
 
-### Phase 7: Currency Support (Weeks 18-19)
+### Phase 8: Currency Support (Weeks 20-21)
 
 **Goals:** Currency conversion with live rates
 
@@ -265,24 +283,6 @@ Implementation Phases
 8. Handle offline gracefully
 
 **Deliverable:** Currency conversions work with auto-updating rates
-
----
-
-### Phase 8: Complete Unit Database (Week 20-21)
-
-**Goals:** Import all unit categories
-
-**Tasks:**
-
-1. Complete GNU Units database import
-   - All categories from requirements
-   - Verify accuracy of conversions
-
-2. Add unit aliases and plurals
-3. Organize into dimensions
-4. Test coverage for all categories
-
-**Deliverable:** All required unit categories available
 
 ---
 

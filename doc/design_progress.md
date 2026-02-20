@@ -333,3 +333,11 @@ Questions that arose during design but haven't been resolved:
   - Units containing `+` or `-` are wrapped in parentheses (e.g. `(5ft + 1in)`)
   - Units starting with a digit or `.` are prefixed with `×` (e.g. `× 5 km`)
   - Used in `freeform_provider.dart` for both `formattedResult` and `formattedReciprocal`
+- *Replace `bool? darkMode` with `ThemeMode themeMode` in settings (February 19, 2026)*
+  - 868 tests passing (9 new)
+  - `UserSettings.darkMode: bool?` → `themeMode: ThemeMode` (default `ThemeMode.system`)
+  - Removed `clearDarkMode` hack from `copyWith`; standard nullable override now suffices
+  - `SettingsRepository`: key renamed `'darkMode'` → `'themeMode'`; stored as string `"system"/"dark"/"light"`
+  - `SettingsNotifier.updateDarkMode(bool?)` → `updateThemeMode(ThemeMode)`
+  - `app.dart`: removed three-case bool switch; passes `settings.themeMode` directly to `MaterialApp.themeMode`
+  - Settings UI: replaced `CheckboxListTile` + `SwitchListTile` with `RadioGroup<ThemeMode>` containing three `RadioListTile` widgets

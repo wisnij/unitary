@@ -10,15 +10,6 @@ class UnitaryApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
-    final ThemeMode themeMode;
-    switch (settings.darkMode) {
-      case true:
-        themeMode = ThemeMode.dark;
-      case false:
-        themeMode = ThemeMode.light;
-      case null:
-        themeMode = ThemeMode.system;
-    }
 
     return MaterialApp(
       title: 'Unitary',
@@ -33,7 +24,7 @@ class UnitaryApp extends ConsumerWidget {
         ),
         useMaterial3: true,
       ),
-      themeMode: themeMode,
+      themeMode: settings.themeMode,
       home: const HomeScreen(),
     );
   }

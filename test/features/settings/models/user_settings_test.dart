@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:unitary/features/settings/models/user_settings.dart';
@@ -36,7 +37,7 @@ void main() {
       final settings = UserSettings.defaults();
       expect(settings.precision, 8);
       expect(settings.notation, Notation.automatic);
-      expect(settings.darkMode, isNull);
+      expect(settings.themeMode, ThemeMode.system);
       expect(settings.evaluationMode, EvaluationMode.realtime);
     });
 
@@ -80,10 +81,10 @@ void main() {
       }
     });
 
-    test('constructor accepts all darkMode values', () {
-      for (final d in [null, true, false]) {
-        final settings = UserSettings(darkMode: d);
-        expect(settings.darkMode, d);
+    test('constructor accepts all themeMode values', () {
+      for (final m in ThemeMode.values) {
+        final settings = UserSettings(themeMode: m);
+        expect(settings.themeMode, m);
       }
     });
 
@@ -99,13 +100,13 @@ void main() {
         final original = UserSettings(
           precision: 4,
           notation: Notation.scientific,
-          darkMode: true,
+          themeMode: ThemeMode.dark,
           evaluationMode: EvaluationMode.onSubmit,
         );
         final copy = original.copyWith();
         expect(copy.precision, original.precision);
         expect(copy.notation, original.notation);
-        expect(copy.darkMode, original.darkMode);
+        expect(copy.themeMode, original.themeMode);
         expect(copy.evaluationMode, original.evaluationMode);
         expect(copy, equals(original));
       });
@@ -124,16 +125,22 @@ void main() {
         expect(copy.precision, original.precision);
       });
 
-      test('changes darkMode', () {
+      test('changes themeMode', () {
         final original = UserSettings.defaults();
-        final copy = original.copyWith(darkMode: false);
-        expect(copy.darkMode, false);
+        final copy = original.copyWith(themeMode: ThemeMode.dark);
+        expect(copy.themeMode, ThemeMode.dark);
       });
 
-      test('changes darkMode to null via clearDarkMode', () {
-        final original = UserSettings(darkMode: true);
-        final copy = original.copyWith(clearDarkMode: true);
-        expect(copy.darkMode, isNull);
+      test('changes themeMode to light', () {
+        final original = UserSettings(themeMode: ThemeMode.dark);
+        final copy = original.copyWith(themeMode: ThemeMode.light);
+        expect(copy.themeMode, ThemeMode.light);
+      });
+
+      test('changes themeMode back to system', () {
+        final original = UserSettings(themeMode: ThemeMode.dark);
+        final copy = original.copyWith(themeMode: ThemeMode.system);
+        expect(copy.themeMode, ThemeMode.system);
       });
 
       test('changes evaluationMode', () {
@@ -173,9 +180,9 @@ void main() {
         expect(a, isNot(equals(b)));
       });
 
-      test('different darkMode makes unequal', () {
-        final a = UserSettings(darkMode: null);
-        final b = UserSettings(darkMode: true);
+      test('different themeMode makes unequal', () {
+        final a = UserSettings(themeMode: ThemeMode.system);
+        final b = UserSettings(themeMode: ThemeMode.dark);
         expect(a, isNot(equals(b)));
       });
 
@@ -191,7 +198,7 @@ void main() {
       final str = settings.toString();
       expect(str, contains('precision'));
       expect(str, contains('notation'));
-      expect(str, contains('darkMode'));
+      expect(str, contains('themeMode'));
       expect(str, contains('evaluationMode'));
     });
   });

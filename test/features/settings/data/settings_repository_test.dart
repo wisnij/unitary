@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,7 +29,7 @@ void main() {
       final settings = UserSettings(
         precision: 4,
         notation: Notation.scientific,
-        darkMode: true,
+        themeMode: ThemeMode.dark,
         evaluationMode: EvaluationMode.onSubmit,
       );
       await repository.save(settings);
@@ -36,20 +37,55 @@ void main() {
       expect(loaded, equals(settings));
     });
 
-    test('save and load preserves darkMode false', () async {
+    test('save and load preserves themeMode light', () async {
       repository = await createRepository();
-      final settings = UserSettings(darkMode: false);
+      final settings = UserSettings(themeMode: ThemeMode.light);
       await repository.save(settings);
       final loaded = repository.load();
-      expect(loaded.darkMode, false);
+      expect(loaded.themeMode, ThemeMode.light);
     });
 
-    test('save and load preserves darkMode null', () async {
+    test('save and load preserves themeMode system', () async {
       repository = await createRepository();
-      final settings = UserSettings(darkMode: null);
+      final settings = UserSettings(themeMode: ThemeMode.system);
       await repository.save(settings);
       final loaded = repository.load();
-      expect(loaded.darkMode, isNull);
+      expect(loaded.themeMode, ThemeMode.system);
+    });
+
+    test('themeMode dark is stored as string "dark"', () async {
+      repository = await createRepository();
+      await repository.save(UserSettings(themeMode: ThemeMode.dark));
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('themeMode'), 'dark');
+    });
+
+    test('themeMode light is stored as string "light"', () async {
+      repository = await createRepository();
+      await repository.save(UserSettings(themeMode: ThemeMode.light));
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('themeMode'), 'light');
+    });
+
+    test('themeMode system is stored as string "system"', () async {
+      repository = await createRepository();
+      await repository.save(UserSettings(themeMode: ThemeMode.system));
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getString('themeMode'), 'system');
+    });
+
+    test('missing themeMode key falls back to ThemeMode.system', () async {
+      SharedPreferences.setMockInitialValues({'precision': 4});
+      repository = await createRepository();
+      final settings = repository.load();
+      expect(settings.themeMode, ThemeMode.system);
+    });
+
+    test('unknown themeMode string falls back to ThemeMode.system', () async {
+      SharedPreferences.setMockInitialValues({'themeMode': 'invalid'});
+      repository = await createRepository();
+      final settings = repository.load();
+      expect(settings.themeMode, ThemeMode.system);
     });
 
     test('load with partial data fills in defaults for missing keys', () async {
@@ -58,7 +94,7 @@ void main() {
       final settings = repository.load();
       expect(settings.precision, 4);
       expect(settings.notation, Notation.automatic);
-      expect(settings.darkMode, isNull);
+      expect(settings.themeMode, ThemeMode.system);
       expect(settings.evaluationMode, EvaluationMode.realtime);
     });
 

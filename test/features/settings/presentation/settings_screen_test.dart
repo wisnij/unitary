@@ -34,6 +34,13 @@ void main() {
 
   group('SettingsScreen', () {
     testWidgets('renders all settings sections', (tester) async {
+      // The settings list is taller than the default test window; use a taller
+      // one so all sections are mounted.
+      tester.view.physicalSize = const Size(800, 1600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
       await tester.pumpWidget(buildApp());
       expect(find.text('Settings'), findsOneWidget); // AppBar title.
       expect(find.text('Display'), findsOneWidget);
@@ -108,47 +115,59 @@ void main() {
       expect(container.read(settingsProvider).notation, Notation.scientific);
     });
 
-    testWidgets('dark mode toggle works', (tester) async {
+    testWidgets('appearance section shows three theme radio options', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      expect(find.text('Use system theme'), findsOneWidget);
+      expect(find.text('Dark mode'), findsOneWidget);
+      expect(find.text('Light mode'), findsOneWidget);
+    });
+
+    testWidgets('selecting dark mode radio updates themeMode', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildApp());
 
-      // Initially "Use system theme" is checked, manual switch is off.
-      final systemCheckbox = find.byType(Checkbox);
-      expect(systemCheckbox, findsOneWidget);
-
-      // Uncheck system theme.
-      await tester.tap(systemCheckbox);
-      await tester.pumpAndSettle();
-
-      // Now the dark mode switch should be enabled.
-      final darkSwitch = find.byType(Switch);
-      expect(darkSwitch, findsOneWidget);
-
-      // Toggle dark mode on.
-      await tester.tap(darkSwitch);
+      await tester.tap(find.text('Dark mode'));
       await tester.pumpAndSettle();
 
       final container = ProviderScope.containerOf(
         tester.element(find.byType(SettingsScreen)),
       );
-      expect(container.read(settingsProvider).darkMode, true);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.dark);
     });
 
-    testWidgets('system theme checkbox sets darkMode to null', (tester) async {
-      // Start with dark mode explicitly set.
-      SharedPreferences.setMockInitialValues({'darkMode': true});
+    testWidgets('selecting light mode radio updates themeMode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.tap(find.text('Light mode'));
+      await tester.pumpAndSettle();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(SettingsScreen)),
+      );
+      expect(container.read(settingsProvider).themeMode, ThemeMode.light);
+    });
+
+    testWidgets('selecting system theme radio updates themeMode', (
+      tester,
+    ) async {
+      // Start with dark mode set.
+      SharedPreferences.setMockInitialValues({'themeMode': 'dark'});
       final prefs = await SharedPreferences.getInstance();
       repo = SettingsRepository(prefs);
       await tester.pumpWidget(buildApp());
 
-      // Check "Use system theme".
-      final systemCheckbox = find.byType(Checkbox);
-      await tester.tap(systemCheckbox);
+      await tester.tap(find.text('Use system theme'));
       await tester.pumpAndSettle();
 
       final container = ProviderScope.containerOf(
         tester.element(find.byType(SettingsScreen)),
       );
-      expect(container.read(settingsProvider).darkMode, isNull);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.system);
     });
 
     testWidgets('evaluation mode selection works', (tester) async {

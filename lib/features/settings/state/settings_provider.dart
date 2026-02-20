@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/settings_repository.dart';
@@ -36,12 +37,8 @@ class SettingsNotifier extends StateNotifier<UserSettings> {
     _repository.save(state);
   }
 
-  void updateDarkMode(bool? darkMode) {
-    if (darkMode == null) {
-      state = state.copyWith(clearDarkMode: true);
-    } else {
-      state = state.copyWith(darkMode: darkMode);
-    }
+  void updateThemeMode(ThemeMode themeMode) {
+    state = state.copyWith(themeMode: themeMode);
     _repository.save(state);
   }
 

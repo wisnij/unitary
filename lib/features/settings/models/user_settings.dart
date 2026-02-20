@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// Number notation style for result formatting.
 enum Notation {
   automatic('Automatic'),
@@ -23,13 +25,13 @@ enum EvaluationMode {
 class UserSettings {
   final int precision;
   final Notation notation;
-  final bool? darkMode;
+  final ThemeMode themeMode;
   final EvaluationMode evaluationMode;
 
   UserSettings({
     this.precision = 8,
     this.notation = Notation.automatic,
-    this.darkMode,
+    this.themeMode = ThemeMode.system,
     this.evaluationMode = EvaluationMode.realtime,
   }) {
     if (precision < 2 || precision > 10) {
@@ -44,20 +46,16 @@ class UserSettings {
   factory UserSettings.defaults() => UserSettings();
 
   /// Creates a copy with the given fields replaced.
-  ///
-  /// Because [darkMode] is nullable, use [clearDarkMode] to explicitly set
-  /// it to null (follow system theme).
   UserSettings copyWith({
     int? precision,
     Notation? notation,
-    bool? darkMode,
-    bool clearDarkMode = false,
+    ThemeMode? themeMode,
     EvaluationMode? evaluationMode,
   }) {
     return UserSettings(
       precision: precision ?? this.precision,
       notation: notation ?? this.notation,
-      darkMode: clearDarkMode ? null : (darkMode ?? this.darkMode),
+      themeMode: themeMode ?? this.themeMode,
       evaluationMode: evaluationMode ?? this.evaluationMode,
     );
   }
@@ -68,15 +66,15 @@ class UserSettings {
       other is UserSettings &&
           precision == other.precision &&
           notation == other.notation &&
-          darkMode == other.darkMode &&
+          themeMode == other.themeMode &&
           evaluationMode == other.evaluationMode;
 
   @override
   int get hashCode =>
-      Object.hash(precision, notation, darkMode, evaluationMode);
+      Object.hash(precision, notation, themeMode, evaluationMode);
 
   @override
   String toString() =>
       'UserSettings(precision: $precision, notation: $notation, '
-      'darkMode: $darkMode, evaluationMode: $evaluationMode)';
+      'themeMode: $themeMode, evaluationMode: $evaluationMode)';
 }

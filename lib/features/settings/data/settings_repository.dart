@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_settings.dart';
@@ -10,7 +11,7 @@ class SettingsRepository {
 
   static const _keyPrecision = 'precision';
   static const _keyNotation = 'notation';
-  static const _keyDarkMode = 'darkMode';
+  static const _keyThemeMode = 'themeMode';
   static const _keyEvaluationMode = 'evaluationMode';
 
   /// Loads settings from storage, using defaults for missing keys.
@@ -23,7 +24,7 @@ class SettingsRepository {
         Notation.values,
         defaults.notation,
       ),
-      darkMode: _loadDarkMode(),
+      themeMode: _loadThemeMode(),
       evaluationMode: _loadEnum(
         _keyEvaluationMode,
         EvaluationMode.values,
@@ -36,15 +37,11 @@ class SettingsRepository {
   Future<void> save(UserSettings settings) async {
     await _prefs.setInt(_keyPrecision, settings.precision);
     await _prefs.setString(_keyNotation, settings.notation.name);
+    await _prefs.setString(_keyEvaluationMode, settings.evaluationMode.name);
     await _prefs.setString(
-      _keyEvaluationMode,
-      settings.evaluationMode.name,
+      _keyThemeMode,
+      _themeModeToString(settings.themeMode),
     );
-    if (settings.darkMode == null) {
-      await _prefs.remove(_keyDarkMode);
-    } else {
-      await _prefs.setBool(_keyDarkMode, settings.darkMode!);
-    }
   }
 
   T _loadEnum<T extends Enum>(String key, List<T> values, T defaultValue) {
@@ -60,10 +57,20 @@ class SettingsRepository {
     return defaultValue;
   }
 
-  bool? _loadDarkMode() {
-    if (!_prefs.containsKey(_keyDarkMode)) {
-      return null;
-    }
-    return _prefs.getBool(_keyDarkMode);
+  ThemeMode _loadThemeMode() {
+    final s = _prefs.getString(_keyThemeMode);
+    return _themeModeFromString(s);
   }
+
+  static String _themeModeToString(ThemeMode m) => switch (m) {
+    ThemeMode.system => 'system',
+    ThemeMode.dark => 'dark',
+    ThemeMode.light => 'light',
+  };
+
+  static ThemeMode _themeModeFromString(String? s) => switch (s) {
+    'dark' => ThemeMode.dark,
+    'light' => ThemeMode.light,
+    _ => ThemeMode.system,
+  };
 }

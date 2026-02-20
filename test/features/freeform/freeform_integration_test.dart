@@ -139,12 +139,8 @@ void main() {
       await tester.tap(find.text('Settings'));
       await tester.pumpAndSettle();
 
-      // Uncheck system theme.
-      await tester.tap(find.byType(Checkbox));
-      await tester.pumpAndSettle();
-
-      // Toggle dark mode on.
-      await tester.tap(find.byType(Switch));
+      // Select dark mode radio.
+      await tester.tap(find.text('Dark mode'));
       await tester.pumpAndSettle();
 
       // Verify the MaterialApp has dark theme mode.

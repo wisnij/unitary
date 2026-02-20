@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -57,17 +58,23 @@ void main() {
       expect(container.read(settingsProvider).notation, Notation.scientific);
     });
 
-    test('updateDarkMode changes state to true', () {
+    test('updateThemeMode changes state to dark', () {
       final notifier = container.read(settingsProvider.notifier);
-      notifier.updateDarkMode(true);
-      expect(container.read(settingsProvider).darkMode, true);
+      notifier.updateThemeMode(ThemeMode.dark);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.dark);
     });
 
-    test('updateDarkMode changes state to null', () {
+    test('updateThemeMode changes state to light', () {
       final notifier = container.read(settingsProvider.notifier);
-      notifier.updateDarkMode(true);
-      notifier.updateDarkMode(null);
-      expect(container.read(settingsProvider).darkMode, isNull);
+      notifier.updateThemeMode(ThemeMode.light);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.light);
+    });
+
+    test('updateThemeMode changes state to system', () {
+      final notifier = container.read(settingsProvider.notifier);
+      notifier.updateThemeMode(ThemeMode.dark);
+      notifier.updateThemeMode(ThemeMode.system);
+      expect(container.read(settingsProvider).themeMode, ThemeMode.system);
     });
 
     test('updateEvaluationMode changes state', () {

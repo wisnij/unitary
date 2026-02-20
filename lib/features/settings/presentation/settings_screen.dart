@@ -18,7 +18,6 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final notifier = ref.read(settingsProvider.notifier);
-    final useSystemTheme = settings.darkMode == null;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
@@ -56,23 +55,29 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
           const _SectionHeader(title: 'Appearance'),
-          CheckboxListTile(
-            title: const Text('Use system theme'),
-            value: useSystemTheme,
+          RadioGroup<ThemeMode>(
+            groupValue: settings.themeMode,
             onChanged: (value) {
-              if (value == true) {
-                notifier.updateDarkMode(null);
-              } else {
-                notifier.updateDarkMode(false);
+              if (value != null) {
+                notifier.updateThemeMode(value);
               }
             },
-          ),
-          SwitchListTile(
-            title: const Text('Dark mode'),
-            value: settings.darkMode ?? false,
-            onChanged: useSystemTheme
-                ? null
-                : (value) => notifier.updateDarkMode(value),
+            child: const Column(
+              children: [
+                RadioListTile<ThemeMode>(
+                  title: Text('Use system theme'),
+                  value: ThemeMode.system,
+                ),
+                RadioListTile<ThemeMode>(
+                  title: Text('Dark mode'),
+                  value: ThemeMode.dark,
+                ),
+                RadioListTile<ThemeMode>(
+                  title: Text('Light mode'),
+                  value: ThemeMode.light,
+                ),
+              ],
+            ),
           ),
           const _SectionHeader(title: 'Behavior'),
           RadioGroup<EvaluationMode>(

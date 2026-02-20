@@ -16,7 +16,7 @@ Project Status
 **Current Phase:** Phase 4 Complete (Basic UI - Freeform Mode)\
 **Last Updated:** February 19, 2026
 
-Phases 0-4 are complete with 859 passing tests.  The expression parser,
+Phases 0-4 are complete with 868 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, and basic UI are
 fully implemented.  Phase 4 added the first working UI: freeform expression
 evaluation with two-field conversion, settings screen (precision, notation,

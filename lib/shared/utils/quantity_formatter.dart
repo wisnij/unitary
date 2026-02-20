@@ -106,6 +106,24 @@ String _formatEngineering(double value, int precision) {
   return '$sign${mantissaStr}e$expSign$exponent';
 }
 
+/// Formats an output unit string for display after a numeric value.
+///
+/// Rules applied in order:
+/// 1. If [unit] contains `+` or `-`, it is wrapped in parentheses to avoid
+///    ambiguity with the preceding numeric result.
+/// 2. Else if [unit] starts with a digit (`0`–`9`) or `.`, it is prefixed
+///    with `× ` (U+00D7) so it does not visually run together with the number.
+/// 3. Otherwise, [unit] is returned unchanged.
+String formatOutputUnit(String unit) {
+  if (unit.contains('+') || unit.contains('-')) {
+    return '($unit)';
+  }
+  if (unit.startsWith(RegExp(r'[0-9.]'))) {
+    return '× $unit';
+  }
+  return unit;
+}
+
 /// Floor division that works correctly for negative numbers.
 int _floorDiv(int a, int b) {
   final result = a ~/ b;

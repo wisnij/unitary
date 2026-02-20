@@ -67,6 +67,7 @@ class FreeformNotifier extends StateNotifier<EvaluationResult> {
       final convertedValue = inputQty.value / outputQty.value;
       final reciprocalValue = 1.0 / convertedValue;
       final outputUnit = output.trim();
+      final formattedUnit = formatOutputUnit(outputUnit);
       final formatted = formatValue(
         convertedValue,
         precision: settings.precision,
@@ -79,8 +80,8 @@ class FreeformNotifier extends StateNotifier<EvaluationResult> {
       );
       state = ConversionSuccess(
         convertedValue: convertedValue,
-        formattedResult: '= $formatted $outputUnit',
-        formattedReciprocal: '= (1 / $formattedReciprocal) $outputUnit',
+        formattedResult: '= $formatted $formattedUnit',
+        formattedReciprocal: '= (1 / $formattedReciprocal) $formattedUnit',
         outputUnit: outputUnit,
       );
     } on UnitaryException catch (e) {

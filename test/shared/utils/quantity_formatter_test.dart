@@ -230,4 +230,34 @@ void main() {
       expect(formatQuantity(q, precision: 6), 'Infinity m');
     });
   });
+
+  group('formatOutputUnit', () {
+    test('plain unit is returned unchanged', () {
+      expect(formatOutputUnit('km'), 'km');
+    });
+
+    test('unit with + is wrapped in parentheses', () {
+      expect(formatOutputUnit('5ft + 1in'), '(5ft + 1in)');
+    });
+
+    test('unit with - is wrapped in parentheses', () {
+      expect(formatOutputUnit('5ft - 1in'), '(5ft - 1in)');
+    });
+
+    test('unit starting with digit is prefixed with ×', () {
+      expect(formatOutputUnit('5m'), '× 5m');
+    });
+
+    test('unit starting with . is prefixed with ×', () {
+      expect(formatOutputUnit('.5m'), '× .5m');
+    });
+
+    test('unit with + and leading digit uses parentheses (rule 1 wins)', () {
+      expect(formatOutputUnit('5ft + 1in'), '(5ft + 1in)');
+    });
+
+    test('empty string is returned unchanged', () {
+      expect(formatOutputUnit(''), '');
+    });
+  });
 }

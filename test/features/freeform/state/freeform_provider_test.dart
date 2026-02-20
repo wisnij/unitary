@@ -142,5 +142,19 @@ void main() {
         expect(success.convertedValue, closeTo(3.0, 1e-10));
       },
     );
+
+    test(
+      'evaluateConversion prefixes output unit with × when it starts with a digit',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // "5 km" starts with a digit, so formattedResult should use × prefix.
+        notifier.evaluateConversion('5000 m', '5 km');
+        final state = container.read(freeformProvider);
+        expect(state, isA<ConversionSuccess>());
+        final success = state as ConversionSuccess;
+        expect(success.formattedResult, contains('× 5 km'));
+        expect(success.formattedReciprocal, contains('× 5 km'));
+      },
+    );
   });
 }

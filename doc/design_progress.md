@@ -327,3 +327,9 @@ Questions that arose during design but haven't been resolved:
   - Formatter now uses `toStringAsPrecision` (significant figures) instead of `toStringAsFixed` (decimal places)
   - Trailing-zero stripping splits on `'e'` to avoid corrupting exponent digits
   - Default precision raised from 6 to 8 significant figures
+- *Output unit disambiguation in freeform conversion display (February 19, 2026)*
+  - 859 tests passing (8 new)
+  - Added `formatOutputUnit()` helper in `quantity_formatter.dart`
+  - Units containing `+` or `-` are wrapped in parentheses (e.g. `(5ft + 1in)`)
+  - Units starting with a digit or `.` are prefixed with `×` (e.g. `× 5 km`)
+  - Used in `freeform_provider.dart` for both `formattedResult` and `formattedReciprocal`

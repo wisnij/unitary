@@ -7,29 +7,29 @@ import 'package:unitary/shared/utils/quantity_formatter.dart';
 
 void main() {
   group('formatValue', () {
-    group('decimal notation', () {
+    group('automatic notation', () {
       test('formats integer value', () {
         expect(formatValue(42, precision: 6), '42');
       });
 
-      test('formats value with fewer decimals than precision', () {
-        expect(formatValue(1609.344, precision: 6), '1609.344');
+      test('formats value with fewer sig figs than precision', () {
+        expect(formatValue(1609.344, precision: 6), '1609.34');
       });
 
       test('formats value truncated to precision', () {
-        expect(formatValue(1.23456789, precision: 4), '1.2346');
+        expect(formatValue(1.23456789, precision: 4), '1.235');
       });
 
       test('formats value at precision 2', () {
-        expect(formatValue(3.14159, precision: 2), '3.14');
+        expect(formatValue(3.14159, precision: 2), '3.1');
       });
 
       test('formats value at precision 10', () {
-        expect(formatValue(3.14159265358979, precision: 10), '3.1415926536');
+        expect(formatValue(3.14159265358979, precision: 10), '3.141592654');
       });
 
       test('formats small value with leading zeros', () {
-        expect(formatValue(0.000123, precision: 4), '0.0001');
+        expect(formatValue(0.000123, precision: 4), '0.000123');
       });
 
       test('formats small value with higher precision', () {
@@ -42,6 +42,10 @@ void main() {
 
       test('strips trailing zeros', () {
         expect(formatValue(1.5000, precision: 6), '1.5');
+      });
+
+      test('strips trailing zeros in exponential notation', () {
+        expect(formatValue(1.5e20, precision: 4), '1.5e+20');
       });
     });
 
@@ -195,7 +199,7 @@ void main() {
 
     test('formats quantity with single unit', () {
       final q = Quantity(1609.344, Dimension({'m': 1}));
-      expect(formatQuantity(q, precision: 6), '1609.344 m');
+      expect(formatQuantity(q, precision: 6), '1609.34 m');
     });
 
     test('formats quantity with compound dimension', () {
@@ -213,7 +217,7 @@ void main() {
 
     test('respects precision setting', () {
       final q = Quantity(3.14159, Dimension({'m': 1}));
-      expect(formatQuantity(q, precision: 2), '3.14 m');
+      expect(formatQuantity(q, precision: 2), '3.1 m');
     });
 
     test('zero with dimension', () {

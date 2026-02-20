@@ -63,15 +63,15 @@ void main() {
     ) async {
       await tester.pumpWidget(buildApp());
       expect(find.text('Decimal precision'), findsOneWidget);
-      // Default precision is 6.
-      expect(find.text('6'), findsOneWidget);
+      // Default precision is 8.
+      expect(find.text('8'), findsOneWidget);
     });
 
     testWidgets('changing precision updates provider state', (tester) async {
       await tester.pumpWidget(buildApp());
 
       // Tap the precision dropdown.
-      await tester.tap(find.text('6'));
+      await tester.tap(find.text('8'));
       await tester.pumpAndSettle();
 
       // Select 4.
@@ -88,14 +88,14 @@ void main() {
     testWidgets('renders notation dropdown with default value', (tester) async {
       await tester.pumpWidget(buildApp());
       expect(find.text('Number notation'), findsOneWidget);
-      expect(find.text('Decimal'), findsOneWidget);
+      expect(find.text('Automatic'), findsOneWidget);
     });
 
     testWidgets('changing notation updates provider state', (tester) async {
       await tester.pumpWidget(buildApp());
 
       // Tap the notation dropdown.
-      await tester.tap(find.text('Decimal'));
+      await tester.tap(find.text('Automatic'));
       await tester.pumpAndSettle();
 
       // Select Scientific.

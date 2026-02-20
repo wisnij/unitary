@@ -6,13 +6,13 @@ void main() {
   group('Notation', () {
     test('has three values', () {
       expect(Notation.values, hasLength(3));
-      expect(Notation.values, contains(Notation.decimal));
+      expect(Notation.values, contains(Notation.automatic));
       expect(Notation.values, contains(Notation.scientific));
       expect(Notation.values, contains(Notation.engineering));
     });
 
     test('label returns human-readable string', () {
-      expect(Notation.decimal.label, 'Decimal');
+      expect(Notation.automatic.label, 'Automatic');
       expect(Notation.scientific.label, 'Scientific');
       expect(Notation.engineering.label, 'Engineering');
     });
@@ -34,8 +34,8 @@ void main() {
   group('UserSettings', () {
     test('defaults() creates settings with default values', () {
       final settings = UserSettings.defaults();
-      expect(settings.precision, 6);
-      expect(settings.notation, Notation.decimal);
+      expect(settings.precision, 8);
+      expect(settings.notation, Notation.automatic);
       expect(settings.darkMode, isNull);
       expect(settings.evaluationMode, EvaluationMode.realtime);
     });
@@ -168,7 +168,7 @@ void main() {
       });
 
       test('different notation makes unequal', () {
-        final a = UserSettings(notation: Notation.decimal);
+        final a = UserSettings(notation: Notation.automatic);
         final b = UserSettings(notation: Notation.scientific);
         expect(a, isNot(equals(b)));
       });

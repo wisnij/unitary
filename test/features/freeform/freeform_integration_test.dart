@@ -99,7 +99,7 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
-      // Default precision 6: 1609.344 m
+      // Default precision 8: 1609.344 m
       expect(find.textContaining('1609.344'), findsOneWidget);
 
       // Navigate to settings.
@@ -109,7 +109,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Change precision to 2.
-      await tester.tap(find.text('6'));
+      await tester.tap(find.text('8'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('2').last);
       await tester.pumpAndSettle();
@@ -126,8 +126,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      // Precision 2: 1609.34 m
-      expect(find.textContaining('1609.34'), findsOneWidget);
+      // Precision 2 (sig figs): 1.6e+3 m
+      expect(find.textContaining('1.6e+3'), findsOneWidget);
     });
 
     testWidgets('toggle dark mode → theme changes', (tester) async {

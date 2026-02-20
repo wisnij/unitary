@@ -276,7 +276,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 18, 2026*
+*Last Updated: February 19, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -321,3 +321,9 @@ Questions that arose during design but haven't been resolved:
   - Settings "About > Version" tile now shows dynamic version (e.g. "0.4.0")
   - Optional build suffix when `--dart-define=BUILD_METADATA=...` is set at build time (e.g. "0.4.0 (build 20260218-143022.abc1234)")
   - CI deploy-web job computes BUILD_METADATA (timestamp + short SHA) and passes it as dart-define
+- *Notation rename and precision default increase (February 19, 2026)*
+  - 851 tests passing (4 new)
+  - Renamed `Notation.decimal` → `Notation.automatic` with label "Automatic"
+  - Formatter now uses `toStringAsPrecision` (significant figures) instead of `toStringAsFixed` (decimal places)
+  - Trailing-zero stripping splits on `'e'` to avoid corrupting exponent digits
+  - Default precision raised from 6 to 8 significant figures

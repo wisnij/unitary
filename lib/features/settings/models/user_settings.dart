@@ -1,6 +1,6 @@
 /// Number notation style for result formatting.
 enum Notation {
-  decimal('Decimal'),
+  automatic('Automatic'),
   scientific('Scientific'),
   engineering('Engineering')
   ;
@@ -27,8 +27,8 @@ class UserSettings {
   final EvaluationMode evaluationMode;
 
   UserSettings({
-    this.precision = 6,
-    this.notation = Notation.decimal,
+    this.precision = 8,
+    this.notation = Notation.automatic,
     this.darkMode,
     this.evaluationMode = EvaluationMode.realtime,
   }) {

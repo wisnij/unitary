@@ -53,11 +53,11 @@ void main() {
     });
 
     test('load with partial data fills in defaults for missing keys', () async {
-      SharedPreferences.setMockInitialValues({'precision': 8});
+      SharedPreferences.setMockInitialValues({'precision': 4});
       repository = await createRepository();
       final settings = repository.load();
-      expect(settings.precision, 8);
-      expect(settings.notation, Notation.decimal);
+      expect(settings.precision, 4);
+      expect(settings.notation, Notation.automatic);
       expect(settings.darkMode, isNull);
       expect(settings.evaluationMode, EvaluationMode.realtime);
     });
@@ -84,7 +84,7 @@ void main() {
       SharedPreferences.setMockInitialValues({'notation': 'invalid'});
       repository = await createRepository();
       final settings = repository.load();
-      expect(settings.notation, Notation.decimal);
+      expect(settings.notation, Notation.automatic);
     });
 
     test('load with invalid evaluationMode falls back to default', () async {

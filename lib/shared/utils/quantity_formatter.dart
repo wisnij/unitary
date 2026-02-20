@@ -10,7 +10,7 @@ import '../../features/settings/models/user_settings.dart';
 String formatQuantity(
   Quantity quantity, {
   required int precision,
-  Notation notation = Notation.decimal,
+  Notation notation = Notation.automatic,
 }) {
   final valueStr = formatValue(
     quantity.value,
@@ -28,7 +28,7 @@ String formatQuantity(
 String formatValue(
   double value, {
   required int precision,
-  Notation notation = Notation.decimal,
+  Notation notation = Notation.automatic,
 }) {
   if (value == 0) {
     return '0';
@@ -38,26 +38,29 @@ String formatValue(
   }
 
   return switch (notation) {
-    Notation.decimal => _formatDecimal(value, precision),
+    Notation.automatic => _formatAutomatic(value, precision),
     Notation.scientific => _formatScientific(value, precision),
     Notation.engineering => _formatEngineering(value, precision),
   };
 }
 
-String _formatDecimal(double value, int precision) {
-  final result = value.toStringAsFixed(precision);
-  // Strip trailing zeros after decimal point.
-  if (result.contains('.')) {
-    var trimmed = result;
+String _formatAutomatic(double value, int precision) {
+  final result = value.toStringAsPrecision(precision);
+  final eIndex = result.indexOf('e');
+  final significand = eIndex == -1 ? result : result.substring(0, eIndex);
+  final suffix = eIndex == -1 ? '' : result.substring(eIndex);
+
+  if (significand.contains('.')) {
+    var trimmed = significand;
     while (trimmed.endsWith('0')) {
       trimmed = trimmed.substring(0, trimmed.length - 1);
     }
     if (trimmed.endsWith('.')) {
       trimmed = trimmed.substring(0, trimmed.length - 1);
     }
-    return trimmed;
+    return '$trimmed$suffix';
   }
-  return result;
+  return '$significand$suffix';
 }
 
 /// Computes floor(log10(absValue)) robustly by cross-checking the

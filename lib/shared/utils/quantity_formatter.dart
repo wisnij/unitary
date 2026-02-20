@@ -118,7 +118,7 @@ String formatOutputUnit(String unit) {
   if (unit.contains('+') || unit.contains('-')) {
     return '($unit)';
   }
-  if (unit.startsWith(RegExp(r'[0-9.]'))) {
+  if (unit.startsWith(RegExp('[0-9.]'))) {
     return '× $unit';
   }
   return unit;

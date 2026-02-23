@@ -403,6 +403,19 @@ void main() {
       expect(() => parse(''), throwsA(isA<ParseException>()));
     });
 
+    test('empty input message contains <end of input>', () {
+      expect(
+        () => parse(''),
+        throwsA(
+          isA<ParseException>().having(
+            (e) => e.message,
+            'message',
+            contains('<end of input>'),
+          ),
+        ),
+      );
+    });
+
     test('missing right paren', () {
       expect(() => parse('(5 + 3'), throwsA(isA<ParseException>()));
     });
@@ -419,8 +432,34 @@ void main() {
       expect(() => parse('* 5'), throwsA(isA<ParseException>()));
     });
 
+    test('unexpected operator at start message contains the lexeme', () {
+      expect(
+        () => parse('* 5'),
+        throwsA(
+          isA<ParseException>().having(
+            (e) => e.message,
+            'message',
+            contains('*'),
+          ),
+        ),
+      );
+    });
+
     test('trailing operator', () {
       expect(() => parse('5 +'), throwsA(isA<ParseException>()));
+    });
+
+    test('trailing operator message contains <end of input>', () {
+      expect(
+        () => parse('5 +'),
+        throwsA(
+          isA<ParseException>().having(
+            (e) => e.message,
+            'message',
+            contains('<end of input>'),
+          ),
+        ),
+      );
     });
 
     test('consecutive operators', () {

@@ -169,7 +169,7 @@ class Parser {
 
     final token = _peek();
     throw ParseException(
-      'Unexpected token: ${token.lexeme.isEmpty ? token.type : token.lexeme}',
+      'Unexpected token: ${token.type == TokenType.eof ? '<end of input>' : token.lexeme}',
       line: token.line,
       column: token.column,
     );

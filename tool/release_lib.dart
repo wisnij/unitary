@@ -260,7 +260,7 @@ String updateChangelog(String content, String newSection) {
   final before = lines.sublist(0, insertIndex).join('\n');
   final after = lines.sublist(insertIndex).join('\n');
 
-  return '$before\n$newSection\n$after';
+  return '$before\n\n$newSection\n$after';
 }
 
 /// Returns true if the text starts with a setext-style h2 heading

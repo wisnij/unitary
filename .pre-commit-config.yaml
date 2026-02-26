@@ -6,7 +6,7 @@ repos:
         args: [--fix]
         exclude: |
           (?x)^(
-            .*/LICENSE.md |
+            (.*/)?LICENSE.md |
             openspec/.*\.md
           )$
         verbose: false

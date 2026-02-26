@@ -7,6 +7,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+[0.5.0] - 2026-02-26
+--------------------
+
+### Added
+
+- initial import of GNU Units database
+- improve parser EOF message
+- format output unit expressions more clearly
+- better default decimal display
+- show build metadata in About widget
+
+### Changed
+
+- use themeMode setting instead of darkMode
+
+### Fixed
+
+- two blank spaces between changelog sections
+- raw string lint
+- update web page title
+
+### Documentation
+
+- move Phase 8 (complete unit database) up to be 5 instead
+
+
 [0.4.0] - 2026-02-16
 --------------------
 

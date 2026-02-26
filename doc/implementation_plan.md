@@ -202,21 +202,28 @@ Implementation Phases
 
 ---
 
-### Phase 5: Complete Unit Database (Weeks 13-14)
+### Phase 5: Complete Unit Database (Weeks 13-14) — COMPLETE
 
 **Goals:** Import all unit categories
 
 **Tasks:**
 
-1. Complete GNU Units database import
-   - All categories from requirements
-   - Verify accuracy of conversions
+- [x] Create GNU Units import pipeline
+  - [x] `tool/import_gnu_units_lib.dart` — two-pass parser with conditional directive evaluation
+  - [x] `tool/import_gnu_units.dart` — executable that reads definitions.units, merges into units.json
+  - [x] `tool/generate_builtin_units_lib.dart` — alias resolution, Dart codegen per unit type
+  - [x] `tool/generate_builtin_units.dart` — executable that reads units.json, writes builtin_units.dart
+- [x] Create `lib/core/domain/data/units.json` (full merged GNU Units database: 7294 units, 125 prefixes, 177 unsupported)
+- [x] Add Phase 5 units: digital storage (6), volume (8), area (2), speed (1), pressure (4), energy (5)
+- [x] Regenerate `lib/core/domain/data/builtin_units.dart` from units.json
+- [x] Test coverage for all new categories
+- [x] Tool tests: 164 tests for importer, codegen, and release libraries
 
-2. Add unit aliases and plurals
-3. Organize into dimensions
-4. Test coverage for all categories
+**Deliverable:** All required unit categories available ✓
 
-**Deliverable:** All required unit categories available
+**Test Coverage:** 844 tests passing
+
+**Completed:** February 23, 2026
 
 ---
 

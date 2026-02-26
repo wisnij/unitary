@@ -80,9 +80,13 @@ class UnitRepository {
   Unit? _findExact(String name) => _unitLookup[name];
 
   /// Plural-stripping lookup in regular units only.
+  ///
+  /// Tries shorter suffixes before longer ones: `s` before `es` before
+  /// `ies→y`. This avoids false matches like `miles` → `mil` (0.001 inch)
+  /// when the correct result is `mile` (statute mile) via simple `s` removal.
   Unit? _findPlural(String name) {
-    if (name.length > 4 && name.endsWith('ies')) {
-      final found = _findExact('${name.substring(0, name.length - 3)}y');
+    if (name.length > 2 && name.endsWith('s')) {
+      final found = _findExact(name.substring(0, name.length - 1));
       if (found != null) {
         return found;
       }
@@ -93,8 +97,8 @@ class UnitRepository {
         return found;
       }
     }
-    if (name.length > 2 && name.endsWith('s')) {
-      final found = _findExact(name.substring(0, name.length - 1));
+    if (name.length > 4 && name.endsWith('ies')) {
+      final found = _findExact('${name.substring(0, name.length - 3)}y');
       if (found != null) {
         return found;
       }

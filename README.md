@@ -13,17 +13,15 @@ user-defined units and dimensions.
 Project Status
 --------------
 
-**Current Phase:** Phase 4 Complete (Basic UI - Freeform Mode)\
-**Last Updated:** February 19, 2026
+**Current Phase:** Phase 5 Complete (Complete Unit Database)\
+**Last Updated:** February 26, 2026
 
-Phases 0-4 are complete with 868 passing tests.  The expression parser,
-evaluator, unit system foundation, advanced unit features, and basic UI are
-fully implemented.  Phase 4 added the first working UI: freeform expression
-evaluation with two-field conversion, settings screen (precision, notation,
-dark mode, evaluation mode), and drawer-based navigation.  State management
-uses Riverpod with SharedPreferences for persistence.  The Settings version
-tile reads the app version dynamically via `package_info_plus`, with build
-metadata (timestamp + git SHA) injected by CI.
+Phases 0-5 are complete with 848 passing tests.  The expression parser,
+evaluator, unit system foundation, advanced unit features, basic UI, and
+complete unit database are fully implemented.  Phase 5 added the GNU Units
+import pipeline (importer tool + codegen tool), a JSON intermediate unit
+database (`units.json`), and 26 new units across six categories: digital
+storage, volume, area, speed, pressure, and energy.
 
 ---
 
@@ -205,6 +203,7 @@ Current Progress
 - ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
 - ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, derived units, affine syntax, dimensionless units, SI prefixes (703 tests)
 - ✅ **Phase 4: Basic UI - Freeform Mode** — Freeform evaluation UI, settings, drawer navigation, Riverpod state management (847 tests)
+- ✅ **Phase 5: Complete Unit Database** — GNU Units import pipeline, JSON unit database, 26 new units (volume, area, speed, pressure, energy, digital storage) (848 tests)
 
 ### Design (ready for implementation)
 
@@ -319,15 +318,13 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
----
+### Contributors
 
+This program includes data files that are part of [GNU
+Units](https://www.gnu.org/software/units/).
+GNU Units is copyright © 1996-2002, 2004-2020, 2022, 2024, 2026 Free Software
+Foundation, Inc.
 
-Acknowledgments
----------------
-
-- GNU Units project for inspiration and unit database
-- Flutter and Dart communities
-- Contributors (future)
 
 ---
 

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
@@ -242,6 +243,70 @@ void main() {
       final unit = repo2.getUnit('kg');
       final q = resolveUnit(unit, repo2);
       expect(q.dimension, Dimension({'kg': 1}));
+    });
+  });
+
+  group('Circular definition detection', () {
+    test('DerivedUnit self-reference throws EvalException', () {
+      final repo = UnitRepository();
+      repo.register(const DerivedUnit(id: 'bad', expression: 'bad'));
+      expect(
+        () => resolveUnit(repo.getUnit('bad'), repo),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('DerivedUnit mutual cycle (A → B → A) throws EvalException', () {
+      final repo = UnitRepository();
+      repo.register(const DerivedUnit(id: 'cycleA', expression: '2 cycleB'));
+      repo.register(const DerivedUnit(id: 'cycleB', expression: '3 cycleA'));
+      expect(
+        () => resolveUnit(repo.getUnit('cycleA'), repo),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('AffineUnit mutual cycle (A → B → A) throws EvalException', () {
+      final repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'base'));
+      repo.register(
+        const AffineUnit(
+          id: 'cycleC',
+          factor: 1.0,
+          offset: 1.0,
+          baseUnitId: 'cycleD',
+        ),
+      );
+      repo.register(
+        const AffineUnit(
+          id: 'cycleD',
+          factor: 1.0,
+          offset: 2.0,
+          baseUnitId: 'cycleC',
+        ),
+      );
+      expect(
+        () => resolveUnit(repo.getUnit('cycleC'), repo),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('diamond dependency (A → B, A → C → B) resolves without error', () {
+      final repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'base'));
+      repo.register(const DerivedUnit(id: 'B', expression: '2 base'));
+      repo.register(const DerivedUnit(id: 'C', expression: '3 B'));
+      repo.register(const DerivedUnit(id: 'A', expression: 'B + C'));
+      expect(() => resolveUnit(repo.getUnit('A'), repo), returnsNormally);
+    });
+
+    test('linear chain (A → B → C → primitive) resolves without error', () {
+      final repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'base'));
+      repo.register(const DerivedUnit(id: 'C', expression: '10 base'));
+      repo.register(const DerivedUnit(id: 'B', expression: '5 C'));
+      repo.register(const DerivedUnit(id: 'A', expression: '2 B'));
+      expect(() => resolveUnit(repo.getUnit('A'), repo), returnsNormally);
     });
   });
 }

@@ -14,7 +14,11 @@ class EvalContext {
   /// behavior (all identifiers treated as raw dimensions).
   final UnitRepository? repo;
 
-  const EvalContext({this.repo});
+  /// Set of unit IDs currently being resolved (the active resolution stack).
+  /// Used to detect circular unit definitions.
+  final Set<String> visited;
+
+  const EvalContext({this.repo, this.visited = const <String>{}});
 }
 
 /// Base class for all AST nodes.
@@ -63,9 +67,9 @@ class UnitNode extends ASTNode {
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
-    final unitQuantity = resolveUnit(result.unit!, repo);
+    final unitQuantity = resolveUnit(result.unit!, repo, context.visited);
     if (result.prefix != null) {
-      final prefixQuantity = resolveUnit(result.prefix!, repo);
+      final prefixQuantity = resolveUnit(result.prefix!, repo, context.visited);
       return prefixQuantity.multiply(unitQuantity);
     }
     return unitQuantity;

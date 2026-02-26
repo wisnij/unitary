@@ -276,7 +276,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 19, 2026*
+*Last Updated: February 26, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -341,3 +341,24 @@ Questions that arose during design but haven't been resolved:
   - `SettingsNotifier.updateDarkMode(bool?)` → `updateThemeMode(ThemeMode)`
   - `app.dart`: removed three-case bool switch; passes `settings.themeMode` directly to `MaterialApp.themeMode`
   - Settings UI: replaced `CheckboxListTile` + `SwitchListTile` with `RadioGroup<ThemeMode>` containing three `RadioListTile` widgets
+- *Phase 5: Complete Unit Database (February 23, 2026)*
+  - 844 tests passing (after phase + cleanup)
+  - GNU Units import pipeline: `tool/import_gnu_units_lib.dart` (two-pass parser, conditional directives, alias detection via known-ID membership), `tool/import_gnu_units.dart`
+  - Codegen pipeline: `tool/generate_builtin_units_lib.dart` (alias chain resolution, per-type Dart emitters, category grouping), `tool/generate_builtin_units.dart`
+  - `lib/core/domain/data/units.json` — full merged GNU Units database (7294 units, 125 prefixes, 177 unsupported); importer-owned vs. pass-through field split; supports primitive/derived/prefix/affine/alias/unsupported types
+  - `lib/core/domain/data/builtin_units.dart` — regenerated from units.json; flat `_registerUnits` + `_registerPrefixes` structure
+  - 26 new Phase 5 units: digital storage (bit primitive, byte, kibibyte, mebibyte, gibibyte, tebibyte), volume (liter, gallon, quart, pint, cup, floz, tbsp, tsp), area (hectare, acre), speed (knot), pressure (bar, atm, psi, mmHg), energy (cal, kcal, BTU, kWh, eV)
+  - 164 tool tests (`test/tool/`): 63 importer + 54 codegen + 47 release_lib
+- *Unit evaluation regression test (February 26, 2026)*
+  - 845 tests passing (1 new)
+  - Added `Evaluation` group to `test/core/domain/data/builtin_units_test.dart`: iterates all registered units, calls `resolveUnit` on each, fails on unexpected errors or unexpected passes
+  - `_knownEvalFailures` set documents 37 units with unsupported expression features (angle-in-trig, `$` lexer, `%` lexer, Unicode identifiers), grouped by root cause with fix guidance
+  - Fixed `basispoint` definition in `units-supplementary.json`: `0.01 %` → `0.01 percent` (the `%` alias is not a lexer-recognized token); regenerated `units.json` and `builtin_units.dart`
+- *Circular unit definition detection (February 26, 2026)*
+  - 848 tests passing (3 new)
+  - `resolveUnit` in `unit_resolver.dart` now accepts optional `Set<String>? visited` parameter (the active resolution stack); throws `EvalException` immediately on re-entry for the same unit instead of stack-overflowing
+  - Keys are namespace-qualified (`"prefix:<id>"` vs `"<id>"`) so a `PrefixUnit` and a same-named `DerivedUnit` (e.g. prefix `US` and unit `US`) are tracked independently
+  - `EvalContext` gains an optional `visited` field (defaults to `const <String>{}` for backward compat with `const EvalContext()`); `UnitNode.evaluate` threads `context.visited` into both `resolveUnit` calls
+  - `ExpressionParser` gains an optional `visited` field, forwarded to `EvalContext`, so the resolution stack is shared across the full `resolveUnit` → `ExpressionParser` → `UnitNode` → `resolveUnit` call chain
+  - `EvalException` propagates through `ExpressionParser.evaluate` → `freeform_provider` `on UnitaryException` handler — no UI changes required
+  - 5 new tests in `test/core/domain/models/unit_test.dart`: self-reference, mutual `DerivedUnit` cycle, mutual `AffineUnit` cycle, diamond dependency (no false positive), linear chain (no false positive)

@@ -1,0 +1,31 @@
+{
+  "units": {
+    "ustablespoon": {
+      "aliases": [
+        "Tbsp"
+      ]
+    },
+    "hectare": {
+      "aliases": [
+        "hektare"
+      ]
+    },
+    "decare": {
+      "aliases": [
+        "dekare"
+      ]
+    },
+    "btu_IT": {
+      "aliases": [
+        "BTU"
+      ]
+    }
+  },
+  "prefixes": {
+    "deca": {
+      "aliases": [
+        "dk"
+      ]
+    }
+  }
+}

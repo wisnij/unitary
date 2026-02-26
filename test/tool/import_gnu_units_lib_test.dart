@@ -762,5 +762,54 @@ void main() {
       expect((result['prefixes'] as Map).isEmpty, isTrue);
       expect((result['unsupported'] as Map).isEmpty, isTrue);
     });
+
+    test(
+      'basePath is stripped from source.file when filename starts with it',
+      () {
+        final entries = [
+          const GnuEntry(
+            id: 'foot',
+            type: 'derived',
+            gnuUnitsSource: 'foot 12 inch',
+            filename: '/repo/root/tool/gnu_units/defs.units',
+            lineNumber: 1,
+            definition: '12 inch',
+            isDimensionless: false,
+            isPrefix: false,
+            target: null,
+            reason: null,
+          ),
+        ];
+        final result = entriesToJson(entries, basePath: '/repo/root/');
+        final data =
+            (result['units'] as Map<String, dynamic>)['foot']
+                as Map<String, dynamic>;
+        final source = data['source'] as Map<String, dynamic>;
+        expect(source['file'], equals('tool/gnu_units/defs.units'));
+      },
+    );
+
+    test('basePath is not stripped when filename does not start with it', () {
+      final entries = [
+        const GnuEntry(
+          id: 'foot',
+          type: 'derived',
+          gnuUnitsSource: 'foot 12 inch',
+          filename: '/other/path/defs.units',
+          lineNumber: 1,
+          definition: '12 inch',
+          isDimensionless: false,
+          isPrefix: false,
+          target: null,
+          reason: null,
+        ),
+      ];
+      final result = entriesToJson(entries, basePath: '/repo/root/');
+      final data =
+          (result['units'] as Map<String, dynamic>)['foot']
+              as Map<String, dynamic>;
+      final source = data['source'] as Map<String, dynamic>;
+      expect(source['file'], equals('/other/path/defs.units'));
+    });
   });
 }

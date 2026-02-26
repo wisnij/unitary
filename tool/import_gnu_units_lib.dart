@@ -499,16 +499,22 @@ GnuEntry? _classifyLine(
 /// (for primitive entries), `target` (for alias entries), and `reason` (for
 /// unsupported entries). No pass-through fields (description, aliases,
 /// category) are included.
-Map<String, dynamic> entriesToJson(List<GnuEntry> entries) {
+Map<String, dynamic> entriesToJson(
+  List<GnuEntry> entries, {
+  String? basePath,
+}) {
   final units = <String, dynamic>{};
   final prefixes = <String, dynamic>{};
   final unsupported = <String, dynamic>{};
 
   for (final entry in entries) {
+    final sourceFile = (basePath != null && entry.filename.startsWith(basePath))
+        ? entry.filename.substring(basePath.length)
+        : entry.filename;
     final map = <String, dynamic>{
       'type': entry.type,
       'gnuUnitsSource': entry.gnuUnitsSource,
-      'source': {'file': entry.filename, 'line': entry.lineNumber},
+      'source': {'file': sourceFile, 'line': entry.lineNumber},
     };
     if (entry.type != 'unsupported') {
       map['definition'] = entry.definition;

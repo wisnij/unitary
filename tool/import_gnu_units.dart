@@ -41,7 +41,7 @@ void main() {
     'Parsed ${newEntries.length} entries from ${definitionsFile.path}',
   );
 
-  final parsed = entriesToJson(newEntries);
+  final parsed = entriesToJson(newEntries, basePath: '${repoRoot.path}/');
 
   const encoder = JsonEncoder.withIndent('  ');
 

@@ -585,4 +585,134 @@ void main() {
       expect((node as NumberNode).value, 5000.0);
     });
   });
+
+  group('Parser: unit trailing-digit exponents', () {
+    // Single trailing digit 2–9 → exponent shorthand.
+    test('m2 parses as m^2', () {
+      final node = parse('m2') as BinaryOpNode;
+      expect(node.operator, TokenType.exponent);
+      expect((node.left as UnitNode).unitName, 'm');
+      expect((node.right as NumberNode).value, 2.0);
+    });
+
+    test('centimeters3 parses as centimeters^3', () {
+      final node = parse('centimeters3') as BinaryOpNode;
+      expect(node.operator, TokenType.exponent);
+      expect((node.left as UnitNode).unitName, 'centimeters');
+      expect((node.right as NumberNode).value, 3.0);
+    });
+
+    test('m2 s2 parses as m^2 * s^2', () {
+      final node = parse('m2 s2') as BinaryOpNode;
+      expect(node.operator, TokenType.times);
+      final left = node.left as BinaryOpNode;
+      final right = node.right as BinaryOpNode;
+      expect(left.operator, TokenType.exponent);
+      expect((left.left as UnitNode).unitName, 'm');
+      expect((left.right as NumberNode).value, 2.0);
+      expect(right.operator, TokenType.exponent);
+      expect((right.left as UnitNode).unitName, 's');
+      expect((right.right as NumberNode).value, 2.0);
+    });
+
+    // Trailing digit 0 or 1 → part of identifier name.
+    test('x0 is identifier x0, not x^0', () {
+      final node = parse('x0') as UnitNode;
+      expect(node.unitName, 'x0');
+    });
+
+    test('y1 is identifier y1, not y^1', () {
+      final node = parse('y1') as UnitNode;
+      expect(node.unitName, 'y1');
+    });
+
+    test('x10 is identifier x10, not x^10 or x1^0', () {
+      final node = parse('x10') as UnitNode;
+      expect(node.unitName, 'x10');
+    });
+
+    test('k1250 is identifier k1250, not k125^0', () {
+      final node = parse('k1250') as UnitNode;
+      expect(node.unitName, 'k1250');
+    });
+
+    test('y21 is identifier y21, not y2^1', () {
+      final node = parse('y21') as UnitNode;
+      expect(node.unitName, 'y21');
+    });
+
+    // Digits preceded by underscore → always part of identifier.
+    test('m_2 is identifier m_2', () {
+      final node = parse('m_2') as UnitNode;
+      expect(node.unitName, 'm_2');
+    });
+
+    test('u_235 is identifier u_235', () {
+      final node = parse('u_235') as UnitNode;
+      expect(node.unitName, 'u_235');
+    });
+
+    // Non-trailing digits → part of identifier (no exponent rule).
+    test('a_123b is identifier a_123b (digits not at end)', () {
+      final node = parse('a_123b') as UnitNode;
+      expect(node.unitName, 'a_123b');
+    });
+
+    test('m2s is identifier m2s (digit embedded before trailing alpha)', () {
+      final node = parse('m2s') as UnitNode;
+      expect(node.unitName, 'm2s');
+    });
+
+    // Whitespace → implicit multiplication, not exponent.
+    test('m 2 is m * 2, not m^2', () {
+      final node = parse('m 2') as BinaryOpNode;
+      expect(node.operator, TokenType.times);
+      expect(node.left, isA<UnitNode>());
+      expect(node.right, isA<NumberNode>());
+      expect((node.right as NumberNode).value, 2.0);
+    });
+
+    // Multiple bare trailing digits ending in 2–9 → ParseException with underscore guidance.
+    test('u235 throws ParseException mentioning underscore', () {
+      expect(
+        () => parse('u235'),
+        throwsA(
+          isA<ParseException>().having(
+            (e) => e.message,
+            'message',
+            contains('underscore'),
+          ),
+        ),
+      );
+    });
+
+    test('m23 throws ParseException mentioning underscore', () {
+      expect(
+        () => parse('m23'),
+        throwsA(
+          isA<ParseException>().having(
+            (e) => e.message,
+            'message',
+            contains('underscore'),
+          ),
+        ),
+      );
+    });
+
+    test(
+      'a_b123 throws ParseException mentioning underscore (digit run not after underscore)',
+      () {
+        expect(
+          () => parse('a_b123'),
+          throwsA(
+            isA<ParseException>().having(
+              (e) => e.message,
+              'message',
+              contains('underscore'),
+            ),
+          ),
+        );
+      },
+    );
+  });
 }

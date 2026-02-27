@@ -253,6 +253,48 @@ class Parser {
       }
     }
 
+    // Trailing-digit exponent shorthand: m2 = m^2, centimeters3 = centimeters^3.
+    //
+    // Rules (applied only when the trailing digit run is not preceded by '_'):
+    //   - Single trailing digit 2–9 → exponent (m2 → m^2)
+    //   - Trailing run ending in 0 or 1 → part of identifier (k1250, y1 are names)
+    //   - Multiple trailing digits ending in 2–9 → ParseException (u235 is invalid)
+    //
+    // Digits preceded by '_' are always part of the identifier (m_2, u_235).
+    // Digits not at the end are always part of the identifier (m2s → identifier m2s).
+    var digitStart = name.length;
+    while (digitStart > 0 && _isAsciiDigit(name.codeUnitAt(digitStart - 1))) {
+      digitStart--;
+    }
+    if (digitStart < name.length) {
+      final precededByUnderscore =
+          digitStart > 0 && name[digitStart - 1] == '_';
+      if (!precededByUnderscore) {
+        final lastDigit = name[name.length - 1];
+        if (!['0', '1'].contains(lastDigit)) {
+          // Last digit is '2'–'9': exponent shorthand or error.
+          final trailingRun = name.substring(digitStart);
+          if (trailingRun.length == 1) {
+            final baseName = name.substring(0, digitStart);
+            return BinaryOpNode(
+              UnitNode(baseName),
+              TokenType.exponent,
+              NumberNode(double.parse(trailingRun)),
+            );
+          } else {
+            throw ParseException(
+              'Unit name "$name" contains bare digits not ending in 0 or 1; '
+              'use an underscore for numeric suffixes (e.g., u_235)',
+              line: token.line,
+              column: token.column + digitStart,
+            );
+          }
+        }
+        // Last digit is '0' or '1': treated as part of the identifier name.
+      }
+      // Digits preceded by '_': always part of the identifier name.
+    }
+
     return UnitNode(name);
   }
 
@@ -305,4 +347,6 @@ class Parser {
     final token = _peek();
     throw ParseException(message, line: token.line, column: token.column);
   }
+
+  bool _isAsciiDigit(int codeUnit) => codeUnit >= 48 && codeUnit <= 57;
 }

@@ -646,4 +646,27 @@ void main() {
       expect(result.dimension, Dimension({'kg': 1, 'm': 1, 's': -2}));
     });
   });
+
+  group('Evaluator: trailing-digit exponent shorthand', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinUnits(repo);
+    });
+
+    test('5 m2 evaluates the same as 5 m^2', () {
+      final shorthand = evalWithRepo('5 m2', repo);
+      final explicit = evalWithRepo('5 m^2', repo);
+      expect(shorthand.value, closeTo(explicit.value, 1e-10));
+      expect(shorthand.dimension, explicit.dimension);
+    });
+
+    test('centimeters3 evaluates the same as cm^3', () {
+      final shorthand = evalWithRepo('centimeters3', repo);
+      final explicit = evalWithRepo('cm^3', repo);
+      expect(shorthand.value, closeTo(explicit.value, 1e-10));
+      expect(shorthand.dimension, explicit.dimension);
+    });
+  });
 }

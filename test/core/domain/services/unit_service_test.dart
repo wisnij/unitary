@@ -66,10 +66,10 @@ void main() {
     });
 
     test('unknown unit name is kept as-is', () {
-      final q = Quantity(5.0, Dimension({'zorblax': 1}));
+      final q = Quantity(5.0, Dimension({'wakalixes': 1}));
       final result = reduce(q, repo);
       expect(result.value, 5.0);
-      expect(result.dimension, Dimension({'zorblax': 1}));
+      expect(result.dimension, Dimension({'wakalixes': 1}));
     });
 
     test('multiple non-primitives: lb ft → kg m', () {

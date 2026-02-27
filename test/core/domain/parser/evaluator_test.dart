@@ -425,10 +425,24 @@ void main() {
       expect(result.dimension, Dimension({'s': 1}));
     });
 
-    test('unknown unit with repo falls back to raw dimension', () {
-      final result = evalWithRepo('5 zorblax', repo);
-      expect(result.value, 5.0);
-      expect(result.dimension, Dimension({'zorblax': 1}));
+    test('unknown unit with repo throws EvalException', () {
+      expect(
+        () => evalWithRepo('5 wakalixes', repo),
+        throwsA(
+          isA<EvalException>().having(
+            (e) => e.message,
+            'message',
+            contains('wakalixes'),
+          ),
+        ),
+      );
+    });
+
+    test('unknown unit mid-expression throws EvalException', () {
+      expect(
+        () => evalWithRepo('5 m + 3 wakalixes', repo),
+        throwsA(isA<EvalException>()),
+      );
     });
 
     test('null repo preserves Phase 1 behavior', () {
@@ -437,6 +451,16 @@ void main() {
       expect(result.value, 5.0);
       expect(result.dimension, Dimension({'m': 1}));
     });
+
+    test(
+      'null repo falls back to raw dimension for unrecognized identifiers',
+      () {
+        // With no repo, unknown names produce raw dimensions (Phase 1 behavior).
+        final result = eval('5 wakalixes');
+        expect(result.value, 5.0);
+        expect(result.dimension, Dimension({'wakalixes': 1}));
+      },
+    );
 
     test('pure arithmetic with repo is unaffected', () {
       final result = evalWithRepo('2 + 3', repo);

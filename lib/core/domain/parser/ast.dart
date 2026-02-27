@@ -45,8 +45,10 @@ class NumberNode extends ASTNode {
 /// A unit identifier.
 ///
 /// When the evaluation context has a unit repository, the unit name is
-/// resolved to its base-unit representation.  Otherwise, or if the unit
-/// is not found in the repository, it falls back to a raw dimension.
+/// resolved to its base-unit representation.  If the unit is not found
+/// in the repository, an [EvalException] is thrown.  If no repository
+/// is provided (Phase 1 / parser-isolation mode), identifiers fall back
+/// to raw dimensions.
 class UnitNode extends ASTNode {
   final String unitName;
 
@@ -62,8 +64,7 @@ class UnitNode extends ASTNode {
 
     final result = repo.findUnitWithPrefix(unitName);
     if (result.unit == null) {
-      // Unknown unit: fall back to raw dimension.
-      return Quantity(1.0, Dimension({unitName: 1}));
+      throw EvalException('Unknown unit: "$unitName"');
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.

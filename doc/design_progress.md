@@ -276,7 +276,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 26, 2026*
+*Last Updated: February 27, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -362,3 +362,8 @@ Questions that arose during design but haven't been resolved:
   - `ExpressionParser` gains an optional `visited` field, forwarded to `EvalContext`, so the resolution stack is shared across the full `resolveUnit` → `ExpressionParser` → `UnitNode` → `resolveUnit` call chain
   - `EvalException` propagates through `ExpressionParser.evaluate` → `freeform_provider` `on UnitaryException` handler — no UI changes required
   - 5 new tests in `test/core/domain/models/unit_test.dart`: self-reference, mutual `DerivedUnit` cycle, mutual `AffineUnit` cycle, diamond dependency (no false positive), linear chain (no false positive)
+- *Unknown unit error (February 27, 2026)*
+  - 852 tests passing (4 new)
+  - `UnitNode.evaluate()` in `ast.dart` now throws `EvalException('Unknown unit: "$unitName"')` when `repo != null` and `findUnitWithPrefix` returns no match; raw-dimension fallback removed for the repo path
+  - `repo == null` (Phase 1 / parser-isolation mode) continues to produce raw dimensions unchanged
+  - New/updated tests in `evaluator_test.dart`: EvalException thrown for unknown unit (with message-content assertion), unknown unit mid-expression, null-repo raw-dimension fallback

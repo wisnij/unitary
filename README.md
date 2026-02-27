@@ -9,6 +9,10 @@ technically-minded users.  Features both freeform calculator-style expression
 evaluation and worksheet-based conversion modes, with support for custom
 user-defined units and dimensions.
 
+Unitary is [free software](https://www.gnu.org/philosophy/free-sw.html), both libre and
+gratis.  It does not and will never contain ads, paywalls, subscriptions, in-app
+purchases, tracking, data harvesting, or any other monetization scheme.
+
 
 Project Status
 --------------

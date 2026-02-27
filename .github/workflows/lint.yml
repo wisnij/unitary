@@ -1,0 +1,32 @@
+name: Lint
+
+on:
+  workflow_call:
+
+jobs:
+  lint-analyze:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.x'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter analyze
+
+  lint-precommit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.38.x'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - uses: pre-commit/action@v3.0.1

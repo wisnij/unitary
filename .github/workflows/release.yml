@@ -1,10 +1,9 @@
-name: CI
+name: Release
 
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    tags:
+      - 'v*'
 
 jobs:
   lint:
@@ -14,15 +13,13 @@ jobs:
     uses: ./.github/workflows/test.yml
     needs: lint
 
-  deploy-web:
-    if: ${{ github.ref == 'refs/heads/main' }}
+  release:
     runs-on: ubuntu-latest
     needs: test
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - run: git fetch --prune --unshallow --tags
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.38.x'
@@ -34,16 +31,18 @@ jobs:
           BUILD_TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "BUILD_METADATA=${BUILD_TIMESTAMP}.${SHORT_SHA}" >> $GITHUB_ENV
-      - run: >-
+      - name: Build web
+        run: >-
           flutter build web
-          --base-href /unitary/
           --dart-define=BUILD_METADATA=${{ env.BUILD_METADATA }}
           --release
           --wasm
-      - run: git config user.name github-actions
-      - run: git config user.email github-actions@github.com
-      - run: git --work-tree build/web add --all
-      - shell: bash
-        run: |
-          git commit -m "Automatic deployment of $(git describe)"
-      - run: git push origin HEAD:gh-pages --force
+      - name: Zip web build
+        run: zip -r unitary-${{ github.ref_name }}-web.zip build/web
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh release create ${{ github.ref_name }}
+          --notes-from-tag
+          unitary-${{ github.ref_name }}-web.zip

@@ -12,52 +12,6 @@ const _knownEvalFailures = {
   'parsec',
   'hubble',
 
-  // '$' dollar-sign identifier not recognised by the lexer.
-  // Fix: add '$' as a valid unit-name character (or alias 'dollar').
-  'fin',
-  'sawbuck',
-  'usgrand',
-  'bitcoin',
-  'silverprice',
-  'goldprice',
-  'platinumprice',
-  'olddollargold',
-  'newdollargold',
-  'poundgold',
-  'goldounce',
-  'silverounce',
-  'platinumounce',
-  'USdimeweight',
-  'USquarterweight',
-  'UShalfdollarweight',
-  'satoshi',
-  'cent',
-
-  // '%' percent-sign used as a unit symbol, not recognised by the lexer.
-  // Fix: add '%' as a valid unit-name character (or rewrite expressions to
-  // use 'percent').
-  'basispoint',
-  'uranium_natural',
-  'air_1976',
-  'air_1962',
-  'air_2023',
-  'air_2015',
-  'polyndx_1976',
-  'polyexpnt',
-
-  // Unicode identifier characters (µ, Ω) not yet supported by the lexer.
-  // Fix: extend the lexer to accept these characters in identifiers.
-  '㎂',
-  '㎌',
-  '㎍',
-  '㎕',
-  '㎛',
-  '㎲',
-  '㎶',
-  '㎼',
-  '㏀',
-  '㏁',
-
   // Affine unit function-call syntax using units not registered in the repo.
   // 'normaltemp' uses 'tempF(70)' but 'tempF' is not in units.json.
   // 'S10' uses 'SB_degree(10)' but 'SB_degree' is not in units.json.

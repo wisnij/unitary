@@ -414,6 +414,126 @@ void main() {
       expect(types(tokens), [TokenType.identifier]);
       expect(tokens[0].literal, 'mileperhour');
     });
+
+    // Extended identifier character set (GNU Units compatibility)
+
+    test('percent sign as identifier', () {
+      final tokens = lex('%');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, '%');
+    });
+
+    test('degree symbol starts identifier', () {
+      final tokens = lex('°C');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, '°C');
+    });
+
+    test('Greek letter as identifier', () {
+      final tokens = lex('Ω');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'Ω');
+    });
+
+    test('apostrophe starts identifier', () {
+      final tokens = lex("'foo");
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, "'foo");
+    });
+
+    test('percent sign in identifier body', () {
+      final tokens = lex('foo%');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'foo%');
+    });
+
+    test('period in identifier body (not at end)', () {
+      final tokens = lex('m.per.s');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'm.per.s');
+    });
+
+    test('Unicode in identifier body', () {
+      final tokens = lex('kΩ');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'kΩ');
+    });
+
+    test('operator terminates identifier: plus', () {
+      final tokens = lex('meter+second');
+      expect(types(tokens), [
+        TokenType.identifier,
+        TokenType.plus,
+        TokenType.identifier,
+      ]);
+      expect(tokens[0].literal, 'meter');
+      expect(tokens[2].literal, 'second');
+    });
+
+    test('operator terminates identifier: slash', () {
+      final tokens = lex('km/hr');
+      expect(types(tokens), [
+        TokenType.identifier,
+        TokenType.divide,
+        TokenType.identifier,
+      ]);
+      expect(tokens[0].literal, 'km');
+      expect(tokens[2].literal, 'hr');
+    });
+
+    test('excluded char terminates identifier: square bracket', () {
+      // `[` is not a valid token, so it causes a lex error immediately after
+      // the identifier `foo` — confirming `[` was not absorbed into the name.
+      expect(() => lex('foo['), throwsA(isA<LexException>()));
+    });
+
+    test('excluded char terminates identifier: equals sign', () {
+      expect(() => lex('a=b'), throwsA(isA<LexException>()));
+    });
+
+    test('excluded char terminates identifier: semicolon', () {
+      expect(() => lex('x;y'), throwsA(isA<LexException>()));
+    });
+
+    test('trailing period: end of input is a lex error', () {
+      expect(() => lex('meter.'), throwsA(isA<LexException>()));
+    });
+
+    test('trailing period: before whitespace is a lex error', () {
+      expect(() => lex('meter. '), throwsA(isA<LexException>()));
+    });
+
+    test('trailing period: before operator is a lex error', () {
+      expect(() => lex('meter.+'), throwsA(isA<LexException>()));
+    });
+
+    test('trailing underscore: end of input is a lex error', () {
+      expect(() => lex('foo_'), throwsA(isA<LexException>()));
+    });
+
+    test('trailing underscore: before whitespace is a lex error', () {
+      expect(() => lex('foo_ '), throwsA(isA<LexException>()));
+    });
+
+    test('trailing underscore: multiple underscores is a lex error', () {
+      expect(() => lex('foo__'), throwsA(isA<LexException>()));
+    });
+
+    test('trailing underscore: before operator is a lex error', () {
+      expect(() => lex('foo_+'), throwsA(isA<LexException>()));
+    });
+
+    test('underscore in middle of identifier is valid', () {
+      final tokens = lex('foo_bar');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'foo_bar');
+    });
+
+    test('underscore-preceded digits are valid', () {
+      final tokens = lex('u_235');
+      expect(types(tokens), [TokenType.identifier]);
+      expect(tokens[0].literal, 'u_235');
+    });
   });
 
   group('Lexer: implicit multiplication', () {
@@ -610,12 +730,12 @@ void main() {
 
   group('Lexer: error cases', () {
     test('unknown character throws LexException', () {
-      expect(() => lex('@'), throwsA(isA<LexException>()));
+      expect(() => lex('['), throwsA(isA<LexException>()));
     });
 
     test('error includes position', () {
       try {
-        lex('5 + @');
+        lex('5 + [');
         fail('Should have thrown');
       } on LexException catch (e) {
         expect(e.column, 5);

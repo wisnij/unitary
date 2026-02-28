@@ -1,6 +1,22 @@
 import '../errors.dart';
 import 'token.dart';
 
+// Characters that terminate identifier scanning: operator tokens and
+// additional characters that are not valid in unit names.
+const Set<String> _identifierExcludedChars = {
+  // Operator characters (also handled by the _scanToken switch)
+  '+',
+  '-', '\u2012', '\u2013', '\u2212', // dashes: ‒ – −
+  '*', '\u00B7', '\u00D7', '\u22C5', '\u2A09', // multiplication: · × ⋅ ⨉
+  '/', '\u00F7', // division: ÷
+  '|', '\u2044', // pipe / fraction slash: ⁄
+  '^',
+  '(', ')',
+  ',',
+  // Additional excluded characters (not operator tokens, but invalid in unit names)
+  '[', ']', '{', '}', '<', '=', '>', '~', ';',
+};
+
 /// Converts an input string into a list of [Token]s.
 ///
 /// Handles numbers (including scientific notation), operators (including
@@ -33,15 +49,15 @@ class Lexer {
   }
 
   /// ```
-  /// PLUS      = "+"
-  /// MINUS     = "-" / "‒" / "–" / "−"
-  /// TIMES     = ("*" !"*") / "·" / "×" / "⋅" / "⨉"
-  /// DIVIDE    = "/" / "÷" / "per"
-  /// DIVIDENUM = "|" / "⁄"
-  /// POWER     = "^" / "**"
-  /// LPAR      = "("
-  /// RPAR      = ")"
-  /// COMMA     = ","
+  /// PLUS       = "+"
+  /// MINUS      = "-" / "‒" / "–" / "−"
+  /// TIMES      = ("*" !"*") / "·" / "×" / "⋅" / "⨉"
+  /// DIVIDE     = "/" / "÷" / "per"
+  /// DIVIDENUM  = "|" / "⁄"
+  /// POWER      = "^" / "**"
+  /// LPAR       = "("
+  /// RPAR       = ")"
+  /// COMMA      = ","
   /// ```
   void _scanToken() {
     final startLine = _line;
@@ -107,7 +123,7 @@ class Lexer {
       default:
         if (_isDigit(c)) {
           _scanNumber(startLine, startColumn);
-        } else if (_isAlpha(c)) {
+        } else if (_isIdentifierStart(c)) {
           _scanIdentifier(startLine, startColumn);
         } else {
           throw LexException(
@@ -168,12 +184,26 @@ class Lexer {
     _tokens.add(Token(TokenType.number, lexeme, value, startLine, startColumn));
   }
 
+  /// ```
+  /// IDENT      = identStart identBody*
+  /// identStart = <any char that is not \s, a digit, ".", or an excluded char>
+  /// identBody  = <any char that is not \s or an excluded char>
+  /// ```
   void _scanIdentifier(int startLine, int startColumn) {
-    while (!_isAtEnd() && _isAlphaNumeric(_peek())) {
+    while (!_isAtEnd() && _isIdentifierBody(_peek())) {
       _advance();
     }
 
     final lexeme = _source.substring(_start, _current);
+    final lastChar = lexeme[lexeme.length - 1];
+    if (lastChar == '.' || lastChar == '_') {
+      throw LexException(
+        "Identifier may not end with '$lastChar'",
+        line: startLine,
+        column: startColumn + lexeme.length - 1,
+      );
+    }
+
     if (lexeme == 'per') {
       // Handle as a different spelling of the / operator
       _tokens.add(Token(TokenType.divide, 'per', null, startLine, startColumn));
@@ -214,12 +244,12 @@ class Lexer {
 
   bool _isDigit(String c) => c.codeUnitAt(0) >= 48 && c.codeUnitAt(0) <= 57;
 
-  bool _isAlpha(String c) {
-    final code = c.codeUnitAt(0);
-    return (code >= 65 && code <= 90) ||
-        (code >= 97 && code <= 122) ||
-        c == '_';
-  }
+  bool _isIdentifierStart(String c) =>
+      !RegExp(r'\s').hasMatch(c) &&
+      !_isDigit(c) &&
+      c != '.' &&
+      !_identifierExcludedChars.contains(c);
 
-  bool _isAlphaNumeric(String c) => _isAlpha(c) || _isDigit(c);
+  bool _isIdentifierBody(String c) =>
+      !RegExp(r'\s').hasMatch(c) && !_identifierExcludedChars.contains(c);
 }

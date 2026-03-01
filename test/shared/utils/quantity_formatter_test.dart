@@ -229,6 +229,56 @@ void main() {
       final q = Quantity(double.infinity, Dimension({'m': 1}));
       expect(formatQuantity(q, precision: 6), 'Infinity m');
     });
+
+    group('reciprocal dimension display', () {
+      test('reciprocal dimension with value 1 strips leading "1"', () {
+        // "/s" evaluates to Quantity(1, 1/s); should display as "1 / s" not "1 1 / s"
+        final q = Quantity(1.0, Dimension({'s': -1}));
+        expect(formatQuantity(q, precision: 6), '1 / s');
+      });
+
+      test('reciprocal dimension with value 2 strips leading "1"', () {
+        // "2/m" evaluates to Quantity(2, 1/m); should display as "2 / m" not "2 1 / m"
+        final q = Quantity(2.0, Dimension({'m': -1}));
+        expect(formatQuantity(q, precision: 6), '2 / m');
+      });
+
+      test(
+        'mixed dimension (numerator and denominator) is displayed unchanged',
+        () {
+          final q = Quantity(5.0, Dimension({'m': 1, 's': -1}));
+          expect(formatQuantity(q, precision: 6), '5 m / s');
+        },
+      );
+
+      test('dimensionless quantity displays value only (no unit label)', () {
+        final q = Quantity.dimensionless(3.0);
+        expect(formatQuantity(q, precision: 6), '3');
+      });
+    });
+
+    group('optional dimension parameter', () {
+      test('provided non-reciprocal dimension string is used as-is', () {
+        final q = Quantity(1.0, Dimension({'m': 1}));
+        expect(formatQuantity(q, precision: 6, dimension: 'km'), '1 km');
+      });
+
+      test(
+        'provided dimension string starting with "1 /" has leading "1 " stripped',
+        () {
+          final q = Quantity(3.0, Dimension({'s': -1}));
+          expect(
+            formatQuantity(q, precision: 6, dimension: '1 / Hz'),
+            '3 / Hz',
+          );
+        },
+      );
+
+      test('omitting dimension param uses canonicalRepresentation', () {
+        final q = Quantity(1609.344, Dimension({'m': 1}));
+        expect(formatQuantity(q, precision: 6), '1609.34 m');
+      });
+    });
   });
 
   group('formatOutputUnit', () {

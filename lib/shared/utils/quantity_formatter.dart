@@ -6,21 +6,33 @@ import '../../features/settings/models/user_settings.dart';
 /// Formats a [Quantity] as a string with value and unit label.
 ///
 /// Dimensionless quantities show only the value. Dimensioned quantities
-/// append the canonical dimension representation.
+/// append the unit label, which is [dimension] if provided, or
+/// [Quantity.dimension]'s canonical representation otherwise.
+///
+/// If the effective dimension string starts with `"1 /"` (i.e., a purely
+/// reciprocal dimension), the leading `"1 "` is stripped so that, for example,
+/// a quantity of 2 with dimension `1/m` renders as `"2 / m"` rather than
+/// `"2 1 / m"`.
 String formatQuantity(
   Quantity quantity, {
   required int precision,
   Notation notation = Notation.automatic,
+  String? dimension,
 }) {
   final valueStr = formatValue(
     quantity.value,
     precision: precision,
     notation: notation,
   );
-  if (quantity.isDimensionless) {
+  final effectiveDimension =
+      dimension ?? quantity.dimension.canonicalRepresentation();
+  if (effectiveDimension == '1') {
     return valueStr;
   }
-  return '$valueStr ${quantity.dimension.canonicalRepresentation()}';
+  final displayDimension = effectiveDimension.startsWith('1 /')
+      ? effectiveDimension.substring(2)
+      : effectiveDimension;
+  return '$valueStr $displayDimension';
 }
 
 /// Formats a numeric [value] as a string according to [notation] and

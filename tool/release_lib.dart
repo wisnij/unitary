@@ -158,8 +158,7 @@ String formatChangelogSection(
   }
 
   final buffer = StringBuffer();
-  final heading =
-      '[$version]($_repoUrl/compare/v$previousVersion...v$version) - $date';
+  final heading = '[$version] - $date';
   buffer.writeln(heading);
   buffer.writeln('-' * heading.length);
 
@@ -177,6 +176,11 @@ String formatChangelogSection(
   }
 
   return buffer.toString();
+}
+
+/// Formats a link reference definition for the given version.
+String formatLinkReference(String version, String previousVersion) {
+  return '[$version]: $_repoUrl/compare/v$previousVersion...v$version';
 }
 
 /// Formats the tag message for an annotated git tag.
@@ -228,7 +232,15 @@ String updatePubspecVersion(String content, String newVersion) {
 /// The header is everything up to and including the first blank line after
 /// the introductory text (the line following the "Semantic Versioning" link
 /// or the first double-newline after content).
-String updateChangelog(String content, String newSection) {
+///
+/// If [newLinkRef] is provided, it is inserted before the existing link
+/// reference block at the end of the file (or appended with a blank line
+/// separator if no link reference block exists yet).
+String updateChangelog(
+  String content,
+  String newSection, [
+  String? newLinkRef,
+]) {
   // Find the insertion point: after the header block.
   // The header ends at the first blank line that follows at least one
   // non-blank line of content.
@@ -264,7 +276,29 @@ String updateChangelog(String content, String newSection) {
   final before = lines.sublist(0, insertIndex).join('\n');
   final after = lines.sublist(insertIndex).join('\n');
 
-  return '$before\n\n$newSection\n$after';
+  var result = '$before\n\n$newSection\n$after';
+
+  if (newLinkRef != null) {
+    final resultLines = result.split('\n');
+    final linkRefPattern = RegExp(r'^\[[\d.]+\]:');
+
+    var linkRefIndex = -1;
+    for (var i = 0; i < resultLines.length; i++) {
+      if (linkRefPattern.hasMatch(resultLines[i])) {
+        linkRefIndex = i;
+        break;
+      }
+    }
+
+    if (linkRefIndex >= 0) {
+      resultLines.insert(linkRefIndex, newLinkRef);
+      result = resultLines.join('\n');
+    } else {
+      result = '$result\n$newLinkRef\n';
+    }
+  }
+
+  return result;
 }
 
 /// Returns true if the text starts with a setext-style h2 heading

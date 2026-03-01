@@ -7,8 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-[0.5.2](https://github.com/wisnij/unitary/compare/v0.5.1...v0.5.2) - 2026-03-01
--------------------------------------------------------------------------------
+[0.5.2] - 2026-03-01
+--------------------
 
 ### Added
 
@@ -23,8 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - free software statement
 
 
-[0.5.1](https://github.com/wisnij/unitary/compare/v0.5.0...v0.5.1) - 2026-02-27
--------------------------------------------------------------------------------
+[0.5.1] - 2026-02-27
+--------------------
 
 ### Added
 
@@ -40,8 +40,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add change spec for making the repo non-nullable in evals
 
 
-[0.5.0](https://github.com/wisnij/unitary/compare/v0.4.0...v0.5.0) - 2026-02-26
--------------------------------------------------------------------------------
+[0.5.0] - 2026-02-26
+--------------------
 
 ### Added
 
@@ -66,8 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - move Phase 8 (complete unit database) up to be 5 instead
 
 
-[0.4.0](https://github.com/wisnij/unitary/compare/v0.3.0...v0.4.0) - 2026-02-16
--------------------------------------------------------------------------------
+[0.4.0] - 2026-02-16
+--------------------
 
 Phase 4: Basic UI - Freeform Mode.
 
@@ -87,8 +87,8 @@ Phase 4: Basic UI - Freeform Mode.
 - 848 passing tests
 
 
-[0.3.0](https://github.com/wisnij/unitary/compare/v0.2.0...v0.3.0) - 2026-02-16
--------------------------------------------------------------------------------
+[0.3.0] - 2026-02-16
+--------------------
 
 Phase 3: Advanced Unit Features.
 
@@ -108,8 +108,8 @@ Phase 3: Advanced Unit Features.
 - 703 passing tests
 
 
-[0.2.0](https://github.com/wisnij/unitary/compare/v0.1.0...v0.2.0) - 2026-02-11
--------------------------------------------------------------------------------
+[0.2.0] - 2026-02-11
+--------------------
 
 Phase 2: Unit System Foundation.
 
@@ -120,7 +120,7 @@ Phase 2: Unit System Foundation.
 - Chained unit definitions for cleaner builtin unit specs
 
 
-0.1.0 - 2026-02-01
+[0.1.0] - 2026-02-01
 ------------------
 
 Phase 1: Core Domain.
@@ -132,3 +132,11 @@ Phase 1: Core Domain.
 - Parenthesized sub-expressions
 - Numeric literals with decimal point support
 - 373 passing tests
+
+[0.5.2]: https://github.com/wisnij/unitary/compare/v0.5.1...v0.5.2
+[0.5.1]: https://github.com/wisnij/unitary/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/wisnij/unitary/compare/v0.4.0...v0.5.0
+[0.4.0]: https://github.com/wisnij/unitary/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/wisnij/unitary/compare/v0.2.0...v0.3.0
+[0.2.0]: https://github.com/wisnij/unitary/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/wisnij/unitary/releases/tag/v0.1.0

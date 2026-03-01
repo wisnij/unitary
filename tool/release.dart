@@ -25,27 +25,29 @@ void main(List<String> args) {
 
   final bumpType = BumpType.values.byName(positional[0]);
 
-  // Verify working tree is clean.
-  final diffResult = Process.runSync('git', ['diff', '--quiet']);
-  final diffCachedResult = Process.runSync('git', [
-    'diff',
-    '--cached',
-    '--quiet',
-  ]);
-  if (diffResult.exitCode != 0 || diffCachedResult.exitCode != 0) {
-    stderr.writeln(
-      'Error: Working tree is not clean. Commit or stash changes first.',
-    );
-    exit(1);
-  }
+  if (!dryRun) {
+    // Verify working tree is clean.
+    final diffResult = Process.runSync('git', ['diff', '--quiet']);
+    final diffCachedResult = Process.runSync('git', [
+      'diff',
+      '--cached',
+      '--quiet',
+    ]);
+    if (diffResult.exitCode != 0 || diffCachedResult.exitCode != 0) {
+      stderr.writeln(
+        'Error: Working tree is not clean. Commit or stash changes first.',
+      );
+      exit(1);
+    }
 
-  // Warn if not on main branch.
-  final branchResult = Process.runSync('git', ['branch', '--show-current']);
-  final currentBranch = (branchResult.stdout as String).trim();
-  if (currentBranch != 'main') {
-    stderr.writeln(
-      'Warning: Not on main branch (currently on "$currentBranch").',
-    );
+    // Warn if not on main branch.
+    final branchResult = Process.runSync('git', ['branch', '--show-current']);
+    final currentBranch = (branchResult.stdout as String).trim();
+    if (currentBranch != 'main') {
+      stderr.writeln(
+        'Warning: Not on main branch (currently on "$currentBranch").',
+      );
+    }
   }
 
   // Read current version from pubspec.yaml.
@@ -98,15 +100,18 @@ void main(List<String> args) {
     dateStr,
     commits,
   );
+  final linkRef = formatLinkReference('$newVersion', '$currentVersion');
 
   // Dry-run mode: print what would happen and exit.
   if (dryRun) {
     stdout.writeln('Dry run: $currentVersion -> $newVersion');
-    stdout.writeln();
     stdout.writeln('Commits since $lastTag: ${commits.length}');
     stdout.writeln();
     stdout.writeln('Changelog entry:');
     stdout.writeln(changelogSection);
+    stdout.writeln('Link reference:');
+    stdout.writeln(linkRef);
+    stdout.writeln();
     stdout.writeln('Would update pubspec.yaml and CHANGELOG.md');
     stdout.writeln('Would commit and tag as v$newVersion');
     return;
@@ -117,7 +122,7 @@ void main(List<String> args) {
   if (changelogFile.existsSync()) {
     final changelogContent = changelogFile.readAsStringSync();
     changelogFile.writeAsStringSync(
-      updateChangelog(changelogContent, changelogSection),
+      updateChangelog(changelogContent, changelogSection, linkRef),
     );
   } else {
     changelogFile.writeAsStringSync('''# Changelog

@@ -227,12 +227,8 @@ void main() {
         '2026-01-01',
         commits,
       );
-      expect(
-        result,
-        contains(
-          '[1.0.0](https://github.com/wisnij/unitary/compare/v0.9.0...v1.0.0) - 2026-01-01\n---',
-        ),
-      );
+      expect(result, contains('[1.0.0] - 2026-01-01\n---'));
+      expect(result, isNot(contains('[1.0.0](')));
       expect(result, contains('### Added'));
       expect(result, contains('- add feature A'));
       expect(result, contains('- add feature C'));
@@ -272,12 +268,8 @@ void main() {
 
     test('handles empty commits list', () {
       final result = formatChangelogSection('1.0.0', '0.9.0', '2026-01-01', []);
-      expect(
-        result,
-        contains(
-          '[1.0.0](https://github.com/wisnij/unitary/compare/v0.9.0...v1.0.0) - 2026-01-01\n---',
-        ),
-      );
+      expect(result, contains('[1.0.0] - 2026-01-01\n---'));
+      expect(result, isNot(contains('[1.0.0](')));
       // Should still have the header even with no entries
     });
 
@@ -348,7 +340,7 @@ void main() {
         commits,
       );
       final result = formatTagMessage('2.0.0', section);
-      expect(result, isNot(contains('[2.0.0](')));
+      expect(result, isNot(contains('[2.0.0] -')));
       expect(result, isNot(contains('-----')));
     });
 
@@ -406,6 +398,21 @@ void main() {
     });
   });
 
+  group('formatLinkReference', () {
+    test('produces correct reference line', () {
+      final result = formatLinkReference('1.0.0', '0.9.0');
+      expect(
+        result,
+        '[1.0.0]: https://github.com/wisnij/unitary/compare/v0.9.0...v1.0.0',
+      );
+    });
+
+    test('uses repoUrl prefix', () {
+      final result = formatLinkReference('1.0.0', '0.9.0');
+      expect(result, startsWith('[1.0.0]: https://github.com/wisnij/unitary'));
+    });
+  });
+
   group('updateChangelog', () {
     const header =
         'Changelog\n'
@@ -457,6 +464,45 @@ void main() {
       );
       expect(result, contains('Changelog'));
       expect(result, contains('[0.1.0]'));
+    });
+
+    test('inserts link ref before existing link ref block', () {
+      const existingLinkRef =
+          '\n[0.1.0]: https://github.com/wisnij/unitary/compare/v0.0.1...v0.1.0\n';
+      const content = header + existingEntry + existingLinkRef;
+      const newSection =
+          '[0.2.0] - 2026-02-01\n'
+          '--------------------\n'
+          '\n'
+          '- New stuff\n';
+      const newLinkRef =
+          '[0.2.0]: https://github.com/wisnij/unitary/compare/v0.1.0...v0.2.0';
+      final result = updateChangelog(content, newSection, newLinkRef);
+      final newLinkIndex = result.indexOf('[0.2.0]: ');
+      final oldLinkIndex = result.indexOf('[0.1.0]: ');
+      expect(newLinkIndex, greaterThanOrEqualTo(0));
+      expect(oldLinkIndex, greaterThanOrEqualTo(0));
+      expect(newLinkIndex, lessThan(oldLinkIndex));
+    });
+
+    test('appends link ref when no link ref block exists', () {
+      const content = header + existingEntry;
+      const newSection =
+          '[0.2.0] - 2026-02-01\n'
+          '--------------------\n'
+          '\n'
+          '- New stuff\n';
+      const newLinkRef =
+          '[0.2.0]: https://github.com/wisnij/unitary/compare/v0.1.0...v0.2.0';
+      final result = updateChangelog(content, newSection, newLinkRef);
+      expect(result, contains(newLinkRef));
+      // Link ref appears after the version headings
+      expect(
+        result.indexOf(newLinkRef),
+        greaterThan(result.indexOf('[0.1.0] - 2026-01-01')),
+      );
+      // One blank line before the link ref
+      expect(result, contains('\n\n$newLinkRef\n'));
     });
   });
 }

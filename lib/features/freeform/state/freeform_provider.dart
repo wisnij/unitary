@@ -9,16 +9,14 @@ import 'freeform_state.dart';
 import 'parser_provider.dart';
 
 /// Provides the current freeform evaluation state.
-final freeformProvider =
-    StateNotifierProvider<FreeformNotifier, EvaluationResult>((ref) {
-      return FreeformNotifier(ref);
-    });
+final freeformProvider = NotifierProvider<FreeformNotifier, EvaluationResult>(
+  FreeformNotifier.new,
+);
 
 /// Manages freeform expression evaluation state.
-class FreeformNotifier extends StateNotifier<EvaluationResult> {
-  final Ref _ref;
-
-  FreeformNotifier(this._ref) : super(const EvaluationIdle());
+class FreeformNotifier extends Notifier<EvaluationResult> {
+  @override
+  EvaluationResult build() => const EvaluationIdle();
 
   /// Evaluates a single expression.
   void evaluateSingle(String input) {
@@ -28,8 +26,8 @@ class FreeformNotifier extends StateNotifier<EvaluationResult> {
     }
 
     try {
-      final parser = _ref.read(parserProvider);
-      final settings = _ref.read(settingsProvider);
+      final parser = ref.read(parserProvider);
+      final settings = ref.read(settingsProvider);
       final result = parser.evaluate(input);
       final formatted = formatQuantity(
         result,
@@ -50,8 +48,8 @@ class FreeformNotifier extends StateNotifier<EvaluationResult> {
     }
 
     try {
-      final parser = _ref.read(parserProvider);
-      final settings = _ref.read(settingsProvider);
+      final parser = ref.read(parserProvider);
+      final settings = ref.read(settingsProvider);
       final inputQty = parser.evaluate(input);
       final outputQty = parser.evaluate(output);
 

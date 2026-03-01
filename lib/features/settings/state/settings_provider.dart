@@ -14,36 +14,34 @@ final settingsRepositoryProvider = Provider<SettingsRepository>(
 );
 
 /// Provides the current [UserSettings] and exposes update methods.
-final settingsProvider = StateNotifierProvider<SettingsNotifier, UserSettings>((
-  ref,
-) {
-  final repository = ref.watch(settingsRepositoryProvider);
-  return SettingsNotifier(repository);
-});
+final settingsProvider = NotifierProvider<SettingsNotifier, UserSettings>(
+  SettingsNotifier.new,
+);
 
 /// Manages [UserSettings] state with persistence.
-class SettingsNotifier extends StateNotifier<UserSettings> {
-  final SettingsRepository _repository;
-
-  SettingsNotifier(this._repository) : super(_repository.load());
+class SettingsNotifier extends Notifier<UserSettings> {
+  @override
+  UserSettings build() {
+    return ref.watch(settingsRepositoryProvider).load();
+  }
 
   void updatePrecision(int precision) {
     state = state.copyWith(precision: precision);
-    _repository.save(state);
+    ref.read(settingsRepositoryProvider).save(state);
   }
 
   void updateNotation(Notation notation) {
     state = state.copyWith(notation: notation);
-    _repository.save(state);
+    ref.read(settingsRepositoryProvider).save(state);
   }
 
   void updateThemeMode(ThemeMode themeMode) {
     state = state.copyWith(themeMode: themeMode);
-    _repository.save(state);
+    ref.read(settingsRepositoryProvider).save(state);
   }
 
   void updateEvaluationMode(EvaluationMode evaluationMode) {
     state = state.copyWith(evaluationMode: evaluationMode);
-    _repository.save(state);
+    ref.read(settingsRepositoryProvider).save(state);
   }
 }

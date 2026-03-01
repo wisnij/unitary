@@ -138,9 +138,12 @@ class ParsedCommit {
 /// Section display order for changelog output.
 const _sectionOrder = ['Added', 'Changed', 'Fixed', 'Documentation', 'Other'];
 
+const _repoUrl = 'https://github.com/wisnij/unitary';
+
 /// Formats a changelog section for the given version, date, and commits.
 String formatChangelogSection(
   String version,
+  String previousVersion,
   String date,
   List<ParsedCommit> commits,
 ) {
@@ -155,7 +158,8 @@ String formatChangelogSection(
   }
 
   final buffer = StringBuffer();
-  final heading = '[$version] - $date';
+  final heading =
+      '[$version]($_repoUrl/compare/v$previousVersion...v$version) - $date';
   buffer.writeln(heading);
   buffer.writeln('-' * heading.length);
 

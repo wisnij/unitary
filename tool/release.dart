@@ -94,6 +94,7 @@ void main(List<String> args) {
       '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
   final changelogSection = formatChangelogSection(
     '$newVersion',
+    '$currentVersion',
     dateStr,
     commits,
   );

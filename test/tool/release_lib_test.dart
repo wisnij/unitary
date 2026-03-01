@@ -221,8 +221,18 @@ void main() {
         ParsedCommit.parse('bbb fix: fix bug B')!,
         ParsedCommit.parse('ccc feat: add feature C')!,
       ];
-      final result = formatChangelogSection('1.0.0', '2026-01-01', commits);
-      expect(result, contains('[1.0.0] - 2026-01-01\n-----'));
+      final result = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
+      expect(
+        result,
+        contains(
+          '[1.0.0](https://github.com/wisnij/unitary/compare/v0.9.0...v1.0.0) - 2026-01-01\n---',
+        ),
+      );
       expect(result, contains('### Added'));
       expect(result, contains('- add feature A'));
       expect(result, contains('- add feature C'));
@@ -232,7 +242,12 @@ void main() {
 
     test('omits empty categories', () {
       final commits = [ParsedCommit.parse('aaa feat: add feature A')!];
-      final result = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final result = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
       expect(result, contains('### Added'));
       expect(result, isNot(contains('### Fixed')));
       expect(result, isNot(contains('### Changed')));
@@ -244,21 +259,36 @@ void main() {
         ParsedCommit.parse('bbb test: add test')!,
         ParsedCommit.parse('ccc chore: cleanup')!,
       ];
-      final result = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final result = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
       expect(result, contains('- add feature'));
       expect(result, isNot(contains('add test')));
       expect(result, isNot(contains('cleanup')));
     });
 
     test('handles empty commits list', () {
-      final result = formatChangelogSection('1.0.0', '2026-01-01', []);
-      expect(result, contains('[1.0.0] - 2026-01-01\n-----'));
+      final result = formatChangelogSection('1.0.0', '0.9.0', '2026-01-01', []);
+      expect(
+        result,
+        contains(
+          '[1.0.0](https://github.com/wisnij/unitary/compare/v0.9.0...v1.0.0) - 2026-01-01\n---',
+        ),
+      );
       // Should still have the header even with no entries
     });
 
     test('includes Other section for untyped commits', () {
       final commits = [ParsedCommit.parse('aaa some random change')!];
-      final result = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final result = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
       expect(result, contains('### Other'));
       expect(result, contains('- some random change'));
     });
@@ -271,7 +301,12 @@ void main() {
         ParsedCommit.parse('ddd feat: a feature')!,
         ParsedCommit.parse('eee refactor: a refactor')!,
       ];
-      final result = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final result = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
       final addedIndex = result.indexOf('### Added');
       final changedIndex = result.indexOf('### Changed');
       final fixedIndex = result.indexOf('### Fixed');
@@ -290,7 +325,12 @@ void main() {
         ParsedCommit.parse('aaa feat: add feature A')!,
         ParsedCommit.parse('bbb fix: fix bug B')!,
       ];
-      final section = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final section = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
       final result = formatTagMessage('1.0.0', section);
       expect(result, startsWith('Release v1.0.0\n\n'));
       expect(result, contains('### Added'));
@@ -301,21 +341,36 @@ void main() {
 
     test('strips heading and dashes from changelog section', () {
       final commits = [ParsedCommit.parse('aaa feat: add feature')!];
-      final section = formatChangelogSection('2.0.0', '2026-03-01', commits);
+      final section = formatChangelogSection(
+        '2.0.0',
+        '1.9.0',
+        '2026-03-01',
+        commits,
+      );
       final result = formatTagMessage('2.0.0', section);
-      expect(result, isNot(contains('[2.0.0] - 2026-03-01')));
+      expect(result, isNot(contains('[2.0.0](')));
       expect(result, isNot(contains('-----')));
     });
 
     test('does not have trailing blank lines', () {
       final commits = [ParsedCommit.parse('aaa feat: add feature')!];
-      final section = formatChangelogSection('1.0.0', '2026-01-01', commits);
+      final section = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
       final result = formatTagMessage('1.0.0', section);
       expect(result, isNot(endsWith('\n')));
     });
 
     test('falls back to simple message with no commits', () {
-      final section = formatChangelogSection('1.0.0', '2026-01-01', []);
+      final section = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        [],
+      );
       final result = formatTagMessage('1.0.0', section);
       expect(result, 'Release v1.0.0');
     });

@@ -252,7 +252,7 @@ throws `EvalException`.
 **Database Schema (planned):**
 
 Currently units are registered via hand-curated Dart code in
-`registerBuiltinUnits()`.  For future persistence, the database would include
+`registerPredefinedUnits()`.  For future persistence, the database would include
 tables for units (with definition type and parameters), unit aliases, prefixes,
 prefix aliases, dimension metadata (for UI category names), constants, and
 custom user-defined units.  Plurals are handled automatically at parse time and

@@ -15,7 +15,7 @@ so that unit names resolve to real units with conversion factors.
 **Deliverable:** A Dart API that converts "5 feet" to meters programmatically:
 
 ~~~~ dart
-final repo = UnitRepository.withBuiltinUnits();
+final repo = UnitRepository.withPredefinedUnits();
 final parser = ExpressionParser(repo: repo);
 final quantity = parser.evaluate('5 ft');
 // quantity == Quantity(1.524, {m: 1})
@@ -59,7 +59,7 @@ These decisions were made during the Phase 2 design review:
    directly to primitives).
 
 4. **Hand-curated Dart code for unit definitions:** Units are registered via
-   Dart code in a `registerBuiltinUnits()` function.  No JSON assets or
+   Dart code in a `registerPredefinedUnits()` function.  No JSON assets or
    database loading.  Compile-time type safety and easy testing.
 
 5. **Flat alias map with plural stripping:** UnitRepository maintains a
@@ -155,7 +155,7 @@ architecture.md for the full resolution order).
 
 `getUnit(name)` is a throwing variant of `findUnit`.
 
-A factory `UnitRepository.withBuiltinUnits()` creates a pre-loaded repository.
+A factory `UnitRepository.withPredefinedUnits()` creates a pre-loaded repository.
 
 **Tests:** `test/core/domain/models/unit_repository_test.dart`
 
@@ -168,15 +168,15 @@ A factory `UnitRepository.withBuiltinUnits()` creates a pre-loaded repository.
 - findUnit returns null for unknown names.
 - getUnit throws ArgumentError for unknown names.
 - allUnits returns all registered units.
-- factory `withBuiltinUnits()` creates a populated repository.
+- factory `withPredefinedUnits()` creates a populated repository.
 - Primitive binding: after registration, primitive's toQuantity works.
 
 
 ### Step 4: Built-in Unit Definitions
 
-**File:** `lib/core/domain/data/builtin_units.dart`
+**File:** `lib/core/domain/data/predefined_units.dart`
 
-Top-level function `registerBuiltinUnits(UnitRepository repo)` that registers
+Top-level function `registerPredefinedUnits(UnitRepository repo)` that registers
 all hand-curated units.
 
 #### Length Units (10)
@@ -225,7 +225,7 @@ all hand-curated units.
   directly, not mile → ft → m) to minimize floating-point chain errors.
 - Conversion factors are from NIST/SI reference values.
 
-**Tests:** `test/core/domain/data/builtin_units_test.dart`
+**Tests:** `test/core/domain/data/predefined_units_test.dart`
 
 - All units register without collision.
 - Spot-check conversion factors:
@@ -349,7 +349,7 @@ File Summary
 | `lib/core/domain/models/unit_definition.dart` | `UnitDefinition`, `PrimitiveUnitDefinition`, `LinearDefinition` |
 | `lib/core/domain/models/unit_repository.dart` | `UnitRepository` class with alias lookup                        |
 | `lib/core/domain/services/unit_service.dart`  | `reduce()` function                                             |
-| `lib/core/domain/data/builtin_units.dart`     | `registerBuiltinUnits()` function                               |
+| `lib/core/domain/data/predefined_units.dart`  | `registerPredefinedUnits()` function                            |
 
 ### Modified production code
 
@@ -365,7 +365,7 @@ File Summary
 | `test/core/domain/models/unit_test.dart`            | Unit class, UnitDefinition hierarchy       |
 | `test/core/domain/models/unit_repository_test.dart` | Registration, lookup, plural stripping     |
 | `test/core/domain/services/unit_service_test.dart`  | reduce() algorithm                         |
-| `test/core/domain/data/builtin_units_test.dart`     | Built-in unit registration and conversions |
+| `test/core/domain/data/predefined_units_test.dart`  | Built-in unit registration and conversions |
 
 ### Modified test code
 

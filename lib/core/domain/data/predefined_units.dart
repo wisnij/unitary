@@ -1,11 +1,11 @@
 // GENERATED CODE - DO NOT EDIT BY HAND
-// Run `dart run tool/generate_builtin_units.dart` to regenerate.
+// Run `dart run tool/generate_predefined_units.dart` to regenerate.
 
 import '../models/unit.dart';
 import '../models/unit_repository.dart';
 
 /// Registers all built-in units into the given [repo].
-void registerBuiltinUnits(UnitRepository repo) {
+void registerPredefinedUnits(UnitRepository repo) {
   _registerUnits(repo);
   _registerPrefixes(repo);
 }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:unitary/core/domain/data/builtin_units.dart';
+import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
 
@@ -34,7 +34,7 @@ void main() {
 
   setUp(() {
     repo = UnitRepository();
-    registerBuiltinUnits(repo);
+    registerPredefinedUnits(repo);
   });
 
   group('Registration', () {

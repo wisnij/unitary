@@ -320,7 +320,7 @@ persists.
 **New file:** `lib/features/freeform/state/parser_provider.dart`
 
 `parserProvider` — `Provider<ExpressionParser>` that creates a singleton
-`ExpressionParser(repo: UnitRepository.withBuiltinUnits())`.
+`ExpressionParser(repo: UnitRepository.withPredefinedUnits())`.
 
 **Tests:** `test/features/freeform/state/parser_provider_test.dart`
 
@@ -328,7 +328,7 @@ persists.
 - Parser can evaluate expressions with units.
 
 **Reuses:** `ExpressionParser` (`lib/core/domain/parser/expression_parser.dart`),
-`UnitRepository.withBuiltinUnits()` (`lib/core/domain/models/unit_repository.dart`)
+`UnitRepository.withPredefinedUnits()` (`lib/core/domain/models/unit_repository.dart`)
 
 ### Step 7: Freeform State and Provider
 

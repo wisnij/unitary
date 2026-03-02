@@ -211,11 +211,11 @@ Implementation Phases
 - [x] Create GNU Units import pipeline
   - [x] `tool/import_gnu_units_lib.dart` — two-pass parser with conditional directive evaluation
   - [x] `tool/import_gnu_units.dart` — executable that reads definitions.units, merges into units.json
-  - [x] `tool/generate_builtin_units_lib.dart` — alias resolution, Dart codegen per unit type
-  - [x] `tool/generate_builtin_units.dart` — executable that reads units.json, writes builtin_units.dart
+  - [x] `tool/generate_predefined_units_lib.dart` — alias resolution, Dart codegen per unit type
+  - [x] `tool/generate_predefined_units.dart` — executable that reads units.json, writes predefined_units.dart
 - [x] Create `lib/core/domain/data/units.json` (full merged GNU Units database: 7294 units, 125 prefixes, 177 unsupported)
 - [x] Add Phase 5 units: digital storage (6), volume (8), area (2), speed (1), pressure (4), energy (5)
-- [x] Regenerate `lib/core/domain/data/builtin_units.dart` from units.json
+- [x] Regenerate `lib/core/domain/data/predefined_units.dart` from units.json
 - [x] Test coverage for all new categories
 - [x] Tool tests: 164 tests for importer, codegen, and release libraries
 

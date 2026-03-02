@@ -344,16 +344,16 @@ Questions that arose during design but haven't been resolved:
 - *Phase 5: Complete Unit Database (February 23, 2026)*
   - 844 tests passing (after phase + cleanup)
   - GNU Units import pipeline: `tool/import_gnu_units_lib.dart` (two-pass parser, conditional directives, alias detection via known-ID membership), `tool/import_gnu_units.dart`
-  - Codegen pipeline: `tool/generate_builtin_units_lib.dart` (alias chain resolution, per-type Dart emitters, category grouping), `tool/generate_builtin_units.dart`
+  - Codegen pipeline: `tool/generate_predefined_units_lib.dart` (alias chain resolution, per-type Dart emitters, category grouping), `tool/generate_predefined_units.dart`
   - `lib/core/domain/data/units.json` — full merged GNU Units database (7294 units, 125 prefixes, 177 unsupported); importer-owned vs. pass-through field split; supports primitive/derived/prefix/affine/alias/unsupported types
-  - `lib/core/domain/data/builtin_units.dart` — regenerated from units.json; flat `_registerUnits` + `_registerPrefixes` structure
+  - `lib/core/domain/data/predefined_units.dart` — regenerated from units.json; flat `_registerUnits` + `_registerPrefixes` structure
   - 26 new Phase 5 units: digital storage (bit primitive, byte, kibibyte, mebibyte, gibibyte, tebibyte), volume (liter, gallon, quart, pint, cup, floz, tbsp, tsp), area (hectare, acre), speed (knot), pressure (bar, atm, psi, mmHg), energy (cal, kcal, BTU, kWh, eV)
   - 164 tool tests (`test/tool/`): 63 importer + 54 codegen + 47 release_lib
 - *Unit evaluation regression test (February 26, 2026)*
   - 845 tests passing (1 new)
-  - Added `Evaluation` group to `test/core/domain/data/builtin_units_test.dart`: iterates all registered units, calls `resolveUnit` on each, fails on unexpected errors or unexpected passes
+  - Added `Evaluation` group to `test/core/domain/data/predefined_units_test.dart`: iterates all registered units, calls `resolveUnit` on each, fails on unexpected errors or unexpected passes
   - `_knownEvalFailures` set documents 37 units with unsupported expression features (angle-in-trig, `$` lexer, `%` lexer, Unicode identifiers), grouped by root cause with fix guidance
-  - Fixed `basispoint` definition in `units-supplementary.json`: `0.01 %` → `0.01 percent` (the `%` alias is not a lexer-recognized token); regenerated `units.json` and `builtin_units.dart`
+  - Fixed `basispoint` definition in `units-supplementary.json`: `0.01 %` → `0.01 percent` (the `%` alias is not a lexer-recognized token); regenerated `units.json` and `predefined_units.dart`
 - *Circular unit definition detection (February 26, 2026)*
   - 848 tests passing (3 new)
   - `resolveUnit` in `unit_resolver.dart` now accepts optional `Set<String>? visited` parameter (the active resolution stack); throws `EvalException` immediately on re-entry for the same unit instead of stack-overflowing

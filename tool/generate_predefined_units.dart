@@ -3,13 +3,13 @@
 /// Reads lib/core/domain/data/units-parsed.json and
 /// lib/core/domain/data/units-supplementary.json, merges them into
 /// lib/core/domain/data/units.json, then generates
-/// lib/core/domain/data/builtin_units.dart.
+/// lib/core/domain/data/predefined_units.dart.
 library;
 
 import 'dart:convert';
 import 'dart:io';
 
-import 'generate_builtin_units_lib.dart';
+import 'generate_predefined_units_lib.dart';
 
 void main() {
   final scriptDir = File(Platform.script.toFilePath()).parent;
@@ -49,10 +49,10 @@ void main() {
     '$unsupportedCount unsupported to ${jsonFile.path}',
   );
 
-  // Generate builtin_units.dart from merged map.
+  // Generate predefined_units.dart from merged map.
   final dartCode = generateDartCode(merged);
 
-  final outputFile = File('$dataDir/builtin_units.dart');
+  final outputFile = File('$dataDir/predefined_units.dart');
   outputFile.writeAsStringSync(dartCode);
   stdout.writeln('Wrote ${outputFile.path}');
 

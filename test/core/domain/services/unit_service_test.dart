@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:unitary/core/domain/data/builtin_units.dart';
+import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
@@ -12,7 +12,7 @@ void main() {
 
   setUp(() {
     repo = UnitRepository();
-    registerBuiltinUnits(repo);
+    registerPredefinedUnits(repo);
   });
 
   group('reduce()', () {

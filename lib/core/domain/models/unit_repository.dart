@@ -1,4 +1,4 @@
-import '../data/builtin_units.dart';
+import '../data/predefined_units.dart';
 import 'unit.dart';
 
 /// Result of a unit lookup that may include a prefix.
@@ -33,10 +33,10 @@ class UnitRepository {
   /// Creates an empty repository.
   UnitRepository();
 
-  /// Creates a repository pre-loaded with the built-in unit set.
-  factory UnitRepository.withBuiltinUnits() {
+  /// Creates a repository pre-loaded with the predefined unit set.
+  factory UnitRepository.withPredefinedUnits() {
     final repo = UnitRepository();
-    registerBuiltinUnits(repo);
+    registerPredefinedUnits(repo);
     return repo;
   }
 

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:unitary/core/domain/data/builtin_units.dart';
+import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
@@ -362,7 +362,7 @@ void main() {
 
     setUp(() {
       repo = UnitRepository();
-      registerBuiltinUnits(repo);
+      registerPredefinedUnits(repo);
     });
 
     test('5 ft resolves to meters', () {
@@ -484,7 +484,7 @@ void main() {
 
       setUp(() {
         repo = UnitRepository();
-        registerBuiltinUnits(repo);
+        registerPredefinedUnits(repo);
       });
 
       test('tempF(212) = 373.15 K', () {
@@ -543,7 +543,7 @@ void main() {
 
     setUp(() {
       repo = UnitRepository();
-      registerBuiltinUnits(repo);
+      registerPredefinedUnits(repo);
     });
 
     test('pi ≈ 3.14159', () {
@@ -587,7 +587,7 @@ void main() {
 
     setUp(() {
       repo = UnitRepository();
-      registerBuiltinUnits(repo);
+      registerPredefinedUnits(repo);
     });
 
     test('5 N = Quantity(5, {kg:1, m:1, s:-2})', () {
@@ -627,7 +627,7 @@ void main() {
 
     setUp(() {
       repo = UnitRepository();
-      registerBuiltinUnits(repo);
+      registerPredefinedUnits(repo);
     });
 
     test(
@@ -652,7 +652,7 @@ void main() {
 
     setUp(() {
       repo = UnitRepository();
-      registerBuiltinUnits(repo);
+      registerPredefinedUnits(repo);
     });
 
     test('5 m2 evaluates the same as 5 m^2', () {

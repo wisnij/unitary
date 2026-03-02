@@ -178,7 +178,7 @@ Affected Code Paths
 | `lib/core/domain/models/unit.dart`            | `PrimitiveUnit`   | `isDimensionless` field                                  |
 | `lib/core/domain/models/dimension.dart`       | `Dimension`       | `removeDimensions()` method                              |
 | `lib/core/domain/models/unit_repository.dart` | `UnitRepository`  | `dimensionlessIds` property                              |
-| `lib/core/domain/data/builtin_units.dart`     | Unit registration | `radian` and `sr` registered as dimensionless primitives |
+| `lib/core/domain/data/predefined_units.dart`  | Unit registration | `radian` and `sr` registered as dimensionless primitives |
 
 ### Future (when conversion interface is built)
 

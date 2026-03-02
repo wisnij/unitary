@@ -53,7 +53,7 @@ void main() {
     late ExpressionParser repoParser;
 
     setUp(() {
-      repo = UnitRepository.withBuiltinUnits();
+      repo = UnitRepository.withPredefinedUnits();
       repoParser = ExpressionParser(repo: repo);
     });
 
@@ -79,7 +79,7 @@ void main() {
 
   group('Phase 2 deliverable', () {
     test('evaluate 5 feet and convert via division', () {
-      final repo = UnitRepository.withBuiltinUnits();
+      final repo = UnitRepository.withPredefinedUnits();
       final repoParser = ExpressionParser(repo: repo);
 
       // Evaluate "5 ft" — produces Quantity in base units (meters)

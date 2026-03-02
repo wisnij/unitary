@@ -1,7 +1,7 @@
-/// Core library for the generate_builtin_units script.
+/// Core library for the generate_predefined_units script.
 ///
 /// Reads a units-parsed.json map and a units-supplementary.json map,
-/// merges them into a units.json map, and produces a valid builtin_units.dart
+/// merges them into a units.json map, and produces a valid predefined_units.dart
 /// source string with const Dart unit objects.
 library;
 
@@ -127,7 +127,7 @@ Map<String, List<String>> _resolveNamespaceAliases(
   return result;
 }
 
-/// Generates builtin_units.dart source from a units JSON map.
+/// Generates predefined_units.dart source from a units JSON map.
 ///
 /// [unitsJson] must have three sections: `'units'`, `'prefixes'`,
 /// `'unsupported'`. Each section maps unit id to entry data (no `id` field
@@ -207,16 +207,16 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
   // File header.
   buf.writeln('// GENERATED CODE - DO NOT EDIT BY HAND');
   buf.writeln(
-    '// Run `dart run tool/generate_builtin_units.dart` to regenerate.',
+    '// Run `dart run tool/generate_predefined_units.dart` to regenerate.',
   );
   buf.writeln();
   buf.writeln("import '../models/unit.dart';");
   buf.writeln("import '../models/unit_repository.dart';");
   buf.writeln();
 
-  // Top-level registerBuiltinUnits function.
-  buf.writeln('/// Registers all built-in units into the given [repo].');
-  buf.writeln('void registerBuiltinUnits(UnitRepository repo) {');
+  // Top-level registerPredefinedUnits function.
+  buf.writeln('/// Registers all predefined units into the given [repo].');
+  buf.writeln('void registerPredefinedUnits(UnitRepository repo) {');
   buf.writeln('  _registerUnits(repo);');
   buf.writeln('  _registerPrefixes(repo);');
   buf.writeln('}');

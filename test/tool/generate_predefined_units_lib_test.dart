@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import '../../tool/generate_builtin_units_lib.dart';
+import '../../tool/generate_predefined_units_lib.dart';
 
 void main() {
   // Converts a flat list (old format with 'id' field) to the new JSON structure.
@@ -339,13 +339,13 @@ void main() {
         expect(code, contains("import '../models/unit_repository.dart'"));
       });
 
-      test('includes registerBuiltinUnits function', () {
+      test('includes registerPredefinedUnits function', () {
         final code = generateDartCode(
           {'units': {}, 'prefixes': {}, 'unsupported': {}},
         );
         expect(
           code,
-          contains('void registerBuiltinUnits(UnitRepository repo)'),
+          contains('void registerPredefinedUnits(UnitRepository repo)'),
         );
       });
     });

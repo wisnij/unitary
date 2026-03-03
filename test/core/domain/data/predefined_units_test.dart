@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/data/builtin_functions.dart';
 import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
@@ -7,11 +8,6 @@ import 'package:unitary/core/domain/services/unit_resolver.dart';
 /// support.  When support is added, remove the affected IDs and the test will
 /// confirm they now resolve correctly.
 const _knownEvalFailures = {
-  // tan/sin/cos called with an angle quantity (dimension: radian).
-  // Fix: treat radian-dimensioned arguments as dimensionless in trig.
-  'parsec',
-  'hubble',
-
   // Affine unit function-call syntax using units not registered in the repo.
   // 'normaltemp' uses 'tempF(70)' but 'tempF' is not in units.json.
   // 'S10' uses 'SB_degree(10)' but 'SB_degree' is not in units.json.
@@ -23,10 +19,6 @@ const _knownEvalFailures = {
   'ipv4classA',
   'ipv4classB',
   'ipv4classC',
-
-  // 'log2' is not a built-in evaluator function (only log/ln/exp are).
-  // Fix: add log2 as a built-in function in the evaluator.
-  'hartley',
 };
 
 void main() {
@@ -35,6 +27,7 @@ void main() {
   setUp(() {
     repo = UnitRepository();
     registerPredefinedUnits(repo);
+    registerBuiltinFunctions(repo);
   });
 
   group('Registration', () {

@@ -6,7 +6,7 @@ import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/core/domain/parser/token.dart';
 
 void main() {
-  final parser = ExpressionParser();
+  final parser = ExpressionParser(repo: UnitRepository.withPredefinedUnits());
 
   group('ExpressionParser.evaluate', () {
     test('simple arithmetic', () {

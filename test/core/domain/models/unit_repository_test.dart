@@ -1,8 +1,21 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
+import 'package:unitary/core/domain/models/function.dart';
+import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
+
+// A minimal test function for registry tests.
+class _TestFn extends UnitaryFunction {
+  _TestFn(String id, {super.aliases}) : super(id: id, arity: 1);
+
+  @override
+  bool get hasInverse => false;
+
+  @override
+  Quantity evaluate(List<Quantity> args) => args[0];
+}
 
 void main() {
   late UnitRepository repo;
@@ -403,6 +416,116 @@ void main() {
         const PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1000'),
       );
       expect(repo.allUnits.length, 1);
+    });
+  });
+
+  group('UnitRepository.registerFunction and findFunction', () {
+    test('finds function by id', () {
+      repo.registerFunction(_TestFn('foo'));
+      expect(repo.findFunction('foo'), isNotNull);
+      expect(repo.findFunction('foo')!.id, 'foo');
+    });
+
+    test('finds function by alias', () {
+      repo.registerFunction(_TestFn('foo', aliases: ['bar']));
+      expect(repo.findFunction('bar'), isNotNull);
+      expect(repo.findFunction('bar')!.id, 'foo');
+    });
+
+    test('returns null for unregistered name', () {
+      expect(repo.findFunction('unknown'), isNull);
+    });
+
+    test('plural form of function name is not matched', () {
+      repo.registerFunction(_TestFn('foo'));
+      expect(repo.findFunction('foos'), isNull);
+    });
+
+    test('prefixed form of function name is not matched', () {
+      repo.registerFunction(_TestFn('sin'));
+      expect(repo.findFunction('ksin'), isNull);
+    });
+  });
+
+  group('UnitRepository.registerFunction collision detection', () {
+    test('throws on duplicate function id', () {
+      repo.registerFunction(_TestFn('foo'));
+      expect(
+        () => repo.registerFunction(_TestFn('foo')),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('throws when function alias collides with existing function', () {
+      repo.registerFunction(_TestFn('foo'));
+      expect(
+        () => repo.registerFunction(_TestFn('bar', aliases: ['foo'])),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('throws when function name collides with unit', () {
+      repo.register(const PrimitiveUnit(id: 'm'));
+      expect(
+        () => repo.registerFunction(_TestFn('m')),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('throws when function name collides with prefix', () {
+      repo.registerPrefix(
+        const PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1000'),
+      );
+      expect(
+        () => repo.registerFunction(_TestFn('kilo')),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+  });
+
+  group('UnitRepository.register() collision with functions', () {
+    test('throws when unit id collides with function', () {
+      repo.registerFunction(_TestFn('sin'));
+      expect(
+        () => repo.register(const PrimitiveUnit(id: 'sin')),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('throws when unit alias collides with function', () {
+      repo.registerFunction(_TestFn('sin'));
+      expect(
+        () => repo.register(const PrimitiveUnit(id: 'x', aliases: ['sin'])),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+  });
+
+  group('UnitRepository.withPredefinedUnits() function registry', () {
+    late UnitRepository fullRepo;
+
+    setUp(() {
+      fullRepo = UnitRepository.withPredefinedUnits();
+    });
+
+    test('all 9 standard builtins findable via findFunction', () {
+      for (final name in [
+        'sin',
+        'cos',
+        'tan',
+        'asin',
+        'acos',
+        'atan',
+        'ln',
+        'log',
+        'exp',
+      ]) {
+        expect(
+          fullRepo.findFunction(name),
+          isNotNull,
+          reason: "'$name' should be findable in withPredefinedUnits()",
+        );
+      }
     });
   });
 }

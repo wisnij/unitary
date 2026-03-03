@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import '../errors.dart';
 import '../models/dimension.dart';
 import '../models/quantity.dart';
@@ -152,8 +150,18 @@ class FunctionNode extends ASTNode {
 
   @override
   Quantity evaluate(EvalContext context) {
+    final repo = context.repo;
+    if (repo == null) {
+      throw EvalException(
+        "No repository; cannot call function '$name'",
+      );
+    }
+    final func = repo.findFunction(name);
+    if (func == null) {
+      throw EvalException("Unknown function: '$name'");
+    }
     final args = arguments.map((a) => a.evaluate(context)).toList();
-    return _evaluateBuiltin(name, args);
+    return func.call(args);
   }
 
   @override
@@ -234,105 +242,4 @@ class FunctionDefinitionRequestNode extends ASTNode {
 
   @override
   String toString() => 'FunctionDefinitionRequest($functionName)';
-}
-
-// -- Built-in function evaluation --
-
-/// Set of recognized built-in function names.
-const _builtinFunctions = {
-  'sin',
-  'cos',
-  'tan',
-  'asin',
-  'acos',
-  'atan',
-  'sqrt',
-  'cbrt',
-  'ln',
-  'log',
-  'exp',
-  'abs',
-};
-
-/// Returns true if [name] is a recognized built-in function.
-bool isBuiltinFunction(String name) => _builtinFunctions.contains(name);
-
-Quantity _evaluateBuiltin(String name, List<Quantity> args) {
-  switch (name) {
-    case 'sin':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(math.sin(args[0].value));
-    case 'cos':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(math.cos(args[0].value));
-    case 'tan':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(math.tan(args[0].value));
-    case 'asin':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      if (args[0].value < -1 || args[0].value > 1) {
-        throw EvalException(
-          'asin requires argument in range [-1, 1], got ${args[0].value}',
-        );
-      }
-      return Quantity.dimensionless(math.asin(args[0].value));
-    case 'acos':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      if (args[0].value < -1 || args[0].value > 1) {
-        throw EvalException(
-          'acos requires argument in range [-1, 1], got ${args[0].value}',
-        );
-      }
-      return Quantity.dimensionless(math.acos(args[0].value));
-    case 'atan':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(math.atan(args[0].value));
-    case 'sqrt':
-      _requireArgCount(name, args, 1);
-      return args[0].power(0.5);
-    case 'cbrt':
-      _requireArgCount(name, args, 1);
-      return args[0].power(1.0 / 3.0);
-    case 'ln' || 'log':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      if (args[0].value <= 0) {
-        throw EvalException(
-          '$name requires positive argument, got ${args[0].value}',
-        );
-      }
-      return Quantity.dimensionless(math.log(args[0].value));
-    case 'exp':
-      _requireArgCount(name, args, 1);
-      _requireDimensionless(name, args[0]);
-      return Quantity.dimensionless(math.exp(args[0].value));
-    case 'abs':
-      _requireArgCount(name, args, 1);
-      return args[0].abs();
-    default:
-      throw EvalException("Unknown function: '$name'");
-  }
-}
-
-void _requireArgCount(String name, List<Quantity> args, int expected) {
-  if (args.length != expected) {
-    throw EvalException(
-      "Function '$name' expects $expected argument(s), got ${args.length}",
-    );
-  }
-}
-
-void _requireDimensionless(String name, Quantity arg) {
-  if (!arg.isDimensionless) {
-    throw DimensionException(
-      "Function '$name' requires dimensionless argument, got "
-      '${arg.dimension.canonicalRepresentation()}',
-    );
-  }
 }

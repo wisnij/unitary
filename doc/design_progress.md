@@ -276,7 +276,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: February 27, 2026*
+*Last Updated: March 2, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -367,3 +367,14 @@ Questions that arose during design but haven't been resolved:
   - `UnitNode.evaluate()` in `ast.dart` now throws `EvalException('Unknown unit: "$unitName"')` when `repo != null` and `findUnitWithPrefix` returns no match; raw-dimension fallback removed for the repo path
   - `repo == null` (Phase 1 / parser-isolation mode) continues to produce raw dimensions unchanged
   - New/updated tests in `evaluator_test.dart`: EvalException thrown for unknown unit (with message-content assertion), unknown unit mid-expression, null-repo raw-dimension fallback
+- *First-class builtin functions (March 2, 2026)*
+  - 990 tests passing (138 new)
+  - `lib/core/domain/models/function.dart`: `Bound` (value + closed flag), `QuantitySpec` (dimension, min/max bounds, `acceptDimensionless`), `UnitaryFunction` abstract class (id, aliases, arity, domain/range, `call()` with full validation, `callInverse()` default), `BuiltinFunction` concrete subclass (wraps `_impl` function pointer, `hasInverse == false`)
+  - `lib/core/domain/data/builtin_functions.dart`: 12 `BuiltinFunction` instances (sin, cos, tan, asin, acos, atan, ln, log, exp, sqrt, cbrt, abs) + `registerBuiltinFunctions(UnitRepository repo)`
+  - `log` changed from natural log to base-10 (`math.log(x) / math.ln10`); `ln` retains natural log behavior
+  - `asin`/`acos`/`atan` return `Quantity` with `{radian: 1}` dimension; sin/cos/tan domain uses `acceptDimensionless: true` (accepts both `{radian: 1}` and pure `{}`)
+  - `UnitRepository` extended: `_functions`/`_functionLookup` maps, `registerFunction()`, `findFunction()`, collision detection in `register()`, `withPredefinedUnits()` calls `registerBuiltinFunctions()`
+  - `parser.dart`: `isBuiltinFunction(name)` check replaced with `_repo?.findFunction(name) != null`; no-repo parser no longer recognizes function calls
+  - `ast.dart`: removed `_builtinFunctions`, `isBuiltinFunction()`, `_evaluateBuiltin()` switch; `FunctionNode.evaluate()` now dispatches via `context.repo?.findFunction(name)`
+  - `parsec` and `hubble` now evaluate successfully (previously failed because trig rejected radian-dimension arguments; `acceptDimensionless: true` on trig domain now allows them)
+  - New test files: `test/core/domain/models/function_test.dart`, `test/core/domain/data/builtin_functions_test.dart`

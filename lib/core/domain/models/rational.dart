@@ -56,6 +56,15 @@ class Rational {
     }
 
     // Continued fraction algorithm.
+    //
+    // Any real number x can be written as x = a0 + 1/(a1 + 1/(a2 + ...))  where
+    // each term a_i = floor(remainder) is a positive integer called a partial
+    // quotient.  Truncating this expansion at each step yields a sequence of
+    // rational approximations called convergents (e.g. a0/1, (a1*a0+1)/a1, ...)
+    // that close in on x rapidly.  The numerator and denominator of each
+    // convergent are computed from the previous two via the recurrence
+    // n2 = a*n1 + n0, d2 = a*d1 + d0.  We stop as soon as the next convergent
+    // would exceed maxDenominator or is close enough to x.
     var n0 = 0, d0 = 1; // Previous convergent.
     var n1 = 1, d1 = 0; // Current convergent.
 

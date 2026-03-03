@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/data/builtin_functions.dart';
 import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
@@ -320,8 +321,15 @@ void main() {
   });
 
   group('Parser: function calls', () {
+    late UnitRepository fnRepo;
+
+    setUp(() {
+      fnRepo = UnitRepository();
+      registerBuiltinFunctions(fnRepo);
+    });
+
     test('single argument function: sin(0.5)', () {
-      final node = parse('sin(0.5)');
+      final node = parseWithRepo('sin(0.5)', fnRepo);
       expect(node, isA<FunctionNode>());
       final func = node as FunctionNode;
       expect(func.name, 'sin');
@@ -330,48 +338,53 @@ void main() {
     });
 
     test('function with expression argument: sqrt(9 m^2)', () {
-      final node = parse('sqrt(9 m^2)') as FunctionNode;
+      final node = parseWithRepo('sqrt(9 m^2)', fnRepo) as FunctionNode;
       expect(node.name, 'sqrt');
       expect(node.arguments.length, 1);
     });
 
     test('nested function calls: abs(sin(0))', () {
-      final node = parse('abs(sin(0))') as FunctionNode;
+      final node = parseWithRepo('abs(sin(0))', fnRepo) as FunctionNode;
       expect(node.name, 'abs');
       expect(node.arguments[0], isA<FunctionNode>());
     });
 
-    test(
-      'multi-argument function: atan2(1, 2)',
-      () {
-        final node = parse('atan2(1, 2)') as FunctionNode;
-        expect(node.name, 'atan2');
-        expect(node.arguments.length, 2);
-      },
-      skip:
-          'Function recognition is TODO, so this parses as unit * (1, 2) which will fail',
-    );
+    test('multi-argument function: atan2(1, 2)', () {
+      final node = parseWithRepo('atan2(1, 2)', fnRepo) as FunctionNode;
+      expect(node.name, 'atan2');
+      expect(node.arguments.length, 2);
+    });
 
     test('function in expression: 5 + sin(0)', () {
-      final node = parse('5 + sin(0)') as BinaryOpNode;
+      final node = parseWithRepo('5 + sin(0)', fnRepo) as BinaryOpNode;
       expect(node.operator, TokenType.plus);
       expect(node.right, isA<FunctionNode>());
     });
 
     test('zero-arg function call throws', () {
-      expect(() => parse('sin()'), throwsA(isA<ParseException>()));
+      expect(
+        () => parseWithRepo('sin()', fnRepo),
+        throwsA(isA<ParseException>()),
+      );
     });
 
     test(
-      'unknown identifier with parens is implicit multiply, not function',
+      'unregistered identifier followed by ( is not a function call',
       () {
-        // foo(5) where foo is not a builtin should be foo * 5
-        final node = parse('foo(5)') as BinaryOpNode;
+        // foo is not registered as a function, so foo(5) parses as foo * 5
+        final node = parseWithRepo('foo(5)', fnRepo) as BinaryOpNode;
         expect(node.operator, TokenType.times);
         expect(node.left, isA<UnitNode>());
         expect((node.left as UnitNode).unitName, 'foo');
       },
     );
+
+    test('no-repo parser does not recognize sin(x) as function call', () {
+      // Without a repo, sin is parsed as a unit identifier (implicit multiply)
+      final node = parse('sin(0.5)');
+      expect(node, isNot(isA<FunctionNode>()));
+      expect(node, isA<BinaryOpNode>());
+    });
   });
 
   group('Parser: complex expressions', () {
@@ -564,7 +577,8 @@ void main() {
     test('all existing parser tests still pass with no repo', () {
       // Smoke test: basic expressions still parse without repo.
       expect(parse('5 + 3'), isA<BinaryOpNode>());
-      expect(parse('sin(0.5)'), isA<FunctionNode>());
+      // Without a repo, sin(0.5) is not a function call — it's unit * number.
+      expect(parse('sin(0.5)'), isA<BinaryOpNode>());
       expect(parse('5 m'), isA<BinaryOpNode>());
     });
 

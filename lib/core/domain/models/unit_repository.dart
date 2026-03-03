@@ -1,4 +1,6 @@
+import '../data/builtin_functions.dart';
 import '../data/predefined_units.dart';
+import 'function.dart';
 import 'unit.dart';
 
 /// Result of a unit lookup that may include a prefix.
@@ -12,8 +14,12 @@ class UnitMatch {
   const UnitMatch({this.prefix, this.unit});
 }
 
-/// Registry for unit definitions.  Provides lookup by name/alias with
-/// automatic plural stripping fallback.
+/// Registry for unit definitions and function definitions.  Provides lookup
+/// by name/alias with automatic plural stripping fallback for units.
+///
+/// Note: despite the name, this registry also holds [UnitaryFunction] objects
+/// (see [registerFunction] / [findFunction]).  A rename to a broader name is
+/// deferred to a future refactor.
 class UnitRepository {
   /// All registered units by their primary ID.
   final Map<String, Unit> _units = {};
@@ -30,19 +36,27 @@ class UnitRepository {
   /// IDs of all dimensionless primitive units (radian, steradian, etc.).
   final Set<String> _dimensionlessIds = {};
 
+  /// All registered functions by their primary ID.
+  final Map<String, UnitaryFunction> _functions = {};
+
+  /// Maps every function name (id + aliases) to its function.
+  final Map<String, UnitaryFunction> _functionLookup = {};
+
   /// Creates an empty repository.
   UnitRepository();
 
-  /// Creates a repository pre-loaded with the predefined unit set.
+  /// Creates a repository pre-loaded with the predefined unit set and all
+  /// built-in functions.
   factory UnitRepository.withPredefinedUnits() {
     final repo = UnitRepository();
     registerPredefinedUnits(repo);
+    registerBuiltinFunctions(repo);
     return repo;
   }
 
   /// Register a unit.  Adds the unit's id and all aliases to the
   /// lookup map.  Throws [ArgumentError] if any name collides with
-  /// an existing entry.
+  /// an existing unit, prefix, or function entry.
   void register(Unit unit) {
     _units[unit.id] = unit;
     if (unit is PrimitiveUnit && unit.isDimensionless) {
@@ -54,6 +68,12 @@ class UnitRepository {
         throw ArgumentError(
           "Unit name '$name' is already registered "
           "(for unit '${_unitLookup[name]!.id}')",
+        );
+      }
+      if (_functionLookup.containsKey(name)) {
+        throw ArgumentError(
+          "Unit name '$name' conflicts with registered function "
+          "'${_functionLookup[name]!.id}'",
         );
       }
       _unitLookup[name] = unit;
@@ -75,6 +95,41 @@ class UnitRepository {
       _prefixLookup[name] = prefix;
     }
   }
+
+  /// Register a function.  Adds the function's id and all aliases to the
+  /// lookup map.  Throws [ArgumentError] if any name collides with an
+  /// existing function, unit, or prefix entry.
+  void registerFunction(UnitaryFunction f) {
+    _functions[f.id] = f;
+    for (final name in f.allNames) {
+      if (_functionLookup.containsKey(name)) {
+        throw ArgumentError(
+          "Function name '$name' is already registered "
+          "(for function '${_functionLookup[name]!.id}')",
+        );
+      }
+      if (_unitLookup.containsKey(name)) {
+        throw ArgumentError(
+          "Function name '$name' conflicts with registered unit "
+          "'${_unitLookup[name]!.id}'",
+        );
+      }
+      if (_prefixLookup.containsKey(name)) {
+        throw ArgumentError(
+          "Function name '$name' conflicts with registered prefix "
+          "'${_prefixLookup[name]!.id}'",
+        );
+      }
+      _functionLookup[name] = f;
+    }
+  }
+
+  /// Look up a function by exact name.
+  ///
+  /// Returns the function registered under [name], or null if no function
+  /// is registered under that name.  No prefix splitting or plural stripping
+  /// is performed.
+  UnitaryFunction? findFunction(String name) => _functionLookup[name];
 
   /// Exact lookup in regular units only.
   Unit? _findExact(String name) => _unitLookup[name];
@@ -171,6 +226,9 @@ class UnitRepository {
 
   /// All registered prefix units (by primary ID).
   Iterable<PrefixUnit> get allPrefixes => _prefixes.values;
+
+  /// All registered functions (by primary ID).
+  Iterable<UnitaryFunction> get allFunctions => _functions.values;
 
   /// IDs of all registered dimensionless primitive units.
   Set<String> get dimensionlessIds => Set.unmodifiable(_dimensionlessIds);

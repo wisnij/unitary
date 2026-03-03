@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/data/builtin_functions.dart';
 import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
@@ -20,6 +21,14 @@ Quantity evalWithRepo(String input, UnitRepository repo) {
   final tokens = Lexer(input).scanTokens();
   final ast = Parser(tokens, repo: repo).parse();
   return ast.evaluate(EvalContext(repo: repo));
+}
+
+// Repo with all predefined units and builtin functions.
+// Initialized lazily and reused across tests.
+UnitRepository? _fnRepoInstance;
+Quantity evalFn(String input) {
+  _fnRepoInstance ??= UnitRepository.withPredefinedUnits();
+  return evalWithRepo(input, _fnRepoInstance!);
 }
 
 void main() {
@@ -188,17 +197,17 @@ void main() {
 
   group('Evaluator: sqrt and cbrt with units', () {
     test('sqrt(9 m^2) → Quantity(3, {m: 1})', () {
-      final result = eval('sqrt(9 m^2)');
+      final result = evalFn('sqrt(9 m^2)');
       expect(result.value, 3.0);
       expect(result.dimension, Dimension({'m': 1}));
     });
 
     test('sqrt(9 m^3) throws DimensionException', () {
-      expect(() => eval('sqrt(9 m^3)'), throwsA(isA<DimensionException>()));
+      expect(() => evalFn('sqrt(9 m^3)'), throwsA(isA<DimensionException>()));
     });
 
     test('cbrt(8 m^3) → Quantity(2, {m: 1})', () {
-      final result = eval('cbrt(8 m^3)');
+      final result = evalFn('cbrt(8 m^3)');
       expect(result.value, closeTo(2.0, 1e-10));
       expect(result.dimension, Dimension({'m': 1}));
     });
@@ -206,98 +215,127 @@ void main() {
 
   group('Evaluator: trig functions', () {
     test('sin(0) = 0', () {
-      final result = eval('sin(0)');
+      final result = evalFn('sin(0)');
       expect(result.value, closeTo(0.0, 1e-10));
       expect(result.isDimensionless, isTrue);
     });
 
     test('cos(0) = 1', () {
-      final result = eval('cos(0)');
+      final result = evalFn('cos(0)');
       expect(result.value, closeTo(1.0, 1e-10));
     });
 
     test('tan(0) = 0', () {
-      final result = eval('tan(0)');
+      final result = evalFn('tan(0)');
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
     test('asin(0) = 0', () {
-      final result = eval('asin(0)');
+      final result = evalFn('asin(0)');
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
     test('acos(1) = 0', () {
-      final result = eval('acos(1)');
+      final result = evalFn('acos(1)');
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
     test('atan(0) = 0', () {
-      final result = eval('atan(0)');
+      final result = evalFn('atan(0)');
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
     test('asin(2) throws EvalException', () {
-      expect(() => eval('asin(2)'), throwsA(isA<EvalException>()));
+      expect(() => evalFn('asin(2)'), throwsA(isA<EvalException>()));
     });
 
     test('acos(2) throws EvalException', () {
-      expect(() => eval('acos(2)'), throwsA(isA<EvalException>()));
+      expect(() => evalFn('acos(2)'), throwsA(isA<EvalException>()));
     });
 
     test('sin(5 m) throws DimensionException', () {
-      expect(() => eval('sin(5 m)'), throwsA(isA<DimensionException>()));
+      expect(() => evalFn('sin(5 m)'), throwsA(isA<DimensionException>()));
     });
   });
 
   group('Evaluator: ln/log/exp', () {
     test('ln(1) = 0', () {
-      final result = eval('ln(1)');
+      final result = evalFn('ln(1)');
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
+    // log is base-10 (log10): log10(1) = 0.
     test('log(1) = 0', () {
-      final result = eval('log(1)');
+      final result = evalFn('log(1)');
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
     test('exp(0) = 1', () {
-      final result = eval('exp(0)');
+      final result = evalFn('exp(0)');
       expect(result.value, closeTo(1.0, 1e-10));
     });
 
     test('exp(1) = e', () {
-      final result = eval('exp(1)');
+      final result = evalFn('exp(1)');
       expect(result.value, closeTo(math.e, 1e-10));
     });
 
     test('ln(0) throws EvalException', () {
-      expect(() => eval('ln(0)'), throwsA(isA<EvalException>()));
+      expect(() => evalFn('ln(0)'), throwsA(isA<EvalException>()));
     });
 
     test('ln(-1) throws EvalException', () {
-      expect(() => eval('ln(-1)'), throwsA(isA<EvalException>()));
+      expect(() => evalFn('ln(-1)'), throwsA(isA<EvalException>()));
     });
 
     test('ln(5 m) throws DimensionException', () {
-      expect(() => eval('ln(5 m)'), throwsA(isA<DimensionException>()));
+      expect(() => evalFn('ln(5 m)'), throwsA(isA<DimensionException>()));
     });
   });
 
   group('Evaluator: abs', () {
     test('abs(-5) = 5', () {
-      final result = eval('abs(-5)');
+      final result = evalFn('abs(-5)');
       expect(result.value, 5.0);
     });
 
     test('abs(5) = 5', () {
-      final result = eval('abs(5)');
+      final result = evalFn('abs(5)');
       expect(result.value, 5.0);
     });
 
     test('abs(-3 m) preserves dimension', () {
-      final result = eval('abs(-3 m)');
+      final result = evalFn('abs(-3 m)');
       expect(result.value, 3.0);
       expect(result.dimension, Dimension({'m': 1}));
+    });
+  });
+
+  group('Evaluator: FunctionNode.evaluate() AST-level', () {
+    test('dispatches through repo and returns correct result', () {
+      final repo = UnitRepository();
+      registerBuiltinFunctions(repo);
+      const node = FunctionNode('sin', [NumberNode(0.0)]);
+      final result = node.evaluate(EvalContext(repo: repo));
+      expect(result.value, closeTo(0.0, 1e-10));
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('throws EvalException when context.repo is null', () {
+      const node = FunctionNode('sin', [NumberNode(0.0)]);
+      expect(
+        () => node.evaluate(const EvalContext()),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('throws EvalException for unknown function name in repo', () {
+      final repo = UnitRepository();
+      const node = FunctionNode('notafunction', [NumberNode(0.0)]);
+      expect(
+        () => node.evaluate(EvalContext(repo: repo)),
+        throwsA(isA<EvalException>()),
+      );
     });
   });
 
@@ -322,12 +360,12 @@ void main() {
     });
 
     test('abs(sin(0)) = 0', () {
-      final result = eval('abs(sin(0))');
+      final result = evalFn('abs(sin(0))');
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
-    test('unit(expr) = unit * expr', () {
-      // 'foo' is not a builtin, so foo(1) parses as foo * 1
+    test('unit(expr) = unit * expr (no repo)', () {
+      // Without a repo, 'foo' is not a function, so foo(1) parses as foo * 1
       // which evaluates to Quantity(1, {foo: 1}), not an error.
       final result = eval('foo(1)');
       expect(result.value, 1.0);
@@ -335,7 +373,7 @@ void main() {
     });
 
     test('wrong arg count throws EvalException', () {
-      expect(() => eval('sin(1, 2)'), throwsA(isA<EvalException>()));
+      expect(() => evalFn('sin(1, 2)'), throwsA(isA<EvalException>()));
     });
 
     test('dimensioned exponent throws DimensionException', () {
@@ -363,6 +401,7 @@ void main() {
     setUp(() {
       repo = UnitRepository();
       registerPredefinedUnits(repo);
+      registerBuiltinFunctions(repo);
     });
 
     test('5 ft resolves to meters', () {
@@ -544,6 +583,7 @@ void main() {
     setUp(() {
       repo = UnitRepository();
       registerPredefinedUnits(repo);
+      registerBuiltinFunctions(repo);
     });
 
     test('pi ≈ 3.14159', () {

@@ -213,8 +213,8 @@ class Parser {
     final token = _advance();
     final name = token.literal as String;
 
-    // Check for builtin functions first.
-    if (_check(TokenType.leftParen) && isBuiltinFunction(name)) {
+    // Check for registered functions first.
+    if (_check(TokenType.leftParen) && _repo?.findFunction(name) != null) {
       _advance(); // consume '('
 
       // Require at least one argument (zero-arg calls not allowed)

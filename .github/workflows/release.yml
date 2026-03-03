@@ -7,11 +7,17 @@ on:
 
 jobs:
   lint:
-    uses: ./.github/workflows/lint.yml
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/lint
 
   test:
-    uses: ./.github/workflows/test.yml
     needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/test
 
   release:
     runs-on: ubuntu-latest

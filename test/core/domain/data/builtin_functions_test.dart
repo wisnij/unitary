@@ -19,11 +19,10 @@ void main() {
       atanFn,
       lnFn,
       logFn,
-      log2Fn,
       expFn,
     ];
 
-    test('hasInverse is false for all 10 builtins', () {
+    test('hasInverse is false for all 9 builtins', () {
       for (final f in allBuiltins) {
         expect(
           f.hasInverse,
@@ -33,7 +32,7 @@ void main() {
       }
     });
 
-    test('arity is 1 for all 10 builtins', () {
+    test('arity is 1 for all 9 builtins', () {
       for (final f in allBuiltins) {
         expect(f.arity, 1, reason: '${f.id}.arity should be 1');
       }
@@ -57,8 +56,8 @@ void main() {
       expect(atan2Fn.range?.dimension, Dimension({'radian': 1}));
     });
 
-    test('log has log10 as an alias', () {
-      expect(logFn.aliases, contains('log10'));
+    test('log has no aliases', () {
+      expect(logFn.aliases, isEmpty);
     });
 
     group('domain specs', () {
@@ -123,13 +122,6 @@ void main() {
         expect(spec.min?.closed, isFalse);
       });
 
-      test('log2: domain dimensionless, min=0 open', () {
-        final spec = log2Fn.domain![0];
-        expect(spec.dimension, dimensionlessDim);
-        expect(spec.min?.value, 0.0);
-        expect(spec.min?.closed, isFalse);
-      });
-
       test('exp: domain dimensionless, no bounds', () {
         final spec = expFn.domain![0];
         expect(spec.dimension, dimensionlessDim);
@@ -172,10 +164,6 @@ void main() {
 
       test('log: range dimensionless', () {
         expect(logFn.range?.dimension, dimensionlessDim);
-      });
-
-      test('log2: range dimensionless', () {
-        expect(log2Fn.range?.dimension, dimensionlessDim);
       });
 
       test('exp: range dimensionless', () {
@@ -342,34 +330,6 @@ void main() {
       });
     });
 
-    group('log2', () {
-      test('log2(8) → 3.0', () {
-        final result = log2Fn.call([Quantity.dimensionless(8.0)]);
-        expect(result.value, closeTo(3.0, 1e-10));
-        expect(result.isDimensionless, isTrue);
-      });
-
-      test('log2(1) → 0.0', () {
-        final result = log2Fn.call([Quantity.dimensionless(1.0)]);
-        expect(result.value, closeTo(0.0, 1e-10));
-        expect(result.isDimensionless, isTrue);
-      });
-
-      test('log2(0) throws EvalException (open min bound violated)', () {
-        expect(
-          () => log2Fn.call([Quantity.dimensionless(0.0)]),
-          throwsA(isA<EvalException>()),
-        );
-      });
-
-      test('log2(-1) throws EvalException (min bound violated)', () {
-        expect(
-          () => log2Fn.call([Quantity.dimensionless(-1.0)]),
-          throwsA(isA<EvalException>()),
-        );
-      });
-    });
-
     group('exp', () {
       test('exp(1) → e', () {
         final result = expFn.call([Quantity.dimensionless(1.0)]);
@@ -398,8 +358,6 @@ void main() {
         'atan2',
         'ln',
         'log',
-        'log10',
-        'log2',
         'exp',
       ]) {
         expect(
@@ -408,6 +366,14 @@ void main() {
           reason: "'$name' should be findable after registration",
         );
       }
+    });
+
+    test('log2 is not registered', () {
+      expect(repo.findFunction('log2'), isNull);
+    });
+
+    test('log10 is not registered', () {
+      expect(repo.findFunction('log10'), isNull);
     });
 
     test('sqrt, cbrt, abs also registered', () {

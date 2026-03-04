@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import '../errors.dart';
 import '../models/unit_repository.dart';
 import 'ast.dart';
@@ -213,6 +215,41 @@ class Parser {
     final token = _advance();
     final name = token.literal as String;
 
+    // logB(x) shorthand: log followed by an integer suffix ≥ 2 means log-base-B.
+    // Must be checked before the function-registry lookup (to avoid treating
+    // log2 as a unit) and before the trailing-digit-exponent check (which would
+    // otherwise turn log2 into log^2).
+    //
+    // Desugars to: ln(x) / ln(B)  →  BinaryOpNode(FunctionNode("ln", [x]),
+    //                                              divide, NumberNode(math.log(B)))
+    if (_check(TokenType.leftParen)) {
+      final logBase = _parseLogBase(name);
+      if (logBase != null) {
+        _advance(); // consume '('
+        if (_check(TokenType.rightParen)) {
+          throw ParseException(
+            "Function '$name' requires exactly one argument",
+            line: token.line,
+            column: token.column,
+          );
+        }
+        final args = _arguments();
+        _consume(TokenType.rightParen, "Expected ')' after function arguments");
+        if (args.length != 1) {
+          throw ParseException(
+            "Function '$name' requires exactly one argument",
+            line: token.line,
+            column: token.column,
+          );
+        }
+        return BinaryOpNode(
+          FunctionNode('ln', args),
+          TokenType.divide,
+          NumberNode(math.log(logBase)),
+        );
+      }
+    }
+
     // Check for registered functions first.
     if (_check(TokenType.leftParen) && _repo?.findFunction(name) != null) {
       _advance(); // consume '('
@@ -349,4 +386,29 @@ class Parser {
   }
 
   bool _isAsciiDigit(int codeUnit) => codeUnit >= 48 && codeUnit <= 57;
+
+  /// If [name] matches `log<digits>` where the digit suffix represents an
+  /// integer ≥ 2, returns that integer.  Otherwise returns null.
+  ///
+  /// Bases 0 and 1 return null (suffix ends in 0 or 1 — treated as part of
+  /// the identifier by existing trailing-digit rules).
+  int? _parseLogBase(String name) {
+    if (!name.startsWith('log')) {
+      return null;
+    }
+    final suffix = name.substring(3);
+    if (suffix.isEmpty) {
+      return null;
+    }
+    for (var i = 0; i < suffix.length; i++) {
+      if (!_isAsciiDigit(suffix.codeUnitAt(i))) {
+        return null;
+      }
+    }
+    final base = int.tryParse(suffix);
+    if (base == null || base < 2) {
+      return null;
+    }
+    return base;
+  }
 }

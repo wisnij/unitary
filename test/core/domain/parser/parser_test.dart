@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/data/builtin_functions.dart';
 import 'package:unitary/core/domain/data/predefined_units.dart';
@@ -728,5 +730,77 @@ void main() {
         );
       },
     );
+  });
+
+  group('Parser: logB(x) desugaring', () {
+    late UnitRepository fnRepo;
+
+    setUp(() {
+      fnRepo = UnitRepository();
+      registerBuiltinFunctions(fnRepo);
+    });
+
+    test(
+      'log2(x) produces BinaryOpNode(FunctionNode("ln", [x]), divide, NumberNode)',
+      () {
+        final node = parseWithRepo('log2(8)', fnRepo);
+        expect(node, isA<BinaryOpNode>());
+        final div = node as BinaryOpNode;
+        expect(div.operator, TokenType.divide);
+        expect(div.left, isA<FunctionNode>());
+        expect((div.left as FunctionNode).name, 'ln');
+        expect((div.left as FunctionNode).arguments.length, 1);
+        expect(div.right, isA<NumberNode>());
+        expect((div.right as NumberNode).value, closeTo(math.log(2), 1e-15));
+      },
+    );
+
+    test(
+      'log2 without ( is parsed as plain identifier (not a function call)',
+      () {
+        final node = parseWithRepo('log2', fnRepo);
+        // log2 ends in a single digit 2, so it desugars as log^2 via trailing-digit rules
+        // (no ( follows, so logB path is skipped).
+        expect(node, isA<BinaryOpNode>());
+        final exp = node as BinaryOpNode;
+        expect(exp.operator, TokenType.exponent);
+        expect((exp.left as UnitNode).unitName, 'log');
+        expect((exp.right as NumberNode).value, 2.0);
+      },
+    );
+
+    test('log10(x) produces the correct AST shape', () {
+      final node = parseWithRepo('log10(1000)', fnRepo);
+      expect(node, isA<BinaryOpNode>());
+      final div = node as BinaryOpNode;
+      expect(div.operator, TokenType.divide);
+      expect((div.left as FunctionNode).name, 'ln');
+    });
+
+    test(
+      'log0 without ( falls through to identifier (base < 2, no desugaring)',
+      () {
+        // log0 ends in 0, so trailing-digit rules treat it as identifier log0.
+        final node = parseWithRepo('log0', fnRepo);
+        expect(node, isA<UnitNode>());
+        expect((node as UnitNode).unitName, 'log0');
+      },
+    );
+
+    test(
+      'log1 without ( falls through to identifier (base < 2, no desugaring)',
+      () {
+        final node = parseWithRepo('log1', fnRepo);
+        expect(node, isA<UnitNode>());
+        expect((node as UnitNode).unitName, 'log1');
+      },
+    );
+
+    test('log256(x) produces BinaryOpNode with ln(256) constant', () {
+      final node = parseWithRepo('log256(65536)', fnRepo);
+      expect(node, isA<BinaryOpNode>());
+      final div = node as BinaryOpNode;
+      expect((div.right as NumberNode).value, closeTo(math.log(256), 1e-10));
+    });
   });
 }

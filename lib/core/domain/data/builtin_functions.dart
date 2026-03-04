@@ -118,10 +118,8 @@ final lnFn = BuiltinFunction(
 );
 
 /// log: base-10 logarithm of a positive dimensionless value; returns dimensionless.
-/// Also accessible as `log10`.
 final logFn = BuiltinFunction(
   id: 'log',
-  aliases: ['log10'],
   arity: 1,
   domain: [
     QuantitySpec(
@@ -131,20 +129,6 @@ final logFn = BuiltinFunction(
   ],
   range: _dimensionlessSpec(),
   impl: (args) => Quantity.dimensionless(math.log(args[0].value) / math.ln10),
-);
-
-/// log2: base-2 logarithm of a positive dimensionless value; returns dimensionless.
-final log2Fn = BuiltinFunction(
-  id: 'log2',
-  arity: 1,
-  domain: [
-    QuantitySpec(
-      dimension: Dimension.dimensionless,
-      min: const Bound(0.0, closed: false),
-    ),
-  ],
-  range: _dimensionlessSpec(),
-  impl: (args) => Quantity.dimensionless(math.log(args[0].value) / math.ln2),
 );
 
 /// exp: e raised to a dimensionless power; returns dimensionless.
@@ -181,7 +165,8 @@ final absFn = BuiltinFunction(
 
 /// Registers all built-in functions into [repo].
 ///
-/// After this call, all 14 builtin functions are available via
+/// After this call, all 13 builtin functions (sin, cos, tan, asin, acos, atan,
+/// atan2, ln, log, exp, sqrt, cbrt, abs) are available via
 /// [UnitRepository.findFunction].
 void registerBuiltinFunctions(UnitRepository repo) {
   for (final f in [
@@ -194,7 +179,6 @@ void registerBuiltinFunctions(UnitRepository repo) {
     atan2Fn,
     lnFn,
     logFn,
-    log2Fn,
     expFn,
     sqrtFn,
     cbrtFn,

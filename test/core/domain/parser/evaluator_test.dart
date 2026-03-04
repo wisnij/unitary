@@ -293,6 +293,46 @@ void main() {
     });
   });
 
+  group('Evaluator: logB(x) arbitrary-base logarithms', () {
+    test('log2(8) = 3', () {
+      expect(evalFn('log2(8)').value, closeTo(3.0, 1e-10));
+    });
+
+    test('log10(1000) = 3', () {
+      expect(evalFn('log10(1000)').value, closeTo(3.0, 1e-10));
+    });
+
+    test('log16(256) = 2', () {
+      expect(evalFn('log16(256)').value, closeTo(2.0, 1e-10));
+    });
+
+    test('log256(65536) = 2', () {
+      expect(evalFn('log256(65536)').value, closeTo(2.0, 1e-10));
+    });
+
+    test('log(100) = 2 (plain log unchanged)', () {
+      expect(evalFn('log(100)').value, closeTo(2.0, 1e-10));
+    });
+
+    test('log(x) and log10(x) produce equal results', () {
+      final a = evalFn('log(500)').value;
+      final b = evalFn('log10(500)').value;
+      expect(a, closeTo(b, 1e-10));
+    });
+
+    test('logB result is dimensionless', () {
+      expect(evalFn('log2(8)').isDimensionless, isTrue);
+    });
+
+    test('log2(0) throws EvalException (ln domain violation)', () {
+      expect(() => evalFn('log2(0)'), throwsA(isA<EvalException>()));
+    });
+
+    test('log2(-1) throws EvalException (ln domain violation)', () {
+      expect(() => evalFn('log2(-1)'), throwsA(isA<EvalException>()));
+    });
+  });
+
   group('Evaluator: abs', () {
     test('abs(-5) = 5', () {
       final result = evalFn('abs(-5)');

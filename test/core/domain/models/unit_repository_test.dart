@@ -527,5 +527,13 @@ void main() {
         );
       }
     });
+
+    test('findFunction("log2") returns null', () {
+      expect(fullRepo.findFunction('log2'), isNull);
+    });
+
+    test('findFunction("log10") returns null', () {
+      expect(fullRepo.findFunction('log10'), isNull);
+    });
   });
 }

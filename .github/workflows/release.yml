@@ -32,26 +32,36 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: Set BUILD_METADATA
+      - name: Set up environment
         run: |
           BUILD_TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
           SHORT_SHA=$(git rev-parse --short HEAD)
           echo "BUILD_METADATA=${BUILD_TIMESTAMP}.${SHORT_SHA}" >> $GITHUB_ENV
+          echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+      - name: Build Android APK
+        run: >-
+          flutter build apk
+          --dart-define=BUILD_METADATA=${{ env.BUILD_METADATA }}
+          --release
       - name: Build web
         run: >-
           flutter build web
           --dart-define=BUILD_METADATA=${{ env.BUILD_METADATA }}
           --release
           --wasm
-      - name: Zip web build
-        run: zip -r unitary-${{ github.ref_name }}-web.zip build/web
+      - name: Prepare Android APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk unitary-$VERSION.apk
+      - name: Prepare web build
+        run: zip -r unitary-$VERSION-web.zip build/web
       - name: Read release notes
         run: >-
-          git tag -l --format="%(contents:body)" ${{ github.ref_name }} > RELEASE_NOTES.md
+          git tag -l --format="%(contents:body)" ${{ github.ref_name }} | tee RELEASE_NOTES.md
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
           gh release create ${{ github.ref_name }}
           --notes-file RELEASE_NOTES.md
-          unitary-${{ github.ref_name }}-web.zip
+          --title "Release $VERSION"
+          unitary-$VERSION.apk
+          unitary-$VERSION-web.zip

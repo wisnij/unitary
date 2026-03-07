@@ -13,6 +13,7 @@ class _IdentityFunction extends UnitaryFunction {
     super.aliases,
     super.arity = 1,
     super.domain,
+    super.range,
     bool hasInverse = false,
   }) : _hasInverse = hasInverse;
 
@@ -21,6 +22,9 @@ class _IdentityFunction extends UnitaryFunction {
 
   @override
   Quantity evaluate(List<Quantity> args) => args[0];
+
+  @override
+  Quantity evaluateInverse(List<Quantity> args) => args[0];
 }
 
 // Test double: returns a fixed output (for testing range validation).
@@ -69,7 +73,7 @@ void main() {
   group('QuantitySpec', () {
     test('all fields default to null', () {
       final spec = QuantitySpec();
-      expect(spec.dimension, isNull);
+      expect(spec.quantity, isNull);
       expect(spec.min, isNull);
       expect(spec.max, isNull);
     });
@@ -78,10 +82,11 @@ void main() {
       expect(QuantitySpec().acceptDimensionless, isFalse);
     });
 
-    test('stores dimension', () {
-      final dim = Dimension({'m': 1});
-      final spec = QuantitySpec(dimension: dim);
-      expect(spec.dimension, dim);
+    test('stores quantity', () {
+      final q = Quantity(1.0, Dimension({'m': 1}));
+      final spec = QuantitySpec(quantity: q);
+      expect(spec.quantity?.dimension, q.dimension);
+      expect(spec.quantity?.value, q.value);
     });
 
     test('stores min and max bounds', () {
@@ -95,6 +100,118 @@ void main() {
     test('stores acceptDimensionless = true', () {
       final spec = QuantitySpec(acceptDimensionless: true);
       expect(spec.acceptDimensionless, isTrue);
+    });
+
+    group('isWithinBounds', () {
+      test('no bounds: any value is within', () {
+        final spec = QuantitySpec();
+        expect(spec.isWithinBounds(0.0), isTrue);
+        expect(spec.isWithinBounds(1e100), isTrue);
+        expect(spec.isWithinBounds(-1e100), isTrue);
+      });
+
+      test('closed min: value above min is within', () {
+        final spec = QuantitySpec(min: const Bound(0.0, closed: true));
+        expect(spec.isWithinBounds(0.0), isTrue);
+        expect(spec.isWithinBounds(1.0), isTrue);
+      });
+
+      test('closed min: value below min is not within', () {
+        final spec = QuantitySpec(min: const Bound(0.0, closed: true));
+        expect(spec.isWithinBounds(-0.001), isFalse);
+      });
+
+      test('open min: value at min is not within', () {
+        final spec = QuantitySpec(min: const Bound(0.0, closed: false));
+        expect(spec.isWithinBounds(0.0), isFalse);
+        expect(spec.isWithinBounds(0.001), isTrue);
+      });
+
+      test('closed max: value at max is within', () {
+        final spec = QuantitySpec(max: const Bound(1.0, closed: true));
+        expect(spec.isWithinBounds(1.0), isTrue);
+        expect(spec.isWithinBounds(0.0), isTrue);
+      });
+
+      test('closed max: value above max is not within', () {
+        final spec = QuantitySpec(max: const Bound(1.0, closed: true));
+        expect(spec.isWithinBounds(1.001), isFalse);
+      });
+
+      test('open max: value at max is not within', () {
+        final spec = QuantitySpec(max: const Bound(1.0, closed: false));
+        expect(spec.isWithinBounds(1.0), isFalse);
+        expect(spec.isWithinBounds(0.999), isTrue);
+      });
+
+      test('closed min and max: value inside is within', () {
+        final spec = QuantitySpec(
+          min: const Bound(-1.0, closed: true),
+          max: const Bound(1.0, closed: true),
+        );
+        expect(spec.isWithinBounds(-1.0), isTrue);
+        expect(spec.isWithinBounds(0.0), isTrue);
+        expect(spec.isWithinBounds(1.0), isTrue);
+      });
+
+      test('closed min and max: value outside is not within', () {
+        final spec = QuantitySpec(
+          min: const Bound(-1.0, closed: true),
+          max: const Bound(1.0, closed: true),
+        );
+        expect(spec.isWithinBounds(-1.001), isFalse);
+        expect(spec.isWithinBounds(1.001), isFalse);
+      });
+    });
+
+    group('boundsString', () {
+      test('no bounds → (,)', () {
+        expect(QuantitySpec().boundsString(), '(,)');
+      });
+
+      test('closed min only → [0,)', () {
+        final spec = QuantitySpec(min: const Bound(0.0, closed: true));
+        expect(spec.boundsString(), '[0,)');
+      });
+
+      test('open min only → (0,)', () {
+        final spec = QuantitySpec(min: const Bound(0.0, closed: false));
+        expect(spec.boundsString(), '(0,)');
+      });
+
+      test('closed max only → (,5]', () {
+        final spec = QuantitySpec(max: const Bound(5.0, closed: true));
+        expect(spec.boundsString(), '(,5]');
+      });
+
+      test('open max only → (,5)', () {
+        final spec = QuantitySpec(max: const Bound(5.0, closed: false));
+        expect(spec.boundsString(), '(,5)');
+      });
+
+      test('closed min and max → [-1,1]', () {
+        final spec = QuantitySpec(
+          min: const Bound(-1.0, closed: true),
+          max: const Bound(1.0, closed: true),
+        );
+        expect(spec.boundsString(), '[-1,1]');
+      });
+
+      test('open min closed max → (0,1]', () {
+        final spec = QuantitySpec(
+          min: const Bound(0.0, closed: false),
+          max: const Bound(1.0, closed: true),
+        );
+        expect(spec.boundsString(), '(0,1]');
+      });
+
+      test('closed min open max → [0,1)', () {
+        final spec = QuantitySpec(
+          min: const Bound(0.0, closed: true),
+          max: const Bound(1.0, closed: false),
+        );
+        expect(spec.boundsString(), '[0,1)');
+      });
     });
   });
 
@@ -116,7 +233,7 @@ void main() {
     test('correct arg count passes', () {
       final f = _IdentityFunction(arity: 1);
       expect(
-        () => f.call([Quantity.dimensionless(1.0)]),
+        () => f.call([Quantity.unity]),
         returnsNormally,
       );
     });
@@ -124,7 +241,7 @@ void main() {
     test('too few arguments throws EvalException naming function', () {
       final f = _IdentityFunction(id: 'myFn', arity: 2);
       expect(
-        () => f.call([Quantity.dimensionless(1.0)]),
+        () => f.call([Quantity.unity]),
         throwsA(
           isA<EvalException>().having(
             (e) => e.message,
@@ -155,7 +272,7 @@ void main() {
     test('wrong argument dimension throws DimensionException', () {
       final f = _IdentityFunction(
         domain: [
-          QuantitySpec(dimension: Dimension({'m': 1})),
+          QuantitySpec(quantity: Quantity(1.0, Dimension({'m': 1}))),
         ],
       );
       expect(
@@ -167,7 +284,7 @@ void main() {
     test('correct argument dimension passes', () {
       final f = _IdentityFunction(
         domain: [
-          QuantitySpec(dimension: Dimension({'m': 1})),
+          QuantitySpec(quantity: Quantity(1.0, Dimension({'m': 1}))),
         ],
       );
       expect(
@@ -184,7 +301,10 @@ void main() {
         final radianDim = Dimension({'radian': 1});
         final f = _IdentityFunction(
           domain: [
-            QuantitySpec(dimension: radianDim, acceptDimensionless: true),
+            QuantitySpec(
+              quantity: Quantity(1.0, radianDim),
+              acceptDimensionless: true,
+            ),
           ],
         );
         // Pure dimensionless {} accepted even though spec requires {radian: 1}
@@ -201,7 +321,10 @@ void main() {
         final radianDim = Dimension({'radian': 1});
         final f = _IdentityFunction(
           domain: [
-            QuantitySpec(dimension: radianDim, acceptDimensionless: true),
+            QuantitySpec(
+              quantity: Quantity(1.0, radianDim),
+              acceptDimensionless: true,
+            ),
           ],
         );
         // {m: 1} is neither {radian: 1} nor {}
@@ -220,7 +343,10 @@ void main() {
         final radianDim = Dimension({'radian': 1});
         final f = _IdentityFunction(
           domain: [
-            QuantitySpec(dimension: radianDim, acceptDimensionless: true),
+            QuantitySpec(
+              quantity: Quantity(1.0, radianDim),
+              acceptDimensionless: true,
+            ),
           ],
         );
         expect(
@@ -312,7 +438,7 @@ void main() {
       final f = _FixedOutputFunction(
         id: 'badReturn',
         arity: 0,
-        range: QuantitySpec(dimension: Dimension({'m': 1})),
+        range: QuantitySpec(quantity: Quantity(1.0, Dimension({'m': 1}))),
         output: Quantity.dimensionless(1.0),
       );
       expect(
@@ -350,7 +476,7 @@ void main() {
     test('throws EvalException when hasInverse == false', () {
       final f = _IdentityFunction(id: 'noInverse', hasInverse: false);
       expect(
-        () => f.callInverse([Quantity.dimensionless(1.0)]),
+        () => f.callInverse([Quantity.unity]),
         throwsA(
           isA<EvalException>().having(
             (e) => e.message,
@@ -358,6 +484,54 @@ void main() {
             contains('noInverse'),
           ),
         ),
+      );
+    });
+
+    test('throws EvalException when arg count != 1', () {
+      final f = _IdentityFunction(id: 'inv', hasInverse: true);
+      expect(
+        () => f.callInverse([]),
+        throwsA(isA<EvalException>()),
+      );
+      expect(
+        () => f.callInverse([Quantity.unity, Quantity.unity]),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('validates arg against range spec', () {
+      final f = _IdentityFunction(
+        id: 'inv',
+        hasInverse: true,
+        range: QuantitySpec(
+          quantity: Quantity.unity,
+          min: const Bound(-1.0, closed: true),
+          max: const Bound(1.0, closed: true),
+        ),
+      );
+      expect(
+        () => f.callInverse([Quantity.dimensionless(2.0)]),
+        throwsA(isA<EvalException>()),
+      );
+      // value within range passes
+      expect(f.callInverse([Quantity.dimensionless(0.5)]).value, 0.5);
+    });
+
+    test('validates result against domain[0] spec', () {
+      final f = _IdentityFunction(
+        id: 'inv',
+        hasInverse: true,
+        domain: [
+          QuantitySpec(
+            quantity: Quantity.unity,
+            min: const Bound(0.0, closed: true),
+          ),
+        ],
+      );
+      // _IdentityFunction returns its arg, so result = arg = -1 → domain violation
+      expect(
+        () => f.callInverse([Quantity.dimensionless(-1.0)]),
+        throwsA(isA<EvalException>()),
       );
     });
   });
@@ -391,8 +565,277 @@ void main() {
         impl: (args) => args[0],
       );
       expect(
-        () => f.callInverse([Quantity.dimensionless(1.0)]),
+        () => f.callInverse([Quantity.unity]),
         throwsA(isA<EvalException>()),
+      );
+    });
+  });
+
+  // -- PiecewiseFunction --
+
+  group('PiecewiseFunction', () {
+    // A simple monotonically increasing table: x ∈ [1,3], y ∈ [10,30]
+    // (output unit: kelvin, factor 1.0)
+    final kelvinDim = Dimension({'K': 1});
+
+    PiecewiseFunction makeSimple() => PiecewiseFunction(
+      id: 'simple',
+      outputUnit: Quantity(1.0, Dimension({'K': 1})),
+      noerror: false,
+      points: const [(1.0, 10.0), (2.0, 20.0), (3.0, 30.0)],
+    );
+
+    // A non-monotonic table: x ∈ [0,4], y goes 0→10→5→10→0
+    PiecewiseFunction makeNonMonotonic() => PiecewiseFunction(
+      id: 'nonmono',
+      outputUnit: Quantity(1.0, Dimension({'K': 1})),
+      noerror: false,
+      points: const [
+        (0.0, 0.0),
+        (1.0, 10.0),
+        (2.0, 5.0),
+        (3.0, 10.0),
+        (4.0, 0.0),
+      ],
+    );
+
+    group('class properties', () {
+      test('arity is 1', () {
+        expect(makeSimple().arity, equals(1));
+      });
+
+      test('hasInverse is true', () {
+        expect(makeSimple().hasInverse, isTrue);
+      });
+
+      test('range quantity dimension matches outputUnit dimension', () {
+        final f = makeSimple();
+        expect(f.range?.quantity?.dimension, equals(kelvinDim));
+      });
+
+      test('range min is minimum y value across all points (closed)', () {
+        final f = makeSimple();
+        expect(f.range?.min?.value, equals(10.0));
+        expect(f.range?.min?.closed, isTrue);
+      });
+
+      test('range max is maximum y value across all points (closed)', () {
+        final f = makeSimple();
+        expect(f.range?.max?.value, equals(30.0));
+        expect(f.range?.max?.closed, isTrue);
+      });
+
+      test(
+        'range min/max use global y extremes for non-monotonic functions',
+        () {
+          final f = makeNonMonotonic();
+          expect(f.range?.min?.value, equals(0.0));
+          expect(f.range?.max?.value, equals(10.0));
+        },
+      );
+
+      test('domain is a single dimensionless spec', () {
+        final f = makeSimple();
+        expect(f.domain?.length, equals(1));
+        expect(
+          f.domain?.first.quantity?.dimension,
+          equals(Dimension.dimensionless),
+        );
+      });
+
+      test('domain bounds match x range of points', () {
+        final f = makeSimple();
+        expect(f.domain?.first.min?.value, equals(1.0));
+        expect(f.domain?.first.min?.closed, isTrue);
+        expect(f.domain?.first.max?.value, equals(3.0));
+        expect(f.domain?.first.max?.closed, isTrue);
+      });
+
+      test('throws ArgumentError when constructed with empty points list', () {
+        expect(
+          () => PiecewiseFunction(
+            id: 'empty',
+            outputUnit: Quantity(1.0, Dimension({'K': 1})),
+            noerror: false,
+            points: const [],
+          ),
+          throwsA(isA<ArgumentError>()),
+        );
+      });
+
+      test('noerror field is stored', () {
+        final f = PiecewiseFunction(
+          id: 'f',
+          outputUnit: Quantity.unity,
+          noerror: true,
+          points: const [(0.0, 0.0), (1.0, 1.0)],
+        );
+        expect(f.noerror, isTrue);
+      });
+    });
+
+    group('forward evaluation', () {
+      test('exact lower boundary returns first y * factor', () {
+        final f = makeSimple();
+        final result = f.call([Quantity.unity]);
+        expect(result.value, closeTo(10.0, 1e-10));
+        expect(result.dimension, equals(kelvinDim));
+      });
+
+      test('exact upper boundary returns last y * factor', () {
+        final f = makeSimple();
+        final result = f.call([Quantity.dimensionless(3.0)]);
+        expect(result.value, closeTo(30.0, 1e-10));
+      });
+
+      test('exact interior control point returns that y', () {
+        final f = makeSimple();
+        final result = f.call([Quantity.dimensionless(2.0)]);
+        expect(result.value, closeTo(20.0, 1e-10));
+      });
+
+      test('midpoint of segment is interpolated', () {
+        final f = makeSimple();
+        final result = f.call([Quantity.dimensionless(1.5)]);
+        expect(result.value, closeTo(15.0, 1e-10));
+      });
+
+      test('outputUnit.value scales the result', () {
+        final f = PiecewiseFunction(
+          id: 'f',
+          outputUnit: Quantity(2.0, Dimension({'K': 1})),
+          noerror: false,
+          points: const [(1.0, 10.0), (3.0, 30.0)],
+        );
+        final result = f.call([Quantity.dimensionless(2.0)]);
+        expect(result.value, closeTo(40.0, 1e-10)); // y=20.0, factor=2.0
+      });
+
+      test('input below domain throws EvalException', () {
+        final f = makeSimple();
+        expect(
+          () => f.call([Quantity.dimensionless(0.5)]),
+          throwsA(isA<EvalException>()),
+        );
+      });
+
+      test('input above domain throws EvalException', () {
+        final f = makeSimple();
+        expect(
+          () => f.call([Quantity.dimensionless(3.5)]),
+          throwsA(isA<EvalException>()),
+        );
+      });
+    });
+
+    group('inverse evaluation', () {
+      test('monotonic: returns unique x', () {
+        final f = makeSimple();
+        final result = f.callInverse([
+          Quantity(20.0, Dimension({'K': 1})),
+        ]);
+        expect(result.value, closeTo(2.0, 1e-10));
+        expect(result.dimension.isDimensionless, isTrue);
+      });
+
+      test('monotonic: boundary y returns boundary x', () {
+        final f = makeSimple();
+        final result = f.callInverse([
+          Quantity(10.0, Dimension({'K': 1})),
+        ]);
+        expect(result.value, closeTo(1.0, 1e-10));
+      });
+
+      test('non-monotonic: returns smallest matching x', () {
+        // y=10 appears at x=1 and x=3; smallest is x=1.
+        final f = makeNonMonotonic();
+        final result = f.callInverse([
+          Quantity(10.0, Dimension({'K': 1})),
+        ]);
+        expect(result.value, closeTo(1.0, 1e-10));
+      });
+
+      test('inverse result is dimensionless', () {
+        final f = makeSimple();
+        final result = f.callInverse([
+          Quantity(20.0, Dimension({'K': 1})),
+        ]);
+        expect(result.dimension.isDimensionless, isTrue);
+      });
+
+      test('y below yMin throws EvalException before segment scan', () {
+        final f = makeSimple();
+        expect(
+          () => f.callInverse([
+            Quantity(5.0, Dimension({'K': 1})),
+          ]),
+          throwsA(isA<EvalException>()),
+        );
+      });
+
+      test('y above yMax throws EvalException before segment scan', () {
+        final f = makeSimple();
+        expect(
+          () => f.callInverse([
+            Quantity(35.0, Dimension({'K': 1})),
+          ]),
+          throwsA(isA<EvalException>()),
+        );
+      });
+
+      test('outputUnit.value is applied when converting inverse input', () {
+        // outputUnit.value = 0.5, so raw y = quantity.value / 0.5.
+        // points: (1,10), (3,30). To get raw y=20, quantity value must be 10.
+        final f = PiecewiseFunction(
+          id: 'f',
+          outputUnit: Quantity(0.5, Dimension({'K': 1})),
+          noerror: false,
+          points: const [(1.0, 10.0), (3.0, 30.0)],
+        );
+        final result = f.callInverse([
+          Quantity(10.0, Dimension({'K': 1})),
+        ]);
+        expect(result.value, closeTo(2.0, 1e-10)); // yRaw=20, x=2
+      });
+
+      test(
+        'outputUnit.value > 1: value in-bounds after normalization succeeds',
+        () {
+          // outputUnit.value = 10.0; range bounds are raw y in [10, 30].
+          // To pass a raw y of 20, the SI quantity value must be 20 * 10 = 200.
+          final f = PiecewiseFunction(
+            id: 'f',
+            outputUnit: Quantity(10.0, Dimension({'K': 1})),
+            noerror: false,
+            points: const [(1.0, 10.0), (3.0, 30.0)],
+          );
+          final result = f.callInverse([
+            Quantity(200.0, Dimension({'K': 1})),
+          ]);
+          expect(result.value, closeTo(2.0, 1e-10)); // yRaw=20 → x=2
+        },
+      );
+
+      test(
+        'outputUnit.value > 1: value that appears in-bounds before normalization '
+        'but is out-of-bounds after normalization throws EvalException',
+        () {
+          // outputUnit.value = 10.0; range bounds are raw y in [10, 30].
+          // SI value 20.0 would pass a naive [10, 30] check,
+          // but normalized: 20.0 / 10.0 = 2.0, which is below the min of 10.
+          final f = PiecewiseFunction(
+            id: 'f',
+            outputUnit: Quantity(10.0, Dimension({'K': 1})),
+            noerror: false,
+            points: const [(1.0, 10.0), (3.0, 30.0)],
+          );
+          expect(
+            () => f.callInverse([
+              Quantity(20.0, Dimension({'K': 1})),
+            ]),
+            throwsA(isA<EvalException>()),
+          );
+        },
       );
     });
   });

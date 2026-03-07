@@ -17,7 +17,8 @@ class GnuEntry {
   /// Primary unit identifier (e.g., 'm', 'kilo', 'foot').
   final String id;
 
-  /// Entry type: 'primitive', 'derived', 'alias', 'prefix', or 'unsupported'.
+  /// Entry type: 'primitive', 'derived', 'alias', 'prefix', 'piecewise', or
+  /// 'unsupported'.
   final String type;
 
   /// The expression text for the unit definition.
@@ -44,6 +45,15 @@ class GnuEntry {
   /// For unsupported entries: reason code.
   final String? reason;
 
+  /// For piecewise entries: the output unit expression (e.g., 'degR', 'K').
+  final String? outputUnit;
+
+  /// For piecewise entries: true if the GNU Units noerror flag was present.
+  final bool noerror;
+
+  /// For piecewise entries: control points as (x, y) pairs.
+  final List<(double, double)>? points;
+
   const GnuEntry({
     required this.id,
     required this.type,
@@ -55,6 +65,9 @@ class GnuEntry {
     this.isPrefix = false,
     required this.target,
     required this.reason,
+    this.outputUnit,
+    this.noerror = false,
+    this.points,
   });
 }
 
@@ -385,16 +398,44 @@ GnuEntry? _classifyLine(
   }
 
   if (nameToken.contains('[')) {
+    // Piecewise-linear function: parse id, outputUnit, noerror, and control points.
+    final bracketStart = nameToken.indexOf('[');
+    final bracketEnd = nameToken.indexOf(']');
+    final id = nameToken.substring(0, bracketStart);
+    final outputUnit = bracketEnd > bracketStart
+        ? nameToken.substring(bracketStart + 1, bracketEnd)
+        : '';
+
+    final tokens = definitionText.split(RegExp(r'\s+'));
+    var tokenStart = 0;
+    var noerror = false;
+    if (tokens.isNotEmpty && tokens[0] == 'noerror') {
+      noerror = true;
+      tokenStart = 1;
+    }
+
+    final points = <(double, double)>[];
+    for (var i = tokenStart; i + 1 < tokens.length; i += 2) {
+      final x = double.tryParse(tokens[i]);
+      final y = double.tryParse(tokens[i + 1]);
+      if (x != null && y != null) {
+        points.add((x, y));
+      }
+    }
+
     return GnuEntry(
-      id: nameToken,
-      type: 'unsupported',
+      id: id,
+      type: 'piecewise',
       definition: definitionText,
       gnuUnitsSource: text,
       filename: filename,
       lineNumber: lineNumber,
       isDimensionless: false,
       target: null,
-      reason: 'piecewise_linear',
+      reason: null,
+      outputUnit: outputUnit,
+      noerror: noerror,
+      points: points,
     );
   }
 
@@ -516,7 +557,7 @@ Map<String, dynamic> entriesToJson(
       'gnuUnitsSource': entry.gnuUnitsSource,
       'source': {'file': sourceFile, 'line': entry.lineNumber},
     };
-    if (entry.type != 'unsupported') {
+    if (entry.type != 'unsupported' && entry.type != 'piecewise') {
       map['definition'] = entry.definition;
     }
     if (entry.type == 'primitive') {
@@ -527,6 +568,11 @@ Map<String, dynamic> entriesToJson(
     }
     if (entry.type == 'unsupported') {
       map['reason'] = entry.reason;
+    }
+    if (entry.type == 'piecewise') {
+      map['outputUnit'] = entry.outputUnit;
+      map['noerror'] = entry.noerror;
+      map['points'] = entry.points?.map((p) => [p.$1, p.$2]).toList() ?? [];
     }
 
     // isPrefix is set by the parser for prefix-namespace entries (name ended

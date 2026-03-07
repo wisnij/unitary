@@ -51,6 +51,7 @@ class UnitRepository {
     final repo = UnitRepository();
     registerPredefinedUnits(repo);
     registerBuiltinFunctions(repo);
+    registerPiecewiseFunctions(repo);
     return repo;
   }
 

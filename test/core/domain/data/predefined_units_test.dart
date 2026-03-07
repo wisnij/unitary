@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:unitary/core/domain/data/builtin_functions.dart';
-import 'package:unitary/core/domain/data/predefined_units.dart';
+import 'package:unitary/core/domain/models/dimension.dart';
+import 'package:unitary/core/domain/models/function.dart';
+import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
 
@@ -25,9 +26,7 @@ void main() {
   late UnitRepository repo;
 
   setUp(() {
-    repo = UnitRepository();
-    registerPredefinedUnits(repo);
-    registerBuiltinFunctions(repo);
+    repo = UnitRepository.withPredefinedUnits();
   });
 
   group('Registration', () {
@@ -37,6 +36,39 @@ void main() {
 
     test('registers a nonzero number of prefixes', () {
       expect(repo.allPrefixes.length, greaterThan(0));
+    });
+  });
+
+  group('Piecewise functions', () {
+    test('gasmark is registered as a PiecewiseFunction', () {
+      final f = repo.findFunction('gasmark');
+      expect(f, isA<PiecewiseFunction>());
+    });
+
+    test('gasmark(5) returns correct value in kelvin', () {
+      // From the GNU Units table: gasmark 5 -> 834.67 degR
+      // degR = 5/9 K, so 834.67 * 5/9 ≈ 463.7055... K
+      final f = repo.findFunction('gasmark') as PiecewiseFunction;
+      final result = f.call([Quantity.dimensionless(5.0)]);
+      expect(result.value, closeTo(834.67 * 5.0 / 9.0, 1e-3));
+    });
+
+    test('gasmark inverse of gasmark(5) returns 5', () {
+      final f = repo.findFunction('gasmark') as PiecewiseFunction;
+      final forward = f.call([Quantity.dimensionless(5.0)]);
+      final inverse = f.callInverse([forward]);
+      expect(inverse.value, closeTo(5.0, 1e-6));
+      expect(inverse.dimension.isDimensionless, isTrue);
+    });
+
+    test('gasmark range quantity has degR dimension and SI factor', () {
+      // degR = 5/9 K exactly
+      final f = repo.findFunction('gasmark') as PiecewiseFunction;
+      expect(
+        f.range!.quantity!.dimension,
+        equals(Dimension({'K': 1})),
+      );
+      expect(f.range!.quantity!.value, closeTo(5.0 / 9.0, 1e-10));
     });
   });
 

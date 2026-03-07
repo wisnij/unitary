@@ -202,6 +202,16 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
     unitEntries.add((id, data));
   }
 
+  // Collect piecewise entries from the units section.
+  final piecewiseEntries = <(String, Map<String, dynamic>)>[];
+  for (final entry in unitsSection.entries) {
+    final id = entry.key;
+    final data = Map<String, dynamic>.from(entry.value as Map);
+    if ((data['type'] as String?) == 'piecewise') {
+      piecewiseEntries.add((id, data));
+    }
+  }
+
   final buf = StringBuffer();
 
   // File header.
@@ -210,8 +220,15 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
     '// Run `dart run tool/generate_predefined_units.dart` to regenerate.',
   );
   buf.writeln();
-  buf.writeln("import '../models/unit.dart';");
-  buf.writeln("import '../models/unit_repository.dart';");
+  if (piecewiseEntries.isNotEmpty) {
+    buf.writeln("import '../models/function.dart';");
+    buf.writeln("import '../models/unit.dart';");
+    buf.writeln("import '../models/unit_repository.dart';");
+    buf.writeln("import '../parser/expression_parser.dart';");
+  } else {
+    buf.writeln("import '../models/unit.dart';");
+    buf.writeln("import '../models/unit_repository.dart';");
+  }
   buf.writeln();
 
   // Top-level registerPredefinedUnits function.
@@ -236,6 +253,23 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
     _emitEntry(buf, id, data, extraPrefixAliases);
   }
   buf.writeln('}');
+
+  // Piecewise function registration (emitted only when entries exist).
+  if (piecewiseEntries.isNotEmpty) {
+    buf.writeln();
+    buf.writeln(
+      '/// Registers all piecewise-linear functions into the given [repo].',
+    );
+    buf.writeln(
+      '/// Must be called after [registerPredefinedUnits] so that output',
+    );
+    buf.writeln('/// units are already registered and can be resolved.');
+    buf.writeln('void registerPiecewiseFunctions(UnitRepository repo) {');
+    for (final (id, data) in piecewiseEntries) {
+      _emitPiecewise(buf, id, data);
+    }
+    buf.writeln('}');
+  }
 
   return buf.toString();
 }
@@ -376,6 +410,34 @@ void _emitAffine(
   buf.writeln('      baseUnitId: ${_q(baseUnitId)},');
   buf.writeln('    ),');
   buf.writeln('  );');
+}
+
+void _emitPiecewise(
+  StringBuffer buf,
+  String id,
+  Map<String, dynamic> entry,
+) {
+  final outputUnit = (entry['outputUnit'] as String?) ?? '';
+  final noerror = (entry['noerror'] as bool?) ?? false;
+  final rawPoints = (entry['points'] as List<dynamic>?) ?? [];
+  final points = rawPoints.map((p) {
+    final pair = p as List<dynamic>;
+    final x = (pair[0] as num).toDouble();
+    final y = (pair[1] as num).toDouble();
+    return '(${_formatDouble(x)}, ${_formatDouble(y)})';
+  }).toList();
+
+  buf.writeln('  {');
+  buf.writeln(
+    '    final output = ExpressionParser(repo: repo).evaluate(${_q(outputUnit)});',
+  );
+  buf.writeln('    repo.registerFunction(PiecewiseFunction(');
+  buf.writeln('      id: ${_q(id)},');
+  buf.writeln('      outputUnit: output,');
+  buf.writeln('      noerror: $noerror,');
+  buf.writeln('      points: const [${points.join(', ')}],');
+  buf.writeln('    ));');
+  buf.writeln('  }');
 }
 
 /// Quotes a string as a single-quoted Dart string literal.

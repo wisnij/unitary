@@ -10,18 +10,18 @@ final _radianDim = Dimension({'radian': 1});
 
 // Domain spec for trig functions: accepts radian dimension OR pure dimensionless.
 QuantitySpec _trigDomainSpec() => QuantitySpec(
-  dimension: _radianDim,
+  quantity: Quantity(1.0, _radianDim),
   acceptDimensionless: true,
 );
 
 // Spec for a dimensionless quantity (no bounds).
 QuantitySpec _dimensionlessSpec() => QuantitySpec(
-  dimension: Dimension.dimensionless,
+  quantity: Quantity.unity,
 );
 
 // Spec for a radian quantity (no bounds).
 QuantitySpec _radianSpec() => QuantitySpec(
-  dimension: _radianDim,
+  quantity: Quantity(1.0, _radianDim),
 );
 
 /// sin: sine of an angle in radians; returns dimensionless in [-1, 1].
@@ -57,7 +57,7 @@ final asinFn = BuiltinFunction(
   arity: 1,
   domain: [
     QuantitySpec(
-      dimension: Dimension.dimensionless,
+      quantity: Quantity.unity,
       min: const Bound(-1.0, closed: true),
       max: const Bound(1.0, closed: true),
     ),
@@ -72,7 +72,7 @@ final acosFn = BuiltinFunction(
   arity: 1,
   domain: [
     QuantitySpec(
-      dimension: Dimension.dimensionless,
+      quantity: Quantity.unity,
       min: const Bound(-1.0, closed: true),
       max: const Bound(1.0, closed: true),
     ),
@@ -85,7 +85,7 @@ final acosFn = BuiltinFunction(
 final atanFn = BuiltinFunction(
   id: 'atan',
   arity: 1,
-  domain: [QuantitySpec(dimension: Dimension.dimensionless)],
+  domain: [QuantitySpec(quantity: Quantity.unity)],
   range: _radianSpec(),
   impl: (args) => Quantity(math.atan(args[0].value), _radianDim),
 );
@@ -95,8 +95,8 @@ final atan2Fn = BuiltinFunction(
   id: 'atan2',
   arity: 2,
   domain: [
-    QuantitySpec(dimension: Dimension.dimensionless),
-    QuantitySpec(dimension: Dimension.dimensionless),
+    QuantitySpec(quantity: Quantity.unity),
+    QuantitySpec(quantity: Quantity.unity),
   ],
   range: _radianSpec(),
   impl: (args) =>
@@ -109,7 +109,7 @@ final lnFn = BuiltinFunction(
   arity: 1,
   domain: [
     QuantitySpec(
-      dimension: Dimension.dimensionless,
+      quantity: Quantity.unity,
       min: const Bound(0.0, closed: false),
     ),
   ],
@@ -123,7 +123,7 @@ final logFn = BuiltinFunction(
   arity: 1,
   domain: [
     QuantitySpec(
-      dimension: Dimension.dimensionless,
+      quantity: Quantity.unity,
       min: const Bound(0.0, closed: false),
     ),
   ],
@@ -135,7 +135,7 @@ final logFn = BuiltinFunction(
 final expFn = BuiltinFunction(
   id: 'exp',
   arity: 1,
-  domain: [QuantitySpec(dimension: Dimension.dimensionless)],
+  domain: [QuantitySpec(quantity: Quantity.unity)],
   range: _dimensionlessSpec(),
   impl: (args) => Quantity.dimensionless(math.exp(args[0].value)),
 );

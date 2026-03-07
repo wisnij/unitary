@@ -1,24 +1,67 @@
-## Purpose
+## ADDED Requirements
 
-The GNU Units import pipeline is a two-stage offline toolchain for building the
-app's built-in unit database from the GNU Units definitions file.
 
-**Stage 1 — Import** (`tool/import_gnu_units.dart`): Parses a GNU Units
-`definitions.units` file (and any supplementary files) into a JSON intermediate
-database (`units.json`). The importer library handles GNU Units syntax (comments,
-line continuations, conditional directives, prefixes, primitives, derived units,
-affine units, aliases, and unsupported nonlinear/piecewise definitions).
+### Requirement: Piecewise entry parsing
+The importer library SHALL recognise a definition whose name token contains `[`
+as a piecewise-linear function definition.  It SHALL parse:
 
-**Stage 2 — Codegen** (`tool/generate_builtin_units.dart`): Reads `units.json`
-and emits a `builtin_units.dart` Dart source file containing `const` unit
-objects registered into a `UnitRepository`.
+- `id` — the name text before `[`
+- `outputUnit` — the text between `[` and `]`
+- `noerror` — `true` if the first token of the definition text is the literal
+  string `"noerror"`; `false` otherwise
+- `points` — the remaining tokens of the definition text, interpreted as
+  alternating x and y `double` values forming a list of `(x, y)` pairs
 
-The pipeline is run offline by developers; its output (`builtin_units.dart`) is
-committed to the repository and shipped with the app.
+The entry SHALL be produced with `type: "piecewise"` and SHALL NOT be placed in
+the `"unsupported"` section.
+
+#### Scenario: Piecewise definition is detected and parsed
+- **WHEN** the unit name contains `[` (e.g., `gasmark[degR]`)
+- **THEN** `type` is `"piecewise"`, `id` is `"gasmark"`, and `outputUnit` is `"degR"`
+
+#### Scenario: Control points are parsed as (x, y) pairs
+- **WHEN** the definition text (after stripping `noerror`) contains an even
+  number of numeric tokens
+- **THEN** `points` is a list of `[x, y]` pairs in the order they appear
+
+#### Scenario: noerror flag is detected
+- **WHEN** the first token of the definition text is `"noerror"`
+- **THEN** `noerror` is `true` and `"noerror"` is not included in the points
+
+#### Scenario: noerror flag is absent
+- **WHEN** the definition text does not begin with `"noerror"`
+- **THEN** `noerror` is `false` and all tokens are parsed as control-point values
 
 ---
 
-## Requirements
+### Requirement: Piecewise function code generation
+The codegen library SHALL emit a `registerPiecewiseFunctions(UnitRepository
+repo)` function for entries with `"type": "piecewise"`.  For each such entry,
+it SHALL:
+
+- Resolve the output unit at registration time via
+  `ExpressionParser(repo: repo).evaluate(outputUnit)`
+- Construct a `PiecewiseFunction` with `id`, `outputFactor` (resolved value),
+  `outputDimension` (resolved dimension), `noerror`, and `points`
+- Register it via `repo.registerFunction(...)`
+
+`registerPiecewiseFunctions` SHALL be called from
+`UnitRepository.withPredefinedUnits()` after `registerPredefinedUnits` and
+`registerBuiltinFunctions`.
+
+#### Scenario: Piecewise function is emitted correctly
+- **WHEN** an entry has `"type": "piecewise"`
+- **THEN** the output contains a `PiecewiseFunction(id: '<id>', ...)` call
+  registered via `repo.registerFunction()`
+- **AND** the output unit is resolved at registration time, not hardcoded
+
+#### Scenario: Piecewise entries are not emitted as unit registrations
+- **WHEN** an entry has `"type": "piecewise"`
+- **THEN** no `repo.register(...)` call is emitted for that entry
+
+
+## MODIFIED Requirements
+
 
 ### Requirement: GNU Units file parsing
 The importer library SHALL parse a GNU Units definitions file string into a list
@@ -106,66 +149,6 @@ SHALL record its source filename and 1-based line number.
 
 ---
 
-### Requirement: Piecewise entry parsing
-The importer library SHALL recognise a definition whose name token contains `[`
-as a piecewise-linear function definition.  It SHALL parse:
-
-- `id` — the name text before `[`
-- `outputUnit` — the text between `[` and `]`
-- `noerror` — `true` if the first token of the definition text is the literal
-  string `"noerror"`; `false` otherwise
-- `points` — the remaining tokens of the definition text, interpreted as
-  alternating x and y `double` values forming a list of `(x, y)` pairs
-
-The entry SHALL be produced with `type: "piecewise"` and SHALL NOT be placed in
-the `"unsupported"` section.
-
-#### Scenario: Piecewise definition is detected and parsed
-- **WHEN** the unit name contains `[` (e.g., `gasmark[degR]`)
-- **THEN** `type` is `"piecewise"`, `id` is `"gasmark"`, and `outputUnit` is `"degR"`
-
-#### Scenario: Control points are parsed as (x, y) pairs
-- **WHEN** the definition text (after stripping `noerror`) contains an even
-  number of numeric tokens
-- **THEN** `points` is a list of `[x, y]` pairs in the order they appear
-
-#### Scenario: noerror flag is detected
-- **WHEN** the first token of the definition text is `"noerror"`
-- **THEN** `noerror` is `true` and `"noerror"` is not included in the points
-
-#### Scenario: noerror flag is absent
-- **WHEN** the definition text does not begin with `"noerror"`
-- **THEN** `noerror` is `false` and all tokens are parsed as control-point values
-
----
-
-### Requirement: Piecewise function code generation
-The codegen library SHALL emit a `registerPiecewiseFunctions(UnitRepository
-repo)` function for entries with `"type": "piecewise"`.  For each such entry,
-it SHALL:
-
-- Resolve the output unit at registration time via
-  `ExpressionParser(repo: repo).evaluate(outputUnit)`
-- Construct a `PiecewiseFunction` with `id`, `outputFactor` (resolved value),
-  `outputDimension` (resolved dimension), `noerror`, and `points`
-- Register it via `repo.registerFunction(...)`
-
-`registerPiecewiseFunctions` SHALL be called from
-`UnitRepository.withPredefinedUnits()` after `registerPredefinedUnits` and
-`registerBuiltinFunctions`.
-
-#### Scenario: Piecewise function is emitted correctly
-- **WHEN** an entry has `"type": "piecewise"`
-- **THEN** the output contains a `PiecewiseFunction(id: '<id>', ...)` call
-  registered via `repo.registerFunction()`
-- **AND** the output unit is resolved at registration time, not hardcoded
-
-#### Scenario: Piecewise entries are not emitted as unit registrations
-- **WHEN** an entry has `"type": "piecewise"`
-- **THEN** no `repo.register(...)` call is emitted for that entry
-
----
-
 ### Requirement: Serialize parsed entries to JSON
 The importer library SHALL serialize a list of parsed GNU entries into a JSON
 map with three sections: `"units"`, `"prefixes"`, and `"unsupported"`. The
@@ -195,32 +178,6 @@ output SHALL contain only importer-owned fields; no pass-through fields
 - **WHEN** `entriesToJson()` produces output
 - **THEN** the output does not contain `description`, `aliases`, or `category`
   fields
-
----
-
-### Requirement: Merge supplementary data
-The codegen library SHALL merge a manually-curated supplementary map over an
-importer-produced parsed map using a pure recursive merge, producing the
-`units.json` map consumed by code generation.
-
-#### Scenario: Supplementary field overlays parsed field
-- **WHEN** a key exists in both the parsed and supplementary maps at any
-  nesting level
-- **THEN** the supplementary value wins; the parsed value is discarded
-
-#### Scenario: Parsed-only field is preserved
-- **WHEN** a key exists in the parsed map but not in the supplementary map
-- **THEN** the parsed value appears unchanged in the merged output
-
-#### Scenario: Supplementary-only entry is added
-- **WHEN** a unit id (or section key) exists only in the supplementary map
-- **THEN** it appears in the merged output as-is
-
-#### Scenario: Merge is purely recursive with no domain-specific rules
-- **WHEN** two maps are merged
-- **THEN** maps at every nesting level are merged key-by-key; for any
-  non-map value (string, number, boolean, list, null) the supplementary
-  value wins verbatim
 
 ---
 

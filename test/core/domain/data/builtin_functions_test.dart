@@ -48,12 +48,12 @@ void main() {
 
     test('atan2: domain is two dimensionless specs', () {
       expect(atan2Fn.domain?.length, 2);
-      expect(atan2Fn.domain![0].dimension, Dimension.dimensionless);
-      expect(atan2Fn.domain![1].dimension, Dimension.dimensionless);
+      expect(atan2Fn.domain![0].quantity?.dimension, Dimension.dimensionless);
+      expect(atan2Fn.domain![1].quantity?.dimension, Dimension.dimensionless);
     });
 
     test('atan2: range is radian', () {
-      expect(atan2Fn.range?.dimension, Dimension({'radian': 1}));
+      expect(atan2Fn.range?.quantity?.dimension, Dimension({'radian': 1}));
     });
 
     test('log has no aliases', () {
@@ -67,25 +67,25 @@ void main() {
       test('sin: domain accepts radian + pure dimensionless', () {
         expect(sinFn.domain, isNotNull);
         final spec = sinFn.domain![0];
-        expect(spec.dimension, radianDim);
+        expect(spec.quantity?.dimension, radianDim);
         expect(spec.acceptDimensionless, isTrue);
       });
 
       test('cos: domain accepts radian + pure dimensionless', () {
         final spec = cosFn.domain![0];
-        expect(spec.dimension, radianDim);
+        expect(spec.quantity?.dimension, radianDim);
         expect(spec.acceptDimensionless, isTrue);
       });
 
       test('tan: domain accepts radian + pure dimensionless', () {
         final spec = tanFn.domain![0];
-        expect(spec.dimension, radianDim);
+        expect(spec.quantity?.dimension, radianDim);
         expect(spec.acceptDimensionless, isTrue);
       });
 
       test('asin: domain dimensionless, min=-1 closed, max=1 closed', () {
         final spec = asinFn.domain![0];
-        expect(spec.dimension, dimensionlessDim);
+        expect(spec.quantity?.dimension, dimensionlessDim);
         expect(spec.min?.value, -1.0);
         expect(spec.min?.closed, isTrue);
         expect(spec.max?.value, 1.0);
@@ -94,7 +94,7 @@ void main() {
 
       test('acos: domain dimensionless, min=-1 closed, max=1 closed', () {
         final spec = acosFn.domain![0];
-        expect(spec.dimension, dimensionlessDim);
+        expect(spec.quantity?.dimension, dimensionlessDim);
         expect(spec.min?.value, -1.0);
         expect(spec.min?.closed, isTrue);
         expect(spec.max?.value, 1.0);
@@ -103,28 +103,28 @@ void main() {
 
       test('atan: domain dimensionless, no bounds', () {
         final spec = atanFn.domain![0];
-        expect(spec.dimension, dimensionlessDim);
+        expect(spec.quantity?.dimension, dimensionlessDim);
         expect(spec.min, isNull);
         expect(spec.max, isNull);
       });
 
       test('ln: domain dimensionless, min=0 open', () {
         final spec = lnFn.domain![0];
-        expect(spec.dimension, dimensionlessDim);
+        expect(spec.quantity?.dimension, dimensionlessDim);
         expect(spec.min?.value, 0.0);
         expect(spec.min?.closed, isFalse);
       });
 
       test('log: domain dimensionless, min=0 open', () {
         final spec = logFn.domain![0];
-        expect(spec.dimension, dimensionlessDim);
+        expect(spec.quantity?.dimension, dimensionlessDim);
         expect(spec.min?.value, 0.0);
         expect(spec.min?.closed, isFalse);
       });
 
       test('exp: domain dimensionless, no bounds', () {
         final spec = expFn.domain![0];
-        expect(spec.dimension, dimensionlessDim);
+        expect(spec.quantity?.dimension, dimensionlessDim);
         expect(spec.min, isNull);
         expect(spec.max, isNull);
       });
@@ -135,39 +135,39 @@ void main() {
       final dimensionlessDim = Dimension.dimensionless;
 
       test('sin: range dimensionless', () {
-        expect(sinFn.range?.dimension, dimensionlessDim);
+        expect(sinFn.range?.quantity?.dimension, dimensionlessDim);
       });
 
       test('cos: range dimensionless', () {
-        expect(cosFn.range?.dimension, dimensionlessDim);
+        expect(cosFn.range?.quantity?.dimension, dimensionlessDim);
       });
 
       test('tan: range dimensionless', () {
-        expect(tanFn.range?.dimension, dimensionlessDim);
+        expect(tanFn.range?.quantity?.dimension, dimensionlessDim);
       });
 
       test('asin: range radian', () {
-        expect(asinFn.range?.dimension, radianDim);
+        expect(asinFn.range?.quantity?.dimension, radianDim);
       });
 
       test('acos: range radian', () {
-        expect(acosFn.range?.dimension, radianDim);
+        expect(acosFn.range?.quantity?.dimension, radianDim);
       });
 
       test('atan: range radian', () {
-        expect(atanFn.range?.dimension, radianDim);
+        expect(atanFn.range?.quantity?.dimension, radianDim);
       });
 
       test('ln: range dimensionless', () {
-        expect(lnFn.range?.dimension, dimensionlessDim);
+        expect(lnFn.range?.quantity?.dimension, dimensionlessDim);
       });
 
       test('log: range dimensionless', () {
-        expect(logFn.range?.dimension, dimensionlessDim);
+        expect(logFn.range?.quantity?.dimension, dimensionlessDim);
       });
 
       test('exp: range dimensionless', () {
-        expect(expFn.range?.dimension, dimensionlessDim);
+        expect(expFn.range?.quantity?.dimension, dimensionlessDim);
       });
     });
   });

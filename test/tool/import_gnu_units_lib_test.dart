@@ -472,12 +472,62 @@ void main() {
         expect(result[0].reason, equals('nonlinear_definition'));
       });
 
-      test('unsupported (piecewise): id containing [ is unsupported', () {
-        const input = 'gasmark[degR] 0 1.25 1 500 2 575 end\n';
+      test('piecewise: id containing [ produces type piecewise', () {
+        const input = 'gasmark[degR] 1 500.0 2 575.0 3 650.0\n';
         final result = parseGnuUnitsFile(input, 'test.units');
         expect(result, hasLength(1));
-        expect(result[0].type, equals('unsupported'));
-        expect(result[0].reason, equals('piecewise_linear'));
+        expect(result[0].type, equals('piecewise'));
+        expect(result[0].reason, isNull);
+      });
+
+      test('piecewise: id is stripped of [outputUnit]', () {
+        const input = 'gasmark[degR] 1 500.0 2 575.0\n';
+        final result = parseGnuUnitsFile(input, 'test.units');
+        expect(result[0].id, equals('gasmark'));
+      });
+
+      test('piecewise: outputUnit is extracted', () {
+        const input = 'gasmark[degR] 1 500.0 2 575.0\n';
+        final result = parseGnuUnitsFile(input, 'test.units');
+        expect(result[0].outputUnit, equals('degR'));
+      });
+
+      test('piecewise: outputUnit with embedded expression', () {
+        const input = 'brix[0.99717g/cm^3] 0 0.0 10 1.0\n';
+        final result = parseGnuUnitsFile(input, 'test.units');
+        expect(result[0].id, equals('brix'));
+        expect(result[0].outputUnit, equals('0.99717g/cm^3'));
+      });
+
+      test('piecewise: control points are parsed as (x, y) pairs', () {
+        const input = 'foo[K] 1.0 10.0 2.0 20.0 3.0 30.0\n';
+        final result = parseGnuUnitsFile(input, 'test.units');
+        expect(
+          result[0].points,
+          equals([(1.0, 10.0), (2.0, 20.0), (3.0, 30.0)]),
+        );
+      });
+
+      test('piecewise: noerror is false when absent', () {
+        const input = 'foo[K] 1.0 10.0 2.0 20.0\n';
+        final result = parseGnuUnitsFile(input, 'test.units');
+        expect(result[0].noerror, isFalse);
+      });
+
+      test('piecewise: noerror is true when present', () {
+        const input = 'foo[K] noerror 1.0 10.0 2.0 20.0\n';
+        final result = parseGnuUnitsFile(input, 'test.units');
+        expect(result[0].noerror, isTrue);
+        expect(result[0].points, equals([(1.0, 10.0), (2.0, 20.0)]));
+      });
+
+      test('piecewise: gnuUnitsSource records original line', () {
+        const input = 'gasmark[degR] 1 500.0 2 575.0\n';
+        final result = parseGnuUnitsFile(input, 'test.units');
+        expect(
+          result[0].gnuUnitsSource,
+          equals('gasmark[degR] 1 500.0 2 575.0'),
+        );
       });
     });
 
@@ -691,6 +741,68 @@ void main() {
         expect((result['units'] as Map).containsKey('tempC'), isFalse);
       },
     );
+
+    test('piecewise entry: in units section with correct fields', () {
+      final entries = [
+        const GnuEntry(
+          id: 'gasmark',
+          type: 'piecewise',
+          definition: '1 500.0 2 575.0 3 650.0',
+          gnuUnitsSource: 'gasmark[degR] 1 500.0 2 575.0 3 650.0',
+          filename: 'defs.units',
+          lineNumber: 5,
+          isDimensionless: false,
+          target: null,
+          reason: null,
+          outputUnit: 'degR',
+          noerror: false,
+          points: [(1.0, 500.0), (2.0, 575.0), (3.0, 650.0)],
+        ),
+      ];
+      final result = entriesToJson(entries);
+      // Goes in units section, not unsupported.
+      final units = result['units'] as Map<String, dynamic>;
+      expect(units.containsKey('gasmark'), isTrue);
+      expect((result['unsupported'] as Map).containsKey('gasmark'), isFalse);
+      final data = units['gasmark'] as Map<String, dynamic>;
+      expect(data['type'], equals('piecewise'));
+      expect(data['outputUnit'], equals('degR'));
+      expect(data['noerror'], isFalse);
+      expect(
+        data['points'],
+        equals([
+          [1.0, 500.0],
+          [2.0, 575.0],
+          [3.0, 650.0],
+        ]),
+      );
+      expect(data.containsKey('definition'), isFalse);
+      expect(data.containsKey('reason'), isFalse);
+    });
+
+    test('piecewise entry with noerror: serialized as true', () {
+      final entries = [
+        const GnuEntry(
+          id: 'foo',
+          type: 'piecewise',
+          definition: 'noerror 1 10.0 2 20.0',
+          gnuUnitsSource: 'foo[K] noerror 1 10.0 2 20.0',
+          filename: 'defs.units',
+          lineNumber: 1,
+          isDimensionless: false,
+          target: null,
+          reason: null,
+          outputUnit: 'K',
+          noerror: true,
+          points: [(1.0, 10.0), (2.0, 20.0)],
+        ),
+      ];
+      final result = entriesToJson(entries);
+      final data =
+          (result['units'] as Map<String, dynamic>)['foo']
+              as Map<String, dynamic>;
+      expect(data['noerror'], isTrue);
+    });
 
     test('two entries with same id in different namespaces both appear', () {
       // 'm' can be both a unit primitive and a prefix (milli) independently.

@@ -819,6 +819,180 @@ void main() {
       });
     });
   });
+
+  group('piecewise codegen', () {
+    Map<String, dynamic> makePiecewiseJson(
+      List<Map<String, dynamic>> pwEntries,
+    ) {
+      final units = <String, dynamic>{};
+      for (final e in pwEntries) {
+        final id = e['id'] as String;
+        units[id] = Map<String, dynamic>.from(e)..remove('id');
+      }
+      return {
+        'units': units,
+        'prefixes': <String, dynamic>{},
+        'unsupported': <String, dynamic>{},
+      };
+    }
+
+    test('piecewise entry generates registerPiecewiseFunctions function', () {
+      final json = makePiecewiseJson([
+        {
+          'id': 'gasmark',
+          'type': 'piecewise',
+          'outputUnit': 'degR',
+          'noerror': false,
+          'points': [
+            [1.0, 500.0],
+            [2.0, 575.0],
+            [3.0, 650.0],
+          ],
+          'gnuUnitsSource': 'gasmark[degR] 1 500.0 2 575.0 3 650.0',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      expect(code, contains('void registerPiecewiseFunctions('));
+    });
+
+    test('piecewise entry uses registerFunction not register', () {
+      final json = makePiecewiseJson([
+        {
+          'id': 'gasmark',
+          'type': 'piecewise',
+          'outputUnit': 'degR',
+          'noerror': false,
+          'points': [
+            [1.0, 500.0],
+            [3.0, 650.0],
+          ],
+          'gnuUnitsSource': 'gasmark[degR] 1 500.0 3 650.0',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerPiecewiseFunctions');
+      expect(body, contains('registerFunction('));
+      expect(body, isNot(contains('repo.register(')));
+    });
+
+    test('piecewise entry emits PiecewiseFunction constructor', () {
+      final json = makePiecewiseJson([
+        {
+          'id': 'foo',
+          'type': 'piecewise',
+          'outputUnit': 'K',
+          'noerror': false,
+          'points': [
+            [1.0, 10.0],
+            [2.0, 20.0],
+          ],
+          'gnuUnitsSource': 'foo[K] 1 10.0 2 20.0',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerPiecewiseFunctions');
+      expect(body, contains("id: 'foo'"));
+      expect(body, contains('PiecewiseFunction('));
+      expect(body, contains("evaluate('K')"));
+      expect(body, contains('noerror: false'));
+    });
+
+    test('piecewise entry with noerror=true emits noerror: true', () {
+      final json = makePiecewiseJson([
+        {
+          'id': 'bar',
+          'type': 'piecewise',
+          'outputUnit': 'K',
+          'noerror': true,
+          'points': [
+            [0.0, 0.0],
+            [1.0, 1.0],
+          ],
+          'gnuUnitsSource': 'bar[K] noerror 0 0 1 1',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerPiecewiseFunctions');
+      expect(body, contains('noerror: true'));
+    });
+
+    test('piecewise entry emits points list', () {
+      final json = makePiecewiseJson([
+        {
+          'id': 'foo',
+          'type': 'piecewise',
+          'outputUnit': 'K',
+          'noerror': false,
+          'points': [
+            [1.0, 10.0],
+            [2.0, 20.0],
+          ],
+          'gnuUnitsSource': 'foo[K] 1 10.0 2 20.0',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerPiecewiseFunctions');
+      expect(body, contains('(1.0, 10.0)'));
+      expect(body, contains('(2.0, 20.0)'));
+    });
+
+    test(
+      'piecewise entry is not emitted as repo.register in _registerUnits',
+      () {
+        final json = makePiecewiseJson([
+          {
+            'id': 'gasmark',
+            'type': 'piecewise',
+            'outputUnit': 'degR',
+            'noerror': false,
+            'points': [
+              [1.0, 500.0],
+              [3.0, 650.0],
+            ],
+            'gnuUnitsSource': 'gasmark[degR] 1 500.0 3 650.0',
+            'source': {'file': 'defs.units', 'line': 1},
+          },
+        ]);
+        final code = generateDartCode(json);
+        final registerUnitsBody = _extractFunctionBody(code, '_registerUnits');
+        expect(registerUnitsBody, isNot(contains("'gasmark'")));
+      },
+    );
+
+    test('piecewise entry imports parser', () {
+      final json = makePiecewiseJson([
+        {
+          'id': 'foo',
+          'type': 'piecewise',
+          'outputUnit': 'K',
+          'noerror': false,
+          'points': [
+            [0.0, 0.0],
+            [1.0, 1.0],
+          ],
+          'gnuUnitsSource': 'foo[K] 0 0 1 1',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      expect(code, contains("import '../parser/expression_parser.dart'"));
+    });
+
+    test('no piecewise entries: registerPiecewiseFunctions not emitted', () {
+      final json = {
+        'units': <String, dynamic>{},
+        'prefixes': <String, dynamic>{},
+        'unsupported': <String, dynamic>{},
+      };
+      final code = generateDartCode(json);
+      expect(code, isNot(contains('registerPiecewiseFunctions')));
+    });
+  });
 }
 
 /// Extracts the text of a function call containing [id] from [code].

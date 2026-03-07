@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../../core/domain/models/quantity.dart';
+import '../../core/domain/utils.dart';
 import '../../features/settings/models/user_settings.dart';
 
 /// Formats a [Quantity] as a string with value and unit label.
@@ -56,24 +57,8 @@ String formatValue(
   };
 }
 
-String _formatAutomatic(double value, int precision) {
-  final result = value.toStringAsPrecision(precision);
-  final eIndex = result.indexOf('e');
-  final significand = eIndex == -1 ? result : result.substring(0, eIndex);
-  final suffix = eIndex == -1 ? '' : result.substring(eIndex);
-
-  if (significand.contains('.')) {
-    var trimmed = significand;
-    while (trimmed.endsWith('0')) {
-      trimmed = trimmed.substring(0, trimmed.length - 1);
-    }
-    if (trimmed.endsWith('.')) {
-      trimmed = trimmed.substring(0, trimmed.length - 1);
-    }
-    return '$trimmed$suffix';
-  }
-  return '$significand$suffix';
-}
+String _formatAutomatic(double value, int precision) =>
+    stripTrailingZeros(value.toStringAsPrecision(precision));
 
 /// Computes floor(log10(absValue)) robustly by cross-checking the
 /// floating-point log against a power-of-10 round-trip.

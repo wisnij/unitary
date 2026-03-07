@@ -13,8 +13,9 @@ const Set<String> _identifierExcludedChars = {
   '^',
   '(', ')',
   ',',
+  '~',
   // Additional excluded characters (not operator tokens, but invalid in unit names)
-  '[', ']', '{', '}', '<', '=', '>', '~', ';',
+  '[', ']', '{', '}', '<', '=', '>', ';',
 };
 
 /// Converts an input string into a list of [Token]s.
@@ -58,6 +59,7 @@ class Lexer {
   /// LPAR       = "("
   /// RPAR       = ")"
   /// COMMA      = ","
+  /// INVERSE    = "~"
   /// ```
   void _scanToken() {
     final startLine = _line;
@@ -110,6 +112,10 @@ class Lexer {
         );
       case ',':
         _tokens.add(Token(TokenType.comma, ',', null, startLine, startColumn));
+      case '~':
+        _tokens.add(
+          Token(TokenType.inverse, '~', null, startLine, startColumn),
+        );
       case '.':
         if (!_isAtEnd() && _isDigit(_peek())) {
           _scanNumber(startLine, startColumn);

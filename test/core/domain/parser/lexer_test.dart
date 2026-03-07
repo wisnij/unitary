@@ -764,4 +764,31 @@ void main() {
       expect(tokens[0].type, TokenType.eof);
     });
   });
+
+  group('Lexer: INVERSE token (~)', () {
+    test('tilde alone produces INVERSE token', () {
+      final tokens = lex('~');
+      expect(types(tokens), [TokenType.inverse]);
+      expect(tokens[0].lexeme, '~');
+    });
+
+    test('tilde before identifier does not merge into identifier', () {
+      final tokens = lex('~tempF');
+      expect(types(tokens), [TokenType.inverse, TokenType.identifier]);
+      expect(tokens[1].literal, 'tempF');
+    });
+
+    test('tilde in a full expression', () {
+      final tokens = lex('5 * ~tempF(300)');
+      expect(types(tokens), [
+        TokenType.number,
+        TokenType.times,
+        TokenType.inverse,
+        TokenType.identifier,
+        TokenType.leftParen,
+        TokenType.number,
+        TokenType.rightParen,
+      ]);
+    });
+  });
 }

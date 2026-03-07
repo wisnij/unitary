@@ -5,6 +5,7 @@ import 'package:unitary/core/domain/data/builtin_functions.dart';
 import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
+import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
@@ -747,6 +748,64 @@ void main() {
       final explicit = evalWithRepo('cm^3', repo);
       expect(shorthand.value, closeTo(explicit.value, 1e-10));
       expect(shorthand.dimension, explicit.dimension);
+    });
+  });
+
+  group('Evaluator: inverse function operator (~)', () {
+    // A simple invertible function: f(x) = 2x, f⁻¹(y) = y/2.
+    // Implemented as a PiecewiseFunction (the only built-in invertible type).
+    UnitRepository makeInvertibleRepo() {
+      final repo = UnitRepository();
+      registerBuiltinFunctions(repo);
+      repo.registerFunction(
+        PiecewiseFunction(
+          id: 'double',
+          points: [(0.0, 0.0), (100.0, 200.0)],
+          noerror: false,
+          outputUnit: Quantity.unity,
+        ),
+      );
+      return repo;
+    }
+
+    test('FunctionNode with inverse == false dispatches to call', () {
+      final repo = UnitRepository();
+      registerBuiltinFunctions(repo);
+      // sin(0) = 0 via call()
+      const node = FunctionNode('sin', [NumberNode(0.0)]);
+      final result = node.evaluate(EvalContext(repo: repo));
+      expect(result.value, closeTo(0.0, 1e-10));
+    });
+
+    test('FunctionNode with inverse == true dispatches to callInverse', () {
+      final repo = makeInvertibleRepo();
+      // double(x) = 2x; ~double(10) = 5
+      const node = FunctionNode(
+        'double',
+        [NumberNode(10.0)],
+        inverse: true,
+      );
+      final result = node.evaluate(EvalContext(repo: repo));
+      expect(result.value, closeTo(5.0, 1e-10));
+    });
+
+    test('~name(args) on non-invertible function throws EvalException', () {
+      // sin has hasInverse == false
+      expect(() => evalFn('~sin(1)'), throwsA(isA<EvalException>()));
+    });
+
+    test('end-to-end: ~double(10) evaluates to 5', () {
+      final repo = makeInvertibleRepo();
+      expect(evalWithRepo('~double(10)', repo).value, closeTo(5.0, 1e-10));
+    });
+
+    test('end-to-end: ~double(~double(x)) roundtrips correctly', () {
+      final repo = makeInvertibleRepo();
+      // ~double(~double(40)) = ~double(20) = 10
+      expect(
+        evalWithRepo('~double(~double(40))', repo).value,
+        closeTo(10.0, 1e-10),
+      );
     });
   });
 }

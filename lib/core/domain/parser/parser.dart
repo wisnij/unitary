@@ -18,8 +18,8 @@ import 'token.dart';
 /// power       = primary ( EXPONENT unary )*  [folded right-to-left]
 /// primary     = numexpr / LPAR expression RPAR / function / unit
 /// numexpr     = NUMBER ( DIVIDENUM NUMBER )*
-/// function    = IDENTIFIER LPAR arguments RPAR  [if known builtin function]
-/// unit        = IDENTIFIER                      [fallback if not function]
+/// function    = INVERSE? IDENTIFIER LPAR arguments RPAR  [if known builtin function]
+/// unit        = IDENTIFIER                               [fallback if not function]
 /// arguments   = expression ( COMMA expression )*
 /// ```
 ///
@@ -169,6 +169,10 @@ class Parser {
       return _identifierOrFunction();
     }
 
+    if (_check(TokenType.inverse)) {
+      return _inverseFunction();
+    }
+
     final token = _peek();
     throw ParseException(
       'Unexpected token: ${token.type == TokenType.eof ? '<end of input>' : token.lexeme}',
@@ -201,6 +205,43 @@ class Parser {
     }
 
     return left;
+  }
+
+  /// ```
+  /// inverseFunction = INVERSE IDENTIFIER LPAR arguments RPAR
+  /// ```
+  ///
+  /// Parses `~name(args)` as a [FunctionNode] with `inverse: true`.
+  /// Throws [ParseException] if `~` is not followed by a known function call.
+  ASTNode _inverseFunction() {
+    final inverseTok = _advance(); // consume '~'
+    if (!_check(TokenType.identifier)) {
+      throw ParseException(
+        'Expected function name after "~"',
+        line: inverseTok.line,
+        column: inverseTok.column,
+      );
+    }
+    final token = _advance();
+    final name = token.literal as String;
+    if (_repo?.findFunction(name) == null || !_check(TokenType.leftParen)) {
+      throw ParseException(
+        '"~" must be followed by a known function call: ~$name(...)',
+        line: token.line,
+        column: token.column,
+      );
+    }
+    _advance(); // consume '('
+    if (_check(TokenType.rightParen)) {
+      throw ParseException(
+        "Function '$name' requires at least one argument",
+        line: token.line,
+        column: token.column,
+      );
+    }
+    final args = _arguments();
+    _consume(TokenType.rightParen, "Expected ')' after function arguments");
+    return FunctionNode(name, args, inverse: true);
   }
 
   /// ```

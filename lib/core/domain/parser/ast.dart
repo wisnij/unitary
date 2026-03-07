@@ -142,11 +142,15 @@ class UnaryOpNode extends ASTNode {
 }
 
 /// A function call (e.g., sin(x), sqrt(x)).
+///
+/// When [inverse] is true, the call is dispatched to [UnitaryFunction.callInverse]
+/// instead of [UnitaryFunction.call], implementing the `~` operator.
 class FunctionNode extends ASTNode {
   final String name;
   final List<ASTNode> arguments;
+  final bool inverse;
 
-  const FunctionNode(this.name, this.arguments);
+  const FunctionNode(this.name, this.arguments, {this.inverse = false});
 
   @override
   Quantity evaluate(EvalContext context) {
@@ -161,11 +165,11 @@ class FunctionNode extends ASTNode {
       throw EvalException("Unknown function: '$name'");
     }
     final args = arguments.map((a) => a.evaluate(context)).toList();
-    return func.call(args);
+    return inverse ? func.callInverse(args) : func.call(args);
   }
 
   @override
-  String toString() => 'Function($name, $arguments)';
+  String toString() => 'Function($name, $arguments, inverse: $inverse)';
 }
 
 /// An affine unit application (e.g., tempF(60)).

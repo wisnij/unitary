@@ -14,6 +14,8 @@ enum TokenType {
   leftParen, // (
   rightParen, // )
   comma, // ,
+  // Prefix operators
+  inverse, // ~
   // Special
   eof, // end of input
 }

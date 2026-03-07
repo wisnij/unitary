@@ -803,4 +803,50 @@ void main() {
       expect((div.right as NumberNode).value, closeTo(math.log(256), 1e-10));
     });
   });
+
+  group('Parser: inverse function operator (~)', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerBuiltinFunctions(repo);
+    });
+
+    test('normal function call has inverse == false', () {
+      final node = parseWithRepo('sin(0)', repo);
+      expect(node, isA<FunctionNode>());
+      expect((node as FunctionNode).inverse, isFalse);
+    });
+
+    test('~name(args) produces FunctionNode with inverse == true', () {
+      final node = parseWithRepo('~sin(1)', repo);
+      expect(node, isA<FunctionNode>());
+      final fn = node as FunctionNode;
+      expect(fn.name, 'sin');
+      expect(fn.inverse, isTrue);
+    });
+
+    test('~name(args) with one argument', () {
+      final node = parseWithRepo('~sqrt(4)', repo);
+      expect(node, isA<FunctionNode>());
+      final fn = node as FunctionNode;
+      expect(fn.name, 'sqrt');
+      expect(fn.inverse, isTrue);
+      expect(fn.arguments.length, 1);
+    });
+
+    test('~ without following function call raises ParseException', () {
+      expect(
+        () => parseWithRepo('~42', repo),
+        throwsA(isA<ParseException>()),
+      );
+    });
+
+    test('~ followed by unknown identifier raises ParseException', () {
+      expect(
+        () => parseWithRepo('~notafunc(1)', repo),
+        throwsA(isA<ParseException>()),
+      );
+    });
+  });
 }

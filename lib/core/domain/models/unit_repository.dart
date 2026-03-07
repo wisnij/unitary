@@ -49,8 +49,8 @@ class UnitRepository {
   /// built-in functions.
   factory UnitRepository.withPredefinedUnits() {
     final repo = UnitRepository();
-    registerPredefinedUnits(repo);
     registerBuiltinFunctions(repo);
+    registerPredefinedUnits(repo);
     registerPiecewiseFunctions(repo);
     return repo;
   }

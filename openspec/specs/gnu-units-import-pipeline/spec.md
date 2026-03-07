@@ -87,7 +87,7 @@ SHALL record its source filename and 1-based line number.
 - **THEN** `type` is `"derived"` and `definition` holds the expression text
 
 #### Scenario: Unsupported (nonlinear) unit is detected
-- **WHEN** the unit name contains `(` (function-argument syntax, e.g.,
+- **WHEN** the unit name contains `(` but NOT `[` (function-argument syntax, e.g.,
   `tempC(x)`)
 - **THEN** `type` is `"unsupported"` and `reason` is `"nonlinear_definition"`
 
@@ -95,6 +95,11 @@ SHALL record its source filename and 1-based line number.
 - **WHEN** the unit name contains `[` (piecewise linear table syntax, e.g.,
   `gasmark[degR]`)
 - **THEN** `type` is `"piecewise"` (see "Piecewise entry parsing" requirement)
+- **AND** the entry is NOT placed in the unsupported section
+
+#### Scenario: Piecewise linear unit with parenthesized output is parsed (not unsupported)
+- **WHEN** the unit name contains both `[` and `(` (e.g., `plategauge[(oz/ft^2)/(480*lb/ft^3)]`)
+- **THEN** `type` is `"piecewise"` — the `[` check takes priority over the `(` check
 - **AND** the entry is NOT placed in the unsupported section
 
 #### Scenario: Source metadata is recorded

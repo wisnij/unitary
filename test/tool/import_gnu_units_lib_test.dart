@@ -499,6 +499,20 @@ void main() {
         expect(result[0].outputUnit, equals('0.99717g/cm^3'));
       });
 
+      test(
+        'piecewise: outputUnit with parentheses is classified as piecewise, not unsupported',
+        () {
+          // plategauge has '(' inside the brackets; the '[' check must take
+          // priority over the '(' (nonlinear) check.
+          const input =
+              'plategauge[(oz/ft^2)/(480*lb/ft^3)] 8 1.0 10 1.25 12 1.5\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result[0].type, equals('piecewise'));
+          expect(result[0].id, equals('plategauge'));
+          expect(result[0].outputUnit, equals('(oz/ft^2)/(480*lb/ft^3)'));
+        },
+      );
+
       test('piecewise: control points are parsed as (x, y) pairs', () {
         const input = 'foo[K] 1.0 10.0 2.0 20.0 3.0 30.0\n';
         final result = parseGnuUnitsFile(input, 'test.units');

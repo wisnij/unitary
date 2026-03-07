@@ -33393,6 +33393,110 @@
         ]
       ]
     },
+    "plategauge": {
+      "type": "piecewise",
+      "gnuUnitsSource": "plategauge[(oz/ft^2)/(480*lb/ft^3)] -5 300 1 180 14 50 16 40 17 36 20 24 26 12 31 7 36 4.5 38 4",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6528
+      },
+      "outputUnit": "(oz/ft^2)/(480*lb/ft^3)",
+      "noerror": false,
+      "points": [
+        [
+          -5.0,
+          300.0
+        ],
+        [
+          1.0,
+          180.0
+        ],
+        [
+          14.0,
+          50.0
+        ],
+        [
+          16.0,
+          40.0
+        ],
+        [
+          17.0,
+          36.0
+        ],
+        [
+          20.0,
+          24.0
+        ],
+        [
+          26.0,
+          12.0
+        ],
+        [
+          31.0,
+          7.0
+        ],
+        [
+          36.0,
+          4.5
+        ],
+        [
+          38.0,
+          4.0
+        ]
+      ]
+    },
+    "stdgauge": {
+      "type": "piecewise",
+      "gnuUnitsSource": "stdgauge[(oz/ft^2)/(501.84*lb/ft^3)] -5 300 1 180 14 50 16 40 17 36 20 24 26 12 31 7 36 4.5 38 4",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6542
+      },
+      "outputUnit": "(oz/ft^2)/(501.84*lb/ft^3)",
+      "noerror": false,
+      "points": [
+        [
+          -5.0,
+          300.0
+        ],
+        [
+          1.0,
+          180.0
+        ],
+        [
+          14.0,
+          50.0
+        ],
+        [
+          16.0,
+          40.0
+        ],
+        [
+          17.0,
+          36.0
+        ],
+        [
+          20.0,
+          24.0
+        ],
+        [
+          26.0,
+          12.0
+        ],
+        [
+          31.0,
+          7.0
+        ],
+        [
+          36.0,
+          4.5
+        ],
+        [
+          38.0,
+          4.0
+        ]
+      ]
+    },
     "zincgauge": {
       "type": "piecewise",
       "gnuUnitsSource": "zincgauge[in] 1 0.002 10 0.02 15 0.04 19 0.06 23 0.1 24 0.125 27 0.5 28 1",
@@ -78167,24 +78271,6 @@
       "source": {
         "file": "tool/gnu_units/definitions.units",
         "line": 6505
-      },
-      "reason": "nonlinear_definition"
-    },
-    "plategauge[(oz/ft^2)/(480*lb/ft^3)]": {
-      "type": "unsupported",
-      "gnuUnitsSource": "plategauge[(oz/ft^2)/(480*lb/ft^3)] -5 300 1 180 14 50 16 40 17 36 20 24 26 12 31 7 36 4.5 38 4",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6528
-      },
-      "reason": "nonlinear_definition"
-    },
-    "stdgauge[(oz/ft^2)/(501.84*lb/ft^3)]": {
-      "type": "unsupported",
-      "gnuUnitsSource": "stdgauge[(oz/ft^2)/(501.84*lb/ft^3)] -5 300 1 180 14 50 16 40 17 36 20 24 26 12 31 7 36 4.5 38 4",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6542
       },
       "reason": "nonlinear_definition"
     },

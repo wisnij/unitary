@@ -382,21 +382,10 @@ GnuEntry? _classifyLine(
     return null;
   }
 
-  // Check for unsupported types first (by name token shape).
-  if (nameToken.contains('(')) {
-    return GnuEntry(
-      id: nameToken,
-      type: 'unsupported',
-      definition: definitionText,
-      gnuUnitsSource: text,
-      filename: filename,
-      lineNumber: lineNumber,
-      isDimensionless: false,
-      target: null,
-      reason: 'nonlinear_definition',
-    );
-  }
-
+  // Check for piecewise functions before nonlinear definitions: a piecewise
+  // name token contains '[', and may also contain '(' in the output unit
+  // expression (e.g. plategauge[(oz/ft^2)/(480*lb/ft^3)]).  '[' is an
+  // unambiguous marker for piecewise entries, so check it first.
   if (nameToken.contains('[')) {
     // Piecewise-linear function: parse id, outputUnit, noerror, and control points.
     final bracketStart = nameToken.indexOf('[');
@@ -436,6 +425,21 @@ GnuEntry? _classifyLine(
       outputUnit: outputUnit,
       noerror: noerror,
       points: points,
+    );
+  }
+
+  // Unsupported nonlinear definition: name contains '(' but not '['.
+  if (nameToken.contains('(')) {
+    return GnuEntry(
+      id: nameToken,
+      type: 'unsupported',
+      definition: definitionText,
+      gnuUnitsSource: text,
+      filename: filename,
+      lineNumber: lineNumber,
+      isDimensionless: false,
+      target: null,
+      reason: 'nonlinear_definition',
     );
   }
 

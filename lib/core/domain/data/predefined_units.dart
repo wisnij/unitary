@@ -40463,6 +40463,54 @@ void registerPiecewiseFunctions(UnitRepository repo) {
     );
   }
   {
+    final output = ExpressionParser(
+      repo: repo,
+    ).evaluate('(oz/ft^2)/(480*lb/ft^3)');
+    repo.registerFunction(
+      PiecewiseFunction(
+        id: 'plategauge',
+        outputUnit: output,
+        noerror: false,
+        points: const [
+          (-5.0, 300.0),
+          (1.0, 180.0),
+          (14.0, 50.0),
+          (16.0, 40.0),
+          (17.0, 36.0),
+          (20.0, 24.0),
+          (26.0, 12.0),
+          (31.0, 7.0),
+          (36.0, 4.5),
+          (38.0, 4.0),
+        ],
+      ),
+    );
+  }
+  {
+    final output = ExpressionParser(
+      repo: repo,
+    ).evaluate('(oz/ft^2)/(501.84*lb/ft^3)');
+    repo.registerFunction(
+      PiecewiseFunction(
+        id: 'stdgauge',
+        outputUnit: output,
+        noerror: false,
+        points: const [
+          (-5.0, 300.0),
+          (1.0, 180.0),
+          (14.0, 50.0),
+          (16.0, 40.0),
+          (17.0, 36.0),
+          (20.0, 24.0),
+          (26.0, 12.0),
+          (31.0, 7.0),
+          (36.0, 4.5),
+          (38.0, 4.0),
+        ],
+      ),
+    );
+  }
+  {
     final output = ExpressionParser(repo: repo).evaluate('in');
     repo.registerFunction(
       PiecewiseFunction(

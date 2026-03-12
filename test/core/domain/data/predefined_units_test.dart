@@ -1,26 +1,17 @@
+import 'dart:math' as math;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/parser/ast.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 /// Units whose expressions use language features the evaluator does not yet
 /// support.  When support is added, remove the affected IDs and the test will
 /// confirm they now resolve correctly.
-const _knownEvalFailures = {
-  // Affine unit function-call syntax using units not registered in the repo.
-  // 'normaltemp' uses 'tempF(70)' but 'tempF' is not in units.json.
-  // 'S10' uses 'SB_degree(10)' but 'SB_degree' is not in units.json.
-  // 'ipv4classA/B/C' use 'ipv4subnetsize(N)' but 'ipv4subnetsize' is not in
-  // units.json.
-  // Fix: register these functions/units or inline their definitions.
-  'normaltemp',
-  'S10',
-  'ipv4classA',
-  'ipv4classB',
-  'ipv4classC',
-};
+const _knownEvalFailures = <String>{};
 
 void main() {
   late UnitRepository repo;
@@ -36,6 +27,59 @@ void main() {
 
     test('registers a nonzero number of prefixes', () {
       expect(repo.allPrefixes.length, greaterThan(0));
+    });
+  });
+
+  group('Defined functions', () {
+    late EvalContext ctx;
+
+    setUp(() {
+      ctx = EvalContext(repo: repo);
+    });
+
+    test('circlearea is registered as a DefinedFunction', () {
+      expect(repo.findFunction('circlearea'), isA<DefinedFunction>());
+    });
+
+    test('circlearea has arity 1 and an inverse', () {
+      final f = repo.findFunction('circlearea') as DefinedFunction;
+      expect(f.arity, 1);
+      expect(f.hasInverse, isTrue);
+    });
+
+    test('circlearea(3 m) returns pi*9 m^2', () {
+      final f = repo.findFunction('circlearea') as DefinedFunction;
+      final r = Quantity(3.0, Dimension({'m': 1}));
+      final result = f.call([r], ctx);
+      expect(result.value, closeTo(math.pi * 9.0, 1e-6));
+      expect(result.dimension, equals(Dimension({'m': 2})));
+    });
+
+    test('tempC is registered as a DefinedFunction', () {
+      expect(repo.findFunction('tempC'), isA<DefinedFunction>());
+    });
+
+    test('tempC has arity 1 and an inverse', () {
+      final f = repo.findFunction('tempC') as DefinedFunction;
+      expect(f.arity, 1);
+      expect(f.hasInverse, isTrue);
+    });
+
+    test('tempC(0) returns 273.15 K', () {
+      final f = repo.findFunction('tempC') as DefinedFunction;
+      final result = f.call([Quantity.dimensionless(0.0)], ctx);
+      expect(result.value, closeTo(273.15, 1e-6));
+      expect(result.dimension, equals(Dimension({'K': 1})));
+    });
+
+    test('windchill is registered as a DefinedFunction', () {
+      expect(repo.findFunction('windchill'), isA<DefinedFunction>());
+    });
+
+    test('windchill has arity 2 and no inverse', () {
+      final f = repo.findFunction('windchill') as DefinedFunction;
+      expect(f.arity, 2);
+      expect(f.hasInverse, isFalse);
     });
   });
 

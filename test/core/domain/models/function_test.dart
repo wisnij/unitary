@@ -1,8 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
+import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/parser/ast.dart';
 
 // Test double: a simple UnitaryFunction that returns its first argument.
 class _IdentityFunction extends UnitaryFunction {
@@ -21,10 +24,10 @@ class _IdentityFunction extends UnitaryFunction {
   bool get hasInverse => _hasInverse;
 
   @override
-  Quantity evaluate(List<Quantity> args) => args[0];
+  Quantity evaluate(List<Quantity> args, [Object? context]) => args[0];
 
   @override
-  Quantity evaluateInverse(List<Quantity> args) => args[0];
+  Quantity evaluateInverse(List<Quantity> args, [Object? context]) => args[0];
 }
 
 // Test double: returns a fixed output (for testing range validation).
@@ -42,7 +45,7 @@ class _FixedOutputFunction extends UnitaryFunction {
   bool get hasInverse => false;
 
   @override
-  Quantity evaluate(List<Quantity> args) => _output;
+  Quantity evaluate(List<Quantity> args, [Object? context]) => _output;
 }
 
 void main() {
@@ -72,14 +75,14 @@ void main() {
 
   group('QuantitySpec', () {
     test('all fields default to null', () {
-      final spec = QuantitySpec();
+      const spec = QuantitySpec();
       expect(spec.quantity, isNull);
       expect(spec.min, isNull);
       expect(spec.max, isNull);
     });
 
     test('acceptDimensionless defaults to false', () {
-      expect(QuantitySpec().acceptDimensionless, isFalse);
+      expect(const QuantitySpec().acceptDimensionless, isFalse);
     });
 
     test('stores quantity', () {
@@ -92,62 +95,62 @@ void main() {
     test('stores min and max bounds', () {
       const min = Bound(-1.0, closed: true);
       const max = Bound(1.0, closed: true);
-      final spec = QuantitySpec(min: min, max: max);
+      const spec = QuantitySpec(min: min, max: max);
       expect(spec.min, min);
       expect(spec.max, max);
     });
 
     test('stores acceptDimensionless = true', () {
-      final spec = QuantitySpec(acceptDimensionless: true);
+      const spec = QuantitySpec(acceptDimensionless: true);
       expect(spec.acceptDimensionless, isTrue);
     });
 
     group('isWithinBounds', () {
       test('no bounds: any value is within', () {
-        final spec = QuantitySpec();
+        const spec = QuantitySpec();
         expect(spec.isWithinBounds(0.0), isTrue);
         expect(spec.isWithinBounds(1e100), isTrue);
         expect(spec.isWithinBounds(-1e100), isTrue);
       });
 
       test('closed min: value above min is within', () {
-        final spec = QuantitySpec(min: const Bound(0.0, closed: true));
+        const spec = QuantitySpec(min: Bound(0.0, closed: true));
         expect(spec.isWithinBounds(0.0), isTrue);
         expect(spec.isWithinBounds(1.0), isTrue);
       });
 
       test('closed min: value below min is not within', () {
-        final spec = QuantitySpec(min: const Bound(0.0, closed: true));
+        const spec = QuantitySpec(min: Bound(0.0, closed: true));
         expect(spec.isWithinBounds(-0.001), isFalse);
       });
 
       test('open min: value at min is not within', () {
-        final spec = QuantitySpec(min: const Bound(0.0, closed: false));
+        const spec = QuantitySpec(min: Bound(0.0, closed: false));
         expect(spec.isWithinBounds(0.0), isFalse);
         expect(spec.isWithinBounds(0.001), isTrue);
       });
 
       test('closed max: value at max is within', () {
-        final spec = QuantitySpec(max: const Bound(1.0, closed: true));
+        const spec = QuantitySpec(max: Bound(1.0, closed: true));
         expect(spec.isWithinBounds(1.0), isTrue);
         expect(spec.isWithinBounds(0.0), isTrue);
       });
 
       test('closed max: value above max is not within', () {
-        final spec = QuantitySpec(max: const Bound(1.0, closed: true));
+        const spec = QuantitySpec(max: Bound(1.0, closed: true));
         expect(spec.isWithinBounds(1.001), isFalse);
       });
 
       test('open max: value at max is not within', () {
-        final spec = QuantitySpec(max: const Bound(1.0, closed: false));
+        const spec = QuantitySpec(max: Bound(1.0, closed: false));
         expect(spec.isWithinBounds(1.0), isFalse);
         expect(spec.isWithinBounds(0.999), isTrue);
       });
 
       test('closed min and max: value inside is within', () {
-        final spec = QuantitySpec(
-          min: const Bound(-1.0, closed: true),
-          max: const Bound(1.0, closed: true),
+        const spec = QuantitySpec(
+          min: Bound(-1.0, closed: true),
+          max: Bound(1.0, closed: true),
         );
         expect(spec.isWithinBounds(-1.0), isTrue);
         expect(spec.isWithinBounds(0.0), isTrue);
@@ -155,9 +158,9 @@ void main() {
       });
 
       test('closed min and max: value outside is not within', () {
-        final spec = QuantitySpec(
-          min: const Bound(-1.0, closed: true),
-          max: const Bound(1.0, closed: true),
+        const spec = QuantitySpec(
+          min: Bound(-1.0, closed: true),
+          max: Bound(1.0, closed: true),
         );
         expect(spec.isWithinBounds(-1.001), isFalse);
         expect(spec.isWithinBounds(1.001), isFalse);
@@ -166,49 +169,49 @@ void main() {
 
     group('boundsString', () {
       test('no bounds → (,)', () {
-        expect(QuantitySpec().boundsString(), '(,)');
+        expect(const QuantitySpec().boundsString(), '(,)');
       });
 
       test('closed min only → [0,)', () {
-        final spec = QuantitySpec(min: const Bound(0.0, closed: true));
+        const spec = QuantitySpec(min: Bound(0.0, closed: true));
         expect(spec.boundsString(), '[0,)');
       });
 
       test('open min only → (0,)', () {
-        final spec = QuantitySpec(min: const Bound(0.0, closed: false));
+        const spec = QuantitySpec(min: Bound(0.0, closed: false));
         expect(spec.boundsString(), '(0,)');
       });
 
       test('closed max only → (,5]', () {
-        final spec = QuantitySpec(max: const Bound(5.0, closed: true));
+        const spec = QuantitySpec(max: Bound(5.0, closed: true));
         expect(spec.boundsString(), '(,5]');
       });
 
       test('open max only → (,5)', () {
-        final spec = QuantitySpec(max: const Bound(5.0, closed: false));
+        const spec = QuantitySpec(max: Bound(5.0, closed: false));
         expect(spec.boundsString(), '(,5)');
       });
 
       test('closed min and max → [-1,1]', () {
-        final spec = QuantitySpec(
-          min: const Bound(-1.0, closed: true),
-          max: const Bound(1.0, closed: true),
+        const spec = QuantitySpec(
+          min: Bound(-1.0, closed: true),
+          max: Bound(1.0, closed: true),
         );
         expect(spec.boundsString(), '[-1,1]');
       });
 
       test('open min closed max → (0,1]', () {
-        final spec = QuantitySpec(
-          min: const Bound(0.0, closed: false),
-          max: const Bound(1.0, closed: true),
+        const spec = QuantitySpec(
+          min: Bound(0.0, closed: false),
+          max: Bound(1.0, closed: true),
         );
         expect(spec.boundsString(), '(0,1]');
       });
 
       test('closed min open max → [0,1)', () {
-        final spec = QuantitySpec(
-          min: const Bound(0.0, closed: true),
-          max: const Bound(1.0, closed: false),
+        const spec = QuantitySpec(
+          min: Bound(0.0, closed: true),
+          max: Bound(1.0, closed: false),
         );
         expect(spec.boundsString(), '[0,1)');
       });
@@ -373,7 +376,7 @@ void main() {
   group('UnitaryFunction: call() - min/max bound validation', () {
     test('value below closed min is rejected', () {
       final f = _IdentityFunction(
-        domain: [QuantitySpec(min: const Bound(-1.0, closed: true))],
+        domain: [const QuantitySpec(min: Bound(-1.0, closed: true))],
       );
       expect(
         () => f.call([Quantity.dimensionless(-2.0)]),
@@ -383,7 +386,7 @@ void main() {
 
     test('value equal to closed min is accepted', () {
       final f = _IdentityFunction(
-        domain: [QuantitySpec(min: const Bound(-1.0, closed: true))],
+        domain: [const QuantitySpec(min: Bound(-1.0, closed: true))],
       );
       expect(
         () => f.call([Quantity.dimensionless(-1.0)]),
@@ -393,7 +396,7 @@ void main() {
 
     test('value equal to open min is rejected', () {
       final f = _IdentityFunction(
-        domain: [QuantitySpec(min: const Bound(0.0, closed: false))],
+        domain: [const QuantitySpec(min: Bound(0.0, closed: false))],
       );
       expect(
         () => f.call([Quantity.dimensionless(0.0)]),
@@ -403,7 +406,7 @@ void main() {
 
     test('value above closed max is rejected', () {
       final f = _IdentityFunction(
-        domain: [QuantitySpec(max: const Bound(1.0, closed: true))],
+        domain: [const QuantitySpec(max: Bound(1.0, closed: true))],
       );
       expect(
         () => f.call([Quantity.dimensionless(2.0)]),
@@ -413,7 +416,7 @@ void main() {
 
     test('value equal to closed max is accepted', () {
       final f = _IdentityFunction(
-        domain: [QuantitySpec(max: const Bound(1.0, closed: true))],
+        domain: [const QuantitySpec(max: Bound(1.0, closed: true))],
       );
       expect(
         () => f.call([Quantity.dimensionless(1.0)]),
@@ -423,7 +426,7 @@ void main() {
 
     test('value equal to open max is rejected', () {
       final f = _IdentityFunction(
-        domain: [QuantitySpec(max: const Bound(1.0, closed: false))],
+        domain: [const QuantitySpec(max: Bound(1.0, closed: false))],
       );
       expect(
         () => f.call([Quantity.dimensionless(1.0)]),
@@ -452,7 +455,7 @@ void main() {
       final f = _FixedOutputFunction(
         id: 'limited',
         arity: 0,
-        range: QuantitySpec(max: const Bound(5.0, closed: true)),
+        range: const QuantitySpec(max: Bound(5.0, closed: true)),
         output: Quantity.dimensionless(10.0),
       );
       expect(
@@ -837,6 +840,217 @@ void main() {
           );
         },
       );
+    });
+  });
+
+  // -- DefinedFunction --
+
+  group('DefinedFunction: class properties', () {
+    test('arity equals params.length (single param)', () {
+      final f = DefinedFunction(
+        id: 'f',
+        params: ['x'],
+        forward: 'x',
+      );
+      expect(f.arity, equals(1));
+    });
+
+    test('arity equals params.length (multi-param)', () {
+      final f = DefinedFunction(
+        id: 'add',
+        params: ['x', 'y'],
+        forward: 'x + y',
+      );
+      expect(f.arity, equals(2));
+    });
+
+    test('hasInverse is true when inverse is provided', () {
+      final f = DefinedFunction(
+        id: 'f',
+        params: ['x'],
+        forward: 'x + 1',
+        inverse: 'f - 1',
+      );
+      expect(f.hasInverse, isTrue);
+    });
+
+    test('hasInverse is false when inverse is null', () {
+      final f = DefinedFunction(
+        id: 'f',
+        params: ['x'],
+        forward: 'x',
+      );
+      expect(f.hasInverse, isFalse);
+    });
+
+    test('multi-param function with non-null inverse throws ArgumentError', () {
+      expect(
+        () => DefinedFunction(
+          id: 'bad',
+          params: ['x', 'y'],
+          forward: 'x + y',
+          inverse: 'bad - 1',
+        ),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+  });
+
+  group('DefinedFunction: forward evaluation', () {
+    late UnitRepository repo;
+    late EvalContext ctx;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerPredefinedUnits(repo);
+      ctx = EvalContext(repo: repo);
+    });
+
+    test('single-param: doubles the argument', () {
+      final f = DefinedFunction(
+        id: 'double',
+        params: ['x'],
+        forward: '2 x',
+      );
+      final result = f.evaluate([Quantity.dimensionless(3.0)], ctx);
+      expect(result.value, closeTo(6.0, 1e-10));
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('multi-param: adds two arguments', () {
+      final f = DefinedFunction(
+        id: 'add',
+        params: ['x', 'y'],
+        forward: 'x + y',
+      );
+      final result = f.evaluate(
+        [Quantity.dimensionless(3.0), Quantity.dimensionless(4.0)],
+        ctx,
+      );
+      expect(result.value, closeTo(7.0, 1e-10));
+    });
+
+    test('null context throws EvalException', () {
+      final f = DefinedFunction(
+        id: 'f',
+        params: ['x'],
+        forward: 'x',
+      );
+      expect(
+        () => f.evaluate([Quantity.dimensionless(1.0)], null),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('call() with context evaluates correctly', () {
+      final f = DefinedFunction(
+        id: 'triple',
+        params: ['x'],
+        forward: '3 x',
+      );
+      final result = f.call([Quantity.dimensionless(2.0)], ctx);
+      expect(result.value, closeTo(6.0, 1e-10));
+    });
+  });
+
+  group('DefinedFunction: inverse evaluation', () {
+    late UnitRepository repo;
+    late EvalContext ctx;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerPredefinedUnits(repo);
+      ctx = EvalContext(repo: repo);
+    });
+
+    test(
+      'inverse recovers original: incr(x) = x + 1, incr_inv(y) = incr - 1',
+      () {
+        // Register the function so evaluating 'incr - 1' can reference 'incr' as a bound var.
+        final f = DefinedFunction(
+          id: 'incr',
+          params: ['x'],
+          forward: 'x + 1',
+          inverse: 'incr - 1',
+        );
+        repo.registerFunction(f);
+        // incr(3) = 4; incr_inv(4) should = 3
+        final result = f.callInverse([Quantity.dimensionless(4.0)], ctx);
+        expect(result.value, closeTo(3.0, 1e-10));
+      },
+    );
+
+    test('null context throws EvalException', () {
+      final f = DefinedFunction(
+        id: 'gfunc',
+        params: ['x'],
+        forward: 'x',
+        inverse: 'gfunc',
+      );
+      expect(
+        () => f.evaluateInverse([Quantity.dimensionless(1.0)], null),
+        throwsA(isA<EvalException>()),
+      );
+    });
+  });
+
+  group('DefinedFunction: recursion detection', () {
+    late UnitRepository repo;
+    late EvalContext ctx;
+
+    setUp(() {
+      repo = UnitRepository();
+      registerPredefinedUnits(repo);
+      ctx = EvalContext(repo: repo);
+    });
+
+    test('direct self-recursion throws EvalException (not stack overflow)', () {
+      final f = DefinedFunction(
+        id: 'selfref',
+        params: ['x'],
+        forward: 'selfref(x)',
+      );
+      repo.registerFunction(f);
+      expect(
+        () => f.call([Quantity.dimensionless(1.0)], ctx),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('mutual recursion throws EvalException', () {
+      final fa = DefinedFunction(
+        id: 'fa',
+        params: ['x'],
+        forward: 'fb(x)',
+      );
+      final fb = DefinedFunction(
+        id: 'fb',
+        params: ['x'],
+        forward: 'fa(x)',
+      );
+      repo.registerFunction(fa);
+      repo.registerFunction(fb);
+      expect(
+        () => fa.call([Quantity.dimensionless(1.0)], ctx),
+        throwsA(isA<EvalException>()),
+      );
+    });
+
+    test('non-recursive chain succeeds', () {
+      final fa = DefinedFunction(
+        id: 'addOne',
+        params: ['x'],
+        forward: 'x + 1',
+      );
+      final fb = DefinedFunction(
+        id: 'addTwo',
+        params: ['x'],
+        forward: 'addOne(x) + 1',
+      );
+      repo.registerFunction(fa);
+      repo.registerFunction(fb);
+      final result = fb.call([Quantity.dimensionless(5.0)], ctx);
+      expect(result.value, closeTo(7.0, 1e-10));
     });
   });
 }

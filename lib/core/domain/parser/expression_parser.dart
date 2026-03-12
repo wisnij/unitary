@@ -14,13 +14,18 @@ class ExpressionParser {
   /// detect circular definitions.
   final Set<String> visited;
 
-  ExpressionParser({this.repo, Set<String>? visited})
+  /// Optional variable bindings that shadow unit lookups during evaluation.
+  final Map<String, Quantity>? variables;
+
+  ExpressionParser({this.repo, Set<String>? visited, this.variables})
     : visited = visited ?? <String>{};
 
   /// Lex, parse, and evaluate an expression string.
   Quantity evaluate(String input) {
     final ast = parse(input);
-    return ast.evaluate(EvalContext(repo: repo, visited: visited));
+    return ast.evaluate(
+      EvalContext(repo: repo, visited: visited, variables: variables),
+    );
   }
 
   /// Lex and parse an expression string, returning the AST.

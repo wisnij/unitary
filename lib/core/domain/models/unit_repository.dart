@@ -52,6 +52,7 @@ class UnitRepository {
     registerBuiltinFunctions(repo);
     registerPredefinedUnits(repo);
     registerPiecewiseFunctions(repo);
+    registerDefinedFunctions(repo);
     return repo;
   }
 

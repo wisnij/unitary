@@ -9,6 +9,7 @@ import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
+import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/core/domain/parser/lexer.dart';
 import 'package:unitary/core/domain/parser/parser.dart';
 
@@ -806,6 +807,72 @@ void main() {
         evalWithRepo('~double(~double(40))', repo).value,
         closeTo(10.0, 1e-10),
       );
+    });
+  });
+
+  group('EvalContext.variables', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository.withPredefinedUnits();
+    });
+
+    Quantity evalWithVars(
+      String expr,
+      UnitRepository r,
+      Map<String, Quantity> vars,
+    ) {
+      final tokens = Lexer(expr).scanTokens();
+      final ast = Parser(tokens, repo: r).parse();
+      return ast.evaluate(EvalContext(repo: r, variables: vars));
+    }
+
+    test('variable name shadows a real unit', () {
+      // 'm' normally resolves as meter; bind it to a dimensionless 5 instead.
+      final vars = {'m': Quantity.dimensionless(5.0)};
+      final result = evalWithVars('m', repo, vars);
+      expect(result.value, closeTo(5.0, 1e-10));
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('name not in variables falls through to repo lookup', () {
+      final vars = {'x': Quantity.dimensionless(99.0)};
+      // 'm' is not in vars, so it should resolve to meter.
+      final result = evalWithVars('m', repo, vars);
+      expect(result.value, closeTo(1.0, 1e-10));
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+
+    test('null variables is transparent (no change in behavior)', () {
+      final tokens = Lexer('m').scanTokens();
+      final ast = Parser(tokens, repo: repo).parse();
+      // variables: null — should behave like a plain EvalContext.
+      final result = ast.evaluate(EvalContext(repo: repo));
+      expect(result.value, closeTo(1.0, 1e-10));
+      expect(result.dimension, Dimension({'m': 1}));
+    });
+  });
+
+  group('ExpressionParser with variables', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository.withPredefinedUnits();
+    });
+
+    test('bound name resolves to bound Quantity', () {
+      final vars = {'x': Quantity.dimensionless(7.0)};
+      final parser = ExpressionParser(repo: repo, variables: vars);
+      final result = parser.evaluate('x');
+      expect(result.value, closeTo(7.0, 1e-10));
+      expect(result.isDimensionless, isTrue);
+    });
+
+    test('expression using bound name evaluates correctly', () {
+      final vars = {'x': Quantity.dimensionless(3.0)};
+      final parser = ExpressionParser(repo: repo, variables: vars);
+      final result = parser.evaluate('2 x');
+      expect(result.value, closeTo(6.0, 1e-10));
     });
   });
 }

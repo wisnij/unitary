@@ -319,6 +319,19 @@
       "definition": "!",
       "isDimensionless": false
     },
+    "abs": {
+      "type": "defined_function",
+      "gnuUnitsSource": "abs(x) noerror sqrt(x^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 454
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "sqrt(x^2)",
+      "noerror": true
+    },
     "one": {
       "type": "derived",
       "gnuUnitsSource": "one 1",
@@ -3539,6 +3552,216 @@
       },
       "definition": "circle (seconds/day)"
     },
+    "circum": {
+      "type": "defined_function",
+      "gnuUnitsSource": "circum(r) units=[m;m] range=[0,) 2 pi r; circum/ 2 pi",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1039
+      },
+      "params": [
+        "r"
+      ],
+      "forward": "2 pi r",
+      "inverse": "circum/ 2 pi",
+      "domainUnits": [
+        "m"
+      ],
+      "rangeUnit": "m",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "circum_d": {
+      "type": "defined_function",
+      "gnuUnitsSource": "circum_d(d) units=[m;m] range=[0,) circum(d/2); 2 ~circum(circum_d)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1040
+      },
+      "params": [
+        "d"
+      ],
+      "forward": "circum(d/2)",
+      "inverse": "2 ~circum(circum_d)",
+      "domainUnits": [
+        "m"
+      ],
+      "rangeUnit": "m",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "circlearea": {
+      "type": "defined_function",
+      "gnuUnitsSource": "circlearea(r) units=[m;m^2] range=[0,) pi r^2 ; sqrt(circlearea/pi)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1041
+      },
+      "params": [
+        "r"
+      ],
+      "forward": "pi r^2",
+      "inverse": "sqrt(circlearea/pi)",
+      "domainUnits": [
+        "m"
+      ],
+      "rangeUnit": "m^2",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "circlearea_d": {
+      "type": "defined_function",
+      "gnuUnitsSource": "circlearea_d(d) units=[m;m^2] range=[0,) circlearea(d/2); 2 ~circlearea(circlearea_d)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1042
+      },
+      "params": [
+        "d"
+      ],
+      "forward": "circlearea(d/2)",
+      "inverse": "2 ~circlearea(circlearea_d)",
+      "domainUnits": [
+        "m"
+      ],
+      "rangeUnit": "m^2",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "spherevolume": {
+      "type": "defined_function",
+      "gnuUnitsSource": "spherevolume(r) units=[m;m^3] range=[0,) 4|3 pi r^3 ; cuberoot(spherevolume/4|3 pi)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1043
+      },
+      "params": [
+        "r"
+      ],
+      "forward": "4|3 pi r^3",
+      "inverse": "cuberoot(spherevolume/4|3 pi)",
+      "domainUnits": [
+        "m"
+      ],
+      "rangeUnit": "m^3",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "spherevolume_d": {
+      "type": "defined_function",
+      "gnuUnitsSource": "spherevolume_d(d) units=[m;m^3] range=[0,) spherevolume(d/2); 2 ~spherevolume(spherevolume_d)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1045
+      },
+      "params": [
+        "d"
+      ],
+      "forward": "spherevolume(d/2)",
+      "inverse": "2 ~spherevolume(spherevolume_d)",
+      "domainUnits": [
+        "m"
+      ],
+      "rangeUnit": "m^3",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "spherevol": {
+      "type": "function_alias",
+      "gnuUnitsSource": "spherevol() spherevolume",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1046
+      },
+      "target": "spherevolume"
+    },
+    "spherevol_d": {
+      "type": "function_alias",
+      "gnuUnitsSource": "spherevol_d() spherevolume_d",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1047
+      },
+      "target": "spherevolume_d"
+    },
+    "circumference": {
+      "type": "function_alias",
+      "gnuUnitsSource": "circumference() circum",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1048
+      },
+      "target": "circum"
+    },
+    "circumference_d": {
+      "type": "function_alias",
+      "gnuUnitsSource": "circumference_d() circum_d",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1049
+      },
+      "target": "circum_d"
+    },
+    "square": {
+      "type": "defined_function",
+      "gnuUnitsSource": "square(x) range=[0,) x^2 ; sqrt(square)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1050
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "x^2",
+      "inverse": "sqrt(square)",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "cube": {
+      "type": "defined_function",
+      "gnuUnitsSource": "cube(x) range=[0,) x^3 ; cube^(1|3)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1051
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "x^3",
+      "inverse": "cube^(1|3)",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "hypot": {
+      "type": "defined_function",
+      "gnuUnitsSource": "hypot(x,y) sqrt(x*x+y*y)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1052
+      },
+      "params": [
+        "x",
+        "y"
+      ],
+      "forward": "sqrt(x*x+y*y)",
+      "noerror": false
+    },
     "sphere": {
       "type": "derived",
       "gnuUnitsSource": "sphere 4 pi sr",
@@ -3753,6 +3976,27 @@
       },
       "definition": "1|1000"
     },
+    "pH": {
+      "type": "defined_function",
+      "gnuUnitsSource": "pH(x) units=[1;mol/liter] range=(0,) 10^(-x) mol/liter ; (-log(pH liters/mol))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1099
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "10^(-x) mol/liter",
+      "inverse": "(-log(pH liters/mol))",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "mol/liter",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
     "TEMPERATURE": {
       "type": "alias",
       "gnuUnitsSource": "TEMPERATURE kelvin",
@@ -3773,6 +4017,39 @@
       "definition": "kelvin",
       "target": "kelvin"
     },
+    "tempC": {
+      "type": "defined_function",
+      "gnuUnitsSource": "tempC(x) units=[1;K] domain=[-273.15,) range=[0,) x K + stdtemp ; (tempC +(-stdtemp))/K",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1139
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "x K + stdtemp",
+      "inverse": "(tempC +(-stdtemp))/K",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-273.15,)"
+      ],
+      "rangeUnit": "K",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "tempcelsius": {
+      "type": "function_alias",
+      "gnuUnitsSource": "tempcelsius() tempC",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1141
+      },
+      "target": "tempC"
+    },
     "degcelsius": {
       "type": "alias",
       "gnuUnitsSource": "degcelsius K",
@@ -3792,6 +4069,39 @@
       },
       "definition": "K",
       "target": "K"
+    },
+    "tempF": {
+      "type": "defined_function",
+      "gnuUnitsSource": "tempF(x) units=[1;K] domain=[-459.67,) range=[0,) (x+(-32)) degF + stdtemp ; (tempF+(-stdtemp))/degF + 32",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1157
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "(x+(-32)) degF + stdtemp",
+      "inverse": "(tempF+(-stdtemp))/degF + 32",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-459.67,)"
+      ],
+      "rangeUnit": "K",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "tempfahrenheit": {
+      "type": "function_alias",
+      "gnuUnitsSource": "tempfahrenheit() tempF",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1159
+      },
+      "target": "tempF"
     },
     "degfahrenheit": {
       "type": "derived",
@@ -3870,6 +4180,30 @@
       },
       "definition": "degrankine",
       "target": "degrankine"
+    },
+    "tempreaumur": {
+      "type": "defined_function",
+      "gnuUnitsSource": "tempreaumur(x) units=[1;K] domain=[-218.52,) range=[0,) x degreaumur+stdtemp ; (tempreaumur+(-stdtemp))/degreaumur",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1171
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "x degreaumur+stdtemp",
+      "inverse": "(tempreaumur+(-stdtemp))/degreaumur",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-218.52,)"
+      ],
+      "rangeUnit": "K",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
     },
     "degreaumur": {
       "type": "derived",
@@ -3967,6 +4301,142 @@
           959.67
         ]
       ]
+    },
+    "beaufort_WMO1100": {
+      "type": "defined_function",
+      "gnuUnitsSource": "beaufort_WMO1100(B) units=[1;m/s] domain=[0,17] range=[0,) 0.836 B^3|2 m/s; (beaufort_WMO1100 s / 0.836 m)^2|3",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1227
+      },
+      "params": [
+        "B"
+      ],
+      "forward": "0.836 B^3|2 m/s",
+      "inverse": "(beaufort_WMO1100 s / 0.836 m)^2|3",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[0,17]"
+      ],
+      "rangeUnit": "m/s",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "beaufort": {
+      "type": "defined_function",
+      "gnuUnitsSource": "beaufort(B) units=[1;m/s] domain=[0,17] range=[0,) beaufort_WMO1100(B); ~beaufort_WMO1100(beaufort)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1230
+      },
+      "params": [
+        "B"
+      ],
+      "forward": "beaufort_WMO1100(B)",
+      "inverse": "~beaufort_WMO1100(beaufort)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[0,17]"
+      ],
+      "rangeUnit": "m/s",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "windchill": {
+      "type": "defined_function",
+      "gnuUnitsSource": "windchill(T,speed) units=[K,mph] domain=[170,283.15],[3,) tempF( 35.74 + 0.6215 ~tempF(T) + - 35.75 (speed/mph)^0.16 + 0.4275 ~tempF(T) (speed/mph)^0.16 )",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1246
+      },
+      "params": [
+        "T",
+        "speed"
+      ],
+      "forward": "tempF( 35.74 + 0.6215 ~tempF(T) + - 35.75 (speed/mph)^0.16 + 0.4275 ~tempF(T) (speed/mph)^0.16 )",
+      "domainUnits": [
+        "K",
+        "mph"
+      ],
+      "domainBounds": [
+        "[170,283.15]",
+        "[3,)"
+      ],
+      "noerror": false
+    },
+    "windchillpower": {
+      "type": "defined_function",
+      "gnuUnitsSource": "windchillpower(T,speed) units=[K,mph] domain=[170,283.15],[3,) (12.1452 + 11.6222 sqrt(speed/(m/s)) +- 1.1622 speed/(m/s)) * (33 +- ~tempC(T)) W/m^2",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1256
+      },
+      "params": [
+        "T",
+        "speed"
+      ],
+      "forward": "(12.1452 + 11.6222 sqrt(speed/(m/s)) +- 1.1622 speed/(m/s)) * (33 +- ~tempC(T)) W/m^2",
+      "domainUnits": [
+        "K",
+        "mph"
+      ],
+      "domainBounds": [
+        "[170,283.15]",
+        "[3,)"
+      ],
+      "noerror": false
+    },
+    "heatindex": {
+      "type": "defined_function",
+      "gnuUnitsSource": "heatindex(T,H) units=[K,1] domain=[0,),[0,1] tempF(-42.379 + 1014.333127 H +- 548.1717 H^2 + (2.04901523 +- 22.475541 H + 8.5282 H^2) ~tempF(T) + (-0.00683783 + 0.122874 H +- 0.0199 H^2) ~tempF(T)^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1283
+      },
+      "params": [
+        "T",
+        "H"
+      ],
+      "forward": "tempF(-42.379 + 1014.333127 H +- 548.1717 H^2 + (2.04901523 +- 22.475541 H + 8.5282 H^2) ~tempF(T) + (-0.00683783 + 0.122874 H +- 0.0199 H^2) ~tempF(T)^2)",
+      "domainUnits": [
+        "K",
+        "1"
+      ],
+      "domainBounds": [
+        "[0,)",
+        "[0,1]"
+      ],
+      "noerror": false
+    },
+    "bmi": {
+      "type": "defined_function",
+      "gnuUnitsSource": "bmi(height,weight) units=[m,kg] domain=(0,)(0,) (weight/kg) / (height/m)^2",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 1302
+      },
+      "params": [
+        "height",
+        "weight"
+      ],
+      "forward": "(weight/kg) / (height/m)^2",
+      "domainUnits": [
+        "m",
+        "kg"
+      ],
+      "domainBounds": [
+        "(0,)",
+        "(0,)"
+      ],
+      "noerror": false
     },
     "pi": {
       "type": "derived",
@@ -7358,6 +7828,24 @@
       },
       "definition": "cd / pi ft^2"
     },
+    "bril": {
+      "type": "defined_function",
+      "gnuUnitsSource": "bril(x) units=[1;lambert] 2^(x+-100) lamberts ;log2(bril/lambert)+100",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2247
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "2^(x+-100) lamberts",
+      "inverse": "log2(bril/lambert)+100",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "lambert",
+      "noerror": false
+    },
     "sunlum": {
       "type": "derived",
       "gnuUnitsSource": "sunlum 1.6e9 cd/m^2",
@@ -7467,6 +7955,57 @@
       },
       "definition": "250 lx / lx s"
     },
+    "ev100": {
+      "type": "defined_function",
+      "gnuUnitsSource": "ev100(x) units=[1;cd/m^2] range=(0,) 2^x k1250 / s100; log2(ev100 s100/k1250)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2316
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "2^x k1250 / s100",
+      "inverse": "log2(ev100 s100/k1250)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "cd/m^2",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "EV100": {
+      "type": "function_alias",
+      "gnuUnitsSource": "EV100() ev100",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2317
+      },
+      "target": "ev100"
+    },
+    "iv100": {
+      "type": "defined_function",
+      "gnuUnitsSource": "iv100(x) units=[1;lx] range=(0,) 2^x c250 / s100; log2(iv100 s100 / c250)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2321
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "2^x c250 / s100",
+      "inverse": "log2(iv100 s100 / c250)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "lx",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
     "N_exif": {
       "type": "derived",
       "gnuUnitsSource": "N_exif 1|3.125 lx s",
@@ -7541,6 +8080,222 @@
       },
       "definition": "C_apex1961",
       "target": "C_apex1961"
+    },
+    "Av": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Av(A) units=[1;1] domain=[-2,) range=[0.5,) 2^(A/2); 2 log2(Av)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2410
+      },
+      "params": [
+        "A"
+      ],
+      "forward": "2^(A/2)",
+      "inverse": "2 log2(Av)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-2,)"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "[0.5,)"
+      ],
+      "noerror": false
+    },
+    "Tv": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Tv(t) units=[1;s] range=(0,) 2^(-t) s; log2(s / Tv)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2412
+      },
+      "params": [
+        "t"
+      ],
+      "forward": "2^(-t) s",
+      "inverse": "log2(s / Tv)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "s",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "Sval": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Sval(S) units=[1;1] range=(0,) 2^S / (N_speed/lx s); log2((N_speed/lx s) Sval)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2418
+      },
+      "params": [
+        "S"
+      ],
+      "forward": "2^S / (N_speed/lx s)",
+      "inverse": "log2((N_speed/lx s) Sval)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "Bv": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Bv(x) units=[1;cd/m^2] range=(0,) 2^x K_lum N_speed ; log2(Bv / (K_lum N_speed))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2421
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "2^x K_lum N_speed",
+      "inverse": "log2(Bv / (K_lum N_speed))",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "cd/m^2",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "Iv": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Iv(x) units=[1;lx] range=(0,) 2^x C_illum N_speed ; log2(Iv / (C_illum N_speed))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2425
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "2^x C_illum N_speed",
+      "inverse": "log2(Iv / (C_illum N_speed))",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "lx",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "Sx": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Sx(S) units=[1;1] domain=(0,) log2((N_speed/lx s) S); 2^Sx / (N_speed/lx s)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2430
+      },
+      "params": [
+        "S"
+      ],
+      "forward": "log2((N_speed/lx s) S)",
+      "inverse": "2^Sx / (N_speed/lx s)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "(0,)"
+      ],
+      "rangeUnit": "1",
+      "noerror": false
+    },
+    "Sdeg": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Sdeg(S) units=[1;1] range=(0,) 10^((S - 1) / 10) ; (1 + 10 log(Sdeg))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2435
+      },
+      "params": [
+        "S"
+      ],
+      "forward": "10^((S - 1) / 10)",
+      "inverse": "(1 + 10 log(Sdeg))",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "Sdin": {
+      "type": "function_alias",
+      "gnuUnitsSource": "Sdin() Sdeg",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2436
+      },
+      "target": "Sdeg"
+    },
+    "numericalaperture": {
+      "type": "defined_function",
+      "gnuUnitsSource": "numericalaperture(x) units=[1;1] domain=(0,1] range=[0.5,) 0.5 / x ; 0.5 / numericalaperture",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2451
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "0.5 / x",
+      "inverse": "0.5 / numericalaperture",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "(0,1]"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "[0.5,)"
+      ],
+      "noerror": false
+    },
+    "NA": {
+      "type": "function_alias",
+      "gnuUnitsSource": "NA() numericalaperture",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2453
+      },
+      "target": "numericalaperture"
+    },
+    "fnumber": {
+      "type": "defined_function",
+      "gnuUnitsSource": "fnumber(x) units=[1;1] domain=[0.5,) range=[0.5,) x ; fnumber",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2456
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "x",
+      "inverse": "fnumber",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[0.5,)"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "[0.5,)"
+      ],
+      "noerror": false
     },
     "TIME": {
       "type": "alias",
@@ -9095,6 +9850,46 @@
       "definition": "lunarparallax",
       "target": "lunarparallax"
     },
+    "airmass": {
+      "type": "defined_function",
+      "gnuUnitsSource": "airmass(alt) units=[degree;1] domain=[0,90] noerror 1 / (sin(alt) + 0.50572 (alt / degree + 6.07995)^-1.6364)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2957
+      },
+      "params": [
+        "alt"
+      ],
+      "forward": "1 / (sin(alt) + 0.50572 (alt / degree + 6.07995)^-1.6364)",
+      "domainUnits": [
+        "degree"
+      ],
+      "domainBounds": [
+        "[0,90]"
+      ],
+      "rangeUnit": "1",
+      "noerror": true
+    },
+    "airmassz": {
+      "type": "defined_function",
+      "gnuUnitsSource": "airmassz(zenith) units=[degree;1] domain=[0,90] noerror 1 / (cos(zenith) + 0.50572 (96.07995 - zenith / degree)^-1.6364)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2961
+      },
+      "params": [
+        "zenith"
+      ],
+      "forward": "1 / (cos(zenith) + 0.50572 (96.07995 - zenith / degree)^-1.6364)",
+      "domainUnits": [
+        "degree"
+      ],
+      "domainBounds": [
+        "[0,90]"
+      ],
+      "rangeUnit": "1",
+      "noerror": true
+    },
     "extinction_coeff": {
       "type": "derived",
       "gnuUnitsSource": "extinction_coeff 0.21",
@@ -9103,6 +9898,46 @@
         "line": 2970
       },
       "definition": "0.21"
+    },
+    "atm_transmission": {
+      "type": "defined_function",
+      "gnuUnitsSource": "atm_transmission(alt) units=[degree;1] domain=[0,90] noerror exp(-extinction_coeff airmass(alt))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2972
+      },
+      "params": [
+        "alt"
+      ],
+      "forward": "exp(-extinction_coeff airmass(alt))",
+      "domainUnits": [
+        "degree"
+      ],
+      "domainBounds": [
+        "[0,90]"
+      ],
+      "rangeUnit": "1",
+      "noerror": true
+    },
+    "atm_transmissionz": {
+      "type": "defined_function",
+      "gnuUnitsSource": "atm_transmissionz(zenith) units=[degree;1] domain=[0,90] noerror exp(-extinction_coeff airmassz(zenith))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 2976
+      },
+      "params": [
+        "zenith"
+      ],
+      "forward": "exp(-extinction_coeff airmassz(zenith))",
+      "domainUnits": [
+        "degree"
+      ],
+      "domainBounds": [
+        "[0,90]"
+      ],
+      "rangeUnit": "1",
+      "noerror": true
     },
     "moonvmag": {
       "type": "derived",
@@ -9139,6 +9974,162 @@
         "line": 2983
       },
       "definition": "asin(sunradius / sundist)"
+    },
+    "vmag": {
+      "type": "defined_function",
+      "gnuUnitsSource": "vmag(mag) units=[1;lx] domain=[,] range=(0,] 2.54e-6 lx 10^(-0.4 mag); -2.5 log(vmag / (2.54e-6 lx))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3004
+      },
+      "params": [
+        "mag"
+      ],
+      "forward": "2.54e-6 lx 10^(-0.4 mag)",
+      "inverse": "-2.5 log(vmag / (2.54e-6 lx))",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[,]"
+      ],
+      "rangeUnit": "lx",
+      "rangeBounds": [
+        "(0,]"
+      ],
+      "noerror": false
+    },
+    "SB_degree": {
+      "type": "defined_function",
+      "gnuUnitsSource": "SB_degree(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / squaredegree ; ~vmag(SB_degree squaredegree)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3026
+      },
+      "params": [
+        "sb"
+      ],
+      "forward": "vmag(sb) / squaredegree",
+      "inverse": "~vmag(SB_degree squaredegree)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[,]"
+      ],
+      "rangeUnit": "cd/m^2",
+      "rangeBounds": [
+        "(0,]"
+      ],
+      "noerror": false
+    },
+    "SB_minute": {
+      "type": "defined_function",
+      "gnuUnitsSource": "SB_minute(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / squareminute ; ~vmag(SB_minute squareminute)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3031
+      },
+      "params": [
+        "sb"
+      ],
+      "forward": "vmag(sb) / squareminute",
+      "inverse": "~vmag(SB_minute squareminute)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[,]"
+      ],
+      "rangeUnit": "cd/m^2",
+      "rangeBounds": [
+        "(0,]"
+      ],
+      "noerror": false
+    },
+    "SB_second": {
+      "type": "defined_function",
+      "gnuUnitsSource": "SB_second(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / squaresecond ; ~vmag(SB_second squaresecond)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3036
+      },
+      "params": [
+        "sb"
+      ],
+      "forward": "vmag(sb) / squaresecond",
+      "inverse": "~vmag(SB_second squaresecond)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[,]"
+      ],
+      "rangeUnit": "cd/m^2",
+      "rangeBounds": [
+        "(0,]"
+      ],
+      "noerror": false
+    },
+    "SB_sr": {
+      "type": "defined_function",
+      "gnuUnitsSource": "SB_sr(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / sr ; ~vmag(SB_sr sr)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3041
+      },
+      "params": [
+        "sb"
+      ],
+      "forward": "vmag(sb) / sr",
+      "inverse": "~vmag(SB_sr sr)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[,]"
+      ],
+      "rangeUnit": "cd/m^2",
+      "rangeBounds": [
+        "(0,]"
+      ],
+      "noerror": false
+    },
+    "SB": {
+      "type": "function_alias",
+      "gnuUnitsSource": "SB() SB_second",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3045
+      },
+      "target": "SB_second"
+    },
+    "SB_sec": {
+      "type": "function_alias",
+      "gnuUnitsSource": "SB_sec() SB_second",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3046
+      },
+      "target": "SB_second"
+    },
+    "SB_min": {
+      "type": "function_alias",
+      "gnuUnitsSource": "SB_min() SB_minute",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3047
+      },
+      "target": "SB_minute"
+    },
+    "SB_deg": {
+      "type": "function_alias",
+      "gnuUnitsSource": "SB_deg() SB_degree",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3048
+      },
+      "target": "SB_degree"
     },
     "S10": {
       "type": "derived",
@@ -11131,6 +12122,78 @@
       },
       "definition": "(3+7|12) inch"
     },
+    "shoesize_men": {
+      "type": "defined_function",
+      "gnuUnitsSource": "shoesize_men(n) units=[1;inch] shoe_men0 + n shoesize_delta ; (shoesize_men+(-shoe_men0))/shoesize_delta",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3593
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "shoe_men0 + n shoesize_delta",
+      "inverse": "(shoesize_men+(-shoe_men0))/shoesize_delta",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "inch",
+      "noerror": false
+    },
+    "shoesize_women": {
+      "type": "defined_function",
+      "gnuUnitsSource": "shoesize_women(n) units=[1;inch] shoe_women0 + n shoesize_delta ; (shoesize_women+(-shoe_women0))/shoesize_delta",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3595
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "shoe_women0 + n shoesize_delta",
+      "inverse": "(shoesize_women+(-shoe_women0))/shoesize_delta",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "inch",
+      "noerror": false
+    },
+    "shoesize_boys": {
+      "type": "defined_function",
+      "gnuUnitsSource": "shoesize_boys(n) units=[1;inch] shoe_boys0 + n shoesize_delta ; (shoesize_boys+(-shoe_boys0))/shoesize_delta",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3597
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "shoe_boys0 + n shoesize_delta",
+      "inverse": "(shoesize_boys+(-shoe_boys0))/shoesize_delta",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "inch",
+      "noerror": false
+    },
+    "shoesize_girls": {
+      "type": "defined_function",
+      "gnuUnitsSource": "shoesize_girls(n) units=[1;inch] shoe_girls0 + n shoesize_delta ; (shoesize_girls+(-shoe_girls0))/shoesize_delta",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3599
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "shoe_girls0 + n shoesize_delta",
+      "inverse": "(shoesize_girls+(-shoe_girls0))/shoesize_delta",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "inch",
+      "noerror": false
+    },
     "europeshoesize": {
       "type": "derived",
       "gnuUnitsSource": "europeshoesize 2|3 cm",
@@ -12480,6 +13543,30 @@
       "definition": "legaltablespoon",
       "target": "legaltablespoon"
     },
+    "scoop": {
+      "type": "defined_function",
+      "gnuUnitsSource": "scoop(n) units=[1;cup] domain=[4,100] range=[0.04,1] 32 usfloz / n ; 32 usfloz / scoop",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 3900
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "32 usfloz / n",
+      "inverse": "32 usfloz / scoop",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[4,100]"
+      ],
+      "rangeUnit": "cup",
+      "rangeBounds": [
+        "[0.04,1]"
+      ],
+      "noerror": false
+    },
     "number1can": {
       "type": "derived",
       "gnuUnitsSource": "number1can 10 usfloz",
@@ -13620,6 +14707,102 @@
         ]
       ]
     },
+    "sugar_bpe": {
+      "type": "defined_function",
+      "gnuUnitsSource": "sugar_bpe(T) units=[K;g/cm^3] domain=[0,39.1636] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(T)); sugar_conc_bpe(~brix(sugar_bpe))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4120
+      },
+      "params": [
+        "T"
+      ],
+      "forward": "brix(~sugar_conc_bpe(T))",
+      "inverse": "sugar_conc_bpe(~brix(sugar_bpe))",
+      "domainUnits": [
+        "K"
+      ],
+      "domainBounds": [
+        "[0,39.1636]"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[0.99717,1.5144619]"
+      ],
+      "noerror": false
+    },
+    "sugar_bp": {
+      "type": "defined_function",
+      "gnuUnitsSource": "sugar_bp(T) units=[K;g/cm^3] domain=[373.15,412.3136] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(T-tempC(100))) ; sugar_conc_bpe(~brix(sugar_bp))+tempC(100)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4123
+      },
+      "params": [
+        "T"
+      ],
+      "forward": "brix(~sugar_conc_bpe(T-tempC(100)))",
+      "inverse": "sugar_conc_bpe(~brix(sugar_bp))+tempC(100)",
+      "domainUnits": [
+        "K"
+      ],
+      "domainBounds": [
+        "[373.15,412.3136]"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[0.99717,1.5144619]"
+      ],
+      "noerror": false
+    },
+    "sugar_bpF": {
+      "type": "defined_function",
+      "gnuUnitsSource": "sugar_bpF(T) units=[1;g/cm^3] domain=[212,282.49448] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(tempF(T)+-tempC(100))) ; ~tempF(sugar_conc_bpe(~brix(sugar_bpF))+tempC(100))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4139
+      },
+      "params": [
+        "T"
+      ],
+      "forward": "brix(~sugar_conc_bpe(tempF(T)+-tempC(100)))",
+      "inverse": "~tempF(sugar_conc_bpe(~brix(sugar_bpF))+tempC(100))",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[212,282.49448]"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[0.99717,1.5144619]"
+      ],
+      "noerror": false
+    },
+    "sugar_bpC": {
+      "type": "defined_function",
+      "gnuUnitsSource": "sugar_bpC(T) units=[1;g/cm^3] domain=[100,139.1636] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(tempC(T)+-tempC(100))) ; ~tempC(sugar_conc_bpe(~brix(sugar_bpC))+tempC(100))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4142
+      },
+      "params": [
+        "T"
+      ],
+      "forward": "brix(~sugar_conc_bpe(tempC(T)+-tempC(100)))",
+      "inverse": "~tempC(sugar_conc_bpe(~brix(sugar_bpC))+tempC(100))",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[100,139.1636]"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[0.99717,1.5144619]"
+      ],
+      "noerror": false
+    },
     "baumeconst": {
       "type": "derived",
       "gnuUnitsSource": "baumeconst 145",
@@ -13628,6 +14811,78 @@
         "line": 4152
       },
       "definition": "145"
+    },
+    "baume": {
+      "type": "defined_function",
+      "gnuUnitsSource": "baume(d) units=[1;g/cm^3] domain=[0,145) range=[1,) (baumeconst/(baumeconst+-d)) g/cm^3 ; (baume+((-g)/cm^3)) baumeconst / baume",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4153
+      },
+      "params": [
+        "d"
+      ],
+      "forward": "(baumeconst/(baumeconst+-d)) g/cm^3",
+      "inverse": "(baume+((-g)/cm^3)) baumeconst / baume",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[0,145)"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[1,)"
+      ],
+      "noerror": false
+    },
+    "twaddell": {
+      "type": "defined_function",
+      "gnuUnitsSource": "twaddell(x) units=[1;g/cm^3] domain=[-200,) range=[0,) (1 + 0.005 x) g / cm^3 ; 200 (twaddell / (g/cm^3) +- 1)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4158
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "(1 + 0.005 x) g / cm^3",
+      "inverse": "200 (twaddell / (g/cm^3) +- 1)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-200,)"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "quevenne": {
+      "type": "defined_function",
+      "gnuUnitsSource": "quevenne(x) units=[1;g/cm^3] domain=[-1000,) range=[0,) (1 + 0.001 x) g / cm^3 ; 1000 (quevenne / (g/cm^3) +- 1)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4164
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "(1 + 0.001 x) g / cm^3",
+      "inverse": "1000 (quevenne / (g/cm^3) +- 1)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-1000,)"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
     },
     "brix": {
       "type": "piecewise",
@@ -14024,6 +15279,30 @@
           1.51876
         ]
       ]
+    },
+    "apidegree": {
+      "type": "defined_function",
+      "gnuUnitsSource": "apidegree(x) units=[1;g/cm^3] domain=[-131.5,) range=[0,) 141.5 g/cm^3 / (x+131.5) ; 141.5 (g/cm^3) / apidegree + (-131.5)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4202
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "141.5 g/cm^3 / (x+131.5)",
+      "inverse": "141.5 (g/cm^3) / apidegree + (-131.5)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-131.5,)"
+      ],
+      "rangeUnit": "g/cm^3",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
     },
     "wood_cherry": {
       "type": "derived",
@@ -17596,6 +18875,39 @@
       "definition": "cental",
       "target": "cental"
     },
+    "shotgungauge": {
+      "type": "defined_function",
+      "gnuUnitsSource": "shotgungauge(ga) units=[1;m] domain=(0,] range=(0,] 2 ~spherevol(1 pound / ga leaddensity) ; 1 pound / leaddensity spherevol(shotgungauge/2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4774
+      },
+      "params": [
+        "ga"
+      ],
+      "forward": "2 ~spherevol(1 pound / ga leaddensity)",
+      "inverse": "1 pound / leaddensity spherevol(shotgungauge/2)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "(0,]"
+      ],
+      "rangeUnit": "m",
+      "rangeBounds": [
+        "(0,]"
+      ],
+      "noerror": false
+    },
+    "shotgunga": {
+      "type": "function_alias",
+      "gnuUnitsSource": "shotgunga() shotgungauge",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 4777
+      },
+      "target": "shotgungauge"
+    },
     "caliber": {
       "type": "derived",
       "gnuUnitsSource": "caliber 0.01 inch",
@@ -19533,6 +20845,510 @@
         "line": 5162
       },
       "definition": "0.082 mm^2 / s"
+    },
+    "bel": {
+      "type": "defined_function",
+      "gnuUnitsSource": "bel(x) units=[1;1] range=(0,) 10^(x); log(bel)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5172
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "10^(x)",
+      "inverse": "log(bel)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "decibel": {
+      "type": "defined_function",
+      "gnuUnitsSource": "decibel(x) units=[1;1] range=(0,) 10^(x/10); 10 log(decibel)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5173
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "10^(x/10)",
+      "inverse": "10 log(decibel)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dB": {
+      "type": "function_alias",
+      "gnuUnitsSource": "dB() decibel",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5174
+      },
+      "target": "decibel"
+    },
+    "dBW": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBW(x) units=[1;W] range=(0,) dB(x) W ; ~dB(dBW/W)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5175
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(x) W",
+      "inverse": "~dB(dBW/W)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "W",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBk": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBk(x) units=[1;W] range=(0,) dB(x) kW ; ~dB(dBk/kW)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5176
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(x) kW",
+      "inverse": "~dB(dBk/kW)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "W",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBf": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBf(x) units=[1;W] range=(0,) dB(x) fW ; ~dB(dBf/fW)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5177
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(x) fW",
+      "inverse": "~dB(dBf/fW)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "W",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBm": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBm(x) units=[1;W] range=(0,) dB(x) mW ; ~dB(dBm/mW)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5178
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(x) mW",
+      "inverse": "~dB(dBm/mW)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "W",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBmW": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBmW(x) units=[1;W] range=(0,) dBm(x) ; ~dBm(dBmW)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5179
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dBm(x)",
+      "inverse": "~dBm(dBmW)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "W",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBJ": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBJ(x) units=[1;J] range=(0,) dB(x) J; ~dB(dBJ/J)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5180
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(x) J",
+      "inverse": "~dB(dBJ/J)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "J",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dB_amplitude": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dB_amplitude(x) units=[1;1] dB(0.5 x) ; ~dB(dB_amplitude^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5189
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x)",
+      "inverse": "~dB(dB_amplitude^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "noerror": false
+    },
+    "dBV": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBV(x) units=[1;V] range=(0,) dB(0.5 x) V;~dB(dBV^2 / V^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5190
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) V",
+      "inverse": "~dB(dBV^2 / V^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "V",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBmV": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBmV(x) units=[1;V] range=(0,) dB(0.5 x) mV;~dB(dBmV^2/mV^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5191
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) mV",
+      "inverse": "~dB(dBmV^2/mV^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "V",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBuV": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBuV(x) units=[1;V] range=(0,) dB(0.5 x) microV ; ~dB(dBuV^2 / microV^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5192
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) microV",
+      "inverse": "~dB(dBuV^2 / microV^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "V",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBA": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBA(x) units=[1;A] range=(0,) dB(0.5 x) A;~dB(dBA^2 / A^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5197
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) A",
+      "inverse": "~dB(dBA^2 / A^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "A",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBmA": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBmA(x) units=[1;A] range=(0,) dB(0.5 x) mA;~dB(dBmA^2/mA^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5198
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) mA",
+      "inverse": "~dB(dBmA^2/mA^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "A",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBuA": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBuA(x) units=[1;A] range=(0,) dB(0.5 x) microA ; ~dB(dBuA^2 / microA^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5199
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) microA",
+      "inverse": "~dB(dBuA^2 / microA^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "A",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBu": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBu(x) units=[1;V] range=(0,) dB(0.5 x) sqrt(mW 600 ohm) ; ~dB(dBu^2 / mW 600 ohm)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5205
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) sqrt(mW 600 ohm)",
+      "inverse": "~dB(dBu^2 / mW 600 ohm)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "V",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBv": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBv(x) units=[1;V] range=(0,) dBu(x) ; ~dBu(dBv)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5207
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dBu(x)",
+      "inverse": "~dBu(dBv)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "V",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBSPL": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBSPL(x) units=[1;Pa] range=(0,) dB(0.5 x) 20 microPa ; ~dB(dBSPL^2 / (20 microPa)^2)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5215
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(0.5 x) 20 microPa",
+      "inverse": "~dB(dBSPL^2 / (20 microPa)^2)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "Pa",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBSIL": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBSIL(x) units=[1;W/m^2] range=(0,) dB(x) 1e-12 W/m^2; ~dB(dBSIL / (1e-12 W/m^2))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5218
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(x) 1e-12 W/m^2",
+      "inverse": "~dB(dBSIL / (1e-12 W/m^2))",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "W/m^2",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "dBSWL": {
+      "type": "defined_function",
+      "gnuUnitsSource": "dBSWL(x) units=[1;W] range=(0,) dB(x) 1e-12 W; ~dB(dBSWL/1e-12 W)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5221
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "dB(x) 1e-12 W",
+      "inverse": "~dB(dBSWL/1e-12 W)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "W",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "neper": {
+      "type": "defined_function",
+      "gnuUnitsSource": "neper(x) units=[1;1] range=(0,) exp(x); ln(neper)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5230
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "exp(x)",
+      "inverse": "ln(neper)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "centineper": {
+      "type": "defined_function",
+      "gnuUnitsSource": "centineper(x) units=[1;1] range=(0,) exp(x/100); 100 ln(centineper)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5231
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "exp(x/100)",
+      "inverse": "100 ln(centineper)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "Np": {
+      "type": "function_alias",
+      "gnuUnitsSource": "Np() neper",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5232
+      },
+      "target": "neper"
+    },
+    "cNp": {
+      "type": "function_alias",
+      "gnuUnitsSource": "cNp() centineper",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5233
+      },
+      "target": "centineper"
+    },
+    "Np_power": {
+      "type": "defined_function",
+      "gnuUnitsSource": "Np_power(x) units=[1;1] Np(2 x) ; ~Np(Np_power)/2",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5234
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "Np(2 x)",
+      "inverse": "~Np(Np_power)/2",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "noerror": false
     },
     "ENTROPY": {
       "type": "derived",
@@ -21989,6 +23805,30 @@
       },
       "definition": "/ 1e9 hour"
     },
+    "ipv4subnetsize": {
+      "type": "defined_function",
+      "gnuUnitsSource": "ipv4subnetsize(prefix_len) units=[1;1] domain=[0,32] range=[1,4294967296] 2^(32-prefix_len) ; 32-log2(ipv4subnetsize)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5730
+      },
+      "params": [
+        "prefix_len"
+      ],
+      "forward": "2^(32-prefix_len)",
+      "inverse": "32-log2(ipv4subnetsize)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[0,32]"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "[1,4294967296]"
+      ],
+      "noerror": false
+    },
     "ipv4classA": {
       "type": "derived",
       "gnuUnitsSource": "ipv4classA ipv4subnetsize(8)",
@@ -22015,6 +23855,30 @@
         "line": 5734
       },
       "definition": "ipv4subnetsize(24)"
+    },
+    "ipv6subnetsize": {
+      "type": "defined_function",
+      "gnuUnitsSource": "ipv6subnetsize(prefix_len) units=[1;1] domain=[0,128] range=[1,340282366920938463463374607431768211456] 2^(128-prefix_len) ; 128-log2(ipv6subnetsize)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5736
+      },
+      "params": [
+        "prefix_len"
+      ],
+      "forward": "2^(128-prefix_len)",
+      "inverse": "128-log2(ipv6subnetsize)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[0,128]"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "[1,340282366920938463463374607431768211456]"
+      ],
+      "noerror": false
     },
     "octave": {
       "type": "derived",
@@ -22141,6 +24005,27 @@
         "line": 5765
       },
       "definition": "octave^(1|12)"
+    },
+    "musicalcent": {
+      "type": "defined_function",
+      "gnuUnitsSource": "musicalcent(x) units=[1;1] range=(0,) semitone^(x/100) ; 100 log(musicalcent)/log(semitone)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 5766
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "semitone^(x/100)",
+      "inverse": "100 log(musicalcent)/log(semitone)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
     },
     "wholenote": {
       "type": "primitive",
@@ -32385,6 +34270,63 @@
       },
       "definition": "2025.9166666666667"
     },
+    "USdollars_in": {
+      "type": "defined_function",
+      "gnuUnitsSource": "USdollars_in(date) units=[1;$] domain=[1913.0833333333333,2025.9166666666667] range=[1,33.07367346938776] US$ UScpi_now / UScpi(date) ; ~UScpi(US$ UScpi_now / USdollars_in)",
+      "source": {
+        "file": "tool/gnu_units/cpi.units",
+        "line": 1362
+      },
+      "params": [
+        "date"
+      ],
+      "forward": "US$ UScpi_now / UScpi(date)",
+      "inverse": "~UScpi(US$ UScpi_now / USdollars_in)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[1913.0833333333333,2025.9166666666667]"
+      ],
+      "rangeUnit": "$",
+      "rangeBounds": [
+        "[1,33.07367346938776]"
+      ],
+      "noerror": false
+    },
+    "USinflation_since": {
+      "type": "defined_function",
+      "gnuUnitsSource": "USinflation_since(date) units=[1;1] domain=[1913.0833333333333,2025.9166666666667] range=[1,33.07367346938776] UScpi_now / UScpi(date) ; ~UScpi(UScpi_now / USinflation_since)",
+      "source": {
+        "file": "tool/gnu_units/cpi.units",
+        "line": 1366
+      },
+      "params": [
+        "date"
+      ],
+      "forward": "UScpi_now / UScpi(date)",
+      "inverse": "~UScpi(UScpi_now / USinflation_since)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[1913.0833333333333,2025.9166666666667]"
+      ],
+      "rangeUnit": "1",
+      "rangeBounds": [
+        "[1,33.07367346938776]"
+      ],
+      "noerror": false
+    },
+    "USCPI": {
+      "type": "function_alias",
+      "gnuUnitsSource": "USCPI() UScpi",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6016
+      },
+      "target": "UScpi"
+    },
     "USCPI_now": {
       "type": "alias",
       "gnuUnitsSource": "USCPI_now UScpi_now",
@@ -32404,6 +34346,24 @@
       },
       "definition": "UScpi_lastdate",
       "target": "UScpi_lastdate"
+    },
+    "cpi": {
+      "type": "function_alias",
+      "gnuUnitsSource": "cpi() UScpi",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6019
+      },
+      "target": "UScpi"
+    },
+    "CPI": {
+      "type": "function_alias",
+      "gnuUnitsSource": "CPI() UScpi",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6020
+      },
+      "target": "UScpi"
     },
     "cpi_now": {
       "type": "alias",
@@ -32444,6 +34404,42 @@
       },
       "definition": "UScpi_lastdate",
       "target": "UScpi_lastdate"
+    },
+    "dollars_in": {
+      "type": "function_alias",
+      "gnuUnitsSource": "dollars_in() USdollars_in",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6031
+      },
+      "target": "USdollars_in"
+    },
+    "US$in": {
+      "type": "function_alias",
+      "gnuUnitsSource": "US$in() USdollars_in",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6032
+      },
+      "target": "USdollars_in"
+    },
+    "$in": {
+      "type": "function_alias",
+      "gnuUnitsSource": "$in() USdollars_in",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6033
+      },
+      "target": "USdollars_in"
+    },
+    "inflation_since": {
+      "type": "function_alias",
+      "gnuUnitsSource": "inflation_since() USinflation_since",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6038
+      },
+      "target": "USinflation_since"
     },
     "cord": {
       "type": "derived",
@@ -32800,6 +34796,54 @@
       },
       "definition": "mmHg / (ml/min)"
     },
+    "viscosity_air": {
+      "type": "defined_function",
+      "gnuUnitsSource": "viscosity_air(T) units=[K;Pa s] domain=[253.15,673.15] range=(0,) (2.791e-7 (T/K)^(0.7355)) Pa s; (((viscosity_air/(Pa s)) / 2.791e-7)^(1|0.7355)) K",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6136
+      },
+      "params": [
+        "T"
+      ],
+      "forward": "(2.791e-7 (T/K)^(0.7355)) Pa s",
+      "inverse": "(((viscosity_air/(Pa s)) / 2.791e-7)^(1|0.7355)) K",
+      "domainUnits": [
+        "K"
+      ],
+      "domainBounds": [
+        "[253.15,673.15]"
+      ],
+      "rangeUnit": "Pa s",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "viscosity_water": {
+      "type": "defined_function",
+      "gnuUnitsSource": "viscosity_water(T) units=[K;mPa s] domain=[0,) range=(0,) 0.02939 exp((507.88 K) / (T - 149.3 K)) mPa s; 149.3 K + (507.88 K) / ln(viscosity_water / (0.02939 mPa s))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6140
+      },
+      "params": [
+        "T"
+      ],
+      "forward": "0.02939 exp((507.88 K) / (T - 149.3 K)) mPa s",
+      "inverse": "149.3 K + (507.88 K) / ln(viscosity_water / (0.02939 mPa s))",
+      "domainUnits": [
+        "K"
+      ],
+      "domainBounds": [
+        "[0,)"
+      ],
+      "rangeUnit": "mPa s",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
     "viscosity_mercury": {
       "type": "derived",
       "gnuUnitsSource": "viscosity_mercury 1.526 mPa s",
@@ -32826,6 +34870,34 @@
         "line": 6146
       },
       "definition": "56.2 mPa s"
+    },
+    "reynolds": {
+      "type": "defined_function",
+      "gnuUnitsSource": "reynolds(density,speed,diam,visc) units=[DENSITY,SPEED,LENGTH,VISCOSITY] domain=(0,),[0,),(0,),(0,) density speed diam / visc",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6155
+      },
+      "params": [
+        "density",
+        "speed",
+        "diam",
+        "visc"
+      ],
+      "forward": "density speed diam / visc",
+      "domainUnits": [
+        "DENSITY",
+        "SPEED",
+        "LENGTH",
+        "VISCOSITY"
+      ],
+      "domainBounds": [
+        "(0,)",
+        "[0,)",
+        "(0,)",
+        "(0,)"
+      ],
+      "noerror": false
     },
     "minersinchAZ": {
       "type": "derived",
@@ -33154,6 +35226,166 @@
       },
       "definition": "6356766 m"
     },
+    "stdatmTH": {
+      "type": "defined_function",
+      "gnuUnitsSource": "stdatmTH(h) units=[m;K] domain=[-5000,11e3] range=[217,321] stdatmT0+(-lapserate h) ; (stdatmT0+(-stdatmTH))/lapserate",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6321
+      },
+      "params": [
+        "h"
+      ],
+      "forward": "stdatmT0+(-lapserate h)",
+      "inverse": "(stdatmT0+(-stdatmTH))/lapserate",
+      "domainUnits": [
+        "m"
+      ],
+      "domainBounds": [
+        "[-5000,11e3]"
+      ],
+      "rangeUnit": "K",
+      "rangeBounds": [
+        "[217,321]"
+      ],
+      "noerror": false
+    },
+    "stdatmT": {
+      "type": "defined_function",
+      "gnuUnitsSource": "stdatmT(z) units=[m;K] domain=[-5000,11e3] range=[217,321] stdatmTH(geop_ht(z)) ; ~geop_ht(~stdatmTH(stdatmT))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6325
+      },
+      "params": [
+        "z"
+      ],
+      "forward": "stdatmTH(geop_ht(z))",
+      "inverse": "~geop_ht(~stdatmTH(stdatmT))",
+      "domainUnits": [
+        "m"
+      ],
+      "domainBounds": [
+        "[-5000,11e3]"
+      ],
+      "rangeUnit": "K",
+      "rangeBounds": [
+        "[217,321]"
+      ],
+      "noerror": false
+    },
+    "stdatmPH": {
+      "type": "defined_function",
+      "gnuUnitsSource": "stdatmPH(h) units=[m;Pa] domain=[-5000,11e3] range=[22877,177764] atm (1 - (lapserate/stdatmT0) h)^(polyndx + 1) ; (stdatmT0/lapserate) (1+(-(stdatmPH/stdatmP0)^(1/(polyndx + 1))))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6334
+      },
+      "params": [
+        "h"
+      ],
+      "forward": "atm (1 - (lapserate/stdatmT0) h)^(polyndx + 1)",
+      "inverse": "(stdatmT0/lapserate) (1+(-(stdatmPH/stdatmP0)^(1/(polyndx + 1))))",
+      "domainUnits": [
+        "m"
+      ],
+      "domainBounds": [
+        "[-5000,11e3]"
+      ],
+      "rangeUnit": "Pa",
+      "rangeBounds": [
+        "[22877,177764]"
+      ],
+      "noerror": false
+    },
+    "stdatmP": {
+      "type": "defined_function",
+      "gnuUnitsSource": "stdatmP(z) units=[m;Pa] domain=[-5000,11e3] range=[22877,177764] stdatmPH(geop_ht(z)); ~geop_ht(~stdatmPH(stdatmP))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6339
+      },
+      "params": [
+        "z"
+      ],
+      "forward": "stdatmPH(geop_ht(z))",
+      "inverse": "~geop_ht(~stdatmPH(stdatmP))",
+      "domainUnits": [
+        "m"
+      ],
+      "domainBounds": [
+        "[-5000,11e3]"
+      ],
+      "rangeUnit": "Pa",
+      "rangeBounds": [
+        "[22877,177764]"
+      ],
+      "noerror": false
+    },
+    "geop_ht": {
+      "type": "defined_function",
+      "gnuUnitsSource": "geop_ht(z) units=[m;m] domain=[-5000,) range=[-5004,) (earthradUSAtm z) / (earthradUSAtm + z) ; (earthradUSAtm geop_ht) / (earthradUSAtm + (-geop_ht))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6347
+      },
+      "params": [
+        "z"
+      ],
+      "forward": "(earthradUSAtm z) / (earthradUSAtm + z)",
+      "inverse": "(earthradUSAtm geop_ht) / (earthradUSAtm + (-geop_ht))",
+      "domainUnits": [
+        "m"
+      ],
+      "domainBounds": [
+        "[-5000,)"
+      ],
+      "rangeUnit": "m",
+      "rangeBounds": [
+        "[-5004,)"
+      ],
+      "noerror": false
+    },
+    "g_phi": {
+      "type": "defined_function",
+      "gnuUnitsSource": "g_phi(lat) units=[deg;m/s2] domain=[0,90] noerror 980.6160e-2 (1+(-0.0026373) cos(2 lat)+0.0000059 cos(2 lat)^2) m/s2",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6361
+      },
+      "params": [
+        "lat"
+      ],
+      "forward": "980.6160e-2 (1+(-0.0026373) cos(2 lat)+0.0000059 cos(2 lat)^2) m/s2",
+      "domainUnits": [
+        "deg"
+      ],
+      "domainBounds": [
+        "[0,90]"
+      ],
+      "rangeUnit": "m/s2",
+      "noerror": true
+    },
+    "earthradius_eff": {
+      "type": "defined_function",
+      "gnuUnitsSource": "earthradius_eff(lat) units=[deg;m] domain=[0,90] noerror m 2 9.780356 (1+0.0052885 sin(lat)^2+(-0.0000059) sin(2 lat)^2) / (3.085462e-6 + 2.27e-9 cos(2 lat) + (-2e-12) cos(4 lat))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6367
+      },
+      "params": [
+        "lat"
+      ],
+      "forward": "m 2 9.780356 (1+0.0052885 sin(lat)^2+(-0.0000059) sin(2 lat)^2) / (3.085462e-6 + 2.27e-9 cos(2 lat) + (-2e-12) cos(4 lat))",
+      "domainUnits": [
+        "deg"
+      ],
+      "domainBounds": [
+        "[0,90]"
+      ],
+      "rangeUnit": "m",
+      "noerror": true
+    },
     "Patm": {
       "type": "alias",
       "gnuUnitsSource": "Patm atm",
@@ -33163,6 +35395,54 @@
       },
       "definition": "atm",
       "target": "atm"
+    },
+    "gaugepressure": {
+      "type": "defined_function",
+      "gnuUnitsSource": "gaugepressure(x) units=[Pa;Pa] domain=[-101325,) range=[0,) x + Patm ; gaugepressure+(-Patm)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6398
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "x + Patm",
+      "inverse": "gaugepressure+(-Patm)",
+      "domainUnits": [
+        "Pa"
+      ],
+      "domainBounds": [
+        "[-101325,)"
+      ],
+      "rangeUnit": "Pa",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
+    },
+    "psig": {
+      "type": "defined_function",
+      "gnuUnitsSource": "psig(x) units=[1;Pa] domain=[-14.6959487755135,) range=[0,) gaugepressure(x psi) ; ~gaugepressure(psig) / psi",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6401
+      },
+      "params": [
+        "x"
+      ],
+      "forward": "gaugepressure(x psi)",
+      "inverse": "~gaugepressure(psig) / psi",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-14.6959487755135,)"
+      ],
+      "rangeUnit": "Pa",
+      "rangeBounds": [
+        "[0,)"
+      ],
+      "noerror": false
     },
     "seawater": {
       "type": "derived",
@@ -33317,6 +35597,84 @@
       },
       "definition": "(-6)"
     },
+    "wiregauge": {
+      "type": "defined_function",
+      "gnuUnitsSource": "wiregauge(g) units=[1;m] range=(0,) 1|200 92^((36+(-g))/39) in; 36+(-39)ln(200 wiregauge/in)/ln(92)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6465
+      },
+      "params": [
+        "g"
+      ],
+      "forward": "1|200 92^((36+(-g))/39) in",
+      "inverse": "36+(-39)ln(200 wiregauge/in)/ln(92)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "m",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "wirega": {
+      "type": "function_alias",
+      "gnuUnitsSource": "wirega() wiregauge",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6467
+      },
+      "target": "wiregauge"
+    },
+    "awg": {
+      "type": "function_alias",
+      "gnuUnitsSource": "awg() wiregauge",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6468
+      },
+      "target": "wiregauge"
+    },
+    "wiregaugeA": {
+      "type": "defined_function",
+      "gnuUnitsSource": "wiregaugeA(ga) units=[1;m^2] range=(0,) circlearea_d(awg(ga)); ~awg(~circlearea_d(wiregaugeA))",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6476
+      },
+      "params": [
+        "ga"
+      ],
+      "forward": "circlearea_d(awg(ga))",
+      "inverse": "~awg(~circlearea_d(wiregaugeA))",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "m^2",
+      "rangeBounds": [
+        "(0,)"
+      ],
+      "noerror": false
+    },
+    "wiregaA": {
+      "type": "function_alias",
+      "gnuUnitsSource": "wiregaA() wiregaugeA",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6480
+      },
+      "target": "wiregaugeA"
+    },
+    "awgA": {
+      "type": "function_alias",
+      "gnuUnitsSource": "awgA() wiregaugeA",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6481
+      },
+      "target": "wiregaugeA"
+    },
     "brwiregauge": {
       "type": "piecewise",
       "gnuUnitsSource": "brwiregauge[in] -6 0.5 -5 0.464 -3 0.4 -2 0.372 3 0.252 6 0.192 10 0.128 14 0.08 19 0.04 23 0.024 26 0.018 28 0.0148 30 0.0124 39 0.0052 49 0.0012 50 0.001",
@@ -33392,6 +35750,15 @@
           0.001
         ]
       ]
+    },
+    "swg": {
+      "type": "function_alias",
+      "gnuUnitsSource": "swg() brwiregauge",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6505
+      },
+      "target": "brwiregauge"
     },
     "plategauge": {
       "type": "piecewise",
@@ -34211,6 +36578,30 @@
       },
       "definition": "0.413 in"
     },
+    "screwgauge": {
+      "type": "defined_function",
+      "gnuUnitsSource": "screwgauge(g) units=[1;m] domain=[-3,24] range=[0.0005334,0.0094488] (.06 + .013 g) in ; (screwgauge/in + (-.06)) / .013",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6730
+      },
+      "params": [
+        "g"
+      ],
+      "forward": "(.06 + .013 g) in",
+      "inverse": "(screwgauge/in + (-.06)) / .013",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[-3,24]"
+      ],
+      "rangeUnit": "m",
+      "rangeBounds": [
+        "[0.0005334,0.0094488]"
+      ],
+      "noerror": false
+    },
     "npsOD": {
       "type": "piecewise",
       "gnuUnitsSource": "npsOD[in] 0.125 0.405 0.25 0.540 0.375 0.675 0.5 0.840 0.75 1.050 1 1.315 1.25 1.660 1.5 1.900 2 2.375 2.5 2.875 3 3.500 3.5 4.000 4 4.500 5 5.563 6 6.625 8 8.625 10 10.750 12 12.750 14 14.000 16 16.000 18 18.000 20 20.000 24 24.000",
@@ -34731,6 +37122,51 @@
         ]
       ]
     },
+    "ipsOD": {
+      "type": "function_alias",
+      "gnuUnitsSource": "ipsOD() npsOD",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6882
+      },
+      "target": "npsOD"
+    },
+    "ips40": {
+      "type": "function_alias",
+      "gnuUnitsSource": "ips40() nps40",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6883
+      },
+      "target": "nps40"
+    },
+    "ips80": {
+      "type": "function_alias",
+      "gnuUnitsSource": "ips80() nps80",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6884
+      },
+      "target": "nps80"
+    },
+    "ips40s": {
+      "type": "function_alias",
+      "gnuUnitsSource": "ips40s() nps40s",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6885
+      },
+      "target": "nps40s"
+    },
+    "ips80s": {
+      "type": "function_alias",
+      "gnuUnitsSource": "ips80s() nps80s",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6886
+      },
+      "target": "nps80s"
+    },
     "DN": {
       "type": "piecewise",
       "gnuUnitsSource": "DN[1] 6 0.125 8 0.25 10 0.375 15 0.5 20 0.75 25 1 32 1.25 40 1.5 50 2 65 2.5 80 3 90 3.5 100 4 115 4.5 125 5 150 6 200 8 250 10 300 12 350 14 400 16 450 18 500 20 550 22 600 24",
@@ -34842,6 +37278,24 @@
           24.0
         ]
       ]
+    },
+    "NB": {
+      "type": "function_alias",
+      "gnuUnitsSource": "NB() DN",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6919
+      },
+      "target": "DN"
+    },
+    "NW": {
+      "type": "function_alias",
+      "gnuUnitsSource": "NW() DN",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 6920
+      },
+      "target": "DN"
     },
     "copperTubeOD": {
       "type": "piecewise",
@@ -35230,6 +37684,51 @@
           3.905
         ]
       ]
+    },
+    "copperOD": {
+      "type": "function_alias",
+      "gnuUnitsSource": "copperOD() copperTubeOD",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7028
+      },
+      "target": "copperTubeOD"
+    },
+    "copperK": {
+      "type": "function_alias",
+      "gnuUnitsSource": "copperK() copperTypeK",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7029
+      },
+      "target": "copperTypeK"
+    },
+    "copperL": {
+      "type": "function_alias",
+      "gnuUnitsSource": "copperL() copperTypeL",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7030
+      },
+      "target": "copperTypeL"
+    },
+    "copperM": {
+      "type": "function_alias",
+      "gnuUnitsSource": "copperM() copperTypeM",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7031
+      },
+      "target": "copperTypeM"
+    },
+    "copperACR": {
+      "type": "function_alias",
+      "gnuUnitsSource": "copperACR() copperTypeACR",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7032
+      },
+      "target": "copperTypeACR"
     },
     "grit_P": {
       "type": "piecewise",
@@ -35679,6 +38178,15 @@
         ]
       ]
     },
+    "grit_ansibonded": {
+      "type": "function_alias",
+      "gnuUnitsSource": "grit_ansibonded() ansibonded",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7197
+      },
+      "target": "ansibonded"
+    },
     "ansicoated": {
       "type": "piecewise",
       "gnuUnitsSource": "ansicoated[micron] noerror 4 4890 5 4125 6 3460 7 2900 8 2460 10 2085 12 1765 14 1470 16 1230 20 1040 22 885 24 745 30 625 36 525 40 438 46 370 54 310 60 260 70 218 80 185 90 154 100 129 120 109 150 82 180 69 220 58 240 50 280 39.5 320 29.5 360 23 400 18.25 500 13.9 600 10.55 800 11.5 1000 9.5 2000 7.2 2500 5.5 3000 4 4000 3 6000 2 8000 1.2",
@@ -35854,6 +38362,15 @@
           1.2
         ]
       ]
+    },
+    "grit_ansicoated": {
+      "type": "function_alias",
+      "gnuUnitsSource": "grit_ansicoated() ansicoated",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7253
+      },
+      "target": "ansicoated"
     },
     "jisgrit": {
       "type": "piecewise",
@@ -36602,6 +39119,15 @@
         ]
       ]
     },
+    "meshUS": {
+      "type": "function_alias",
+      "gnuUnitsSource": "meshUS() sieve",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7442
+      },
+      "target": "sieve"
+    },
     "meshbritish": {
       "type": "piecewise",
       "gnuUnitsSource": "meshbritish[micron] 3 5657 3.5 4757 4 4000 5 3364 6 2828 7 2378 8 2000 10 1682 12 1414 14 1189 16 1000 18 841 22 707 25 595 30 500 36 420 44 354 52 297 60 250 72 210 85 177 100 149 120 125 150 105 170 88 200 74 240 63 300 53 350 44 400 37",
@@ -36833,6 +39359,30 @@
           5000.0
         ]
       ]
+    },
+    "ringsize": {
+      "type": "defined_function",
+      "gnuUnitsSource": "ringsize(n) units=[1;in] domain=[2,) range=[1.6252,) (1.4216+.1018 n) in ; (ringsize/in + (-1.4216))/.1018",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7533
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "(1.4216+.1018 n) in",
+      "inverse": "(ringsize/in + (-1.4216))/.1018",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[2,)"
+      ],
+      "rangeUnit": "in",
+      "rangeBounds": [
+        "[1.6252,)"
+      ],
+      "noerror": false
     },
     "sizeAring": {
       "type": "derived",
@@ -37067,6 +39617,48 @@
         "line": 7569
       },
       "definition": "68.75 mm"
+    },
+    "jpringsize": {
+      "type": "defined_function",
+      "gnuUnitsSource": "jpringsize(n) units=[1;mm] domain=[1,) range=[0.040840704,) (38|3 + n/3) pi mm ; 3 jpringsize/ pi mm + (-38)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7575
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "(38|3 + n/3) pi mm",
+      "inverse": "3 jpringsize/ pi mm + (-38)",
+      "domainUnits": [
+        "1"
+      ],
+      "domainBounds": [
+        "[1,)"
+      ],
+      "rangeUnit": "mm",
+      "rangeBounds": [
+        "[0.040840704,)"
+      ],
+      "noerror": false
+    },
+    "euringsize": {
+      "type": "defined_function",
+      "gnuUnitsSource": "euringsize(n) units=[1;mm] (n+40) mm ; euringsize/mm + (-40)",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 7580
+      },
+      "params": [
+        "n"
+      ],
+      "forward": "(n+40) mm",
+      "inverse": "euringsize/mm + (-40)",
+      "domainUnits": [
+        "1"
+      ],
+      "rangeUnit": "mm",
+      "noerror": false
     },
     "mph": {
       "type": "derived",
@@ -75844,6 +78436,15 @@
       },
       "definition": "C/kg"
     },
+    "㏈": {
+      "type": "function_alias",
+      "gnuUnitsSource": "㏈() dB",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 8905
+      },
+      "target": "dB"
+    },
     "㏉": {
       "type": "alias",
       "gnuUnitsSource": "㏉ Gy",
@@ -75930,6 +78531,15 @@
       },
       "definition": "mol",
       "target": "mol"
+    },
+    "㏗": {
+      "type": "function_alias",
+      "gnuUnitsSource": "㏗() pH",
+      "source": {
+        "file": "tool/gnu_units/definitions.units",
+        "line": 8920
+      },
+      "target": "pH"
     },
     "㏙": {
       "type": "alias",
@@ -77139,1329 +79749,5 @@
       "target": "micro"
     }
   },
-  "unsupported": {
-    "abs(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "abs(x) noerror sqrt(x^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 454
-      },
-      "reason": "nonlinear_definition"
-    },
-    "circum(r)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "circum(r) units=[m;m] range=[0,) 2 pi r; circum/ 2 pi",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1039
-      },
-      "reason": "nonlinear_definition"
-    },
-    "circum_d(d)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "circum_d(d) units=[m;m] range=[0,) circum(d/2); 2 ~circum(circum_d)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1040
-      },
-      "reason": "nonlinear_definition"
-    },
-    "circlearea(r)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "circlearea(r) units=[m;m^2] range=[0,) pi r^2 ; sqrt(circlearea/pi)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1041
-      },
-      "reason": "nonlinear_definition"
-    },
-    "circlearea_d(d)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "circlearea_d(d) units=[m;m^2] range=[0,) circlearea(d/2); 2 ~circlearea(circlearea_d)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1042
-      },
-      "reason": "nonlinear_definition"
-    },
-    "spherevolume(r)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "spherevolume(r) units=[m;m^3] range=[0,) 4|3 pi r^3 ; cuberoot(spherevolume/4|3 pi)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1043
-      },
-      "reason": "nonlinear_definition"
-    },
-    "spherevolume_d(d)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "spherevolume_d(d) units=[m;m^3] range=[0,) spherevolume(d/2); 2 ~spherevolume(spherevolume_d)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1045
-      },
-      "reason": "nonlinear_definition"
-    },
-    "spherevol()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "spherevol() spherevolume",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1046
-      },
-      "reason": "nonlinear_definition"
-    },
-    "spherevol_d()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "spherevol_d() spherevolume_d",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1047
-      },
-      "reason": "nonlinear_definition"
-    },
-    "circumference()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "circumference() circum",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1048
-      },
-      "reason": "nonlinear_definition"
-    },
-    "circumference_d()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "circumference_d() circum_d",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1049
-      },
-      "reason": "nonlinear_definition"
-    },
-    "square(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "square(x) range=[0,) x^2 ; sqrt(square)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1050
-      },
-      "reason": "nonlinear_definition"
-    },
-    "cube(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "cube(x) range=[0,) x^3 ; cube^(1|3)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1051
-      },
-      "reason": "nonlinear_definition"
-    },
-    "hypot(x,y)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "hypot(x,y) sqrt(x*x+y*y)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1052
-      },
-      "reason": "nonlinear_definition"
-    },
-    "pH(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "pH(x) units=[1;mol/liter] range=(0,) 10^(-x) mol/liter ; (-log(pH liters/mol))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1099
-      },
-      "reason": "nonlinear_definition"
-    },
-    "tempC(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "tempC(x) units=[1;K] domain=[-273.15,) range=[0,) x K + stdtemp ; (tempC +(-stdtemp))/K",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1139
-      },
-      "reason": "nonlinear_definition"
-    },
-    "tempcelsius()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "tempcelsius() tempC",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1141
-      },
-      "reason": "nonlinear_definition"
-    },
-    "tempF(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "tempF(x) units=[1;K] domain=[-459.67,) range=[0,) (x+(-32)) degF + stdtemp ; (tempF+(-stdtemp))/degF + 32",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1157
-      },
-      "reason": "nonlinear_definition"
-    },
-    "tempfahrenheit()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "tempfahrenheit() tempF",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1159
-      },
-      "reason": "nonlinear_definition"
-    },
-    "tempreaumur(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "tempreaumur(x) units=[1;K] domain=[-218.52,) range=[0,) x degreaumur+stdtemp ; (tempreaumur+(-stdtemp))/degreaumur",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1171
-      },
-      "reason": "nonlinear_definition"
-    },
-    "beaufort_WMO1100(B)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "beaufort_WMO1100(B) units=[1;m/s] domain=[0,17] range=[0,) 0.836 B^3|2 m/s; (beaufort_WMO1100 s / 0.836 m)^2|3",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1227
-      },
-      "reason": "nonlinear_definition"
-    },
-    "beaufort(B)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "beaufort(B) units=[1;m/s] domain=[0,17] range=[0,) beaufort_WMO1100(B); ~beaufort_WMO1100(beaufort)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1230
-      },
-      "reason": "nonlinear_definition"
-    },
-    "windchill(T,speed)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "windchill(T,speed) units=[K,mph] domain=[170,283.15],[3,) tempF( 35.74 + 0.6215 ~tempF(T) + - 35.75 (speed/mph)^0.16 + 0.4275 ~tempF(T) (speed/mph)^0.16 )",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1246
-      },
-      "reason": "nonlinear_definition"
-    },
-    "windchillpower(T,speed)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "windchillpower(T,speed) units=[K,mph] domain=[170,283.15],[3,) (12.1452 + 11.6222 sqrt(speed/(m/s)) +- 1.1622 speed/(m/s)) * (33 +- ~tempC(T)) W/m^2",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1256
-      },
-      "reason": "nonlinear_definition"
-    },
-    "heatindex(T,H)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "heatindex(T,H) units=[K,1] domain=[0,),[0,1] tempF(-42.379 + 1014.333127 H +- 548.1717 H^2 + (2.04901523 +- 22.475541 H + 8.5282 H^2) ~tempF(T) + (-0.00683783 + 0.122874 H +- 0.0199 H^2) ~tempF(T)^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1283
-      },
-      "reason": "nonlinear_definition"
-    },
-    "bmi(height,weight)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "bmi(height,weight) units=[m,kg] domain=(0,)(0,) (weight/kg) / (height/m)^2",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 1302
-      },
-      "reason": "nonlinear_definition"
-    },
-    "bril(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "bril(x) units=[1;lambert] 2^(x+-100) lamberts ;log2(bril/lambert)+100",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2247
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ev100(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ev100(x) units=[1;cd/m^2] range=(0,) 2^x k1250 / s100; log2(ev100 s100/k1250)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2316
-      },
-      "reason": "nonlinear_definition"
-    },
-    "EV100()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "EV100() ev100",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2317
-      },
-      "reason": "nonlinear_definition"
-    },
-    "iv100(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "iv100(x) units=[1;lx] range=(0,) 2^x c250 / s100; log2(iv100 s100 / c250)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2321
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Av(A)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Av(A) units=[1;1] domain=[-2,) range=[0.5,) 2^(A/2); 2 log2(Av)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2410
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Tv(t)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Tv(t) units=[1;s] range=(0,) 2^(-t) s; log2(s / Tv)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2412
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Sval(S)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Sval(S) units=[1;1] range=(0,) 2^S / (N_speed/lx s); log2((N_speed/lx s) Sval)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2418
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Bv(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Bv(x) units=[1;cd/m^2] range=(0,) 2^x K_lum N_speed ; log2(Bv / (K_lum N_speed))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2421
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Iv(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Iv(x) units=[1;lx] range=(0,) 2^x C_illum N_speed ; log2(Iv / (C_illum N_speed))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2425
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Sx(S)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Sx(S) units=[1;1] domain=(0,) log2((N_speed/lx s) S); 2^Sx / (N_speed/lx s)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2430
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Sdeg(S)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Sdeg(S) units=[1;1] range=(0,) 10^((S - 1) / 10) ; (1 + 10 log(Sdeg))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2435
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Sdin()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Sdin() Sdeg",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2436
-      },
-      "reason": "nonlinear_definition"
-    },
-    "numericalaperture(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "numericalaperture(x) units=[1;1] domain=(0,1] range=[0.5,) 0.5 / x ; 0.5 / numericalaperture",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2451
-      },
-      "reason": "nonlinear_definition"
-    },
-    "NA()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "NA() numericalaperture",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2453
-      },
-      "reason": "nonlinear_definition"
-    },
-    "fnumber(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "fnumber(x) units=[1;1] domain=[0.5,) range=[0.5,) x ; fnumber",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2456
-      },
-      "reason": "nonlinear_definition"
-    },
-    "airmass(alt)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "airmass(alt) units=[degree;1] domain=[0,90] noerror 1 / (sin(alt) + 0.50572 (alt / degree + 6.07995)^-1.6364)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2957
-      },
-      "reason": "nonlinear_definition"
-    },
-    "airmassz(zenith)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "airmassz(zenith) units=[degree;1] domain=[0,90] noerror 1 / (cos(zenith) + 0.50572 (96.07995 - zenith / degree)^-1.6364)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2961
-      },
-      "reason": "nonlinear_definition"
-    },
-    "atm_transmission(alt)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "atm_transmission(alt) units=[degree;1] domain=[0,90] noerror exp(-extinction_coeff airmass(alt))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2972
-      },
-      "reason": "nonlinear_definition"
-    },
-    "atm_transmissionz(zenith)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "atm_transmissionz(zenith) units=[degree;1] domain=[0,90] noerror exp(-extinction_coeff airmassz(zenith))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 2976
-      },
-      "reason": "nonlinear_definition"
-    },
-    "vmag(mag)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "vmag(mag) units=[1;lx] domain=[,] range=(0,] 2.54e-6 lx 10^(-0.4 mag); -2.5 log(vmag / (2.54e-6 lx))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3004
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB_degree(sb)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB_degree(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / squaredegree ; ~vmag(SB_degree squaredegree)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3026
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB_minute(sb)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB_minute(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / squareminute ; ~vmag(SB_minute squareminute)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3031
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB_second(sb)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB_second(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / squaresecond ; ~vmag(SB_second squaresecond)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3036
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB_sr(sb)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB_sr(sb) units=[1;cd/m^2] domain=[,] range=(0,] vmag(sb) / sr ; ~vmag(SB_sr sr)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3041
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB() SB_second",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3045
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB_sec()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB_sec() SB_second",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3046
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB_min()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB_min() SB_minute",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3047
-      },
-      "reason": "nonlinear_definition"
-    },
-    "SB_deg()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "SB_deg() SB_degree",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3048
-      },
-      "reason": "nonlinear_definition"
-    },
-    "shoesize_men(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "shoesize_men(n) units=[1;inch] shoe_men0 + n shoesize_delta ; (shoesize_men+(-shoe_men0))/shoesize_delta",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3593
-      },
-      "reason": "nonlinear_definition"
-    },
-    "shoesize_women(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "shoesize_women(n) units=[1;inch] shoe_women0 + n shoesize_delta ; (shoesize_women+(-shoe_women0))/shoesize_delta",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3595
-      },
-      "reason": "nonlinear_definition"
-    },
-    "shoesize_boys(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "shoesize_boys(n) units=[1;inch] shoe_boys0 + n shoesize_delta ; (shoesize_boys+(-shoe_boys0))/shoesize_delta",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3597
-      },
-      "reason": "nonlinear_definition"
-    },
-    "shoesize_girls(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "shoesize_girls(n) units=[1;inch] shoe_girls0 + n shoesize_delta ; (shoesize_girls+(-shoe_girls0))/shoesize_delta",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3599
-      },
-      "reason": "nonlinear_definition"
-    },
-    "scoop(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "scoop(n) units=[1;cup] domain=[4,100] range=[0.04,1] 32 usfloz / n ; 32 usfloz / scoop",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 3900
-      },
-      "reason": "nonlinear_definition"
-    },
-    "sugar_bpe(T)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "sugar_bpe(T) units=[K;g/cm^3] domain=[0,39.1636] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(T)); sugar_conc_bpe(~brix(sugar_bpe))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4120
-      },
-      "reason": "nonlinear_definition"
-    },
-    "sugar_bp(T)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "sugar_bp(T) units=[K;g/cm^3] domain=[373.15,412.3136] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(T-tempC(100))) ; sugar_conc_bpe(~brix(sugar_bp))+tempC(100)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4123
-      },
-      "reason": "nonlinear_definition"
-    },
-    "sugar_bpF(T)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "sugar_bpF(T) units=[1;g/cm^3] domain=[212,282.49448] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(tempF(T)+-tempC(100))) ; ~tempF(sugar_conc_bpe(~brix(sugar_bpF))+tempC(100))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4139
-      },
-      "reason": "nonlinear_definition"
-    },
-    "sugar_bpC(T)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "sugar_bpC(T) units=[1;g/cm^3] domain=[100,139.1636] range=[0.99717,1.5144619] brix(~sugar_conc_bpe(tempC(T)+-tempC(100))) ; ~tempC(sugar_conc_bpe(~brix(sugar_bpC))+tempC(100))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4142
-      },
-      "reason": "nonlinear_definition"
-    },
-    "baume(d)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "baume(d) units=[1;g/cm^3] domain=[0,145) range=[1,) (baumeconst/(baumeconst+-d)) g/cm^3 ; (baume+((-g)/cm^3)) baumeconst / baume",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4153
-      },
-      "reason": "nonlinear_definition"
-    },
-    "twaddell(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "twaddell(x) units=[1;g/cm^3] domain=[-200,) range=[0,) (1 + 0.005 x) g / cm^3 ; 200 (twaddell / (g/cm^3) +- 1)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4158
-      },
-      "reason": "nonlinear_definition"
-    },
-    "quevenne(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "quevenne(x) units=[1;g/cm^3] domain=[-1000,) range=[0,) (1 + 0.001 x) g / cm^3 ; 1000 (quevenne / (g/cm^3) +- 1)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4164
-      },
-      "reason": "nonlinear_definition"
-    },
-    "apidegree(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "apidegree(x) units=[1;g/cm^3] domain=[-131.5,) range=[0,) 141.5 g/cm^3 / (x+131.5) ; 141.5 (g/cm^3) / apidegree + (-131.5)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4202
-      },
-      "reason": "nonlinear_definition"
-    },
-    "shotgungauge(ga)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "shotgungauge(ga) units=[1;m] domain=(0,] range=(0,] 2 ~spherevol(1 pound / ga leaddensity) ; 1 pound / leaddensity spherevol(shotgungauge/2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4774
-      },
-      "reason": "nonlinear_definition"
-    },
-    "shotgunga()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "shotgunga() shotgungauge",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 4777
-      },
-      "reason": "nonlinear_definition"
-    },
-    "bel(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "bel(x) units=[1;1] range=(0,) 10^(x); log(bel)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5172
-      },
-      "reason": "nonlinear_definition"
-    },
-    "decibel(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "decibel(x) units=[1;1] range=(0,) 10^(x/10); 10 log(decibel)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5173
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dB()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dB() decibel",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5174
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBW(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBW(x) units=[1;W] range=(0,) dB(x) W ; ~dB(dBW/W)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5175
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBk(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBk(x) units=[1;W] range=(0,) dB(x) kW ; ~dB(dBk/kW)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5176
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBf(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBf(x) units=[1;W] range=(0,) dB(x) fW ; ~dB(dBf/fW)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5177
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBm(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBm(x) units=[1;W] range=(0,) dB(x) mW ; ~dB(dBm/mW)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5178
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBmW(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBmW(x) units=[1;W] range=(0,) dBm(x) ; ~dBm(dBmW)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5179
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBJ(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBJ(x) units=[1;J] range=(0,) dB(x) J; ~dB(dBJ/J)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5180
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dB_amplitude(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dB_amplitude(x) units=[1;1] dB(0.5 x) ; ~dB(dB_amplitude^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5189
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBV(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBV(x) units=[1;V] range=(0,) dB(0.5 x) V;~dB(dBV^2 / V^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5190
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBmV(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBmV(x) units=[1;V] range=(0,) dB(0.5 x) mV;~dB(dBmV^2/mV^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5191
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBuV(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBuV(x) units=[1;V] range=(0,) dB(0.5 x) microV ; ~dB(dBuV^2 / microV^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5192
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBA(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBA(x) units=[1;A] range=(0,) dB(0.5 x) A;~dB(dBA^2 / A^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5197
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBmA(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBmA(x) units=[1;A] range=(0,) dB(0.5 x) mA;~dB(dBmA^2/mA^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5198
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBuA(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBuA(x) units=[1;A] range=(0,) dB(0.5 x) microA ; ~dB(dBuA^2 / microA^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5199
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBu(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBu(x) units=[1;V] range=(0,) dB(0.5 x) sqrt(mW 600 ohm) ; ~dB(dBu^2 / mW 600 ohm)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5205
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBv(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBv(x) units=[1;V] range=(0,) dBu(x) ; ~dBu(dBv)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5207
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBSPL(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBSPL(x) units=[1;Pa] range=(0,) dB(0.5 x) 20 microPa ; ~dB(dBSPL^2 / (20 microPa)^2)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5215
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBSIL(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBSIL(x) units=[1;W/m^2] range=(0,) dB(x) 1e-12 W/m^2; ~dB(dBSIL / (1e-12 W/m^2))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5218
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dBSWL(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dBSWL(x) units=[1;W] range=(0,) dB(x) 1e-12 W; ~dB(dBSWL/1e-12 W)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5221
-      },
-      "reason": "nonlinear_definition"
-    },
-    "neper(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "neper(x) units=[1;1] range=(0,) exp(x); ln(neper)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5230
-      },
-      "reason": "nonlinear_definition"
-    },
-    "centineper(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "centineper(x) units=[1;1] range=(0,) exp(x/100); 100 ln(centineper)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5231
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Np()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Np() neper",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5232
-      },
-      "reason": "nonlinear_definition"
-    },
-    "cNp()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "cNp() centineper",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5233
-      },
-      "reason": "nonlinear_definition"
-    },
-    "Np_power(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "Np_power(x) units=[1;1] Np(2 x) ; ~Np(Np_power)/2",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5234
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ipv4subnetsize(prefix_len)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ipv4subnetsize(prefix_len) units=[1;1] domain=[0,32] range=[1,4294967296] 2^(32-prefix_len) ; 32-log2(ipv4subnetsize)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5730
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ipv6subnetsize(prefix_len)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ipv6subnetsize(prefix_len) units=[1;1] domain=[0,128] range=[1,340282366920938463463374607431768211456] 2^(128-prefix_len) ; 128-log2(ipv6subnetsize)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5736
-      },
-      "reason": "nonlinear_definition"
-    },
-    "musicalcent(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "musicalcent(x) units=[1;1] range=(0,) semitone^(x/100) ; 100 log(musicalcent)/log(semitone)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 5766
-      },
-      "reason": "nonlinear_definition"
-    },
-    "USdollars_in(date)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "USdollars_in(date) units=[1;$] domain=[1913.0833333333333,2025.9166666666667] range=[1,33.07367346938776] US$ UScpi_now / UScpi(date) ; ~UScpi(US$ UScpi_now / USdollars_in)",
-      "source": {
-        "file": "tool/gnu_units/cpi.units",
-        "line": 1362
-      },
-      "reason": "nonlinear_definition"
-    },
-    "USinflation_since(date)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "USinflation_since(date) units=[1;1] domain=[1913.0833333333333,2025.9166666666667] range=[1,33.07367346938776] UScpi_now / UScpi(date) ; ~UScpi(UScpi_now / USinflation_since)",
-      "source": {
-        "file": "tool/gnu_units/cpi.units",
-        "line": 1366
-      },
-      "reason": "nonlinear_definition"
-    },
-    "USCPI()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "USCPI() UScpi",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6016
-      },
-      "reason": "nonlinear_definition"
-    },
-    "cpi()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "cpi() UScpi",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6019
-      },
-      "reason": "nonlinear_definition"
-    },
-    "CPI()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "CPI() UScpi",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6020
-      },
-      "reason": "nonlinear_definition"
-    },
-    "dollars_in()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "dollars_in() USdollars_in",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6031
-      },
-      "reason": "nonlinear_definition"
-    },
-    "US$in()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "US$in() USdollars_in",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6032
-      },
-      "reason": "nonlinear_definition"
-    },
-    "$in()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "$in() USdollars_in",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6033
-      },
-      "reason": "nonlinear_definition"
-    },
-    "inflation_since()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "inflation_since() USinflation_since",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6038
-      },
-      "reason": "nonlinear_definition"
-    },
-    "viscosity_air(T)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "viscosity_air(T) units=[K;Pa s] domain=[253.15,673.15] range=(0,) (2.791e-7 (T/K)^(0.7355)) Pa s; (((viscosity_air/(Pa s)) / 2.791e-7)^(1|0.7355)) K",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6136
-      },
-      "reason": "nonlinear_definition"
-    },
-    "viscosity_water(T)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "viscosity_water(T) units=[K;mPa s] domain=[0,) range=(0,) 0.02939 exp((507.88 K) / (T - 149.3 K)) mPa s; 149.3 K + (507.88 K) / ln(viscosity_water / (0.02939 mPa s))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6140
-      },
-      "reason": "nonlinear_definition"
-    },
-    "reynolds(density,speed,diam,visc)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "reynolds(density,speed,diam,visc) units=[DENSITY,SPEED,LENGTH,VISCOSITY] domain=(0,),[0,),(0,),(0,) density speed diam / visc",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6155
-      },
-      "reason": "nonlinear_definition"
-    },
-    "stdatmTH(h)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "stdatmTH(h) units=[m;K] domain=[-5000,11e3] range=[217,321] stdatmT0+(-lapserate h) ; (stdatmT0+(-stdatmTH))/lapserate",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6321
-      },
-      "reason": "nonlinear_definition"
-    },
-    "stdatmT(z)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "stdatmT(z) units=[m;K] domain=[-5000,11e3] range=[217,321] stdatmTH(geop_ht(z)) ; ~geop_ht(~stdatmTH(stdatmT))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6325
-      },
-      "reason": "nonlinear_definition"
-    },
-    "stdatmPH(h)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "stdatmPH(h) units=[m;Pa] domain=[-5000,11e3] range=[22877,177764] atm (1 - (lapserate/stdatmT0) h)^(polyndx + 1) ; (stdatmT0/lapserate) (1+(-(stdatmPH/stdatmP0)^(1/(polyndx + 1))))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6334
-      },
-      "reason": "nonlinear_definition"
-    },
-    "stdatmP(z)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "stdatmP(z) units=[m;Pa] domain=[-5000,11e3] range=[22877,177764] stdatmPH(geop_ht(z)); ~geop_ht(~stdatmPH(stdatmP))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6339
-      },
-      "reason": "nonlinear_definition"
-    },
-    "geop_ht(z)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "geop_ht(z) units=[m;m] domain=[-5000,) range=[-5004,) (earthradUSAtm z) / (earthradUSAtm + z) ; (earthradUSAtm geop_ht) / (earthradUSAtm + (-geop_ht))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6347
-      },
-      "reason": "nonlinear_definition"
-    },
-    "g_phi(lat)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "g_phi(lat) units=[deg;m/s2] domain=[0,90] noerror 980.6160e-2 (1+(-0.0026373) cos(2 lat)+0.0000059 cos(2 lat)^2) m/s2",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6361
-      },
-      "reason": "nonlinear_definition"
-    },
-    "earthradius_eff(lat)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "earthradius_eff(lat) units=[deg;m] domain=[0,90] noerror m 2 9.780356 (1+0.0052885 sin(lat)^2+(-0.0000059) sin(2 lat)^2) / (3.085462e-6 + 2.27e-9 cos(2 lat) + (-2e-12) cos(4 lat))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6367
-      },
-      "reason": "nonlinear_definition"
-    },
-    "gaugepressure(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "gaugepressure(x) units=[Pa;Pa] domain=[-101325,) range=[0,) x + Patm ; gaugepressure+(-Patm)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6398
-      },
-      "reason": "nonlinear_definition"
-    },
-    "psig(x)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "psig(x) units=[1;Pa] domain=[-14.6959487755135,) range=[0,) gaugepressure(x psi) ; ~gaugepressure(psig) / psi",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6401
-      },
-      "reason": "nonlinear_definition"
-    },
-    "wiregauge(g)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "wiregauge(g) units=[1;m] range=(0,) 1|200 92^((36+(-g))/39) in; 36+(-39)ln(200 wiregauge/in)/ln(92)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6465
-      },
-      "reason": "nonlinear_definition"
-    },
-    "wirega()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "wirega() wiregauge",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6467
-      },
-      "reason": "nonlinear_definition"
-    },
-    "awg()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "awg() wiregauge",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6468
-      },
-      "reason": "nonlinear_definition"
-    },
-    "wiregaugeA(ga)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "wiregaugeA(ga) units=[1;m^2] range=(0,) circlearea_d(awg(ga)); ~awg(~circlearea_d(wiregaugeA))",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6476
-      },
-      "reason": "nonlinear_definition"
-    },
-    "wiregaA()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "wiregaA() wiregaugeA",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6480
-      },
-      "reason": "nonlinear_definition"
-    },
-    "awgA()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "awgA() wiregaugeA",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6481
-      },
-      "reason": "nonlinear_definition"
-    },
-    "swg()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "swg() brwiregauge",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6505
-      },
-      "reason": "nonlinear_definition"
-    },
-    "screwgauge(g)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "screwgauge(g) units=[1;m] domain=[-3,24] range=[0.0005334,0.0094488] (.06 + .013 g) in ; (screwgauge/in + (-.06)) / .013",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6730
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ipsOD()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ipsOD() npsOD",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6882
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ips40()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ips40() nps40",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6883
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ips80()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ips80() nps80",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6884
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ips40s()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ips40s() nps40s",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6885
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ips80s()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ips80s() nps80s",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6886
-      },
-      "reason": "nonlinear_definition"
-    },
-    "NB()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "NB() DN",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6919
-      },
-      "reason": "nonlinear_definition"
-    },
-    "NW()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "NW() DN",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 6920
-      },
-      "reason": "nonlinear_definition"
-    },
-    "copperOD()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "copperOD() copperTubeOD",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7028
-      },
-      "reason": "nonlinear_definition"
-    },
-    "copperK()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "copperK() copperTypeK",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7029
-      },
-      "reason": "nonlinear_definition"
-    },
-    "copperL()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "copperL() copperTypeL",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7030
-      },
-      "reason": "nonlinear_definition"
-    },
-    "copperM()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "copperM() copperTypeM",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7031
-      },
-      "reason": "nonlinear_definition"
-    },
-    "copperACR()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "copperACR() copperTypeACR",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7032
-      },
-      "reason": "nonlinear_definition"
-    },
-    "grit_ansibonded()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "grit_ansibonded() ansibonded",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7197
-      },
-      "reason": "nonlinear_definition"
-    },
-    "grit_ansicoated()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "grit_ansicoated() ansicoated",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7253
-      },
-      "reason": "nonlinear_definition"
-    },
-    "meshUS()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "meshUS() sieve",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7442
-      },
-      "reason": "nonlinear_definition"
-    },
-    "ringsize(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "ringsize(n) units=[1;in] domain=[2,) range=[1.6252,) (1.4216+.1018 n) in ; (ringsize/in + (-1.4216))/.1018",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7533
-      },
-      "reason": "nonlinear_definition"
-    },
-    "jpringsize(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "jpringsize(n) units=[1;mm] domain=[1,) range=[0.040840704,) (38|3 + n/3) pi mm ; 3 jpringsize/ pi mm + (-38)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7575
-      },
-      "reason": "nonlinear_definition"
-    },
-    "euringsize(n)": {
-      "type": "unsupported",
-      "gnuUnitsSource": "euringsize(n) units=[1;mm] (n+40) mm ; euringsize/mm + (-40)",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 7580
-      },
-      "reason": "nonlinear_definition"
-    },
-    "㏈()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "㏈() dB",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 8905
-      },
-      "reason": "nonlinear_definition"
-    },
-    "㏗()": {
-      "type": "unsupported",
-      "gnuUnitsSource": "㏗() pH",
-      "source": {
-        "file": "tool/gnu_units/definitions.units",
-        "line": 8920
-      },
-      "reason": "nonlinear_definition"
-    }
-  }
+  "unsupported": {}
 }

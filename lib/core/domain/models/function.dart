@@ -1,4 +1,6 @@
 import '../errors.dart';
+import '../parser/ast.dart';
+import '../parser/expression_parser.dart';
 import '../utils.dart';
 import 'quantity.dart';
 
@@ -32,7 +34,7 @@ class QuantitySpec {
   /// like radian, so that sin(0) is accepted in addition to sin(π/2 rad).
   final bool acceptDimensionless;
 
-  QuantitySpec({
+  const QuantitySpec({
     this.quantity,
     this.min,
     this.max,
@@ -113,9 +115,13 @@ abstract class UnitaryFunction {
 
   /// Validates args against [domain], evaluates, validates result against [range].
   ///
+  /// The optional [context] parameter is passed through to [evaluate] for
+  /// subclasses (e.g. [DefinedFunction]) that require an evaluation context.
+  /// [BuiltinFunction] and [PiecewiseFunction] accept and ignore it.
+  ///
   /// Throws [EvalException] on argument count mismatch or bound violation.
   /// Throws [DimensionException] on dimension mismatch.
-  Quantity call(List<Quantity> args) {
+  Quantity call(List<Quantity> args, [EvalContext? context]) {
     if (args.length != arity) {
       throw EvalException(
         "Function '$id' expects $arity argument(s), got ${args.length}",
@@ -126,7 +132,7 @@ abstract class UnitaryFunction {
         _validateSpec(args[i], domain![i]);
       }
     }
-    final result = evaluate(args);
+    final result = evaluate(args, context);
     if (range != null) {
       _validateSpec(result, range!);
     }
@@ -139,10 +145,13 @@ abstract class UnitaryFunction {
   /// Inverse functions always take exactly one argument (a value in the
   /// forward function's range).
   ///
+  /// The optional [context] parameter is passed through to [evaluateInverse]
+  /// for subclasses that require an evaluation context.
+  ///
   /// Throws [EvalException] if [hasInverse] is false.
   /// Throws [EvalException] on argument count mismatch or bound violation.
   /// Throws [DimensionException] on dimension mismatch.
-  Quantity callInverse(List<Quantity> args) {
+  Quantity callInverse(List<Quantity> args, [EvalContext? context]) {
     if (!hasInverse) {
       throw EvalException('No inverse defined for "$id"');
     }
@@ -154,7 +163,7 @@ abstract class UnitaryFunction {
     if (range != null) {
       _validateSpec(args[0], range!);
     }
-    final result = evaluateInverse(args);
+    final result = evaluateInverse(args, context);
     if (domain != null && domain!.isNotEmpty) {
       _validateSpec(result, domain![0]);
     }
@@ -162,13 +171,13 @@ abstract class UnitaryFunction {
   }
 
   /// Subclass-implemented forward evaluation logic.
-  Quantity evaluate(List<Quantity> args);
+  Quantity evaluate(List<Quantity> args, [EvalContext? context]);
 
   /// Subclass-implemented inverse evaluation logic.
   ///
   /// The default implementation throws [EvalException], ensuring subclasses
   /// that set [hasInverse] to true must override this method.
-  Quantity evaluateInverse(List<Quantity> args) {
+  Quantity evaluateInverse(List<Quantity> args, [EvalContext? context]) {
     throw EvalException('No inverse defined for "$id"');
   }
 
@@ -219,7 +228,7 @@ class BuiltinFunction extends UnitaryFunction {
   bool get hasInverse => false;
 
   @override
-  Quantity evaluate(List<Quantity> args) => _impl(args);
+  Quantity evaluate(List<Quantity> args, [EvalContext? context]) => _impl(args);
 }
 
 /// A piecewise-linear function defined by a fixed set of (x, y) control points.
@@ -294,7 +303,7 @@ class PiecewiseFunction extends UnitaryFunction {
   bool get hasInverse => true;
 
   @override
-  Quantity evaluate(List<Quantity> args) {
+  Quantity evaluate(List<Quantity> args, [EvalContext? context]) {
     // Binary search for the enclosing segment.
     final x = args[0].value;
     var lo = 0;
@@ -316,7 +325,7 @@ class PiecewiseFunction extends UnitaryFunction {
   }
 
   @override
-  Quantity evaluateInverse(List<Quantity> args) {
+  Quantity evaluateInverse(List<Quantity> args, [EvalContext? context]) {
     final unit = range!.quantity!;
     final yRaw = args[0].value / unit.value;
     // Segments are ordered by increasing x, so the first segment containing
@@ -336,5 +345,102 @@ class PiecewiseFunction extends UnitaryFunction {
     throw EvalException(
       "Function '$id': no segment contains inverse value $yRaw",
     );
+  }
+}
+
+/// A user-defined function expressed as a forward expression string and an
+/// optional inverse expression string.
+///
+/// The [params] list names the formal parameters.  When [call] is invoked,
+/// each parameter is bound to the corresponding argument and the [forward]
+/// expression is evaluated in that environment via [ExpressionParser].
+///
+/// The [inverse] expression (if non-null) is evaluated with the function's
+/// primary id bound to the single argument.  Multi-parameter functions may
+/// not have an inverse.
+class DefinedFunction extends UnitaryFunction {
+  /// Formal parameter names.
+  final List<String> params;
+
+  /// Expression string for the forward evaluation.
+  final String forward;
+
+  /// Expression string for the inverse evaluation; null if no inverse.
+  final String? inverse;
+
+  /// Whether the GNU Units `noerror` flag was present (stored for fidelity).
+  final bool noerror;
+
+  DefinedFunction({
+    required super.id,
+    super.aliases,
+    required this.params,
+    required this.forward,
+    this.inverse,
+    this.noerror = false,
+    super.domain,
+    super.range,
+  }) : super(arity: params.length) {
+    if (params.length > 1 && inverse != null) {
+      throw ArgumentError(
+        "DefinedFunction '$id': inverse is not supported for multi-parameter functions",
+      );
+    }
+  }
+
+  @override
+  bool get hasInverse => inverse != null;
+
+  @override
+  Quantity evaluate(List<Quantity> args, [EvalContext? context]) {
+    if (context == null) {
+      throw EvalException(
+        'DefinedFunction "$id" requires an EvalContext',
+      );
+    }
+
+    final funcKey = '$id()';
+    if (context.visited.contains(funcKey)) {
+      throw EvalException(
+        'Circular function definition detected for "$id"',
+      );
+    }
+
+    final extendedVisited = {...context.visited, funcKey};
+    final vars = <String, Quantity>{};
+    for (var i = 0; i < params.length; i++) {
+      vars[params[i]] = args[i];
+    }
+
+    return ExpressionParser(
+      repo: context.repo,
+      variables: vars,
+      visited: extendedVisited,
+    ).evaluate(forward);
+  }
+
+  @override
+  Quantity evaluateInverse(List<Quantity> args, [EvalContext? context]) {
+    if (context == null) {
+      throw EvalException(
+        'DefinedFunction "$id" requires an EvalContext',
+      );
+    }
+
+    final funcKey = '$id()';
+    if (context.visited.contains(funcKey)) {
+      throw EvalException(
+        'Circular function definition detected for "$id"',
+      );
+    }
+
+    final extendedVisited = {...context.visited, funcKey};
+    final vars = <String, Quantity>{id: args[0]};
+
+    return ExpressionParser(
+      repo: context.repo,
+      variables: vars,
+      visited: extendedVisited,
+    ).evaluate(inverse!);
   }
 }

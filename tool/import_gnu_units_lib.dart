@@ -17,8 +17,8 @@ class GnuEntry {
   /// Primary unit identifier (e.g., 'm', 'kilo', 'foot').
   final String id;
 
-  /// Entry type: 'primitive', 'derived', 'alias', 'prefix', 'piecewise', or
-  /// 'unsupported'.
+  /// Entry type: 'primitive', 'derived', 'alias', 'prefix', 'piecewise',
+  /// 'defined_function', 'function_alias', or 'unsupported'.
   final String type;
 
   /// The expression text for the unit definition.
@@ -39,7 +39,7 @@ class GnuEntry {
   /// True if this entry belongs in the prefix namespace (source name ended with '-').
   final bool isPrefix;
 
-  /// For alias entries: the target id this aliases.
+  /// For alias entries and function_alias entries: the target id this aliases.
   final String? target;
 
   /// For unsupported entries: reason code.
@@ -48,11 +48,35 @@ class GnuEntry {
   /// For piecewise entries: the output unit expression (e.g., 'degR', 'K').
   final String? outputUnit;
 
-  /// For piecewise entries: true if the GNU Units noerror flag was present.
+  /// For piecewise entries and defined_function entries: true if the GNU Units
+  /// noerror flag was present.
   final bool noerror;
 
   /// For piecewise entries: control points as (x, y) pairs.
   final List<(double, double)>? points;
+
+  // --- Fields for defined_function entries ---
+
+  /// Formal parameter names; one element per parameter.
+  final List<String>? params;
+
+  /// Forward expression string for the function body.
+  final String? forward;
+
+  /// Inverse expression string; null if no inverse.
+  final String? inverse;
+
+  /// Domain unit expressions, one per parameter (from `units=[u1,u2,...;...]`).
+  final List<String>? domainUnits;
+
+  /// Domain bound strings, one per parameter (from `domain=...`).
+  final List<String>? domainBounds;
+
+  /// Range unit expression (from `units=[...;rangeUnit]`).
+  final String? rangeUnit;
+
+  /// Range bound strings (from `range=...`).
+  final List<String>? rangeBounds;
 
   const GnuEntry({
     required this.id,
@@ -68,6 +92,13 @@ class GnuEntry {
     this.outputUnit,
     this.noerror = false,
     this.points,
+    this.params,
+    this.forward,
+    this.inverse,
+    this.domainUnits,
+    this.domainBounds,
+    this.rangeUnit,
+    this.rangeBounds,
   });
 }
 
@@ -356,6 +387,203 @@ Set<String> _collectPrefixIds(List<_LogicalLine> logicalLines) {
   return ids;
 }
 
+/// Parses a nonlinear (function) definition from a name token containing '('.
+///
+/// If the definition is a zero-arg alias (empty params + single identifier
+/// definition with no spaces or special chars), returns a `function_alias`
+/// entry.  Otherwise parses and returns a `defined_function` entry.
+GnuEntry _parseNonlinearDefinition(
+  String nameToken,
+  String definition,
+  String gnuUnitsSource,
+  String filename,
+  int lineNumber,
+) {
+  // Split nameToken into id and params.
+  final parenStart = nameToken.indexOf('(');
+  final parenEnd = nameToken.lastIndexOf(')');
+  final id = nameToken.substring(0, parenStart);
+  final paramsRaw = parenEnd > parenStart
+      ? nameToken.substring(parenStart + 1, parenEnd)
+      : '';
+  final params = paramsRaw.trim().isEmpty
+      ? <String>[]
+      : paramsRaw.split(',').map((p) => p.trim()).toList();
+
+  // Zero-arg alias: `funcname()` with a single-token identifier definition.
+  if (params.isEmpty) {
+    final trimmed = definition.trim();
+    // Single identifier: no spaces, no special chars (no +,-,*,/,^,(,),=,[,])
+    final isSingleIdentifier =
+        trimmed.isNotEmpty &&
+        !trimmed.contains(' ') &&
+        !RegExp(r'[+\-*/^()\[\]=;,]').hasMatch(trimmed);
+    if (isSingleIdentifier) {
+      return GnuEntry(
+        id: id,
+        type: 'function_alias',
+        definition: definition,
+        gnuUnitsSource: gnuUnitsSource,
+        filename: filename,
+        lineNumber: lineNumber,
+        isDimensionless: false,
+        target: trimmed,
+        reason: null,
+      );
+    }
+  }
+
+  // Parse optional fields from the definition string.
+  var remaining = definition.trim();
+
+  // Extract units=[...] token.
+  List<String> domainUnits = [];
+  String? rangeUnit;
+  final unitsMatch = RegExp(r'^units=\[([^\]]*)\]').firstMatch(remaining);
+  if (unitsMatch != null) {
+    final unitsContent = unitsMatch.group(1)!;
+    // Split on ';' to get domain units (before) and range unit (after).
+    final semiIdx = unitsContent.indexOf(';');
+    if (semiIdx >= 0) {
+      final domainPart = unitsContent.substring(0, semiIdx);
+      final rangePart = unitsContent.substring(semiIdx + 1).trim();
+      domainUnits = domainPart.isEmpty
+          ? []
+          : domainPart.split(',').map((u) => u.trim()).toList();
+      rangeUnit = rangePart.isEmpty ? null : rangePart;
+    } else {
+      // No semicolon: everything is domain units.
+      domainUnits = unitsContent.isEmpty
+          ? []
+          : unitsContent.split(',').map((u) => u.trim()).toList();
+    }
+    remaining = remaining.substring(unitsMatch.end).trim();
+  }
+
+  // Extract domain=... token (bracket-pairs with no spaces between pairs).
+  // The entire domain= token is space-delimited, so we first extract the
+  // space-delimited token value, then parse bracket-pairs from it.
+  List<String>? domainBounds;
+  if (remaining.startsWith('domain=')) {
+    final tokenValue = _extractSpaceToken(
+      remaining.substring('domain='.length),
+    );
+    final parsed = _parseBoundsList(tokenValue);
+    domainBounds = parsed.bounds.isEmpty ? null : parsed.bounds;
+    remaining = remaining
+        .substring('domain='.length + tokenValue.length)
+        .trim();
+  }
+
+  // Extract range=... token.
+  List<String>? rangeBounds;
+  if (remaining.startsWith('range=')) {
+    final tokenValue = _extractSpaceToken(remaining.substring('range='.length));
+    final parsed = _parseBoundsList(tokenValue);
+    rangeBounds = parsed.bounds.isEmpty ? null : parsed.bounds;
+    remaining = remaining.substring('range='.length + tokenValue.length).trim();
+  }
+
+  // Extract noerror flag.
+  var noerror = false;
+  if (remaining.startsWith('noerror')) {
+    final afterNoerror = remaining.substring('noerror'.length);
+    if (afterNoerror.isEmpty || afterNoerror.startsWith(' ')) {
+      noerror = true;
+      remaining = afterNoerror.trim();
+    }
+  }
+
+  // Split remaining on ';' for forward/inverse.
+  final semiIdx = remaining.indexOf(';');
+  final String forward;
+  final String? inverse;
+  if (semiIdx >= 0) {
+    forward = remaining.substring(0, semiIdx).trim();
+    inverse = remaining.substring(semiIdx + 1).trim();
+  } else {
+    forward = remaining;
+    inverse = null;
+  }
+
+  return GnuEntry(
+    id: id,
+    type: 'defined_function',
+    definition: definition,
+    gnuUnitsSource: gnuUnitsSource,
+    filename: filename,
+    lineNumber: lineNumber,
+    isDimensionless: false,
+    target: null,
+    reason: null,
+    noerror: noerror,
+    params: params,
+    forward: forward,
+    inverse: inverse,
+    domainUnits: domainUnits.isEmpty ? null : domainUnits,
+    domainBounds: domainBounds,
+    rangeUnit: rangeUnit,
+    rangeBounds: rangeBounds,
+  );
+}
+
+/// Extracts the first space-delimited token from [input].
+///
+/// Returns everything up to (but not including) the first space, or the
+/// entire string if there is no space.
+String _extractSpaceToken(String input) {
+  final spaceIdx = input.indexOf(' ');
+  return spaceIdx < 0 ? input : input.substring(0, spaceIdx);
+}
+
+/// Result of parsing a list of interval bounds.
+class _BoundsParseResult {
+  /// Parsed interval strings (e.g., '[170,283.15]', '(0,)').
+  final List<String> bounds;
+
+  /// Number of characters consumed from the input.
+  final int consumed;
+
+  _BoundsParseResult(this.bounds, this.consumed);
+}
+
+/// Parses a list of bracket-pair intervals from the start of [input].
+///
+/// Each interval is delimited by `[` or `(` and closed by `]` or `)` (they
+/// can mix, as in `[3,)` meaning 3 inclusive to infinity).  Commas and
+/// whitespace between pairs are skipped.  Parsing stops at the first
+/// character that does not begin a new bracket-pair.
+_BoundsParseResult _parseBoundsList(String input) {
+  final bounds = <String>[];
+  var i = 0;
+
+  while (i < input.length) {
+    // Skip any commas and whitespace between bracket-pairs, but only if
+    // we are about to start a new bracket-pair (lookahead for '[' or '(').
+    var j = i;
+    while (j < input.length && (input[j] == ',' || input[j] == ' ')) {
+      j++;
+    }
+    if (j >= input.length || (input[j] != '[' && input[j] != '(')) {
+      break;
+    }
+    i = j;
+    final bracketStart = i;
+
+    // Read one bracket-pair: scan to the first ']' or ')'.
+    i++; // consume opening bracket
+    while (i < input.length && input[i] != ']' && input[i] != ')') {
+      i++;
+    }
+    if (i < input.length) {
+      i++; // consume closing bracket
+    }
+    bounds.add(input.substring(bracketStart, i));
+  }
+
+  return _BoundsParseResult(bounds, i);
+}
+
 /// Classifies a single logical line into a GnuEntry or null.
 GnuEntry? _classifyLine(
   String text,
@@ -428,18 +656,14 @@ GnuEntry? _classifyLine(
     );
   }
 
-  // Unsupported nonlinear definition: name contains '(' but not '['.
+  // Nonlinear (function) definition: name contains '(' but not '['.
   if (nameToken.contains('(')) {
-    return GnuEntry(
-      id: nameToken,
-      type: 'unsupported',
-      definition: definitionText,
-      gnuUnitsSource: text,
-      filename: filename,
-      lineNumber: lineNumber,
-      isDimensionless: false,
-      target: null,
-      reason: 'nonlinear_definition',
+    return _parseNonlinearDefinition(
+      nameToken,
+      definitionText,
+      text,
+      filename,
+      lineNumber,
     );
   }
 
@@ -561,7 +785,10 @@ Map<String, dynamic> entriesToJson(
       'gnuUnitsSource': entry.gnuUnitsSource,
       'source': {'file': sourceFile, 'line': entry.lineNumber},
     };
-    if (entry.type != 'unsupported' && entry.type != 'piecewise') {
+    if (entry.type != 'unsupported' &&
+        entry.type != 'piecewise' &&
+        entry.type != 'defined_function' &&
+        entry.type != 'function_alias') {
       map['definition'] = entry.definition;
     }
     if (entry.type == 'primitive') {
@@ -577,6 +804,29 @@ Map<String, dynamic> entriesToJson(
       map['outputUnit'] = entry.outputUnit;
       map['noerror'] = entry.noerror;
       map['points'] = entry.points?.map((p) => [p.$1, p.$2]).toList() ?? [];
+    }
+    if (entry.type == 'defined_function') {
+      map['params'] = entry.params ?? [];
+      map['forward'] = entry.forward ?? '';
+      if (entry.inverse != null) {
+        map['inverse'] = entry.inverse;
+      }
+      if (entry.domainUnits != null) {
+        map['domainUnits'] = entry.domainUnits;
+      }
+      if (entry.domainBounds != null) {
+        map['domainBounds'] = entry.domainBounds;
+      }
+      if (entry.rangeUnit != null) {
+        map['rangeUnit'] = entry.rangeUnit;
+      }
+      if (entry.rangeBounds != null) {
+        map['rangeBounds'] = entry.rangeBounds;
+      }
+      map['noerror'] = entry.noerror;
+    }
+    if (entry.type == 'function_alias') {
+      map['target'] = entry.target;
     }
 
     // isPrefix is set by the parser for prefix-namespace entries (name ended

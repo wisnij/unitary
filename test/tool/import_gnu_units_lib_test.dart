@@ -463,13 +463,176 @@ void main() {
         },
       );
 
-      test('unsupported (nonlinear): id containing ( is unsupported', () {
-        const input =
-            'tempC(x) units=K domain=[-273.15,) range=[0,) x + 273.15\n';
-        final result = parseGnuUnitsFile(input, 'test.units');
-        expect(result, hasLength(1));
-        expect(result[0].type, equals('unsupported'));
-        expect(result[0].reason, equals('nonlinear_definition'));
+      test(
+        'defined_function: id containing ( produces type defined_function',
+        () {
+          const input =
+              'tempC(x) units=[K;K] domain=[-273.15,) range=[0,) x + 273.15\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result, hasLength(1));
+          expect(result[0].type, equals('defined_function'));
+          expect(result[0].id, equals('tempC'));
+          expect(result[0].params, equals(['x']));
+          expect(result[0].reason, isNull);
+        },
+      );
+
+      group('defined_function parsing', () {
+        test('single-param function with units, range, forward, inverse', () {
+          const input =
+              'circlearea(r) units=[m;m^2] range=[0,) pi r^2 ; sqrt(circlearea/pi)\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result, hasLength(1));
+          final e = result[0];
+          expect(e.type, equals('defined_function'));
+          expect(e.id, equals('circlearea'));
+          expect(e.params, equals(['r']));
+          expect(e.domainUnits, equals(['m']));
+          expect(e.rangeUnit, equals('m^2'));
+          expect(e.rangeBounds, equals(['[0,)']));
+          expect(e.forward, equals('pi r^2'));
+          expect(e.inverse, equals('sqrt(circlearea/pi)'));
+          expect(e.domainBounds, isNull);
+          expect(e.noerror, isFalse);
+        });
+
+        test('multi-param function with domain bounds', () {
+          const input =
+              'windchill(T,speed) units=[K,mph] domain=[170,283.15],[3,) T - speed\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result, hasLength(1));
+          final e = result[0];
+          expect(e.type, equals('defined_function'));
+          expect(e.id, equals('windchill'));
+          expect(e.params, equals(['T', 'speed']));
+          expect(e.domainUnits, equals(['K', 'mph']));
+          expect(e.domainBounds, equals(['[170,283.15]', '[3,)']));
+          expect(e.forward, equals('T - speed'));
+          expect(e.inverse, isNull);
+        });
+
+        test('no-separator bracket pairs for domain bounds', () {
+          const input =
+              'bmi(height,weight) units=[m,kg] domain=(0,)(0,) (weight/kg)/(height/m)^2\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result, hasLength(1));
+          final e = result[0];
+          expect(e.id, equals('bmi'));
+          expect(e.domainBounds, equals(['(0,)', '(0,)']));
+          expect(e.forward, equals('(weight/kg)/(height/m)^2'));
+        });
+
+        test('absent units= produces null domainUnits and rangeUnit', () {
+          const input = 'triple(x) 3 x\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result, hasLength(1));
+          final e = result[0];
+          expect(e.type, equals('defined_function'));
+          expect(e.domainUnits, isNull);
+          expect(e.rangeUnit, isNull);
+          expect(e.forward, equals('3 x'));
+          expect(e.inverse, isNull);
+        });
+
+        test(
+          'zero-arg function with single-identifier definition is function_alias',
+          () {
+            const input = 'tempcelsius() tempC\n';
+            final result = parseGnuUnitsFile(input, 'test.units');
+            expect(result, hasLength(1));
+            final e = result[0];
+            expect(e.type, equals('function_alias'));
+            expect(e.id, equals('tempcelsius'));
+            expect(e.target, equals('tempC'));
+          },
+        );
+
+        test('noerror flag is parsed correctly', () {
+          const input = 'myf(x) units=[m;m] noerror x\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result, hasLength(1));
+          expect(result[0].noerror, isTrue);
+          expect(result[0].forward, equals('x'));
+        });
+
+        test('no inverse when no semicolon in body', () {
+          const input = 'addone(x) x + 1\n';
+          final result = parseGnuUnitsFile(input, 'test.units');
+          expect(result, hasLength(1));
+          expect(result[0].inverse, isNull);
+          expect(result[0].forward, equals('x + 1'));
+        });
+      });
+
+      group('defined_function entriesToJson', () {
+        test(
+          'defined_function entry goes in units section with required fields',
+          () {
+            final entries = [
+              const GnuEntry(
+                id: 'circlearea',
+                type: 'defined_function',
+                definition: 'pi r^2',
+                gnuUnitsSource: 'circlearea(r) units=[m;m^2] pi r^2',
+                filename: 'defs.units',
+                lineNumber: 1,
+                isDimensionless: false,
+                target: null,
+                reason: null,
+                noerror: false,
+                params: ['r'],
+                forward: 'pi r^2',
+                inverse: null,
+                domainUnits: ['m'],
+                rangeUnit: 'm^2',
+                rangeBounds: ['[0,)'],
+              ),
+            ];
+            final result = entriesToJson(entries);
+            final units = result['units'] as Map<String, dynamic>;
+            expect(units.containsKey('circlearea'), isTrue);
+            expect(
+              (result['unsupported'] as Map).containsKey('circlearea'),
+              isFalse,
+            );
+            final data = units['circlearea'] as Map<String, dynamic>;
+            expect(data['type'], equals('defined_function'));
+            expect(data['params'], equals(['r']));
+            expect(data['forward'], equals('pi r^2'));
+            expect(data.containsKey('inverse'), isFalse);
+            expect(data['domainUnits'], equals(['m']));
+            expect(data['rangeUnit'], equals('m^2'));
+            expect(data['rangeBounds'], equals(['[0,)']));
+            expect(data['noerror'], isFalse);
+            expect(data.containsKey('definition'), isFalse);
+          },
+        );
+
+        test(
+          'function_alias entry goes in units section with target field',
+          () {
+            final entries = [
+              const GnuEntry(
+                id: 'tempcelsius',
+                type: 'function_alias',
+                definition: 'tempC',
+                gnuUnitsSource: 'tempcelsius() tempC',
+                filename: 'defs.units',
+                lineNumber: 1,
+                isDimensionless: false,
+                target: 'tempC',
+                reason: null,
+              ),
+            ];
+            final result = entriesToJson(entries);
+            final units = result['units'] as Map<String, dynamic>;
+            expect(units.containsKey('tempcelsius'), isTrue);
+            final data = units['tempcelsius'] as Map<String, dynamic>;
+            expect(data['type'], equals('function_alias'));
+            expect(data['target'], equals('tempC'));
+            expect(data.containsKey('definition'), isFalse);
+          },
+        );
       });
 
       test('piecewise: id containing [ produces type piecewise', () {

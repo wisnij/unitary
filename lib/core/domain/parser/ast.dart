@@ -16,7 +16,16 @@ class EvalContext {
   /// Used to detect circular unit definitions.
   final Set<String> visited;
 
-  const EvalContext({this.repo, this.visited = const <String>{}});
+  /// Optional variable bindings that shadow unit lookups.  When non-null,
+  /// an identifier found in this map is returned directly as a [Quantity]
+  /// without consulting the repository.
+  final Map<String, Quantity>? variables;
+
+  const EvalContext({
+    this.repo,
+    this.visited = const <String>{},
+    this.variables,
+  });
 }
 
 /// Base class for all AST nodes.
@@ -54,6 +63,11 @@ class UnitNode extends ASTNode {
 
   @override
   Quantity evaluate(EvalContext context) {
+    // Variables shadow unit/repo lookups.
+    if (context.variables != null && context.variables!.containsKey(unitName)) {
+      return context.variables![unitName]!;
+    }
+
     final repo = context.repo;
     if (repo == null) {
       // No repo: Phase 1 behavior (raw dimension).
@@ -165,7 +179,7 @@ class FunctionNode extends ASTNode {
       throw EvalException("Unknown function: '$name'");
     }
     final args = arguments.map((a) => a.evaluate(context)).toList();
-    return inverse ? func.callInverse(args) : func.call(args);
+    return inverse ? func.callInverse(args, context) : func.call(args, context);
   }
 
   @override

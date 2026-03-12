@@ -18,14 +18,16 @@ Project Status
 --------------
 
 **Current Phase:** Phase 5 Complete (Complete Unit Database)\
-**Last Updated:** February 27, 2026
+**Last Updated:** March 11, 2026
 
-Phases 0-5 are complete with 852 passing tests.  The expression parser,
+Phases 0-5 are complete with 1146 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, and
 complete unit database are fully implemented.  Phase 5 added the GNU Units
 import pipeline (importer tool + codegen tool), a JSON intermediate unit
 database (`units.json`), and 26 new units across six categories: digital
-storage, volume, area, speed, pressure, and energy.
+storage, volume, area, speed, pressure, and energy.  Post-phase-5 work
+added first-class builtin functions, GNU Units-defined functions (101
+registered, with 46 aliases), and circular definition detection.
 
 ---
 
@@ -208,6 +210,7 @@ Current Progress
 - ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, derived units, affine syntax, dimensionless units, SI prefixes (703 tests)
 - ✅ **Phase 4: Basic UI - Freeform Mode** — Freeform evaluation UI, settings, drawer navigation, Riverpod state management (847 tests)
 - ✅ **Phase 5: Complete Unit Database** — GNU Units import pipeline, JSON unit database, 26 new units (volume, area, speed, pressure, energy, digital storage) (852 tests)
+- ✅ **Defined Functions** — First-class builtin functions, GNU Units-defined functions (101 registered + 46 aliases), circular definition detection (1146 tests)
 
 ### Design (ready for implementation)
 

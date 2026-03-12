@@ -276,7 +276,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: March 2, 2026*
+*Last Updated: March 11, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -378,3 +378,14 @@ Questions that arose during design but haven't been resolved:
   - `ast.dart`: removed `_builtinFunctions`, `isBuiltinFunction()`, `_evaluateBuiltin()` switch; `FunctionNode.evaluate()` now dispatches via `context.repo?.findFunction(name)`
   - `parsec` and `hubble` now evaluate successfully (previously failed because trig rejected radian-dimension arguments; `acceptDimensionless: true` on trig domain now allows them)
   - New test files: `test/core/domain/models/function_test.dart`, `test/core/domain/data/builtin_functions_test.dart`
+- *Defined functions (March 11, 2026)*
+  - 1146 tests passing (156 new)
+  - `EvalContext` gains `Map<String, Quantity>? variables` field; `UnitNode.evaluate()` checks variables before repo lookup so function parameter bindings shadow unit names
+  - `ExpressionParser` gains `Map<String, Quantity>? variables` parameter, threaded into `EvalContext`
+  - `UnitaryFunction.call()` and `callInverse()` gain `[Object? context]` optional parameter; `FunctionNode.evaluate()` passes its `EvalContext` through
+  - New `lib/core/domain/models/defined_function.dart`: `DefinedFunction` class evaluates a forward expression string with parameter bindings; supports inverse evaluation for single-parameter functions; detects direct and mutual circular recursion via `"$id()"` keys in `EvalContext.visited`; lives in its own file to avoid a circular import (`function.dart` → `ast.dart` → `unit_repository.dart` → `function.dart`)
+  - `tool/import_gnu_units_lib.dart`: `_classifyLine` routes nonlinear definitions (`name(params)`) to `_parseNonlinearDefinition()`; extracts params, `units=`, `domain=`, `range=`, `noerror`; parses domain interval lists (`[a,b]`, `(a,b)`, `[a,)`, mixed bracket types); splits expression body on `;` for forward/inverse; zero-arg form emits `function_alias`; `entriesToJson()` serializes `defined_function` and `function_alias` entries
+  - `tool/generate_predefined_units_lib.dart`: `_emitDefinedFunction()` emits `DefinedFunction(...)` constructor calls with domain/range units resolved via `ExpressionParser` at registration time; `_builtinFunctionIds` skips defined functions whose names conflict with registered builtins (e.g. `abs`); `registerDefinedFunctions(UnitRepository repo)` top-level function emitted; `function_alias` entries folded into target function's aliases list
+  - `lib/core/domain/data/units.json` regenerated: 7471 units, 125 prefixes, 0 nonlinear_definition entries in unsupported section
+  - `lib/core/domain/data/predefined_units.dart` regenerated: contains `registerDefinedFunctions` registering 101 defined functions and 46 function aliases
+  - `_knownEvalFailures` in `predefined_units_test.dart` cleared to empty set (normaltemp, S10, ipv4classA/B/C and others now resolve via defined functions)

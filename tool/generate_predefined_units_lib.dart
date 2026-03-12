@@ -127,6 +127,69 @@ Map<String, List<String>> _resolveNamespaceAliases(
   return result;
 }
 
+/// Resolves function alias chains in the units section.
+///
+/// Returns a map of canonical function id -> extra alias ids derived from
+/// `function_alias`-type entries that point to that function.
+Map<String, List<String>> resolveFunctionAliases(
+  Map<String, dynamic> unitsJson,
+) {
+  final rawUnits = unitsJson['units'];
+  final unitsSection = rawUnits == null
+      ? <String, dynamic>{}
+      : Map<String, dynamic>.from(rawUnits as Map);
+
+  final byId = <String, Map<String, dynamic>>{};
+  for (final entry in unitsSection.entries) {
+    byId[entry.key] = Map<String, dynamic>.from(entry.value as Map);
+  }
+
+  // Collect base aliases claimed by canonical function entries.
+  final claimedBaseAliases = <String>{};
+  for (final entry in unitsSection.entries) {
+    final data = byId[entry.key]!;
+    if ((data['type'] as String?) == 'function_alias') {
+      continue;
+    }
+    final aliases = (data['aliases'] as List<dynamic>?)?.cast<String>();
+    if (aliases != null) {
+      claimedBaseAliases.addAll(aliases);
+    }
+  }
+
+  final result = <String, List<String>>{};
+  for (final entry in unitsSection.entries) {
+    final aliasId = entry.key;
+    final data = byId[aliasId]!;
+    if ((data['type'] as String?) != 'function_alias') {
+      continue;
+    }
+    if (claimedBaseAliases.contains(aliasId)) {
+      continue;
+    }
+
+    var target = data['target'] as String?;
+    final seen = <String>{aliasId};
+    while (target != null) {
+      final targetEntry = byId[target];
+      if (targetEntry == null) {
+        break;
+      }
+      if ((targetEntry['type'] as String?) != 'function_alias') {
+        // Found the canonical function.
+        result.putIfAbsent(target, () => []).add(aliasId);
+        break;
+      }
+      if (!seen.add(target)) {
+        break;
+      }
+      target = targetEntry['target'] as String?;
+    }
+  }
+
+  return result;
+}
+
 /// Generates predefined_units.dart source from a units JSON map.
 ///
 /// [unitsJson] must have three sections: `'units'`, `'prefixes'`,
@@ -212,6 +275,17 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
     }
   }
 
+  // Collect defined_function entries and resolve function aliases.
+  final extraFunctionAliases = resolveFunctionAliases(unitsJson);
+  final definedFunctionEntries = <(String, Map<String, dynamic>)>[];
+  for (final entry in unitsSection.entries) {
+    final id = entry.key;
+    final data = Map<String, dynamic>.from(entry.value as Map);
+    if ((data['type'] as String?) == 'defined_function') {
+      definedFunctionEntries.add((id, data));
+    }
+  }
+
   final buf = StringBuffer();
 
   // File header.
@@ -220,7 +294,9 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
     '// Run `dart run tool/generate_predefined_units.dart` to regenerate.',
   );
   buf.writeln();
-  if (piecewiseEntries.isNotEmpty) {
+  final needsFunctionImports =
+      piecewiseEntries.isNotEmpty || definedFunctionEntries.isNotEmpty;
+  if (needsFunctionImports) {
     buf.writeln("import '../models/function.dart';");
     buf.writeln("import '../models/unit.dart';");
     buf.writeln("import '../models/unit_repository.dart';");
@@ -271,6 +347,26 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
     buf.writeln('}');
   }
 
+  // Defined function registration (emitted only when entries exist).
+  if (definedFunctionEntries.isNotEmpty) {
+    buf.writeln();
+    buf.writeln(
+      '/// Registers all defined functions into the given [repo].',
+    );
+    buf.writeln(
+      '/// Must be called after [registerPredefinedUnits] so that domain',
+    );
+    buf.writeln(
+      '/// and range units are already registered and can be resolved.',
+    );
+    buf.writeln('void registerDefinedFunctions(UnitRepository repo) {');
+    for (final (id, data) in definedFunctionEntries) {
+      final extraAliases = extraFunctionAliases[id] ?? [];
+      _emitDefinedFunction(buf, id, extraAliases, data);
+    }
+    buf.writeln('}');
+  }
+
   return buf.toString();
 }
 
@@ -308,8 +404,11 @@ void _emitEntry(
       _emitPrefix(buf, id, allAliases, description, entry);
     case 'affine':
       _emitAffine(buf, id, allAliases, description, entry);
+    case 'defined_function' || 'function_alias':
+      // Handled separately in registerDefinedFunctions; skip here.
+      break;
     default:
-      // Skip anything else.
+      // Skip anything else (piecewise, unsupported, etc.).
       break;
   }
 }
@@ -438,6 +537,207 @@ void _emitPiecewise(
   buf.writeln('      points: const [${points.join(', ')}],');
   buf.writeln('    ));');
   buf.writeln('  }');
+}
+
+/// IDs of built-in functions registered by [registerBuiltinFunctions].
+///
+/// Defined functions with the same name are skipped to avoid duplicate
+/// registration errors; the built-in implementation takes precedence.
+const _builtinFunctionIds = {
+  'sin',
+  'cos',
+  'tan',
+  'asin',
+  'acos',
+  'atan',
+  'ln',
+  'log',
+  'exp',
+  'sqrt',
+  'cbrt',
+  'abs',
+};
+
+void _emitDefinedFunction(
+  StringBuffer buf,
+  String id,
+  List<String> extraAliases,
+  Map<String, dynamic> entry,
+) {
+  // Skip defined functions whose name conflicts with a registered builtin.
+  if (_builtinFunctionIds.contains(id)) {
+    return;
+  }
+  final params =
+      ((entry['params'] as List<dynamic>?)?.cast<String>()) ?? <String>[];
+  final forward = (entry['forward'] as String?) ?? '';
+  final inverse = entry['inverse'] as String?;
+  final noerror = (entry['noerror'] as bool?) ?? false;
+  final domainUnits =
+      ((entry['domainUnits'] as List<dynamic>?)?.cast<String>()) ?? <String>[];
+  final domainBounds =
+      ((entry['domainBounds'] as List<dynamic>?)?.cast<String>()) ?? <String>[];
+  final rangeUnit = entry['rangeUnit'] as String?;
+  final rangeBounds =
+      ((entry['rangeBounds'] as List<dynamic>?)?.cast<String>()) ?? <String>[];
+  final description = (entry['description'] as String?) ?? '';
+
+  // Compute combined alias list (base + extra), deduplicating.
+  final baseAliases =
+      (entry['aliases'] as List<dynamic>?)?.cast<String>() ?? [];
+  final seen = <String>{};
+  final allAliases = <String>[];
+  for (final a in [...baseAliases, ...extraAliases]) {
+    if (seen.add(a)) {
+      allAliases.add(a);
+    }
+  }
+
+  buf.writeln('  {');
+
+  // Resolve domain units.
+  for (var i = 0; i < domainUnits.length; i++) {
+    buf.writeln(
+      '    final domainUnit$i = ExpressionParser(repo: repo).evaluate(${_q(domainUnits[i])});',
+    );
+  }
+
+  // Resolve range unit.
+  if (rangeUnit != null) {
+    buf.writeln(
+      '    final rangeUnit = ExpressionParser(repo: repo).evaluate(${_q(rangeUnit)});',
+    );
+  }
+
+  buf.writeln('    repo.registerFunction(DefinedFunction(');
+  buf.writeln('      id: ${_q(id)},');
+  if (allAliases.isNotEmpty) {
+    buf.writeln('      aliases: [${allAliases.map(_q).join(', ')}],');
+  }
+  if (description.isNotEmpty) {
+    buf.writeln('      description: ${_q(description)},');
+  }
+  buf.writeln(
+    '      params: [${params.map(_q).join(', ')}],',
+  );
+  buf.writeln('      forward: ${_q(forward)},');
+  if (inverse != null) {
+    buf.writeln('      inverse: ${_q(inverse)},');
+  }
+  buf.writeln('      noerror: $noerror,');
+
+  // Emit domain spec if we have domain units or bounds.
+  if (domainUnits.isNotEmpty || domainBounds.isNotEmpty) {
+    buf.writeln('      domain: [');
+    final count = domainUnits.isNotEmpty
+        ? domainUnits.length
+        : domainBounds.length;
+    for (var i = 0; i < count; i++) {
+      final hasQuantity = i < domainUnits.length;
+      final constPrefix = hasQuantity ? '' : 'const ';
+      buf.write('        ${constPrefix}QuantitySpec(');
+      if (hasQuantity) {
+        buf.write('quantity: domainUnit$i');
+      }
+      if (i < domainBounds.length) {
+        // Parse the bounds string, e.g. "[170,283.15]" or "(0,)".
+        final boundsSpec = _parseBoundsSpec(
+          domainBounds[i],
+          constOuter: !hasQuantity,
+        );
+        if (hasQuantity) {
+          buf.write(', ');
+        }
+        if (boundsSpec.min != null) {
+          buf.write('min: ${boundsSpec.min}');
+        }
+        if (boundsSpec.max != null) {
+          if (boundsSpec.min != null) {
+            buf.write(', ');
+          }
+          buf.write('max: ${boundsSpec.max}');
+        }
+      }
+      buf.writeln('),');
+    }
+    buf.writeln('      ],');
+  }
+
+  // Emit range spec if we have a range unit or bounds.
+  if (rangeUnit != null || rangeBounds.isNotEmpty) {
+    final parts = <String>[];
+    if (rangeUnit != null) {
+      parts.add('quantity: rangeUnit');
+    }
+    // Use 'const' when there is no runtime 'quantity' arg.
+    final isConstSpec = rangeUnit == null;
+    if (rangeBounds.isNotEmpty) {
+      final boundsSpec = _parseBoundsSpec(
+        rangeBounds[0],
+        constOuter: isConstSpec,
+      );
+      if (boundsSpec.min != null) {
+        parts.add('min: ${boundsSpec.min}');
+      }
+      if (boundsSpec.max != null) {
+        parts.add('max: ${boundsSpec.max}');
+      }
+    }
+    final constPrefix = isConstSpec ? 'const ' : '';
+    buf.writeln(
+      '      range: ${constPrefix}QuantitySpec(${parts.join(', ')}),',
+    );
+  }
+
+  buf.writeln('    ));');
+  buf.writeln('  }');
+}
+
+/// Parsed min/max from an interval bounds string like `[170,283.15]` or `(0,)`.
+class _BoundsSpec {
+  final String?
+  min; // Dart code for the Bound, e.g. 'Bound(170.0, closed: true)'
+  final String? max;
+
+  _BoundsSpec(this.min, this.max);
+}
+
+/// Parses an interval string like `[170,283.15]`, `(0,)`, `[3,)` into
+/// [_BoundsSpec] with Dart [Bound] constructor call strings.
+///
+/// If [constOuter] is true, the `const` keyword is omitted from the [Bound]
+/// constructors because the surrounding expression is already `const`.
+_BoundsSpec _parseBoundsSpec(String interval, {bool constOuter = false}) {
+  if (interval.isEmpty) {
+    return _BoundsSpec(null, null);
+  }
+  final openChar = interval[0];
+  final closeChar = interval[interval.length - 1];
+  final inner = interval.substring(1, interval.length - 1); // strip brackets
+  final commaIdx = inner.indexOf(',');
+  if (commaIdx < 0) {
+    return _BoundsSpec(null, null);
+  }
+  final lowerStr = inner.substring(0, commaIdx).trim();
+  final upperStr = inner.substring(commaIdx + 1).trim();
+
+  final boundPrefix = constOuter ? '' : 'const ';
+
+  String? min;
+  if (lowerStr.isNotEmpty) {
+    final closed = openChar == '[';
+    final value = double.tryParse(lowerStr) ?? 0.0;
+    min = '${boundPrefix}Bound(${_formatDouble(value)}, closed: $closed)';
+  }
+
+  String? max;
+  if (upperStr.isNotEmpty) {
+    final closed = closeChar == ']';
+    final value = double.tryParse(upperStr) ?? 0.0;
+    max = '${boundPrefix}Bound(${_formatDouble(value)}, closed: $closed)';
+  }
+
+  return _BoundsSpec(min, max);
 }
 
 /// Quotes a string as a single-quoted Dart string literal.

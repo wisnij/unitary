@@ -41416,3 +41416,2155 @@ void registerPiecewiseFunctions(UnitRepository repo) {
     );
   }
 }
+
+/// Registers all defined functions into the given [repo].
+/// Must be called after [registerPredefinedUnits] so that domain
+/// and range units are already registered and can be resolved.
+void registerDefinedFunctions(UnitRepository repo) {
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'circum',
+        aliases: ['circumference'],
+        params: ['r'],
+        forward: '2 pi r',
+        inverse: 'circum/ 2 pi',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'circum_d',
+        aliases: ['circumference_d'],
+        params: ['d'],
+        forward: 'circum(d/2)',
+        inverse: '2 ~circum(circum_d)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'circlearea',
+        params: ['r'],
+        forward: 'pi r^2',
+        inverse: 'sqrt(circlearea/pi)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'circlearea_d',
+        params: ['d'],
+        forward: 'circlearea(d/2)',
+        inverse: '2 ~circlearea(circlearea_d)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'spherevolume',
+        aliases: ['spherevol'],
+        params: ['r'],
+        forward: '4|3 pi r^3',
+        inverse: 'cuberoot(spherevolume/4|3 pi)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'spherevolume_d',
+        aliases: ['spherevol_d'],
+        params: ['d'],
+        forward: 'spherevolume(d/2)',
+        inverse: '2 ~spherevolume(spherevolume_d)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'square',
+        params: ['x'],
+        forward: 'x^2',
+        inverse: 'sqrt(square)',
+        noerror: false,
+        range: const QuantitySpec(min: Bound(0.0, closed: true)),
+      ),
+    );
+  }
+  {
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'cube',
+        params: ['x'],
+        forward: 'x^3',
+        inverse: 'cube^(1|3)',
+        noerror: false,
+        range: const QuantitySpec(min: Bound(0.0, closed: true)),
+      ),
+    );
+  }
+  {
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'hypot',
+        params: ['x', 'y'],
+        forward: 'sqrt(x*x+y*y)',
+        noerror: false,
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('mol/liter');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'pH',
+        aliases: ['㏗'],
+        params: ['x'],
+        forward: '10^(-x) mol/liter',
+        inverse: '(-log(pH liters/mol))',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('K');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'tempC',
+        aliases: ['tempcelsius'],
+        params: ['x'],
+        forward: 'x K + stdtemp',
+        inverse: '(tempC +(-stdtemp))/K',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-273.15, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('K');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'tempF',
+        aliases: ['tempfahrenheit'],
+        params: ['x'],
+        forward: '(x+(-32)) degF + stdtemp',
+        inverse: '(tempF+(-stdtemp))/degF + 32',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-459.67, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('K');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'tempreaumur',
+        params: ['x'],
+        forward: 'x degreaumur+stdtemp',
+        inverse: '(tempreaumur+(-stdtemp))/degreaumur',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-218.52, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m/s');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'beaufort_WMO1100',
+        params: ['B'],
+        forward: '0.836 B^3|2 m/s',
+        inverse: '(beaufort_WMO1100 s / 0.836 m)^2|3',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(17.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m/s');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'beaufort',
+        params: ['B'],
+        forward: 'beaufort_WMO1100(B)',
+        inverse: '~beaufort_WMO1100(beaufort)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(17.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('K');
+    final domainUnit1 = ExpressionParser(repo: repo).evaluate('mph');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'windchill',
+        params: ['T', 'speed'],
+        forward:
+            'tempF( 35.74 + 0.6215 ~tempF(T) + - 35.75 (speed/mph)^0.16 + 0.4275 ~tempF(T) (speed/mph)^0.16 )',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(170.0, closed: true),
+            max: const Bound(283.15, closed: true),
+          ),
+          QuantitySpec(
+            quantity: domainUnit1,
+            min: const Bound(3.0, closed: true),
+          ),
+        ],
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('K');
+    final domainUnit1 = ExpressionParser(repo: repo).evaluate('mph');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'windchillpower',
+        params: ['T', 'speed'],
+        forward:
+            '(12.1452 + 11.6222 sqrt(speed/(m/s)) +- 1.1622 speed/(m/s)) * (33 +- ~tempC(T)) W/m^2',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(170.0, closed: true),
+            max: const Bound(283.15, closed: true),
+          ),
+          QuantitySpec(
+            quantity: domainUnit1,
+            min: const Bound(3.0, closed: true),
+          ),
+        ],
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('K');
+    final domainUnit1 = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'heatindex',
+        params: ['T', 'H'],
+        forward:
+            'tempF(-42.379 + 1014.333127 H +- 548.1717 H^2 + (2.04901523 +- 22.475541 H + 8.5282 H^2) ~tempF(T) + (-0.00683783 + 0.122874 H +- 0.0199 H^2) ~tempF(T)^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+          ),
+          QuantitySpec(
+            quantity: domainUnit1,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(1.0, closed: true),
+          ),
+        ],
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final domainUnit1 = ExpressionParser(repo: repo).evaluate('kg');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'bmi',
+        params: ['height', 'weight'],
+        forward: '(weight/kg) / (height/m)^2',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: false),
+          ),
+          QuantitySpec(
+            quantity: domainUnit1,
+            min: const Bound(0.0, closed: false),
+          ),
+        ],
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('lambert');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'bril',
+        params: ['x'],
+        forward: '2^(x+-100) lamberts',
+        inverse: 'log2(bril/lambert)+100',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('cd/m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'ev100',
+        aliases: ['EV100'],
+        params: ['x'],
+        forward: '2^x k1250 / s100',
+        inverse: 'log2(ev100 s100/k1250)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('lx');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'iv100',
+        params: ['x'],
+        forward: '2^x c250 / s100',
+        inverse: 'log2(iv100 s100 / c250)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Av',
+        params: ['A'],
+        forward: '2^(A/2)',
+        inverse: '2 log2(Av)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-2.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.5, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('s');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Tv',
+        params: ['t'],
+        forward: '2^(-t) s',
+        inverse: 'log2(s / Tv)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Sval',
+        params: ['S'],
+        forward: '2^S / (N_speed/lx s)',
+        inverse: 'log2((N_speed/lx s) Sval)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('cd/m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Bv',
+        params: ['x'],
+        forward: '2^x K_lum N_speed',
+        inverse: 'log2(Bv / (K_lum N_speed))',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('lx');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Iv',
+        params: ['x'],
+        forward: '2^x C_illum N_speed',
+        inverse: 'log2(Iv / (C_illum N_speed))',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Sx',
+        params: ['S'],
+        forward: 'log2((N_speed/lx s) S)',
+        inverse: '2^Sx / (N_speed/lx s)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: false),
+          ),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Sdeg',
+        aliases: ['Sdin'],
+        params: ['S'],
+        forward: '10^((S - 1) / 10)',
+        inverse: '(1 + 10 log(Sdeg))',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'numericalaperture',
+        aliases: ['NA'],
+        params: ['x'],
+        forward: '0.5 / x',
+        inverse: '0.5 / numericalaperture',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: false),
+            max: const Bound(1.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.5, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'fnumber',
+        params: ['x'],
+        forward: 'x',
+        inverse: 'fnumber',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.5, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.5, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('degree');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'airmass',
+        params: ['alt'],
+        forward: '1 / (sin(alt) + 0.50572 (alt / degree + 6.07995)^-1.6364)',
+        noerror: true,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(90.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('degree');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'airmassz',
+        params: ['zenith'],
+        forward:
+            '1 / (cos(zenith) + 0.50572 (96.07995 - zenith / degree)^-1.6364)',
+        noerror: true,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(90.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('degree');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'atm_transmission',
+        params: ['alt'],
+        forward: 'exp(-extinction_coeff airmass(alt))',
+        noerror: true,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(90.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('degree');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'atm_transmissionz',
+        params: ['zenith'],
+        forward: 'exp(-extinction_coeff airmassz(zenith))',
+        noerror: true,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(90.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('lx');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'vmag',
+        params: ['mag'],
+        forward: '2.54e-6 lx 10^(-0.4 mag)',
+        inverse: '-2.5 log(vmag / (2.54e-6 lx))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('cd/m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'SB_degree',
+        aliases: ['SB_deg'],
+        params: ['sb'],
+        forward: 'vmag(sb) / squaredegree',
+        inverse: '~vmag(SB_degree squaredegree)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('cd/m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'SB_minute',
+        aliases: ['SB_min'],
+        params: ['sb'],
+        forward: 'vmag(sb) / squareminute',
+        inverse: '~vmag(SB_minute squareminute)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('cd/m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'SB_second',
+        aliases: ['SB', 'SB_sec'],
+        params: ['sb'],
+        forward: 'vmag(sb) / squaresecond',
+        inverse: '~vmag(SB_second squaresecond)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('cd/m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'SB_sr',
+        params: ['sb'],
+        forward: 'vmag(sb) / sr',
+        inverse: '~vmag(SB_sr sr)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('inch');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'shoesize_men',
+        params: ['n'],
+        forward: 'shoe_men0 + n shoesize_delta',
+        inverse: '(shoesize_men+(-shoe_men0))/shoesize_delta',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('inch');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'shoesize_women',
+        params: ['n'],
+        forward: 'shoe_women0 + n shoesize_delta',
+        inverse: '(shoesize_women+(-shoe_women0))/shoesize_delta',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('inch');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'shoesize_boys',
+        params: ['n'],
+        forward: 'shoe_boys0 + n shoesize_delta',
+        inverse: '(shoesize_boys+(-shoe_boys0))/shoesize_delta',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('inch');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'shoesize_girls',
+        params: ['n'],
+        forward: 'shoe_girls0 + n shoesize_delta',
+        inverse: '(shoesize_girls+(-shoe_girls0))/shoesize_delta',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('cup');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'scoop',
+        params: ['n'],
+        forward: '32 usfloz / n',
+        inverse: '32 usfloz / scoop',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(4.0, closed: true),
+            max: const Bound(100.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.04, closed: true),
+          max: const Bound(1.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('K');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'sugar_bpe',
+        params: ['T'],
+        forward: 'brix(~sugar_conc_bpe(T))',
+        inverse: 'sugar_conc_bpe(~brix(sugar_bpe))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(39.1636, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.99717, closed: true),
+          max: const Bound(1.5144619, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('K');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'sugar_bp',
+        params: ['T'],
+        forward: 'brix(~sugar_conc_bpe(T-tempC(100)))',
+        inverse: 'sugar_conc_bpe(~brix(sugar_bp))+tempC(100)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(373.15, closed: true),
+            max: const Bound(412.3136, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.99717, closed: true),
+          max: const Bound(1.5144619, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'sugar_bpF',
+        params: ['T'],
+        forward: 'brix(~sugar_conc_bpe(tempF(T)+-tempC(100)))',
+        inverse: '~tempF(sugar_conc_bpe(~brix(sugar_bpF))+tempC(100))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(212.0, closed: true),
+            max: const Bound(282.49448, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.99717, closed: true),
+          max: const Bound(1.5144619, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'sugar_bpC',
+        params: ['T'],
+        forward: 'brix(~sugar_conc_bpe(tempC(T)+-tempC(100)))',
+        inverse: '~tempC(sugar_conc_bpe(~brix(sugar_bpC))+tempC(100))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(100.0, closed: true),
+            max: const Bound(139.1636, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.99717, closed: true),
+          max: const Bound(1.5144619, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'baume',
+        params: ['d'],
+        forward: '(baumeconst/(baumeconst+-d)) g/cm^3',
+        inverse: '(baume+((-g)/cm^3)) baumeconst / baume',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(145.0, closed: false),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(1.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'twaddell',
+        params: ['x'],
+        forward: '(1 + 0.005 x) g / cm^3',
+        inverse: '200 (twaddell / (g/cm^3) +- 1)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-200.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'quevenne',
+        params: ['x'],
+        forward: '(1 + 0.001 x) g / cm^3',
+        inverse: '1000 (quevenne / (g/cm^3) +- 1)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-1000.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('g/cm^3');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'apidegree',
+        params: ['x'],
+        forward: '141.5 g/cm^3 / (x+131.5)',
+        inverse: '141.5 (g/cm^3) / apidegree + (-131.5)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-131.5, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'shotgungauge',
+        aliases: ['shotgunga'],
+        params: ['ga'],
+        forward: '2 ~spherevol(1 pound / ga leaddensity)',
+        inverse: '1 pound / leaddensity spherevol(shotgungauge/2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: false),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'bel',
+        params: ['x'],
+        forward: '10^(x)',
+        inverse: 'log(bel)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'decibel',
+        aliases: ['dB', '㏈'],
+        params: ['x'],
+        forward: '10^(x/10)',
+        inverse: '10 log(decibel)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('W');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBW',
+        params: ['x'],
+        forward: 'dB(x) W',
+        inverse: '~dB(dBW/W)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('W');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBk',
+        params: ['x'],
+        forward: 'dB(x) kW',
+        inverse: '~dB(dBk/kW)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('W');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBf',
+        params: ['x'],
+        forward: 'dB(x) fW',
+        inverse: '~dB(dBf/fW)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('W');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBm',
+        params: ['x'],
+        forward: 'dB(x) mW',
+        inverse: '~dB(dBm/mW)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('W');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBmW',
+        params: ['x'],
+        forward: 'dBm(x)',
+        inverse: '~dBm(dBmW)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('J');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBJ',
+        params: ['x'],
+        forward: 'dB(x) J',
+        inverse: '~dB(dBJ/J)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dB_amplitude',
+        params: ['x'],
+        forward: 'dB(0.5 x)',
+        inverse: '~dB(dB_amplitude^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('V');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBV',
+        params: ['x'],
+        forward: 'dB(0.5 x) V',
+        inverse: '~dB(dBV^2 / V^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('V');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBmV',
+        params: ['x'],
+        forward: 'dB(0.5 x) mV',
+        inverse: '~dB(dBmV^2/mV^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('V');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBuV',
+        params: ['x'],
+        forward: 'dB(0.5 x) microV',
+        inverse: '~dB(dBuV^2 / microV^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('A');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBA',
+        params: ['x'],
+        forward: 'dB(0.5 x) A',
+        inverse: '~dB(dBA^2 / A^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('A');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBmA',
+        params: ['x'],
+        forward: 'dB(0.5 x) mA',
+        inverse: '~dB(dBmA^2/mA^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('A');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBuA',
+        params: ['x'],
+        forward: 'dB(0.5 x) microA',
+        inverse: '~dB(dBuA^2 / microA^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('V');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBu',
+        params: ['x'],
+        forward: 'dB(0.5 x) sqrt(mW 600 ohm)',
+        inverse: '~dB(dBu^2 / mW 600 ohm)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('V');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBv',
+        params: ['x'],
+        forward: 'dBu(x)',
+        inverse: '~dBu(dBv)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('Pa');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBSPL',
+        params: ['x'],
+        forward: 'dB(0.5 x) 20 microPa',
+        inverse: '~dB(dBSPL^2 / (20 microPa)^2)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('W/m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBSIL',
+        params: ['x'],
+        forward: 'dB(x) 1e-12 W/m^2',
+        inverse: '~dB(dBSIL / (1e-12 W/m^2))',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('W');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'dBSWL',
+        params: ['x'],
+        forward: 'dB(x) 1e-12 W',
+        inverse: '~dB(dBSWL/1e-12 W)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'neper',
+        aliases: ['Np'],
+        params: ['x'],
+        forward: 'exp(x)',
+        inverse: 'ln(neper)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'centineper',
+        aliases: ['cNp'],
+        params: ['x'],
+        forward: 'exp(x/100)',
+        inverse: '100 ln(centineper)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'Np_power',
+        params: ['x'],
+        forward: 'Np(2 x)',
+        inverse: '~Np(Np_power)/2',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'ipv4subnetsize',
+        params: ['prefix_len'],
+        forward: '2^(32-prefix_len)',
+        inverse: '32-log2(ipv4subnetsize)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(32.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(1.0, closed: true),
+          max: const Bound(4294967296.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'ipv6subnetsize',
+        params: ['prefix_len'],
+        forward: '2^(128-prefix_len)',
+        inverse: '128-log2(ipv6subnetsize)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(128.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(1.0, closed: true),
+          max: const Bound(3.402823669209385e+38, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'musicalcent',
+        params: ['x'],
+        forward: 'semitone^(x/100)',
+        inverse: '100 log(musicalcent)/log(semitone)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('\$');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'USdollars_in',
+        aliases: ['dollars_in', 'US\$in', '\$in'],
+        params: ['date'],
+        forward: 'US\$ UScpi_now / UScpi(date)',
+        inverse: '~UScpi(US\$ UScpi_now / USdollars_in)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(1913.0833333333333, closed: true),
+            max: const Bound(2025.9166666666667, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(1.0, closed: true),
+          max: const Bound(33.07367346938776, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('1');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'USinflation_since',
+        aliases: ['inflation_since'],
+        params: ['date'],
+        forward: 'UScpi_now / UScpi(date)',
+        inverse: '~UScpi(UScpi_now / USinflation_since)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(1913.0833333333333, closed: true),
+            max: const Bound(2025.9166666666667, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(1.0, closed: true),
+          max: const Bound(33.07367346938776, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('K');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('Pa s');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'viscosity_air',
+        params: ['T'],
+        forward: '(2.791e-7 (T/K)^(0.7355)) Pa s',
+        inverse: '(((viscosity_air/(Pa s)) / 2.791e-7)^(1|0.7355)) K',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(253.15, closed: true),
+            max: const Bound(673.15, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('K');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('mPa s');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'viscosity_water',
+        params: ['T'],
+        forward: '0.02939 exp((507.88 K) / (T - 149.3 K)) mPa s',
+        inverse: '149.3 K + (507.88 K) / ln(viscosity_water / (0.02939 mPa s))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('DENSITY');
+    final domainUnit1 = ExpressionParser(repo: repo).evaluate('SPEED');
+    final domainUnit2 = ExpressionParser(repo: repo).evaluate('LENGTH');
+    final domainUnit3 = ExpressionParser(repo: repo).evaluate('VISCOSITY');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'reynolds',
+        params: ['density', 'speed', 'diam', 'visc'],
+        forward: 'density speed diam / visc',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: false),
+          ),
+          QuantitySpec(
+            quantity: domainUnit1,
+            min: const Bound(0.0, closed: true),
+          ),
+          QuantitySpec(
+            quantity: domainUnit2,
+            min: const Bound(0.0, closed: false),
+          ),
+          QuantitySpec(
+            quantity: domainUnit3,
+            min: const Bound(0.0, closed: false),
+          ),
+        ],
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('K');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'stdatmTH',
+        params: ['h'],
+        forward: 'stdatmT0+(-lapserate h)',
+        inverse: '(stdatmT0+(-stdatmTH))/lapserate',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-5000.0, closed: true),
+            max: const Bound(11000.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(217.0, closed: true),
+          max: const Bound(321.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('K');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'stdatmT',
+        params: ['z'],
+        forward: 'stdatmTH(geop_ht(z))',
+        inverse: '~geop_ht(~stdatmTH(stdatmT))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-5000.0, closed: true),
+            max: const Bound(11000.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(217.0, closed: true),
+          max: const Bound(321.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('Pa');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'stdatmPH',
+        params: ['h'],
+        forward: 'atm (1 - (lapserate/stdatmT0) h)^(polyndx + 1)',
+        inverse:
+            '(stdatmT0/lapserate) (1+(-(stdatmPH/stdatmP0)^(1/(polyndx + 1))))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-5000.0, closed: true),
+            max: const Bound(11000.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(22877.0, closed: true),
+          max: const Bound(177764.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('Pa');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'stdatmP',
+        params: ['z'],
+        forward: 'stdatmPH(geop_ht(z))',
+        inverse: '~geop_ht(~stdatmPH(stdatmP))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-5000.0, closed: true),
+            max: const Bound(11000.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(22877.0, closed: true),
+          max: const Bound(177764.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('m');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'geop_ht',
+        params: ['z'],
+        forward: '(earthradUSAtm z) / (earthradUSAtm + z)',
+        inverse: '(earthradUSAtm geop_ht) / (earthradUSAtm + (-geop_ht))',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-5000.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(-5004.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('deg');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m/s2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'g_phi',
+        params: ['lat'],
+        forward:
+            '980.6160e-2 (1+(-0.0026373) cos(2 lat)+0.0000059 cos(2 lat)^2) m/s2',
+        noerror: true,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(90.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('deg');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'earthradius_eff',
+        params: ['lat'],
+        forward:
+            'm 2 9.780356 (1+0.0052885 sin(lat)^2+(-0.0000059) sin(2 lat)^2) / (3.085462e-6 + 2.27e-9 cos(2 lat) + (-2e-12) cos(4 lat))',
+        noerror: true,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(0.0, closed: true),
+            max: const Bound(90.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('Pa');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('Pa');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'gaugepressure',
+        params: ['x'],
+        forward: 'x + Patm',
+        inverse: 'gaugepressure+(-Patm)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-101325.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('Pa');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'psig',
+        params: ['x'],
+        forward: 'gaugepressure(x psi)',
+        inverse: '~gaugepressure(psig) / psi',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-14.6959487755135, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'wiregauge',
+        aliases: ['wirega', 'awg'],
+        params: ['g'],
+        forward: '1|200 92^((36+(-g))/39) in',
+        inverse: '36+(-39)ln(200 wiregauge/in)/ln(92)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m^2');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'wiregaugeA',
+        aliases: ['wiregaA', 'awgA'],
+        params: ['ga'],
+        forward: 'circlearea_d(awg(ga))',
+        inverse: '~awg(~circlearea_d(wiregaugeA))',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0, closed: false),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('m');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'screwgauge',
+        params: ['g'],
+        forward: '(.06 + .013 g) in',
+        inverse: '(screwgauge/in + (-.06)) / .013',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(-3.0, closed: true),
+            max: const Bound(24.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.0005334, closed: true),
+          max: const Bound(0.0094488, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('in');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'ringsize',
+        params: ['n'],
+        forward: '(1.4216+.1018 n) in',
+        inverse: '(ringsize/in + (-1.4216))/.1018',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(2.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(1.6252, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('mm');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'jpringsize',
+        params: ['n'],
+        forward: '(38|3 + n/3) pi mm',
+        inverse: '3 jpringsize/ pi mm + (-38)',
+        noerror: false,
+        domain: [
+          QuantitySpec(
+            quantity: domainUnit0,
+            min: const Bound(1.0, closed: true),
+          ),
+        ],
+        range: QuantitySpec(
+          quantity: rangeUnit,
+          min: const Bound(0.040840704, closed: true),
+        ),
+      ),
+    );
+  }
+  {
+    final domainUnit0 = ExpressionParser(repo: repo).evaluate('1');
+    final rangeUnit = ExpressionParser(repo: repo).evaluate('mm');
+    repo.registerFunction(
+      DefinedFunction(
+        id: 'euringsize',
+        params: ['n'],
+        forward: '(n+40) mm',
+        inverse: 'euringsize/mm + (-40)',
+        noerror: false,
+        domain: [
+          QuantitySpec(quantity: domainUnit0),
+        ],
+        range: QuantitySpec(quantity: rangeUnit),
+      ),
+    );
+  }
+}

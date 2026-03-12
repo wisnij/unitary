@@ -14,7 +14,7 @@ class _TestFn extends UnitaryFunction {
   bool get hasInverse => false;
 
   @override
-  Quantity evaluate(List<Quantity> args) => args[0];
+  Quantity evaluate(List<Quantity> args, [Object? context]) => args[0];
 }
 
 void main() {

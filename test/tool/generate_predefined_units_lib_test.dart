@@ -993,6 +993,156 @@ void main() {
       expect(code, isNot(contains('registerPiecewiseFunctions')));
     });
   });
+
+  group('defined_function codegen', () {
+    Map<String, dynamic> makeDefinedFunctionJson(
+      List<Map<String, dynamic>> entries,
+    ) {
+      final units = <String, dynamic>{};
+      for (final e in entries) {
+        final id = e['id'] as String;
+        units[id] = Map<String, dynamic>.from(e)..remove('id');
+      }
+      return {
+        'units': units,
+        'prefixes': <String, dynamic>{},
+        'unsupported': <String, dynamic>{},
+      };
+    }
+
+    test(
+      'defined_function entry generates registerDefinedFunctions function',
+      () {
+        final json = makeDefinedFunctionJson([
+          {
+            'id': 'triple',
+            'type': 'defined_function',
+            'params': ['x'],
+            'forward': '3 x',
+            'noerror': false,
+            'gnuUnitsSource': 'triple(x) 3 x',
+            'source': {'file': 'defs.units', 'line': 1},
+          },
+        ]);
+        final code = generateDartCode(json);
+        expect(code, contains('void registerDefinedFunctions('));
+      },
+    );
+
+    test('defined_function entry emits DefinedFunction constructor', () {
+      final json = makeDefinedFunctionJson([
+        {
+          'id': 'triple',
+          'type': 'defined_function',
+          'params': ['x'],
+          'forward': '3 x',
+          'noerror': false,
+          'gnuUnitsSource': 'triple(x) 3 x',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerDefinedFunctions');
+      expect(body, contains("id: 'triple'"));
+      expect(body, contains('DefinedFunction('));
+      expect(body, contains("params: ['x']"));
+      expect(body, contains("forward: '3 x'"));
+    });
+
+    test('domain units resolved via ExpressionParser', () {
+      final json = makeDefinedFunctionJson([
+        {
+          'id': 'circlearea',
+          'type': 'defined_function',
+          'params': ['r'],
+          'forward': 'pi r^2',
+          'domainUnits': ['m'],
+          'rangeUnit': 'm^2',
+          'noerror': false,
+          'gnuUnitsSource': 'circlearea(r) units=[m;m^2] pi r^2',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerDefinedFunctions');
+      expect(body, contains("ExpressionParser(repo: repo).evaluate('m')"));
+      expect(body, contains("ExpressionParser(repo: repo).evaluate('m^2')"));
+    });
+
+    test('defined_function with inverse emits inverse field', () {
+      final json = makeDefinedFunctionJson([
+        {
+          'id': 'incr',
+          'type': 'defined_function',
+          'params': ['x'],
+          'forward': 'x + 1',
+          'inverse': 'incr - 1',
+          'noerror': false,
+          'gnuUnitsSource': 'incr(x) x + 1 ; incr - 1',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerDefinedFunctions');
+      expect(body, contains("inverse: 'incr - 1'"));
+    });
+
+    test('defined_function entry is not emitted in _registerUnits', () {
+      final json = makeDefinedFunctionJson([
+        {
+          'id': 'triple',
+          'type': 'defined_function',
+          'params': ['x'],
+          'forward': '3 x',
+          'noerror': false,
+          'gnuUnitsSource': 'triple(x) 3 x',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final registerUnitsBody = _extractFunctionBody(code, '_registerUnits');
+      expect(registerUnitsBody, isNot(contains("'triple'")));
+    });
+
+    test('function_alias entry is folded into target function aliases', () {
+      final json = makeDefinedFunctionJson([
+        {
+          'id': 'triple',
+          'type': 'defined_function',
+          'params': ['x'],
+          'forward': '3 x',
+          'noerror': false,
+          'gnuUnitsSource': 'triple(x) 3 x',
+          'source': {'file': 'defs.units', 'line': 1},
+        },
+        {
+          'id': 'tripler',
+          'type': 'function_alias',
+          'target': 'triple',
+          'gnuUnitsSource': 'tripler() triple',
+          'source': {'file': 'defs.units', 'line': 2},
+        },
+      ]);
+      final code = generateDartCode(json);
+      final body = _extractFunctionBody(code, 'registerDefinedFunctions');
+      expect(body, contains("'tripler'"));
+      // The alias should not produce a separate DefinedFunction registration.
+      expect(body.split('DefinedFunction(').length - 1, equals(1));
+    });
+
+    test(
+      'no defined_function entries: registerDefinedFunctions not emitted',
+      () {
+        final json = {
+          'units': <String, dynamic>{},
+          'prefixes': <String, dynamic>{},
+          'unsupported': <String, dynamic>{},
+        };
+        final code = generateDartCode(json);
+        expect(code, isNot(contains('registerDefinedFunctions')));
+      },
+    );
+  });
 }
 
 /// Extracts the text of a function call containing [id] from [code].

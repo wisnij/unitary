@@ -1,9 +1,7 @@
-Defined Function
-================
+# Defined Function
 
 
-Purpose
--------
+## Purpose
 
 Define the `DefinedFunction` concrete subclass of `UnitaryFunction` for
 functions whose forward and inverse behaviours are specified by expression
@@ -12,8 +10,7 @@ strings evaluated at call time, along with the supporting changes to
 available during expression evaluation.
 
 
-Requirements
-------------
+## Requirements
 
 ### Requirement: DefinedFunction class
 The system SHALL provide a `DefinedFunction` concrete subclass of

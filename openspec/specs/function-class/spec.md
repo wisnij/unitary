@@ -1,8 +1,6 @@
-Function Class
-==============
+# Function Class
 
-Purpose
--------
+## Purpose
 
 Define the `UnitaryFunction` abstract base class and its supporting types
 (`QuantitySpec`, `Bound`) that represent named callable identifiers in the
@@ -10,8 +8,7 @@ expression evaluator, along with the concrete `BuiltinFunction` subclass for
 the set of built-in mathematical functions.
 
 
-Requirements
-------------
+## Requirements
 
 ### Requirement: UnitaryFunction abstract base class
 The system SHALL provide a `UnitaryFunction` abstract class as the base for all

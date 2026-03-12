@@ -1,8 +1,6 @@
-Log-N Function
-==============
+# Log-N Function
 
-Purpose
--------
+## Purpose
 
 Define the parser's recognition and desugaring of `logB(x)` syntax for any
 integer base B ≥ 2, following the GNU Units convention where `logB(x)` is

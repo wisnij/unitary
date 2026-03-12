@@ -1,8 +1,6 @@
-Function Registry
-=================
+# Function Registry
 
-Purpose
--------
+## Purpose
 
 Define how `UnitaryFunction` objects are stored in and retrieved from
 `UnitRepository`, including collision detection across the function, unit, and
@@ -10,8 +8,7 @@ prefix registries, and how builtin functions are registered and wired into the
 parser and evaluator.
 
 
-Requirements
-------------
+## Requirements
 
 ### Requirement: UnitRepository stores and retrieves functions
 `UnitRepository` SHALL maintain a registry of `UnitaryFunction` objects

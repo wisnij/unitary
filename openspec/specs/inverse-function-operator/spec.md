@@ -1,15 +1,12 @@
-Inverse Function Operator
-=========================
+# Inverse Function Operator
 
-Purpose
--------
+## Purpose
 
 Define the `~` operator that invokes the inverse of a named function in the
 expression grammar, matching GNU Units syntax.
 
 
-Requirements
-------------
+## Requirements
 
 ### Requirement: INVERSE lexer token
 

@@ -1,9 +1,7 @@
-Defined Function Registry
-=========================
+# Defined Function Registry
 
 
-Purpose
--------
+## Purpose
 
 Define how `DefinedFunction` objects produced by the codegen pipeline are
 registered into `UnitRepository`, including the `registerDefinedFunctions`
@@ -11,8 +9,7 @@ top-level function emitted by the codegen library and its integration with
 `UnitRepository.withPredefinedUnits()`.
 
 
-Requirements
-------------
+## Requirements
 
 ### Requirement: Nonlinear definition import produces defined_function entries
 The importer library SHALL parse a GNU Units nonlinear unit definition line

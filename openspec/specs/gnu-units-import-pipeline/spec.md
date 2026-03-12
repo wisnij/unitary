@@ -269,11 +269,6 @@ piecewise function registrations, and defined function registrations.
   `const PrefixUnit(id: '<id>', expression: '<definition>', ...)` registered
   via `repo.registerPrefix()`
 
-#### Scenario: Affine unit is emitted correctly
-- **WHEN** an entry has `"type": "affine"`
-- **THEN** the output contains
-  `const AffineUnit(id: '<id>', factor: <factor>, offset: <offset>, baseUnitId: '<baseUnitId>', ...)` registered via `repo.register()`
-
 #### Scenario: Unsupported and alias entries are omitted from unit registration
 - **WHEN** an entry has `"type": "unsupported"` or `"type": "alias"`
 - **THEN** no unit registration is emitted for that entry
@@ -310,7 +305,7 @@ piecewise function registrations, and defined function registrations.
 - **WHEN** any code is generated
 - **THEN** `registerPredefinedUnits(repo)` calls exactly two private functions:
   `_registerUnits(repo)` and `_registerPrefixes(repo)`
-- **AND** all unit entries (primitive, derived, affine) appear inside
+- **AND** all unit entries (primitive, derived) appear inside
   `_registerUnits`, and all prefix entries appear inside `_registerPrefixes`
 - **AND** a separate top-level `registerPiecewiseFunctions(repo)` function is
   emitted for piecewise registrations

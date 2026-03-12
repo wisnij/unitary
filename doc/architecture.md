@@ -139,7 +139,7 @@ line/column for error reporting.
 - `UnitNode` — unit identifier (resolved via UnitRepository at evaluation time)
 - `BinaryOpNode` — binary operators (+, -, *, /, ^) including implicit multiplication
 - `UnaryOpNode` — unary minus
-- `FunctionNode` — built-in functions (sin, cos, sqrt, etc.) and affine units (tempF, tempC)
+- `FunctionNode` — builtin and defined functions (sin, cos, sqrt, tempF, tempC, etc.)
 
 **Evaluator:**
 
@@ -201,9 +201,6 @@ Unit subclasses define how units convert to primitive base units:
 - **`PrimitiveUnit`** — fundamental units that define their own dimension
   (e.g., meter → `{m: 1}`).  Optionally `isDimensionless` for units like
   radian and steradian.
-- **`AffineUnit`** — units with a scale factor and offset relative to a base
-  unit (e.g., tempC: `(value + 273.15) * 1.0` → kelvin).  Used for absolute
-  temperature conversions.
 - **`DerivedUnit`** — units defined by an expression string that is parsed
   and evaluated through the full pipeline (e.g., newton: `"kg m/s^2"`,
   mile: `"5280 ft"`).
@@ -222,7 +219,6 @@ Examples of unit definitions:
 Primitive:  m (meter)           → Quantity(1.0, {m: 1})
 Derived:    mi (mile)           → "5280 ft" → Quantity(1609.344, {m: 1})
 Derived:    N (newton)          → "kg m/s^2" → Quantity(1.0, {kg: 1, m: 1, s: -2})
-Affine:     tempF (Fahrenheit)  → (value - 32) * 5/9 + 273.15 K
 Prefix:     kilo                → "1000" → Quantity(1000.0, dimensionless)
 ~~~~
 

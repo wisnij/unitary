@@ -22,7 +22,7 @@ The following areas have been thoroughly designed and documented:
 - **Dimension**: Representation as map of primitive unit IDs to exponents
 - **Unit**: Structure with id, aliases, description, and definition
 - **Primitive Units**: Units that cannot be reduced further (dimensioned and dimensionless)
-- **Derived Units**: Affine and compound definitions
+- **Derived Units**: Compound definitions
 - **Prefixes**: SI and other prefixes with multiplication factors
 - **DimensionRegistry**: Mapping dimensions to human-readable names for UI
 
@@ -43,8 +43,8 @@ The following areas have been thoroughly designed and documented:
 - **Unit Conversion**: Algorithm for converting between conformable units, handling chains and derived units
 - **Unit Reduction**: Algorithm to express quantities in primitive units
 - **Temperature Handling**: GNU Units approach with separate absolute (tempF/tempC) and difference (degF/degC) units
-- **Function/Affine Syntax**: Parentheses required for functions and affine units except when standalone (definition lookup/conversion target)
-- **Prefix Restrictions**: No prefixes allowed on functions or affine units
+- **Function Syntax**: Parentheses required for functions except when standalone (definition lookup/conversion target)
+- **Prefix Restrictions**: No prefixes allowed on functions
 - **Error Handling**: Fail-fast approach - throw immediately on NaN-producing operations with clear messages
 - **Edge Cases**: Division by zero, very large/small numbers, negative bases with fractional exponents, precision loss
 - **Testing Strategy**: Comprehensive unit tests, integration tests, and property-based tests documented
@@ -296,7 +296,7 @@ Questions that arose during design but haven't been resolved:
   - Unit, UnitDefinition, UnitRepository, built-in units, reduce, evaluator integration
 - *Phase 3: Advanced Unit Features completed (February 13, 2026)*
   - 643 tests passing (151 new)
-  - AffineDefinition, CompoundDefinition (unified from Linear/Constant/Compound), SI base units, temperature, constants, affine syntax
+  - CompoundDefinition (unified from Linear/Constant/Compound), SI base units, temperature, constants
 - *Phase 3 cleanup: Removed UnitDefinition.toQuantity, decoupled models from UnitRepository (February 14, 2026)*
   - 618 tests passing (removed 25 redundant toQuantity-based tests now covered through parser/resolveUnit paths)
   - All UnitDefinition subclasses now pure const data classes; unit resolution centralized in resolveUnit()
@@ -345,7 +345,7 @@ Questions that arose during design but haven't been resolved:
   - 844 tests passing (after phase + cleanup)
   - GNU Units import pipeline: `tool/import_gnu_units_lib.dart` (two-pass parser, conditional directives, alias detection via known-ID membership), `tool/import_gnu_units.dart`
   - Codegen pipeline: `tool/generate_predefined_units_lib.dart` (alias chain resolution, per-type Dart emitters, category grouping), `tool/generate_predefined_units.dart`
-  - `lib/core/domain/data/units.json` — full merged GNU Units database (7294 units, 125 prefixes, 177 unsupported); importer-owned vs. pass-through field split; supports primitive/derived/prefix/affine/alias/unsupported types
+  - `lib/core/domain/data/units.json` — full merged GNU Units database (7294 units, 125 prefixes, 177 unsupported); importer-owned vs. pass-through field split; supports primitive/derived/prefix/alias/unsupported types
   - `lib/core/domain/data/predefined_units.dart` — regenerated from units.json; flat `_registerUnits` + `_registerPrefixes` structure
   - 26 new Phase 5 units: digital storage (bit primitive, byte, kibibyte, mebibyte, gibibyte, tebibyte), volume (liter, gallon, quart, pint, cup, floz, tbsp, tsp), area (hectare, acre), speed (knot), pressure (bar, atm, psi, mmHg), energy (cal, kcal, BTU, kWh, eV)
   - 164 tool tests (`test/tool/`): 63 importer + 54 codegen + 47 release_lib
@@ -361,7 +361,7 @@ Questions that arose during design but haven't been resolved:
   - `EvalContext` gains an optional `visited` field (defaults to `const <String>{}` for backward compat with `const EvalContext()`); `UnitNode.evaluate` threads `context.visited` into both `resolveUnit` calls
   - `ExpressionParser` gains an optional `visited` field, forwarded to `EvalContext`, so the resolution stack is shared across the full `resolveUnit` → `ExpressionParser` → `UnitNode` → `resolveUnit` call chain
   - `EvalException` propagates through `ExpressionParser.evaluate` → `freeform_provider` `on UnitaryException` handler — no UI changes required
-  - 5 new tests in `test/core/domain/models/unit_test.dart`: self-reference, mutual `DerivedUnit` cycle, mutual `AffineUnit` cycle, diamond dependency (no false positive), linear chain (no false positive)
+  - 5 new tests in `test/core/domain/models/unit_test.dart`: self-reference, mutual `DerivedUnit` cycle, mutual cycle via defined functions, diamond dependency (no false positive), linear chain (no false positive)
 - *Unknown unit error (February 27, 2026)*
   - 852 tests passing (4 new)
   - `UnitNode.evaluate()` in `ast.dart` now throws `EvalException('Unknown unit: "$unitName"')` when `repo != null` and `findUnitWithPrefix` returns no match; raw-dimension fallback removed for the repo path

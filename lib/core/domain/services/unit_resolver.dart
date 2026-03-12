@@ -34,10 +34,6 @@ Quantity resolveUnit(Unit unit, UnitRepository repo, [Set<String>? visited]) {
   try {
     if (unit is PrimitiveUnit) {
       return Quantity(1.0, Dimension({unit.id: 1}));
-    } else if (unit is AffineUnit) {
-      final baseUnit = repo.getUnit(unit.baseUnitId);
-      final baseQuantity = resolveUnit(baseUnit, repo, seen);
-      return Quantity(unit.factor * baseQuantity.value, baseQuantity.dimension);
     } else if (unit is DerivedUnit) {
       return ExpressionParser(
         repo: repo,

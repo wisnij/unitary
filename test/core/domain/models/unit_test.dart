@@ -45,10 +45,6 @@ void main() {
       expect(const PrimitiveUnit(id: 'm').isPrimitive, isTrue);
     });
 
-    test('isAffine is false', () {
-      expect(const PrimitiveUnit(id: 'm').isAffine, isFalse);
-    });
-
     test('isDimensionless defaults to false', () {
       const unit = PrimitiveUnit(id: 'm');
       expect(unit.isDimensionless, isFalse);
@@ -76,28 +72,6 @@ void main() {
     });
   });
 
-  group('AffineUnit', () {
-    test('isAffine is true', () {
-      const unit = AffineUnit(
-        id: 'tempC',
-        factor: 1.0,
-        offset: 273.15,
-        baseUnitId: 'K',
-      );
-      expect(unit.isAffine, isTrue);
-    });
-
-    test('isPrimitive is false', () {
-      const unit = AffineUnit(
-        id: 'tempC',
-        factor: 1.0,
-        offset: 273.15,
-        baseUnitId: 'K',
-      );
-      expect(unit.isPrimitive, isFalse);
-    });
-  });
-
   group('DerivedUnit', () {
     test('stores expression string', () {
       const unit = DerivedUnit(id: 'N', expression: 'kg m / s^2');
@@ -113,11 +87,6 @@ void main() {
       const unit = DerivedUnit(id: 'km', expression: '1000 m');
       expect(unit.isPrimitive, isFalse);
     });
-
-    test('isAffine is false', () {
-      const unit = DerivedUnit(id: 'km', expression: '1000 m');
-      expect(unit.isAffine, isFalse);
-    });
   });
 
   group('PrefixUnit', () {
@@ -129,11 +98,6 @@ void main() {
     test('isPrimitive is false', () {
       const unit = PrefixUnit(id: 'kilo', expression: '1000');
       expect(unit.isPrimitive, isFalse);
-    });
-
-    test('isAffine is false', () {
-      const unit = PrefixUnit(id: 'kilo', expression: '1000');
-      expect(unit.isAffine, isFalse);
     });
 
     test('is a DerivedUnit', () {
@@ -182,16 +146,6 @@ void main() {
         const DerivedUnit(id: 'km', expression: '1000 m').isPrefix,
         isFalse,
       );
-    });
-
-    test('AffineUnit.isPrefix is false', () {
-      const unit = AffineUnit(
-        id: 'tempC',
-        factor: 1.0,
-        offset: 273.15,
-        baseUnitId: 'K',
-      );
-      expect(unit.isPrefix, isFalse);
     });
   });
 
@@ -262,31 +216,6 @@ void main() {
       repo.register(const DerivedUnit(id: 'cycleB', expression: '3 cycleA'));
       expect(
         () => resolveUnit(repo.getUnit('cycleA'), repo),
-        throwsA(isA<EvalException>()),
-      );
-    });
-
-    test('AffineUnit mutual cycle (A → B → A) throws EvalException', () {
-      final repo = UnitRepository();
-      repo.register(const PrimitiveUnit(id: 'base'));
-      repo.register(
-        const AffineUnit(
-          id: 'cycleC',
-          factor: 1.0,
-          offset: 1.0,
-          baseUnitId: 'cycleD',
-        ),
-      );
-      repo.register(
-        const AffineUnit(
-          id: 'cycleD',
-          factor: 1.0,
-          offset: 2.0,
-          baseUnitId: 'cycleC',
-        ),
-      );
-      expect(
-        () => resolveUnit(repo.getUnit('cycleC'), repo),
         throwsA(isA<EvalException>()),
       );
     });

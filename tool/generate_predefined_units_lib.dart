@@ -402,8 +402,6 @@ void _emitEntry(
       _emitDerived(buf, id, allAliases, description, entry);
     case 'prefix':
       _emitPrefix(buf, id, allAliases, description, entry);
-    case 'affine':
-      _emitAffine(buf, id, allAliases, description, entry);
     case 'defined_function' || 'function_alias':
       // Handled separately in registerDefinedFunctions; skip here.
       break;
@@ -480,33 +478,6 @@ void _emitPrefix(
     buf.writeln('      description: ${_q(description)},');
   }
   buf.writeln('      expression: ${_q(definition)},');
-  buf.writeln('    ),');
-  buf.writeln('  );');
-}
-
-void _emitAffine(
-  StringBuffer buf,
-  String id,
-  List<String> aliases,
-  String description,
-  Map<String, dynamic> entry,
-) {
-  final factor = entry['factor'] as num;
-  final offset = entry['offset'] as num;
-  final baseUnitId = entry['baseUnitId'] as String;
-
-  buf.writeln('  repo.register(');
-  buf.writeln('    const AffineUnit(');
-  buf.writeln('      id: ${_q(id)},');
-  if (aliases.isNotEmpty) {
-    buf.writeln('      aliases: [${aliases.map(_q).join(', ')}],');
-  }
-  if (description.isNotEmpty) {
-    buf.writeln('      description: ${_q(description)},');
-  }
-  buf.writeln('      factor: ${_formatDouble(factor.toDouble())},');
-  buf.writeln('      offset: ${_formatDouble(offset.toDouble())},');
-  buf.writeln('      baseUnitId: ${_q(baseUnitId)},');
   buf.writeln('    ),');
   buf.writeln('  );');
 }

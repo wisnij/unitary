@@ -1,7 +1,6 @@
 import '../errors.dart';
 import '../models/dimension.dart';
 import '../models/quantity.dart';
-import '../models/unit.dart';
 import '../models/unit_repository.dart';
 import '../services/unit_resolver.dart';
 import 'token.dart';
@@ -184,44 +183,6 @@ class FunctionNode extends ASTNode {
 
   @override
   String toString() => 'Function($name, $arguments, inverse: $inverse)';
-}
-
-/// An affine unit application (e.g., tempF(60)).
-///
-/// Stub for Phase 1; evaluation requires unit definitions.
-class AffineUnitNode extends ASTNode {
-  final String unitName;
-  final ASTNode argument;
-
-  const AffineUnitNode(this.unitName, this.argument);
-
-  @override
-  Quantity evaluate(EvalContext context) {
-    final argValue = argument.evaluate(context);
-
-    if (!argValue.isDimensionless) {
-      throw DimensionException(
-        "Affine unit '$unitName' requires a dimensionless argument, got "
-        '${argValue.dimension.canonicalRepresentation()}',
-      );
-    }
-
-    final repo = context.repo;
-    if (repo == null) {
-      throw EvalException(
-        "Cannot evaluate affine unit '$unitName' without a unit repository",
-      );
-    }
-
-    final unit = repo.getUnit(unitName) as AffineUnit;
-    final baseUnit = repo.getUnit(unit.baseUnitId);
-    final baseQuantity = resolveUnit(baseUnit, repo);
-    final kelvin = (argValue.value + unit.offset) * unit.factor;
-    return Quantity(kelvin * baseQuantity.value, baseQuantity.dimension);
-  }
-
-  @override
-  String toString() => 'AffineUnit($unitName, $argument)';
 }
 
 /// A standalone unit identifier used as a definition request.

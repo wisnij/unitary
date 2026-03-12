@@ -28,10 +28,6 @@ abstract class Unit {
   /// Whether this is a prefix (e.g., kilo, milli).
   bool get isPrefix => false;
 
-  /// Whether this is an affine (temperature-style offset) unit.
-  /// Affine units require function-call syntax: `tempF(212)` not `212 tempF`.
-  bool get isAffine => false;
-
   /// All recognized names for this unit: id + aliases.
   List<String> get allNames => [id, ...aliases];
 }
@@ -55,36 +51,6 @@ class PrimitiveUnit extends Unit {
 
   @override
   bool get isPrimitive => true;
-}
-
-/// A unit defined by an affine transformation of another unit.
-///
-/// Computes `(value + offset) * factor` and passes the result through the
-/// base unit.  Used for temperature scales where zero points differ.
-///
-/// For example: tempC has factor=1.0, offset=273.15, baseUnitId='K',
-/// so tempC(100) = (100 + 273.15) * 1.0 = 373.15 K.
-class AffineUnit extends Unit {
-  /// Multiplicative factor applied after adding the offset.
-  final double factor;
-
-  /// Additive offset applied to the input value before scaling.
-  final double offset;
-
-  /// The ID of the base unit to resolve through.
-  final String baseUnitId;
-
-  const AffineUnit({
-    required super.id,
-    super.aliases,
-    super.description,
-    required this.factor,
-    required this.offset,
-    required this.baseUnitId,
-  });
-
-  @override
-  bool get isAffine => true;
 }
 
 /// A unit defined by an expression in terms of other units.

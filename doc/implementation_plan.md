@@ -132,15 +132,12 @@ Implementation Phases
 
 **Tasks:**
 
-- [x] Implement AffineDefinition for offset conversions (temperature)
 - [x] Implement ConstantDefinition for physical constants
 - [x] Implement CompoundDefinition for derived units
 - [x] Add all 7 SI base unit primitives (m, kg, s, K, A, mol, cd)
 - [x] Add temperature units (degK/tempK, degC/tempC, degF/tempF, degR/tempR)
 - [x] Add physical constants (pi, euler, tau, c, gravity, h, N_A, k_B, e, R)
 - [x] Add derived units (N, Pa, J, W, Hz, C, V, ohm, F, Wb, T, H)
-- [x] Integrate affine syntax with parser (tempF(212) required, 212 tempF rejected)
-- [x] Add AffineUnitNode evaluation
 - [x] Add dimensionless primitive units (radian, steradian)
 - [x] Implement SI prefix support (24 prefixes from quecto to quetta)
 - [x] Implement PrefixUnit subclass and prefix-aware unit lookup

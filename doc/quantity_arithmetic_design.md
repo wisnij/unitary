@@ -257,16 +257,6 @@ To convert a quantity to a target unit: check conformability, then divide the
 quantity's value by the target unit's base value.  For quantities already in
 primitive units, this is simply `value / resolveUnit(target).value`.
 
-### Handling Affine Conversions (Temperature)
-
-Temperature units with offsets (like Celsius/Fahrenheit) require special handling:
-
-Affine conversions apply `(value + offset) * factor` and are only valid for
-absolute temperature values, not for differences or in derived units.  This is
-handled by using separate `degC`/`degF` (linear, no offset) units for
-differences and rates vs. `tempC`/`tempF` (affine, function syntax required)
-for absolute temperatures.
-
 ---
 
 
@@ -373,19 +363,19 @@ computation can produce NaN.
 
 **Problem**: Temperature has two distinct meanings:
 
-1. **Absolute temperature**: A point on the temperature scale (affine conversion with offset)
+1. **Absolute temperature**: A point on the temperature scale (conversion with offset)
 2. **Temperature difference**: The size of a temperature interval (linear conversion, no offset)
 
 **GNU Units Solution**: Define separate units for each concept:
 
-- `tempF`, `tempC`: Absolute temperature with affine conversion (includes offset)
+- `tempF`, `tempC`: Absolute temperature conversion (includes offset)
 - `degF`, `degC`: Temperature difference, the "size" of one degree (linear, no offset)
 
 **Example:**
 
 ~~~~
 // Absolute temperature conversion (with offset)
-100 tempF = 37.78 tempC  (affine: (100-32)×5/9)
+100 tempF = 37.78 tempC  ((100-32)×5/9)
 
 // Temperature difference conversion (no offset)
 100 degF = 55.56 degC    (linear: 100×5/9)
@@ -398,8 +388,8 @@ computation can produce NaN.
 
 Two types of temperature units are defined for each scale:
 
-- Absolute (affine): `tempF` uses `AffineUnit` with factor 5/9, offset -32,
-  base K.  `tempC` uses factor 1, offset 273.15, base K.
+- Absolute: `tempF`, `tempC`, `tempK`, `tempR` are `DefinedFunction`s
+  implementing the offset conversion.
 - Difference (linear): `degF` and `degC` are `DerivedUnit`s with no offset,
   just the scale factor relative to K.
 - Similar pairs for Rankine (tempR/degR).
@@ -426,176 +416,43 @@ result to degree units when subtracting absolutes.
 
 ---
 
-### 6. Function and Affine Unit Syntax
+### 6. Function Syntax
 
-**The Affine Ambiguity Problem:**
+**General Rule**: Any identifier can be followed by `(expr)` which is normally
+implicit multiplication.
 
-Affine conversions don't distribute over multiplication. Consider `2 60 tempF`:
+**Special Rule**: For **functions**, the parenthesized expression is **required**
+(not optional).
 
-- Parse as `2 * (60 tempF)`: Convert 60°F → 288.71 K, multiply by 2 → 577.42 K
-- Parse as `(2 * 60) tempF` = `120 tempF`: Convert 120°F → 322.04 K
-- Parse as `(2 tempF) * 60`: Convert 2°F → 256.48 K, multiply by 60 → 15,388.8 K
+**Exception**: A function MAY appear without parentheses if it is the **only
+non-whitespace token** in the entire input string (for definition lookup or
+conversion targets).
 
-**Three completely different results!** This is because `tempF(x) = (x - 32) × 5/9 + 273.15` includes that offset.
-
-**Solution: Function Syntax for Functions and Affine Units**
-
-**General Rule**: Any identifier can be followed by `(expr)` which is normally implicit multiplication.
-
-**Special Rule**: For **functions** and **affine units**, the parenthesized expression is **required** (not optional).
-
-**Exception**: A function or affine unit MAY appear without parentheses if it is the **only non-whitespace token** in the entire input string (for definition lookup or conversion targets).
-
-### Syntax Rules
-
-#### Functions (sin, cos, sqrt, etc.)
+#### Syntax Rules
 
 **In expressions (multiple tokens):**
 
 - ✓ `sin(0.5)` - function call
 - ✓ `sqrt(9 m^2)` - function call
-- ✓ `cos(pi/4)` - function call
+- ✓ `tempF(60)` - defined function call
 - ✗ `sin 0.5` → Error: "Function 'sin' requires arguments: sin(...)"
-- ✗ `sqrt 9` → Error: "Function 'sqrt' requires arguments: sqrt(...)"
 
 **As standalone input (single token):**
 
 - ✓ `sin` → Definition: "Function: sin(x) - sine of x (radians)"
-- ✓ `sqrt` → Definition: "Function: sqrt(x) - square root of x"
+- ✓ `tempF` → Definition of the tempF conversion function
 
-#### Affine Units (tempF, tempC)
+#### Prefix Restrictions
 
-**In expressions (multiple tokens):**
-
-- ✓ `tempF(60)` - affine conversion
-- ✓ `tempF(32) + 10 degF` - affine conversion in expression
-- ✓ `2 * tempF(100)` - multiply result of conversion
-- ✗ `tempF 60` → Error: "Affine unit 'tempF' requires function syntax: tempF(...)"
-- ✗ `60 tempF` → Error (same)
-- ✗ `2 tempF` → Error (same)
-
-**As standalone input (single token):**
-
-- ✓ `tempF` → Definition: "tempF(x) = (x - 32) × 5/9 + 273.15 K"
-- ✓ `tempC` → Definition: "tempC(x) = x + 273.15 K"
-
-**As conversion target:**
-
-- ✓ Input: `tempF(68)`, Target: `tempC` → Result: `20`
-- ✓ Input: `tempF(32)`, Target: `tempK` → Result: `273.15`
-
-#### Linear Units (degF, meter, kg, all others)
-
-**Normal unit syntax (parentheses = multiplication):**
-
-- ✓ `60 degF` - normal unit application
-- ✓ `5 m` - normal unit application
-- ✓ `degF(60)` - parsed as `degF * 60` (multiplication, same as above)
-- ✓ `2 60 degF` - parsed as `2 * 60 * degF = 120 degF`
-
-**As standalone or conversion target:**
-
-- ✓ `degF` → Definition or conversion target
-- ✓ `meter` → Definition or conversion target
-
-### Prefix Restrictions
-
-**Functions and affine units CANNOT have prefixes:**
+**Functions CANNOT have prefixes:**
 
 - ✗ `millicos(2)` → Error: "Cannot attach prefix 'milli' to function 'cos'"
 - ✗ `kilosin(0.5)` → Error: "Cannot attach prefix 'kilo' to function 'sin'"
-- ✗ `megatempF(60)` → Error: "Cannot attach prefix 'mega' to affine unit 'tempF'"
-- ✗ `millitempC(20)` → Error: "Cannot attach prefix 'milli' to affine unit 'tempC'"
 
 **Linear units CAN have prefixes:**
 
 - ✓ `kilometer` - parsed as prefix 'kilo' + unit 'meter'
-- ✓ `5 km` - valid
-- ✓ `millidegF` - parsed as prefix 'milli' + unit 'degF' (if useful)
-
-### Implementation
-
-Validation happens in two stages:
-
-1. **Lexer:** Identifies functions and units (with optional prefix).  Enforces
-   prefix restrictions — prefixes on functions or affine units produce a
-   `LexException`.  Marks standalone tokens (single non-EOF token in input).
-
-2. **Parser:** Validates parenthesis requirements.  For non-standalone functions
-   and affine units, the next token must be `(` or a `ParseException` is thrown.
-   Standalone functions produce a `FunctionDefinitionRequestNode`; standalone
-   affine units produce a `DefinitionRequestNode`.  Affine units with `(` are
-   parsed as `AffineUnitNode` with the parenthesized expression as argument.
-
-3. **AffineUnitNode evaluation:** Evaluates the argument, verifies it is
-   dimensionless, and applies the affine conversion.  Throws
-   `DimensionException` if the argument has dimensions.
-
-### Examples
-
-**Valid expressions:**
-
-| Input                 | Result                                 |
-|-----------------------|----------------------------------------|
-| `sin(0.5)`            | FunctionNode                           |
-| `tempF(60)`           | AffineUnitNode                         |
-| `tempF(32) + 10 degF` | BinaryOpNode (add)                     |
-| `60 degF`             | BinaryOpNode (implicit multiplication) |
-| `kilometer`           | UnitNode                               |
-
-**Valid standalone (definition requests):**
-
-| Input   | Result                        |
-|---------|-------------------------------|
-| `sin`   | FunctionDefinitionRequestNode |
-| `tempF` | DefinitionRequestNode         |
-| `meter` | DefinitionRequestNode         |
-
-**Valid conversion targets:** `tempF(68)` → `tempC` = 20; `5 m` → `ft` = 16.404
-
-**Invalid expressions (errors):**
-
-| Input                   | Error                                          |
-|-------------------------|------------------------------------------------|
-| `sin 0.5`               | "Function 'sin' requires arguments"            |
-| `tempF 60` / `60 tempF` | "Affine unit 'tempF' requires function syntax" |
-| `millicos(2)`           | "Cannot attach prefix to function"             |
-| `megatempF(60)`         | "Cannot attach prefix to affine unit"          |
-
-**Edge cases:** `5` → NumberNode (not standalone special case); `(tempF)` →
-expression (parens = multiple tokens, not standalone).
-
-### Testing
-
-Key test cases for function/affine syntax:
-
-- Functions require parentheses in expressions (`sin 0.5` → error)
-- Affine units require function syntax (`tempF 60`, `60 tempF` → error)
-- Standalone functions → definition request
-- Standalone affine units → definition request
-- Affine unit as conversion target works
-- Linear units allow both postfix (`60 degF`) and call (`degF(60)`) syntax
-- Prefixes rejected on functions (`millicos`) and affine units (`megatempF`)
-- Prefixes allowed on linear units (`kilometer`)
-- Affine argument must be dimensionless (`tempF(60 m)` → DimensionException)
-
-### Warning About Temperature in Compound Expressions
-
-When parsing expressions, detect if `tempF` or `tempC` appears in the numerator
-of a compound expression (e.g., `tempC/hour`) and issue a warning suggesting the
-user may have meant the degree unit (`degC/hour`) instead.
-
-**Implementation Notes:**
-
-1. No special token types needed - use existing `TokenType.function` and `TokenType.unit`
-2. Validation happens in two stages: prefix restrictions in lexer, parenthesis requirements in parser
-3. Standalone detection happens after full tokenization
-4. AffineUnitNode is a distinct AST node type requiring dimensionless argument
-5. Temperature usage warnings can be added as a linting/validation pass
-
-This section is a duplicate of Section 5 above; see [Temperature: Absolute vs.
-Difference](#5-temperature-absolute-vs-difference-gnu-units-approach) for the
-full discussion.
+- ✓ `millidegF` - parsed as prefix 'milli' + unit 'degF'
 
 ### 6. Negative Bases with Fractional Exponents
 
@@ -680,8 +537,8 @@ Testing Strategy
 rejection, multiplication with dimension combining, division with dimension
 subtraction, power with dimensional exponent validation, division by zero.
 
-**Conversion:** Linear conversions (miles → meters), affine conversions
-(temperature with offset), non-conformable rejection.
+**Conversion:** Linear conversions (miles → meters), temperature function
+conversions (tempF, tempC), non-conformable rejection.
 
 **Edge cases:** Very large numbers (overflow → infinity), negative base with
 fractional exponent, dimensional exponent validation (`(m^2)^0.5` valid vs.
@@ -713,7 +570,7 @@ This design provides:
 2. **Complete arithmetic operations** with proper dimensional analysis including rational exponent validation
 3. **Robust conversion algorithm** handling unit chains and derived units
 4. **GNU Units-compatible temperature handling** with separate absolute (tempF/tempC) and difference (degF/degC) units
-5. **Unambiguous function and affine syntax** with special handling for standalone tokens
+5. **Unambiguous function syntax** with special handling for standalone tokens
 6. **Fail-fast error handling** that throws immediately with clear messages
 7. **Strong testing strategy** ensuring correctness
 
@@ -731,10 +588,9 @@ The design balances:
 1. ✅ Use `double` with rational recovery via continued fractions (maxDenominator = 100)
 2. ✅ Separate temperature units: `tempF/tempC` (absolute) vs `degF/degC` (difference)
 3. ✅ Dimensional exponent validation: base dimensions must be divisible by rational denominator
-4. ✅ Function/affine syntax: Parentheses required except when standalone (definition lookup/conversion target)
-5. ✅ No prefixes on functions or affine units
+4. ✅ Function syntax: Parentheses required except when standalone (definition lookup/conversion target)
+5. ✅ No prefixes on functions
 6. ✅ Throw immediately on NaN-producing operations (fail-fast)
-7. ✅ Warn when affine temperature units appear in compound expressions (tempF/hour → should be degF/hour)
 
 **Next Steps:**
 
@@ -746,17 +602,17 @@ The design balances:
    - NaN validation (throw immediately)
    - Conversion methods
 4. Update lexer/parser for:
-   - Function and affine syntax validation
+   - Function syntax validation
    - Prefix restriction enforcement
    - Standalone token detection
    - Definition request node types
 5. Implement both `tempX` and `degX` temperature units in unit database
-6. Add `AffineUnitNode` and `DefinitionRequestNode` AST node types
+6. Add `DefinitionRequestNode` AST node type
 7. Add comprehensive tests for:
    - Rational recovery
    - Dimensional validation
    - Temperature conversions
-   - Function/affine syntax
+   - Function syntax
    - NaN handling
 8. Document temperature unit distinction for users
 9. Integrate with expression evaluator

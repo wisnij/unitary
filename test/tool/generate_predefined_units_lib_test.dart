@@ -105,7 +105,7 @@ void main() {
         'units': <String, dynamic>{},
         'prefixes': <String, dynamic>{},
         'unsupported': <String, dynamic>{
-          'tempC': <String, dynamic>{
+          'liter': <String, dynamic>{
             'type': 'unsupported',
             'reason': 'nonlinear_definition',
           },
@@ -113,20 +113,18 @@ void main() {
       };
       final supplementary = <String, dynamic>{
         'units': <String, dynamic>{
-          'tempC': <String, dynamic>{
-            'type': 'affine',
-            'factor': 1.0,
-            'offset': 273.15,
-            'baseUnitId': 'K',
-            'category': 'temperature',
+          'liter': <String, dynamic>{
+            'type': 'derived',
+            'definition': '0.001 m^3',
+            'category': 'volume',
           },
         },
       };
       final result = mergeSupplementary(parsed, supplementary);
-      final tempCUnit =
-          (result['units'] as Map<String, dynamic>)['tempC']
+      final literUnit =
+          (result['units'] as Map<String, dynamic>)['liter']
               as Map<String, dynamic>;
-      expect(tempCUnit['type'], equals('affine'));
+      expect(literUnit['type'], equals('derived'));
     });
 
     test('parsed-only entry appears unchanged', () {
@@ -150,13 +148,13 @@ void main() {
     });
 
     test(
-      'cross-section: tempC in parsed unsupported + supplementary units -> both sections',
+      'cross-section: entry in parsed unsupported + supplementary units -> both sections',
       () {
         final parsed = <String, dynamic>{
           'units': <String, dynamic>{},
           'prefixes': <String, dynamic>{},
           'unsupported': <String, dynamic>{
-            'tempC': <String, dynamic>{
+            'liter': <String, dynamic>{
               'type': 'unsupported',
               'reason': 'nonlinear_definition',
             },
@@ -164,23 +162,21 @@ void main() {
         };
         final supplementary = <String, dynamic>{
           'units': <String, dynamic>{
-            'tempC': <String, dynamic>{
-              'type': 'affine',
-              'factor': 1.0,
-              'offset': 273.15,
-              'baseUnitId': 'K',
+            'liter': <String, dynamic>{
+              'type': 'derived',
+              'definition': '0.001 m^3',
             },
           },
         };
         final result = mergeSupplementary(parsed, supplementary);
-        expect((result['units'] as Map).containsKey('tempC'), isTrue);
-        expect((result['unsupported'] as Map).containsKey('tempC'), isTrue);
+        expect((result['units'] as Map).containsKey('liter'), isTrue);
+        expect((result['unsupported'] as Map).containsKey('liter'), isTrue);
         expect(
-          ((result['units'] as Map<String, dynamic>)['tempC'] as Map)['type'],
-          equals('affine'),
+          ((result['units'] as Map<String, dynamic>)['liter'] as Map)['type'],
+          equals('derived'),
         );
         expect(
-          ((result['unsupported'] as Map<String, dynamic>)['tempC']
+          ((result['unsupported'] as Map<String, dynamic>)['liter']
               as Map)['type'],
           equals('unsupported'),
         );
@@ -549,45 +545,6 @@ void main() {
       });
     });
 
-    group('affine unit emission', () {
-      test('emits AffineUnit with factor, offset, baseUnitId', () {
-        final entries = [
-          {
-            'id': 'tempC',
-            'type': 'affine',
-            'category': 'temperature',
-            'factor': 1.0,
-            'offset': 273.15,
-            'baseUnitId': 'K',
-          },
-        ];
-        final code = generateDartCode(makeJson(entries));
-        expect(code, contains('const AffineUnit('));
-        expect(code, contains("id: 'tempC'"));
-        expect(code, contains('factor:'));
-        expect(code, contains('offset:'));
-        expect(code, contains("baseUnitId: 'K'"));
-        expect(code, contains('repo.register('));
-      });
-
-      test('affine factor value is formatted with decimal point', () {
-        final entries = [
-          {
-            'id': 'tempK',
-            'type': 'affine',
-            'category': 'temperature',
-            'factor': 1.0,
-            'offset': 0.0,
-            'baseUnitId': 'K',
-          },
-        ];
-        final code = generateDartCode(makeJson(entries));
-        // The value 1.0 should appear as a double literal
-        expect(code, matches(RegExp(r'factor:\s*1\.0')));
-        expect(code, matches(RegExp(r'offset:\s*0\.0')));
-      });
-    });
-
     group('unsupported entries', () {
       test('unsupported entry is omitted from output', () {
         final entries = [
@@ -741,20 +698,23 @@ void main() {
 
     group('double formatting', () {
       test('integer-valued double includes decimal point', () {
+        // Piecewise function points use _formatDouble for coordinates.
         final entries = [
           {
-            'id': 'tempK',
-            'type': 'affine',
-            'category': 'temperature',
-            'factor': 1.0,
-            'offset': 0.0,
-            'baseUnitId': 'K',
+            'id': 'testpiecewise',
+            'type': 'piecewise',
+            'category': 'test',
+            'outputUnit': 'm',
+            'points': [
+              [0.0, 1.0],
+              [2.0, 3.0],
+            ],
           },
         ];
         final code = generateDartCode(makeJson(entries));
-        // Verify the doubles have decimal notation
-        expect(code, contains('1.0'));
+        // Point coordinates should appear as double literals with decimal point.
         expect(code, contains('0.0'));
+        expect(code, contains('1.0'));
       });
     });
 

@@ -309,28 +309,6 @@ class Parser {
       return FunctionNode(name, args);
     }
 
-    // Check for affine units (require function-call syntax).
-    if (_repo != null) {
-      final unit = _repo.findUnit(name);
-      if (unit != null && unit.isAffine) {
-        if (!_check(TokenType.leftParen)) {
-          throw ParseException(
-            "Affine unit '$name' requires function-call syntax: "
-            '$name(<value>)',
-            line: token.line,
-            column: token.column,
-          );
-        }
-        _advance(); // consume '('
-        final arg = _expression();
-        _consume(
-          TokenType.rightParen,
-          "Expected ')' after affine unit argument",
-        );
-        return AffineUnitNode(name, arg);
-      }
-    }
-
     // Trailing-digit exponent shorthand: m2 = m^2, centimeters3 = centimeters^3.
     //
     // Rules (applied only when the trailing digit run is not preceded by '_'):

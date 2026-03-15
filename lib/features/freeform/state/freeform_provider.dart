@@ -127,7 +127,10 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
       precision: settings.precision,
       notation: settings.notation,
     );
-    return EvaluationSuccess(result: result, formattedResult: formatted);
+    return FunctionConversionResult(
+      functionName: outputNode.name,
+      formattedValue: formatted,
+    );
   }
 
   void _evaluateSingle(ExpressionParser parser, ExpressionNode inputNode) {

@@ -89,6 +89,17 @@ class ResultDisplay extends StatelessWidget {
         ),
         colorScheme.primary,
       ),
+      FunctionConversionResult(:final functionName, :final formattedValue) => (
+        Text(
+          '$functionName($formattedValue)',
+          style: TextStyle(
+            color: colorScheme.primary,
+            fontSize: 20,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        colorScheme.primary,
+      ),
       EvaluationError(:final message) => (
         Row(
           children: [

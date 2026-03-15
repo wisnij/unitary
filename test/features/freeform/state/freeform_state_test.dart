@@ -52,6 +52,16 @@ void main() {
       expect(state.expression, isNull);
     });
 
+    test('FunctionConversionResult holds functionName and formattedValue', () {
+      const state = FunctionConversionResult(
+        functionName: 'tempC',
+        formattedValue: '20',
+      );
+      expect(state, isA<EvaluationResult>());
+      expect(state.functionName, 'tempC');
+      expect(state.formattedValue, '20');
+    });
+
     test('EvaluationError holds error message', () {
       const state = EvaluationError(message: 'Parse error at 1:5');
       expect(state.message, 'Parse error at 1:5');
@@ -74,6 +84,10 @@ void main() {
           label: 'tempF(x) =',
           expression: 'x * 9|5 + 32',
         ),
+        const FunctionConversionResult(
+          functionName: 'tempC',
+          formattedValue: '20',
+        ),
         const EvaluationError(message: 'error'),
       ];
 
@@ -84,6 +98,7 @@ void main() {
           EvaluationSuccess() => 'success',
           ConversionSuccess() => 'conversion',
           FunctionDefinitionResult() => 'function-definition',
+          FunctionConversionResult() => 'function-conversion',
           EvaluationError() => 'error',
         };
         expect(label, isNotEmpty);

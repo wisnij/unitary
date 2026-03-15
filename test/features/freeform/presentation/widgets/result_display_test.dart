@@ -129,5 +129,59 @@ void main() {
         expect(find.text('<not available>'), findsOneWidget);
       },
     );
+
+    testWidgets(
+      'FunctionConversionResult renders as functionName(formattedValue)',
+      (tester) async {
+        const state = FunctionConversionResult(
+          functionName: 'tempC',
+          formattedValue: '20',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('tempC(20)'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'FunctionConversionResult uses primary color',
+      (tester) async {
+        const state = FunctionConversionResult(
+          functionName: 'tempC',
+          formattedValue: '20',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        final text = tester.widget<Text>(find.text('tempC(20)'));
+        final context = tester.element(find.byType(ResultDisplay));
+        final primaryColor = Theme.of(context).colorScheme.primary;
+        expect(text.style?.color, primaryColor);
+      },
+    );
+
+    testWidgets(
+      'FunctionConversionResult with dimensioned value renders full string',
+      (tester) async {
+        const state = FunctionConversionResult(
+          functionName: 'stdatmT',
+          formattedValue: '2.0000006 m',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('stdatmT(2.0000006 m)'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'FunctionConversionResult does not show a reciprocal row',
+      (tester) async {
+        const state = FunctionConversionResult(
+          functionName: 'tempC',
+          formattedValue: '20',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        // Only one Text widget: the composed function call string.
+        final texts = tester.widgetList<Text>(find.byType(Text)).toList();
+        expect(texts.length, 1);
+        expect(texts.first.data, 'tempC(20)');
+      },
+    );
   });
 }

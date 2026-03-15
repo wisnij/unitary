@@ -206,15 +206,46 @@ void main() {
     // -- Function name in output field --
 
     test(
-      'expression input + function name output → EvaluationSuccess via callInverse',
+      'expression input + function name output → FunctionConversionResult via callInverse',
       () {
         final notifier = container.read(freeformProvider.notifier);
-        // tempF(32) = 273.15 K; ~tempC(273.15 K) = 0 °C = 0.0
-        notifier.evaluate('tempF(32)', 'tempC');
+        // tempF(68) = 293.15 K; ~tempC(293.15 K) = 20 °C = 20.0
+        notifier.evaluate('tempF(68)', 'tempC');
         final state = container.read(freeformProvider);
-        expect(state, isA<EvaluationSuccess>());
-        final success = state as EvaluationSuccess;
-        expect(success.result.value, closeTo(0.0, 1e-6));
+        expect(state, isA<FunctionConversionResult>());
+        final result = state as FunctionConversionResult;
+        expect(result.functionName, 'tempC');
+        expect(double.parse(result.formattedValue), closeTo(20.0, 1e-4));
+      },
+    );
+
+    test(
+      'FunctionConversionResult uses the name as entered, not the canonical id',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // 'tempcelsius' is an alias for tempC; the display should reflect what the user typed
+        notifier.evaluate('tempF(68)', 'tempcelsius');
+        final state = container.read(freeformProvider);
+        expect(state, isA<FunctionConversionResult>());
+        final result = state as FunctionConversionResult;
+        expect(result.functionName, 'tempcelsius');
+        expect(double.parse(result.formattedValue), closeTo(20.0, 1e-4));
+      },
+    );
+
+    test(
+      'FunctionConversionResult includes dimension when inverse returns dimensioned quantity',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // stdatmTH(2 m) → temperature; ~stdatmT of that temperature ≈ 2 m
+        notifier.evaluate('stdatmTH(2 m)', 'stdatmT');
+        final state = container.read(freeformProvider);
+        expect(state, isA<FunctionConversionResult>());
+        final result = state as FunctionConversionResult;
+        expect(result.functionName, 'stdatmT');
+        // formattedValue should include the unit label (e.g. "2.0000006 m")
+        expect(result.formattedValue, contains(' m'));
+        expect(result.formattedValue, isNot(equals('m')));
       },
     );
 

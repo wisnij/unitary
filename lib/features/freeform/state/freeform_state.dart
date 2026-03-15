@@ -52,6 +52,21 @@ class FunctionDefinitionResult extends EvaluationResult {
   });
 }
 
+/// Function-name output applied via inverse — shows `functionName(value)`.
+///
+/// [functionName] is the name of the function whose inverse was applied
+/// (e.g. `"tempC"`).  [formattedValue] is the formatted numeric result
+/// (e.g. `"20"`).  The display composes these as `"tempC(20)"`.
+class FunctionConversionResult extends EvaluationResult {
+  final String functionName;
+  final String formattedValue;
+
+  const FunctionConversionResult({
+    required this.functionName,
+    required this.formattedValue,
+  });
+}
+
 /// Evaluation failed with an error message.
 class EvaluationError extends EvaluationResult {
   final String message;

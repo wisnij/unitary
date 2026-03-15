@@ -28,15 +28,29 @@ class EvalContext {
 }
 
 /// Base class for all AST nodes.
-abstract class ASTNode {
+///
+/// Sealed so that exhaustive switch statements over the full node hierarchy
+/// are enforced by the Dart compiler.  Nodes that produce a [Quantity] when
+/// evaluated extend [ExpressionNode]; name-reference nodes (e.g.
+/// [FunctionNameNode]) extend this class directly.
+sealed class ASTNode {
   const ASTNode();
+}
+
+/// Abstract base for AST nodes that can be evaluated to a [Quantity].
+///
+/// Sealed so that exhaustive switch statements over expression node subtypes
+/// are enforced by the Dart compiler.  All nodes that produce a value during
+/// evaluation extend this class.
+sealed class ExpressionNode extends ASTNode {
+  const ExpressionNode();
 
   /// Evaluate this node and return a [Quantity].
   Quantity evaluate(EvalContext context);
 }
 
 /// A numeric literal.
-class NumberNode extends ASTNode {
+class NumberNode extends ExpressionNode {
   final double value;
 
   const NumberNode(this.value);
@@ -55,7 +69,7 @@ class NumberNode extends ASTNode {
 /// in the repository, an [EvalException] is thrown.  If no repository
 /// is provided (Phase 1 / parser-isolation mode), identifiers fall back
 /// to raw dimensions.
-class UnitNode extends ASTNode {
+class UnitNode extends ExpressionNode {
   final String unitName;
 
   const UnitNode(this.unitName);
@@ -92,9 +106,9 @@ class UnitNode extends ASTNode {
 }
 
 /// A binary operation (e.g., +, -, *, /, ^).
-class BinaryOpNode extends ASTNode {
-  final ASTNode left;
-  final ASTNode right;
+class BinaryOpNode extends ExpressionNode {
+  final ExpressionNode left;
+  final ExpressionNode right;
   final TokenType operator;
 
   const BinaryOpNode(this.left, this.operator, this.right);
@@ -131,9 +145,9 @@ class BinaryOpNode extends ASTNode {
 }
 
 /// A unary operation (+ or -).
-class UnaryOpNode extends ASTNode {
+class UnaryOpNode extends ExpressionNode {
   final TokenType operator;
-  final ASTNode operand;
+  final ExpressionNode operand;
 
   const UnaryOpNode(this.operator, this.operand);
 
@@ -154,16 +168,16 @@ class UnaryOpNode extends ASTNode {
   String toString() => 'UnaryOp($operator, $operand)';
 }
 
-/// A function call (e.g., sin(x), sqrt(x)).
+/// A function call with arguments (e.g., sin(x), sqrt(x), ~tempF(212)).
 ///
 /// When [inverse] is true, the call is dispatched to [UnitaryFunction.callInverse]
 /// instead of [UnitaryFunction.call], implementing the `~` operator.
-class FunctionNode extends ASTNode {
+class FunctionCallNode extends ExpressionNode {
   final String name;
-  final List<ASTNode> arguments;
+  final List<ExpressionNode> arguments;
   final bool inverse;
 
-  const FunctionNode(this.name, this.arguments, {this.inverse = false});
+  const FunctionCallNode(this.name, this.arguments, {this.inverse = false});
 
   @override
   Quantity evaluate(EvalContext context) {
@@ -182,43 +196,35 @@ class FunctionNode extends ASTNode {
   }
 
   @override
-  String toString() => 'Function($name, $arguments, inverse: $inverse)';
+  String toString() => 'FunctionCall($name, $arguments, inverse: $inverse)';
+}
+
+/// A bare function name with no argument list.
+///
+/// Represents either `funcName` (bare forward reference) or `~funcName`
+/// (bare inverse reference).  This node carries only the syntactic facts
+/// the parser knows; contextual meaning (show definition, show inverse
+/// expression, apply inverse conversion) is determined by the calling code.
+///
+/// This node does NOT extend [ExpressionNode] and cannot be evaluated.
+class FunctionNameNode extends ASTNode {
+  final String name;
+  final bool inverse;
+
+  const FunctionNameNode(this.name, {required this.inverse});
+
+  @override
+  String toString() => 'FunctionName($name, inverse: $inverse)';
 }
 
 /// A standalone unit identifier used as a definition request.
 ///
-/// Stub for Phase 1; requires unit definitions.
+/// Stub for future unit definition display.  Not yet implemented.
 class DefinitionRequestNode extends ASTNode {
   final String unitName;
 
   const DefinitionRequestNode(this.unitName);
 
   @override
-  Quantity evaluate(EvalContext context) {
-    throw UnimplementedError(
-      'DefinitionRequestNode evaluation requires unit definitions (Phase 2)',
-    );
-  }
-
-  @override
   String toString() => 'DefinitionRequest($unitName)';
-}
-
-/// A standalone function name used as a definition request.
-///
-/// Stub for Phase 1; requires function registry.
-class FunctionDefinitionRequestNode extends ASTNode {
-  final String functionName;
-
-  const FunctionDefinitionRequestNode(this.functionName);
-
-  @override
-  Quantity evaluate(EvalContext context) {
-    throw UnimplementedError(
-      'FunctionDefinitionRequestNode evaluation not yet implemented',
-    );
-  }
-
-  @override
-  String toString() => 'FunctionDefinitionRequest($functionName)';
 }

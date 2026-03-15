@@ -51,18 +51,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   void _evaluate() {
     final input = _inputController.text;
     final output = _outputController.text;
-    final notifier = ref.read(freeformProvider.notifier);
-
-    if (input.trim().isEmpty) {
-      notifier.clear();
-      return;
-    }
-
-    if (output.trim().isEmpty) {
-      notifier.evaluateSingle(input);
-    } else {
-      notifier.evaluateConversion(input, output);
-    }
+    ref.read(freeformProvider.notifier).evaluate(input, output);
   }
 
   void _clear() {

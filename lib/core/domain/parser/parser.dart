@@ -33,8 +33,9 @@ class Parser {
 
   Parser(this._tokens, {UnitRepository? repo}) : _repo = repo;
 
-  /// Parses the token list and returns the root AST node.
-  ASTNode parse() {
+  /// Parses the token list as an expression and returns the root
+  /// [ExpressionNode].
+  ExpressionNode parseExpression() {
     final node = _expression();
     if (!_isAtEnd()) {
       final token = _peek();
@@ -47,6 +48,45 @@ class Parser {
     return node;
   }
 
+  /// Parses the token list, returning a [FunctionNameNode] when the tokens
+  /// represent a bare known-function name (optionally preceded by `~`);
+  /// otherwise delegates to [parseExpression].
+  ///
+  /// If no repository is present, all inputs are delegated to
+  /// [parseExpression].
+  ///
+  /// ```
+  /// query = INVERSE? FUNCTION_NAME / expression
+  /// ```
+  ASTNode parseQuery() {
+    if (_repo != null) {
+      final significant = _tokens
+          .where((t) => t.type != TokenType.eof)
+          .toList();
+
+      // Bare function name: exactly one identifier that is a known function.
+      if (significant.length == 1 &&
+          significant[0].type == TokenType.identifier) {
+        final name = significant[0].literal as String;
+        if (_repo.findFunction(name) != null) {
+          return FunctionNameNode(name, inverse: false);
+        }
+      }
+
+      // ~funcName: inverse token followed by one known-function identifier.
+      if (significant.length == 2 &&
+          significant[0].type == TokenType.inverse &&
+          significant[1].type == TokenType.identifier) {
+        final name = significant[1].literal as String;
+        if (_repo.findFunction(name) != null) {
+          return FunctionNameNode(name, inverse: true);
+        }
+      }
+    }
+
+    return parseExpression();
+  }
+
   // -- Grammar rules (lowest to highest precedence) --
 
   /// ```
@@ -54,7 +94,7 @@ class Parser {
   /// ```
   ///
   /// Leading `/` creates a reciprocal (1/x).
-  ASTNode _expression() {
+  ExpressionNode _expression() {
     if (_match(TokenType.divide)) {
       final operand = _listProduct();
       return BinaryOpNode(const NumberNode(1.0), TokenType.divide, operand);
@@ -65,7 +105,7 @@ class Parser {
   /// ```
   /// sum = opProduct ( (PLUS / MINUS) opProduct )*
   /// ```
-  ASTNode _sum() {
+  ExpressionNode _sum() {
     var left = _opProduct();
 
     while (_match(TokenType.plus) || _match(TokenType.minus)) {
@@ -80,7 +120,7 @@ class Parser {
   /// ```
   /// opProduct = listProduct ( (TIMES / DIVIDE) listProduct )*
   /// ```
-  ASTNode _opProduct() {
+  ExpressionNode _opProduct() {
     var left = _listProduct();
 
     while (_match(TokenType.times) || _match(TokenType.divide)) {
@@ -100,7 +140,7 @@ class Parser {
   /// `power` terms while the current token can start an implicit multiply.
   /// Only the first term can have a leading unary operator, so any + or - seen
   /// after that ends the list and starts the next term in a sum.
-  ASTNode _listProduct() {
+  ExpressionNode _listProduct() {
     var left = _unary();
 
     while (_startsImplicitMultiply()) {
@@ -121,7 +161,7 @@ class Parser {
   /// ```
   /// unary = ( PLUS / MINUS )? power
   /// ```
-  ASTNode _unary() {
+  ExpressionNode _unary() {
     if (_match(TokenType.plus) || _match(TokenType.minus)) {
       final op = _previous().type;
       final operand = _power();
@@ -135,8 +175,8 @@ class Parser {
   /// ```
   ///
   /// Right-associative: `2^3^4` = `2^(3^4)`.
-  ASTNode _power() {
-    final operands = <ASTNode>[_primary()];
+  ExpressionNode _power() {
+    final operands = <ExpressionNode>[_primary()];
 
     while (_match(TokenType.exponent)) {
       operands.add(_unary());
@@ -154,7 +194,7 @@ class Parser {
   /// ```
   /// primary = numexpr / LPAR expression RPAR / function / unit
   /// ```
-  ASTNode _primary() {
+  ExpressionNode _primary() {
     if (_check(TokenType.number)) {
       return _numexpr();
     }
@@ -186,9 +226,9 @@ class Parser {
   /// ```
   ///
   /// Both operands of `|` must be bare NUMBER literals.
-  ASTNode _numexpr() {
+  ExpressionNode _numexpr() {
     final numberToken = _advance();
-    var left = NumberNode(numberToken.literal as double) as ASTNode;
+    var left = NumberNode(numberToken.literal as double) as ExpressionNode;
 
     while (_match(TokenType.divideNum)) {
       final opToken = _previous();
@@ -211,9 +251,9 @@ class Parser {
   /// inverseFunction = INVERSE IDENTIFIER LPAR arguments RPAR
   /// ```
   ///
-  /// Parses `~name(args)` as a [FunctionNode] with `inverse: true`.
+  /// Parses `~name(args)` as a [FunctionCallNode] with `inverse: true`.
   /// Throws [ParseException] if `~` is not followed by a known function call.
-  ASTNode _inverseFunction() {
+  ExpressionNode _inverseFunction() {
     final inverseTok = _advance(); // consume '~'
     if (!_check(TokenType.identifier)) {
       throw ParseException(
@@ -241,7 +281,7 @@ class Parser {
     }
     final args = _arguments();
     _consume(TokenType.rightParen, "Expected ')' after function arguments");
-    return FunctionNode(name, args, inverse: true);
+    return FunctionCallNode(name, args, inverse: true);
   }
 
   /// ```
@@ -252,7 +292,7 @@ class Parser {
   /// If the identifier is a known builtin function AND followed by `(`,
   /// parse as function call. Otherwise, treat as unit (which may still
   /// be followed by `(` for implicit multiplication).
-  ASTNode _identifierOrFunction() {
+  ExpressionNode _identifierOrFunction() {
     final token = _advance();
     final name = token.literal as String;
 
@@ -261,7 +301,7 @@ class Parser {
     // log2 as a unit) and before the trailing-digit-exponent check (which would
     // otherwise turn log2 into log^2).
     //
-    // Desugars to: ln(x) / ln(B)  →  BinaryOpNode(FunctionNode("ln", [x]),
+    // Desugars to: ln(x) / ln(B)  →  BinaryOpNode(FunctionCallNode("ln", [x]),
     //                                              divide, NumberNode(math.log(B)))
     if (_check(TokenType.leftParen)) {
       final logBase = _parseLogBase(name);
@@ -284,7 +324,7 @@ class Parser {
           );
         }
         return BinaryOpNode(
-          FunctionNode('ln', args),
+          FunctionCallNode('ln', args),
           TokenType.divide,
           NumberNode(math.log(logBase)),
         );
@@ -306,7 +346,7 @@ class Parser {
 
       final args = _arguments();
       _consume(TokenType.rightParen, "Expected ')' after function arguments");
-      return FunctionNode(name, args);
+      return FunctionCallNode(name, args);
     }
 
     // Trailing-digit exponent shorthand: m2 = m^2, centimeters3 = centimeters^3.
@@ -357,8 +397,8 @@ class Parser {
   /// ```
   /// arguments = expression ( COMMA expression )*
   /// ```
-  List<ASTNode> _arguments() {
-    final args = <ASTNode>[_expression()];
+  List<ExpressionNode> _arguments() {
+    final args = <ExpressionNode>[_expression()];
     while (_match(TokenType.comma)) {
       args.add(_expression());
     }

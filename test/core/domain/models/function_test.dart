@@ -24,6 +24,15 @@ class _IdentityFunction extends UnitaryFunction {
   bool get hasInverse => _hasInverse;
 
   @override
+  List<String> get params => const ['x'];
+
+  @override
+  String? get definitionDisplay => null;
+
+  @override
+  String? get inverseDisplay => null;
+
+  @override
   Quantity evaluate(List<Quantity> args, [Object? context]) => args[0];
 
   @override
@@ -43,6 +52,15 @@ class _FixedOutputFunction extends UnitaryFunction {
 
   @override
   bool get hasInverse => false;
+
+  @override
+  List<String> get params => const [];
+
+  @override
+  String? get definitionDisplay => null;
+
+  @override
+  String? get inverseDisplay => null;
 
   @override
   Quantity evaluate(List<Quantity> args, [Object? context]) => _output;
@@ -1051,6 +1069,84 @@ void main() {
       repo.registerFunction(fb);
       final result = fb.call([Quantity.dimensionless(5.0)], ctx);
       expect(result.value, closeTo(7.0, 1e-10));
+    });
+  });
+
+  // -- definitionDisplay / inverseDisplay --
+
+  group('DefinedFunction: definitionDisplay / inverseDisplay', () {
+    test('returns forward string from definitionDisplay', () {
+      final f = DefinedFunction(
+        id: 'f',
+        params: ['x'],
+        forward: 'x * 9|5 + 32',
+      );
+      expect(f.definitionDisplay, 'x * 9|5 + 32');
+    });
+
+    test('returns inverse string from inverseDisplay when present', () {
+      final f = DefinedFunction(
+        id: 'f',
+        params: ['x'],
+        forward: 'x * 9|5 + 32',
+        inverse: '(x - 32) * 5|9',
+      );
+      expect(f.inverseDisplay, '(x - 32) * 5|9');
+    });
+
+    test(
+      'returns fallback string from inverseDisplay when no inverse defined',
+      () {
+        final f = DefinedFunction(
+          id: 'f',
+          params: ['x'],
+          forward: 'x + 1',
+        );
+        expect(f.inverseDisplay, 'no inverse defined');
+      },
+    );
+  });
+
+  group('BuiltinFunction: definitionDisplay / inverseDisplay', () {
+    test('definitionDisplay returns built-in label with function id', () {
+      final repo = UnitRepository.withPredefinedUnits();
+      final sin = repo.findFunction('sin')!;
+      expect(sin.definitionDisplay, '<built-in function sin>');
+    });
+
+    test('inverseDisplay returns no-inverse fallback', () {
+      final repo = UnitRepository.withPredefinedUnits();
+      final sin = repo.findFunction('sin')!;
+      expect(sin.inverseDisplay, 'no inverse defined');
+    });
+  });
+
+  group('BuiltinFunction: params', () {
+    test('falls back to generic names when no params provided', () {
+      final repo = UnitRepository.withPredefinedUnits();
+      final sin = repo.findFunction('sin')!;
+      expect(sin.params, ['x']);
+    });
+
+    test('returns explicitly provided names when given', () {
+      final repo = UnitRepository.withPredefinedUnits();
+      final atan2 = repo.findFunction('atan2')!;
+      expect(atan2.params, ['y', 'x']);
+    });
+  });
+
+  group('PiecewiseFunction: definitionDisplay / inverseDisplay', () {
+    test('definitionDisplay returns piecewise label', () {
+      final repo = UnitRepository.withPredefinedUnits();
+      // gasmark is a piecewise-linear function in the predefined units.
+      final f = repo.findFunction('gasmark')!;
+      expect(f.definitionDisplay, 'piecewise linear function');
+    });
+
+    test('inverseDisplay returns piecewise label', () {
+      final repo = UnitRepository.withPredefinedUnits();
+      final f = repo.findFunction('gasmark')!;
+      expect(f.inverseDisplay, 'piecewise linear function');
     });
   });
 }

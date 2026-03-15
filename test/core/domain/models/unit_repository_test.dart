@@ -14,6 +14,15 @@ class _TestFn extends UnitaryFunction {
   bool get hasInverse => false;
 
   @override
+  List<String> get params => const ['x'];
+
+  @override
+  String? get definitionDisplay => null;
+
+  @override
+  String? get inverseDisplay => null;
+
+  @override
   Quantity evaluate(List<Quantity> args, [Object? context]) => args[0];
 }
 

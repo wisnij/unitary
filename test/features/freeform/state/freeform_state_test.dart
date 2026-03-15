@@ -34,6 +34,24 @@ void main() {
       expect(state.outputUnit, 'km');
     });
 
+    test('FunctionDefinitionResult holds label and expression', () {
+      const state = FunctionDefinitionResult(
+        label: 'tempF(x) =',
+        expression: 'x * 9|5 + 32',
+      );
+      expect(state.label, 'tempF(x) =');
+      expect(state.expression, 'x * 9|5 + 32');
+    });
+
+    test('FunctionDefinitionResult accepts null expression', () {
+      const state = FunctionDefinitionResult(
+        label: '~sin =',
+        expression: null,
+      );
+      expect(state.label, '~sin =');
+      expect(state.expression, isNull);
+    });
+
     test('EvaluationError holds error message', () {
       const state = EvaluationError(message: 'Parse error at 1:5');
       expect(state.message, 'Parse error at 1:5');
@@ -52,6 +70,10 @@ void main() {
           formattedReciprocal: '= (1 / 1) m',
           outputUnit: 'm',
         ),
+        const FunctionDefinitionResult(
+          label: 'tempF(x) =',
+          expression: 'x * 9|5 + 32',
+        ),
         const EvaluationError(message: 'error'),
       ];
 
@@ -61,6 +83,7 @@ void main() {
           EvaluationIdle() => 'idle',
           EvaluationSuccess() => 'success',
           ConversionSuccess() => 'conversion',
+          FunctionDefinitionResult() => 'function-definition',
           EvaluationError() => 'error',
         };
         expect(label, isNotEmpty);

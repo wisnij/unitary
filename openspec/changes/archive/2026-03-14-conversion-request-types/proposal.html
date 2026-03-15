@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+<title>proposal.html</title>
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8"/>
+
+</head>
+
+<body>
+
+<h2 id="why">Why</h2>
+<p>The freeform screen currently dispatches to one of two hardcoded
+paths (single expression or two-expression conversion), with no room to
+grow. New input patterns — bare function name lookup, inverse expression
+display, function-as- conversion-target — each need their own evaluation
+behavior, and more patterns are expected in future phases (e.g. unit
+lists). The AST needs a cleaner type hierarchy to make the distinction
+between “something that evaluates to a Quantity” and “a name reference”
+explicit in the type system, and the parser needs a general entry point
+that can return either.</p>
+<h2 id="what-changes">What Changes</h2>
+<ul>
+<li>Mark <code>ASTNode</code> and <code>ExpressionNode</code> as
+<code>sealed</code>. Leaf classes are left unmarked (not
+<code>final</code>) to allow future extension.</li>
+<li>Introduce <code>ExpressionNode</code> as a sealed abstract subtype
+of <code>ASTNode</code>. All current expression node types
+(<code>NumberNode</code>, <code>UnitNode</code>,
+<code>BinaryOpNode</code>, <code>UnaryOpNode</code>,
+<code>FunctionCallNode</code>) become subtypes of
+<code>ExpressionNode</code>. <code>evaluate() → Quantity</code> moves
+from <code>ASTNode</code> to <code>ExpressionNode</code>, making it a
+type error to evaluate a non-expression node. Both levels of the
+hierarchy support exhaustive <code>switch</code> statements.</li>
+<li>Rename <code>FunctionNode</code> → <code>FunctionCallNode</code> for
+clarity (it represents a function call with arguments, not a bare
+function reference).</li>
+<li>Add <code>FunctionNameNode(name: String, inverse: bool)</code> as a
+direct <code>ASTNode</code> subtype (not <code>ExpressionNode</code>).
+Represents a bare function name (<code>funcName</code> or
+<code>~funcName</code>) with no argument list. Carries only the
+syntactic facts the parser knows; contextual meaning is determined by
+the calling code.</li>
+<li>Add <code>parseExpression()</code> to <code>ExpressionParser</code>,
+returning <code>ExpressionNode</code>. This is the renamed form of the
+current <code>parse()</code>, restricted to expression inputs.</li>
+<li>Add <code>parseQuery()</code> to <code>ExpressionParser</code>,
+returning <code>ASTNode</code>. This is the general entry point: it
+recognizes a bare known-function name (or <code>~funcName</code>) and
+returns a <code>FunctionNameNode</code>; otherwise it delegates to
+<code>parseExpression()</code>.</li>
+<li>Remove the old <code>parse()</code> method once all call sites are
+updated.</li>
+<li>In the parser, a bare known-function identifier with no following
+<code>(</code> emits <code>FunctionNameNode(name, inverse: false)</code>
+instead of falling through to <code>UnitNode</code>. A
+<code>~funcName</code> with no following <code>(</code> emits
+<code>FunctionNameNode(name, inverse: true)</code> instead of throwing
+<code>ParseException</code>.</li>
+<li>Refactor <code>FreeformNotifier</code> to a single
+<code>evaluate(input, output)</code> entry point. It calls
+<code>parseQuery()</code> on each field and dispatches on the result
+types:
+<ul>
+<li>Input <code>FunctionNameNode(f, false)</code>, output empty → look
+up <code>repo.findFunction(f)</code>, display forward definition.</li>
+<li>Input <code>FunctionNameNode(f, true)</code>, output empty → look up
+<code>repo.findFunction(f)</code>, display inverse expression.</li>
+<li>Output <code>FunctionNameNode(f, false)</code> → evaluate input to
+<code>Quantity</code>, call
+<code>repo.findFunction(f).callInverse(inputQty)</code>, display
+result.</li>
+<li>Output <code>FunctionNameNode(f, true)</code> → error (not a
+meaningful combination).</li>
+<li>Otherwise → existing expression evaluation / conversion
+behavior.</li>
+</ul></li>
+<li>Add new <code>EvaluationResult</code> subtypes for the two
+display-only cases (<code>FunctionDefinitionResult</code>,
+<code>InverseExpressionResult</code>).</li>
+<li>Extend <code>UnitaryFunction</code> / <code>DefinedFunction</code>
+to expose the forward definition expression string and inverse
+expression string for display. <code>BuiltinFunction</code> returns a
+suitable placeholder (e.g. <code>"&lt;built-in&gt;"</code>).</li>
+<li>Extend the result display widget to render the new result
+subtypes.</li>
+</ul>
+<h2 id="capabilities">Capabilities</h2>
+<h3 id="new-capabilities">New Capabilities</h3>
+<ul>
+<li><code>conversion-request-types</code>: <code>ExpressionNode</code>
+layer in the AST; <code>FunctionCallNode</code> rename;
+<code>FunctionNameNode</code>; <code>parseExpression()</code> /
+<code>parseQuery()</code> parser entry points; unified freeform
+dispatch; new <code>EvaluationResult</code> subtypes for definition and
+inverse display; <code>UnitaryFunction</code> definition string
+exposure.</li>
+</ul>
+<h3 id="modified-capabilities">Modified Capabilities</h3>
+<!-- No existing spec-level requirements change; this is purely additive. -->
+<h2 id="impact">Impact</h2>
+<ul>
+<li><code>lib/core/domain/parser/ast.dart</code> — mark
+<code>ASTNode</code> sealed; add <code>ExpressionNode</code> (sealed
+abstract); move <code>evaluate()</code> there; rename
+<code>FunctionNode</code> → <code>FunctionCallNode</code>; add
+<code>FunctionNameNode</code>.</li>
+<li><code>lib/core/domain/parser/parser.dart</code> — emit
+<code>FunctionNameNode</code> for bare known-function identifiers; relax
+<code>~</code> to allow bare function names.</li>
+<li><code>lib/core/domain/parser/expression_parser.dart</code> — add
+<code>parseExpression()</code> and <code>parseQuery()</code>; remove
+<code>parse()</code> after call-site migration.</li>
+<li><code>lib/core/domain/models/function.dart</code> — expose
+<code>definitionExpression</code> and <code>inverseExpression</code> on
+<code>UnitaryFunction</code>.</li>
+<li><code>lib/features/freeform/state/freeform_state.dart</code> — add
+<code>FunctionDefinitionResult</code> and
+<code>InverseExpressionResult</code>.</li>
+<li><code>lib/features/freeform/state/freeform_provider.dart</code> —
+unified <code>evaluate()</code> entry point dispatching on parsed AST
+type.</li>
+<li><code>lib/features/freeform/presentation/widgets/result_display.dart</code>
+— render new result subtypes.</li>
+<li>All existing call sites of <code>parse()</code> updated to
+<code>parseExpression()</code> or <code>parseQuery()</code> as
+appropriate before <code>parse()</code> is removed.</li>
+<li>No new package dependencies.</li>
+</ul>
+
+</body>
+</html>

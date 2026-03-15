@@ -64,6 +64,31 @@ class ResultDisplay extends StatelessWidget {
           ),
           colorScheme.primary,
         ),
+      FunctionDefinitionResult(:final label, :final expression) => (
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              expression ?? '<not available>',
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+        colorScheme.primary,
+      ),
       EvaluationError(:final message) => (
         Row(
           children: [

@@ -28,10 +28,98 @@ void main() {
     });
   });
 
-  group('ExpressionParser.parse', () {
-    test('returns AST node', () {
-      final node = parser.parse('5 + 3');
+  group('ExpressionParser.parseExpression', () {
+    test('returns ExpressionNode', () {
+      final node = parser.parseExpression('5 + 3');
       expect(node, isA<BinaryOpNode>());
+    });
+  });
+
+  group('FunctionNameNode', () {
+    test('forward reference stores name and inverse: false', () {
+      const node = FunctionNameNode('tempF', inverse: false);
+      expect(node.name, 'tempF');
+      expect(node.inverse, isFalse);
+    });
+
+    test('inverse reference stores name and inverse: true', () {
+      const node = FunctionNameNode('tempF', inverse: true);
+      expect(node.name, 'tempF');
+      expect(node.inverse, isTrue);
+    });
+
+    test('is an ASTNode but not an ExpressionNode', () {
+      const node = FunctionNameNode('tempF', inverse: false);
+      expect(node, isA<ASTNode>());
+      expect(node, isNot(isA<ExpressionNode>()));
+    });
+
+    test('toString includes name and inverse flag', () {
+      expect(
+        const FunctionNameNode('tempF', inverse: false).toString(),
+        'FunctionName(tempF, inverse: false)',
+      );
+      expect(
+        const FunctionNameNode('tempF', inverse: true).toString(),
+        'FunctionName(tempF, inverse: true)',
+      );
+    });
+  });
+
+  group('ExpressionParser.parseQuery', () {
+    late UnitRepository repo;
+    late ExpressionParser repoParser;
+    late ExpressionParser noRepoParser;
+
+    setUp(() {
+      repo = UnitRepository.withPredefinedUnits();
+      repoParser = ExpressionParser(repo: repo);
+      noRepoParser = ExpressionParser();
+    });
+
+    test(
+      'bare known-function name returns FunctionNameNode(inverse: false)',
+      () {
+        final node = repoParser.parseQuery('tempF');
+        expect(node, isA<FunctionNameNode>());
+        final fn = node as FunctionNameNode;
+        expect(fn.name, 'tempF');
+        expect(fn.inverse, isFalse);
+      },
+    );
+
+    test('~funcName returns FunctionNameNode(inverse: true)', () {
+      final node = repoParser.parseQuery('~tempF');
+      expect(node, isA<FunctionNameNode>());
+      final fn = node as FunctionNameNode;
+      expect(fn.name, 'tempF');
+      expect(fn.inverse, isTrue);
+    });
+
+    test(
+      'bare unit identifier (not a function) delegates to parseExpression',
+      () {
+        final node = repoParser.parseQuery('meter');
+        expect(node, isA<UnitNode>());
+        expect((node as UnitNode).unitName, 'meter');
+      },
+    );
+
+    test('multi-token input delegates to parseExpression', () {
+      final node = repoParser.parseQuery('5 km');
+      expect(node, isA<BinaryOpNode>());
+    });
+
+    test('function call with parens delegates to parseExpression', () {
+      final node = repoParser.parseQuery('tempF(32)');
+      expect(node, isA<FunctionCallNode>());
+    });
+
+    test('without a repository all inputs delegate to parseExpression', () {
+      final node = noRepoParser.parseQuery('tempF');
+      // Without repo, "tempF" is treated as a raw UnitNode.
+      expect(node, isA<ExpressionNode>());
+      expect(node, isNot(isA<FunctionNameNode>()));
     });
   });
 

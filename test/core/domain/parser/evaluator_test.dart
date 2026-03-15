@@ -15,13 +15,13 @@ import 'package:unitary/core/domain/parser/parser.dart';
 
 Quantity eval(String input) {
   final tokens = Lexer(input).scanTokens();
-  final ast = Parser(tokens).parse();
+  final ast = Parser(tokens).parseExpression();
   return ast.evaluate(const EvalContext());
 }
 
 Quantity evalWithRepo(String input, UnitRepository repo) {
   final tokens = Lexer(input).scanTokens();
-  final ast = Parser(tokens, repo: repo).parse();
+  final ast = Parser(tokens, repo: repo).parseExpression();
   return ast.evaluate(EvalContext(repo: repo));
 }
 
@@ -353,18 +353,18 @@ void main() {
     });
   });
 
-  group('Evaluator: FunctionNode.evaluate() AST-level', () {
+  group('Evaluator: FunctionCallNode.evaluate() AST-level', () {
     test('dispatches through repo and returns correct result', () {
       final repo = UnitRepository();
       registerBuiltinFunctions(repo);
-      const node = FunctionNode('sin', [NumberNode(0.0)]);
+      const node = FunctionCallNode('sin', [NumberNode(0.0)]);
       final result = node.evaluate(EvalContext(repo: repo));
       expect(result.value, closeTo(0.0, 1e-10));
       expect(result.isDimensionless, isTrue);
     });
 
     test('throws EvalException when context.repo is null', () {
-      const node = FunctionNode('sin', [NumberNode(0.0)]);
+      const node = FunctionCallNode('sin', [NumberNode(0.0)]);
       expect(
         () => node.evaluate(const EvalContext()),
         throwsA(isA<EvalException>()),
@@ -373,7 +373,7 @@ void main() {
 
     test('throws EvalException for unknown function name in repo', () {
       final repo = UnitRepository();
-      const node = FunctionNode('notafunction', [NumberNode(0.0)]);
+      const node = FunctionCallNode('notafunction', [NumberNode(0.0)]);
       expect(
         () => node.evaluate(EvalContext(repo: repo)),
         throwsA(isA<EvalException>()),
@@ -697,19 +697,19 @@ void main() {
       return repo;
     }
 
-    test('FunctionNode with inverse == false dispatches to call', () {
+    test('FunctionCallNode with inverse == false dispatches to call', () {
       final repo = UnitRepository();
       registerBuiltinFunctions(repo);
       // sin(0) = 0 via call()
-      const node = FunctionNode('sin', [NumberNode(0.0)]);
+      const node = FunctionCallNode('sin', [NumberNode(0.0)]);
       final result = node.evaluate(EvalContext(repo: repo));
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
-    test('FunctionNode with inverse == true dispatches to callInverse', () {
+    test('FunctionCallNode with inverse == true dispatches to callInverse', () {
       final repo = makeInvertibleRepo();
       // double(x) = 2x; ~double(10) = 5
-      const node = FunctionNode(
+      const node = FunctionCallNode(
         'double',
         [NumberNode(10.0)],
         inverse: true,
@@ -751,7 +751,7 @@ void main() {
       Map<String, Quantity> vars,
     ) {
       final tokens = Lexer(expr).scanTokens();
-      final ast = Parser(tokens, repo: r).parse();
+      final ast = Parser(tokens, repo: r).parseExpression();
       return ast.evaluate(EvalContext(repo: r, variables: vars));
     }
 
@@ -773,7 +773,7 @@ void main() {
 
     test('null variables is transparent (no change in behavior)', () {
       final tokens = Lexer('m').scanTokens();
-      final ast = Parser(tokens, repo: repo).parse();
+      final ast = Parser(tokens, repo: repo).parseExpression();
       // variables: null — should behave like a plain EvalContext.
       final result = ast.evaluate(EvalContext(repo: repo));
       expect(result.value, closeTo(1.0, 1e-10));

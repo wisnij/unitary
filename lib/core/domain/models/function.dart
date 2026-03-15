@@ -113,6 +113,22 @@ abstract class UnitaryFunction {
   /// Whether this function supports inverse evaluation via [callInverse].
   bool get hasInverse;
 
+  /// Formal parameter names, used for display (e.g. `['x']` for single-arg
+  /// functions).  `DefinedFunction` returns its actual parameter names;
+  /// other subclasses return generic names based on [arity].
+  List<String> get params;
+
+  /// Presentation label for the forward definition, shown as-is in the UI.
+  /// Not guaranteed to be a parseable expression — may be a descriptive
+  /// string such as `"<built-in function sin>"` or `"piecewise linear function"`.
+  String? get definitionDisplay;
+
+  /// Presentation label for the inverse definition, shown as-is in the UI.
+  /// Returns `null` only when the inverse is not representable as a display
+  /// string (e.g. [PiecewiseFunction] may use this). Implementations that have
+  /// no inverse should return `'no inverse defined'`.
+  String? get inverseDisplay;
+
   /// Validates args against [domain], evaluates, validates result against [range].
   ///
   /// The optional [context] parameter is passed through to [evaluate] for
@@ -214,6 +230,7 @@ abstract class UnitaryFunction {
 /// evaluation.
 class BuiltinFunction extends UnitaryFunction {
   final Quantity Function(List<Quantity>) _impl;
+  final List<String>? _params;
 
   BuiltinFunction({
     required super.id,
@@ -221,14 +238,32 @@ class BuiltinFunction extends UnitaryFunction {
     required super.arity,
     super.domain,
     super.range,
+    List<String>? params,
     required Quantity Function(List<Quantity>) impl,
-  }) : _impl = impl;
+  }) : _params = params,
+       _impl = impl;
 
   @override
   bool get hasInverse => false;
 
   @override
+  List<String> get params => _params ?? _genericParams(arity);
+
+  @override
+  String? get definitionDisplay => '<built-in function $id>';
+
+  @override
+  String? get inverseDisplay => 'no inverse defined';
+
+  @override
   Quantity evaluate(List<Quantity> args, [EvalContext? context]) => _impl(args);
+
+  static List<String> _genericParams(int arity) {
+    const letters = ['x', 'y', 'z'];
+    return arity <= letters.length
+        ? letters.sublist(0, arity)
+        : List.generate(arity, (i) => 'x${i + 1}');
+  }
 }
 
 /// A piecewise-linear function defined by a fixed set of (x, y) control points.
@@ -303,6 +338,15 @@ class PiecewiseFunction extends UnitaryFunction {
   bool get hasInverse => true;
 
   @override
+  List<String> get params => const ['x']; // PiecewiseFunction is always arity 1
+
+  @override
+  String? get definitionDisplay => 'piecewise linear function';
+
+  @override
+  String? get inverseDisplay => 'piecewise linear function';
+
+  @override
   Quantity evaluate(List<Quantity> args, [EvalContext? context]) {
     // Binary search for the enclosing segment.
     final x = args[0].value;
@@ -360,6 +404,7 @@ class PiecewiseFunction extends UnitaryFunction {
 /// not have an inverse.
 class DefinedFunction extends UnitaryFunction {
   /// Formal parameter names.
+  @override
   final List<String> params;
 
   /// Expression string for the forward evaluation.
@@ -390,6 +435,12 @@ class DefinedFunction extends UnitaryFunction {
 
   @override
   bool get hasInverse => inverse != null;
+
+  @override
+  String? get definitionDisplay => forward;
+
+  @override
+  String? get inverseDisplay => inverse ?? 'no inverse defined';
 
   @override
   Quantity evaluate(List<Quantity> args, [EvalContext? context]) {

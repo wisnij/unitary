@@ -36,6 +36,22 @@ class ConversionSuccess extends EvaluationResult {
   });
 }
 
+/// Bare function name (forward or `~inverse`) in input field — shows the
+/// function's definition or inverse expression.
+///
+/// [label] is the pre-formatted display label, e.g. `"sin(x) ="` or
+/// `"~tempF(x) ="`.  [expression] is the display string for the body, or
+/// `null` when no expression is available.
+class FunctionDefinitionResult extends EvaluationResult {
+  final String label;
+  final String? expression;
+
+  const FunctionDefinitionResult({
+    required this.label,
+    required this.expression,
+  });
+}
+
 /// Evaluation failed with an error message.
 class EvaluationError extends EvaluationResult {
   final String message;

@@ -22,17 +22,33 @@ class ExpressionParser {
 
   /// Lex, parse, and evaluate an expression string.
   Quantity evaluate(String input) {
-    final ast = parse(input);
+    final ast = parseExpression(input);
     return ast.evaluate(
       EvalContext(repo: repo, visited: visited, variables: variables),
     );
   }
 
-  /// Lex and parse an expression string, returning the AST.
-  ASTNode parse(String input) {
-    final tokens = tokenize(input);
-    return Parser(tokens, repo: repo).parse();
-  }
+  /// Lex and parse an expression string, returning an [ExpressionNode].
+  ///
+  /// Use this entry point when the input is known to be a mathematical
+  /// expression (not a bare function name reference).
+  ExpressionNode parseExpression(String input) =>
+      Parser(tokenize(input), repo: repo).parseExpression();
+
+  /// Lex and parse an input that may be an expression or a bare function name.
+  ///
+  /// Returns a [FunctionNameNode] when the input is exactly a bare known-
+  /// function identifier (optionally preceded by `~`).  Otherwise delegates
+  /// to [Parser.parseExpression] and returns the resulting [ExpressionNode].
+  ///
+  /// If no [repo] is present, all inputs are delegated to [parseExpression].
+  ASTNode parseQuery(String input) =>
+      Parser(tokenize(input), repo: repo).parseQuery();
+
+  /// Evaluate an already-parsed [ExpressionNode] using this parser's context.
+  Quantity evaluateNode(ExpressionNode node) => node.evaluate(
+    EvalContext(repo: repo, visited: visited, variables: variables),
+  );
 
   /// Lex an expression string, returning the token list.
   List<Token> tokenize(String input) {

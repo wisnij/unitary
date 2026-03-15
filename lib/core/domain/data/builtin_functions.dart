@@ -94,6 +94,7 @@ final atanFn = BuiltinFunction(
 final atan2Fn = BuiltinFunction(
   id: 'atan2',
   arity: 2,
+  params: ['y', 'x'],
   domain: [
     QuantitySpec(quantity: Quantity.unity),
     QuantitySpec(quantity: Quantity.unity),

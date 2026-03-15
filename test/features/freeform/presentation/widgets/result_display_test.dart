@@ -77,5 +77,57 @@ void main() {
       final errorColor = Theme.of(context).colorScheme.error;
       expect(text.style?.color, errorColor);
     });
+
+    testWidgets(
+      'FunctionDefinitionResult with non-null expression shows label and expression',
+      (tester) async {
+        const state = FunctionDefinitionResult(
+          label: 'tempF(x) =',
+          expression: 'x * 9|5 + 32',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('tempF(x) ='), findsOneWidget);
+        expect(find.text('x * 9|5 + 32'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'FunctionDefinitionResult with null expression shows <not available>',
+      (tester) async {
+        const state = FunctionDefinitionResult(
+          label: 'unknown(x) =',
+          expression: null,
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('unknown(x) ='), findsOneWidget);
+        expect(find.text('<not available>'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'FunctionDefinitionResult with inverse label shows inverse expression',
+      (tester) async {
+        const state = FunctionDefinitionResult(
+          label: '~tempF =',
+          expression: '(x - 32) * 5|9',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('~tempF ='), findsOneWidget);
+        expect(find.text('(x - 32) * 5|9'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'FunctionDefinitionResult with inverse label and null expression shows <not available>',
+      (tester) async {
+        const state = FunctionDefinitionResult(
+          label: '~sin =',
+          expression: null,
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('~sin ='), findsOneWidget);
+        expect(find.text('<not available>'), findsOneWidget);
+      },
+    );
   });
 }

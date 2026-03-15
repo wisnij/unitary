@@ -12,12 +12,12 @@ import 'package:unitary/core/domain/parser/token.dart';
 
 ASTNode parse(String input) {
   final tokens = Lexer(input).scanTokens();
-  return Parser(tokens).parse();
+  return Parser(tokens).parseExpression();
 }
 
 ASTNode parseWithRepo(String input, UnitRepository repo) {
   final tokens = Lexer(input).scanTokens();
-  return Parser(tokens, repo: repo).parse();
+  return Parser(tokens, repo: repo).parseExpression();
 }
 
 void main() {
@@ -332,27 +332,27 @@ void main() {
 
     test('single argument function: sin(0.5)', () {
       final node = parseWithRepo('sin(0.5)', fnRepo);
-      expect(node, isA<FunctionNode>());
-      final func = node as FunctionNode;
+      expect(node, isA<FunctionCallNode>());
+      final func = node as FunctionCallNode;
       expect(func.name, 'sin');
       expect(func.arguments.length, 1);
       expect(func.arguments[0], isA<NumberNode>());
     });
 
     test('function with expression argument: sqrt(9 m^2)', () {
-      final node = parseWithRepo('sqrt(9 m^2)', fnRepo) as FunctionNode;
+      final node = parseWithRepo('sqrt(9 m^2)', fnRepo) as FunctionCallNode;
       expect(node.name, 'sqrt');
       expect(node.arguments.length, 1);
     });
 
     test('nested function calls: abs(sin(0))', () {
-      final node = parseWithRepo('abs(sin(0))', fnRepo) as FunctionNode;
+      final node = parseWithRepo('abs(sin(0))', fnRepo) as FunctionCallNode;
       expect(node.name, 'abs');
-      expect(node.arguments[0], isA<FunctionNode>());
+      expect(node.arguments[0], isA<FunctionCallNode>());
     });
 
     test('multi-argument function: atan2(1, 2)', () {
-      final node = parseWithRepo('atan2(1, 2)', fnRepo) as FunctionNode;
+      final node = parseWithRepo('atan2(1, 2)', fnRepo) as FunctionCallNode;
       expect(node.name, 'atan2');
       expect(node.arguments.length, 2);
     });
@@ -360,7 +360,7 @@ void main() {
     test('function in expression: 5 + sin(0)', () {
       final node = parseWithRepo('5 + sin(0)', fnRepo) as BinaryOpNode;
       expect(node.operator, TokenType.plus);
-      expect(node.right, isA<FunctionNode>());
+      expect(node.right, isA<FunctionCallNode>());
     });
 
     test('zero-arg function call throws', () {
@@ -384,7 +384,7 @@ void main() {
     test('no-repo parser does not recognize sin(x) as function call', () {
       // Without a repo, sin is parsed as a unit identifier (implicit multiply)
       final node = parse('sin(0.5)');
-      expect(node, isNot(isA<FunctionNode>()));
+      expect(node, isNot(isA<FunctionCallNode>()));
       expect(node, isA<BinaryOpNode>());
     });
   });
@@ -672,15 +672,15 @@ void main() {
     });
 
     test(
-      'log2(x) produces BinaryOpNode(FunctionNode("ln", [x]), divide, NumberNode)',
+      'log2(x) produces BinaryOpNode(FunctionCallNode("ln", [x]), divide, NumberNode)',
       () {
         final node = parseWithRepo('log2(8)', fnRepo);
         expect(node, isA<BinaryOpNode>());
         final div = node as BinaryOpNode;
         expect(div.operator, TokenType.divide);
-        expect(div.left, isA<FunctionNode>());
-        expect((div.left as FunctionNode).name, 'ln');
-        expect((div.left as FunctionNode).arguments.length, 1);
+        expect(div.left, isA<FunctionCallNode>());
+        expect((div.left as FunctionCallNode).name, 'ln');
+        expect((div.left as FunctionCallNode).arguments.length, 1);
         expect(div.right, isA<NumberNode>());
         expect((div.right as NumberNode).value, closeTo(math.log(2), 1e-15));
       },
@@ -705,7 +705,7 @@ void main() {
       expect(node, isA<BinaryOpNode>());
       final div = node as BinaryOpNode;
       expect(div.operator, TokenType.divide);
-      expect((div.left as FunctionNode).name, 'ln');
+      expect((div.left as FunctionCallNode).name, 'ln');
     });
 
     test(
@@ -745,22 +745,22 @@ void main() {
 
     test('normal function call has inverse == false', () {
       final node = parseWithRepo('sin(0)', repo);
-      expect(node, isA<FunctionNode>());
-      expect((node as FunctionNode).inverse, isFalse);
+      expect(node, isA<FunctionCallNode>());
+      expect((node as FunctionCallNode).inverse, isFalse);
     });
 
-    test('~name(args) produces FunctionNode with inverse == true', () {
+    test('~name(args) produces FunctionCallNode with inverse == true', () {
       final node = parseWithRepo('~sin(1)', repo);
-      expect(node, isA<FunctionNode>());
-      final fn = node as FunctionNode;
+      expect(node, isA<FunctionCallNode>());
+      final fn = node as FunctionCallNode;
       expect(fn.name, 'sin');
       expect(fn.inverse, isTrue);
     });
 
     test('~name(args) with one argument', () {
       final node = parseWithRepo('~sqrt(4)', repo);
-      expect(node, isA<FunctionNode>());
-      final fn = node as FunctionNode;
+      expect(node, isA<FunctionCallNode>());
+      final fn = node as FunctionCallNode;
       expect(fn.name, 'sqrt');
       expect(fn.inverse, isTrue);
       expect(fn.arguments.length, 1);

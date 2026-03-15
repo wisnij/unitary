@@ -2,13 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/user_settings.dart';
-import '../state/package_info_provider.dart';
 import '../state/settings_provider.dart';
-
-const buildMetadata = String.fromEnvironment(
-  'BUILD_METADATA',
-  defaultValue: 'unknown',
-);
 
 /// Settings screen with precision, notation, dark mode, and evaluation mode.
 class SettingsScreen extends ConsumerWidget {
@@ -100,21 +94,6 @@ class SettingsScreen extends ConsumerWidget {
                   value: EvaluationMode.onSubmit,
                 ),
               ],
-            ),
-          ),
-          const _SectionHeader(title: 'About'),
-          ListTile(
-            title: const Text('Version'),
-            subtitle: Text(
-              ref
-                  .watch(packageInfoProvider)
-                  .when(
-                    data: (info) {
-                      return '${info.version} (build $buildMetadata)';
-                    },
-                    loading: () => '…',
-                    error: (_, _) => 'unknown',
-                  ),
             ),
           ),
         ],

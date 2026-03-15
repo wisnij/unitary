@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../about/presentation/about_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
 import 'freeform_screen.dart';
 
@@ -12,29 +13,35 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Unitary')),
       drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Colors.blue),
-              child: Text(
-                'Unitary',
-                style: TextStyle(color: Colors.white, fontSize: 24),
+            Expanded(
+              child: ListView(
+                padding: EdgeInsets.zero,
+                children: [
+                  const DrawerHeader(
+                    decoration: BoxDecoration(color: Colors.blue),
+                    child: Text(
+                      'Unitary',
+                      style: TextStyle(color: Colors.white, fontSize: 24),
+                    ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.calculate),
+                    title: const Text('Freeform'),
+                    selected: true,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  const ListTile(
+                    leading: Icon(Icons.table_chart),
+                    title: Text('Worksheet'),
+                    enabled: false,
+                    onTap: null,
+                  ),
+                ],
               ),
             ),
-            ListTile(
-              leading: const Icon(Icons.calculate),
-              title: const Text('Freeform'),
-              selected: true,
-              onTap: () => Navigator.pop(context),
-            ),
-            const ListTile(
-              leading: Icon(Icons.table_chart),
-              title: Text('Worksheet'),
-              enabled: false,
-              onTap: null,
-            ),
-            const Divider(),
+            const Divider(height: 1),
             ListTile(
               leading: const Icon(Icons.settings),
               title: const Text('Settings'),
@@ -44,6 +51,19 @@ class HomeScreen extends StatelessWidget {
                   context,
                   MaterialPageRoute<void>(
                     builder: (_) => const SettingsScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info_outline),
+              title: const Text('About'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AboutScreen(),
                   ),
                 );
               },

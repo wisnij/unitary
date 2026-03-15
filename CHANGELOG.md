@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add an About screen to the left-hand drawer menu
 - Display function name when converting to a function
 
 

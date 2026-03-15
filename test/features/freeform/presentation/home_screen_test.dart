@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/freeform/presentation/home_screen.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
@@ -43,19 +44,24 @@ void main() {
       expect(find.text('Freeform'), findsOneWidget);
       expect(find.text('Worksheet'), findsOneWidget);
       expect(find.text('Settings'), findsOneWidget);
+      expect(find.text('About'), findsOneWidget);
     });
 
-    testWidgets('drawer contains Freeform, Worksheet, Settings entries', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-      await tester.tap(find.byIcon(Icons.menu));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'drawer contains Freeform, Worksheet, Settings, About entries',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(buildApp());
+        await tester.tap(find.byIcon(Icons.menu));
+        await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.calculate), findsOneWidget);
-      expect(find.byIcon(Icons.table_chart), findsOneWidget);
-      expect(find.byIcon(Icons.settings), findsOneWidget);
-    });
+        expect(find.byIcon(Icons.calculate), findsOneWidget);
+        expect(find.byIcon(Icons.table_chart), findsOneWidget);
+        expect(find.byIcon(Icons.settings), findsOneWidget);
+        expect(find.byIcon(Icons.info_outline), findsOneWidget);
+      },
+    );
 
     testWidgets('Worksheet entry is disabled', (tester) async {
       await tester.pumpWidget(buildApp());
@@ -79,6 +85,17 @@ void main() {
 
       // Should now be on the SettingsScreen.
       expect(find.byType(SettingsScreen), findsOneWidget);
+    });
+
+    testWidgets('About tap navigates to AboutScreen', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('About'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AboutScreen), findsOneWidget);
     });
 
     testWidgets('Freeform tap closes drawer', (tester) async {

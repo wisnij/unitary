@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/settings/data/settings_repository.dart';
@@ -16,13 +15,6 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     repo = SettingsRepository(prefs);
-    PackageInfo.setMockInitialValues(
-      appName: 'unitary',
-      packageName: 'com.wisnij.unitary',
-      version: '0.0.1',
-      buildNumber: '',
-      buildSignature: '',
-    );
   });
 
   Widget buildApp() {
@@ -34,35 +26,12 @@ void main() {
 
   group('SettingsScreen', () {
     testWidgets('renders all settings sections', (tester) async {
-      // The settings list is taller than the default test window; use a taller
-      // one so all sections are mounted.
-      tester.view.physicalSize = const Size(800, 1600);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
       await tester.pumpWidget(buildApp());
       expect(find.text('Settings'), findsOneWidget); // AppBar title.
       expect(find.text('Display'), findsOneWidget);
       expect(find.text('Appearance'), findsOneWidget);
       expect(find.text('Behavior'), findsOneWidget);
-      expect(find.text('About'), findsOneWidget);
-    });
-
-    testWidgets('version tile shows app version from PackageInfo', (
-      tester,
-    ) async {
-      // The settings list is taller than the default 600px test window, so the
-      // Version tile would be unmounted (off-screen). Use a taller window.
-      tester.view.physicalSize = const Size(800, 1600);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      await tester.pumpWidget(buildApp());
-      await tester.pump(); // Allow FutureProvider to resolve.
-      expect(find.text('Version'), findsOneWidget);
-      expect(find.textContaining('0.0.1'), findsOneWidget);
+      expect(find.text('About'), findsNothing);
     });
 
     testWidgets('renders precision dropdown with default value', (

@@ -505,4 +505,357 @@ void main() {
       expect(result, contains('\n\n$newLinkRef\n'));
     });
   });
+
+  group('formatUnreleasedSection', () {
+    test('returns null when no commits produce changelog entries', () {
+      final commits = [
+        ParsedCommit.parse('aaa test: add test')!,
+        ParsedCommit.parse('bbb chore: cleanup')!,
+        ParsedCommit.parse('ccc ci: update workflow')!,
+      ];
+      expect(formatUnreleasedSection(commits), isNull);
+    });
+
+    test('returns null for empty commit list', () {
+      expect(formatUnreleasedSection([]), isNull);
+    });
+
+    test('heading is exactly [Unreleased] with 12 dashes', () {
+      final commits = [ParsedCommit.parse('aaa feat: add feature')!];
+      final result = formatUnreleasedSection(commits)!;
+      final lines = result.split('\n');
+      expect(lines[0], '[Unreleased]');
+      expect(lines[1], '------------');
+      expect(lines[1].length, '[Unreleased]'.length);
+    });
+
+    test('body uses same section groups as versioned entries', () {
+      final commits = [
+        ParsedCommit.parse('aaa feat: add feature')!,
+        ParsedCommit.parse('bbb fix: fix bug')!,
+        ParsedCommit.parse('ccc refactor: improve code')!,
+        ParsedCommit.parse('ddd docs: update docs')!,
+      ];
+      final result = formatUnreleasedSection(commits)!;
+      expect(result, contains('### Added'));
+      expect(result, contains('- add feature'));
+      expect(result, contains('### Fixed'));
+      expect(result, contains('- fix bug'));
+      expect(result, contains('### Changed'));
+      expect(result, contains('- improve code'));
+      expect(result, contains('### Documentation'));
+      expect(result, contains('- update docs'));
+    });
+
+    test('omits empty section groups', () {
+      final commits = [ParsedCommit.parse('aaa feat: add feature')!];
+      final result = formatUnreleasedSection(commits)!;
+      expect(result, contains('### Added'));
+      expect(result, isNot(contains('### Fixed')));
+      expect(result, isNot(contains('### Changed')));
+    });
+
+    test('omits test/chore/build/ci/style commits', () {
+      final commits = [
+        ParsedCommit.parse('aaa feat: keep this')!,
+        ParsedCommit.parse('bbb test: skip this')!,
+        ParsedCommit.parse('ccc style: skip this too')!,
+      ];
+      final result = formatUnreleasedSection(commits)!;
+      expect(result, contains('keep this'));
+      expect(result, isNot(contains('skip this')));
+    });
+
+    test('sections are in the standard order', () {
+      final commits = [
+        ParsedCommit.parse('aaa fix: a fix')!,
+        ParsedCommit.parse('bbb feat: a feature')!,
+        ParsedCommit.parse('ccc docs: some docs')!,
+      ];
+      final result = formatUnreleasedSection(commits)!;
+      expect(
+        result.indexOf('### Added'),
+        lessThan(result.indexOf('### Fixed')),
+      );
+      expect(
+        result.indexOf('### Fixed'),
+        lessThan(result.indexOf('### Documentation')),
+      );
+    });
+  });
+
+  group('formatUnreleasedLinkRef', () {
+    test('produces correct reference line', () {
+      final result = formatUnreleasedLinkRef('0.5.9');
+      expect(
+        result,
+        '[Unreleased]: https://github.com/wisnij/unitary/compare/v0.5.9...HEAD',
+      );
+    });
+
+    test('uses repoUrl prefix', () {
+      final result = formatUnreleasedLinkRef('1.2.3');
+      expect(
+        result,
+        startsWith('[Unreleased]: https://github.com/wisnij/unitary'),
+      );
+    });
+
+    test('interpolates lastTag correctly', () {
+      final result = formatUnreleasedLinkRef('2.0.0');
+      expect(result, contains('v2.0.0...HEAD'));
+    });
+  });
+
+  group('extractUnreleasedBody', () {
+    const header =
+        'Changelog\n'
+        '=========\n'
+        '\n'
+        'All notable changes.\n'
+        '\n'
+        'The format is based on Keep a Changelog.\n';
+
+    test('returns null when no [Unreleased] section present', () {
+      const content =
+          '$header'
+          '\n\n'
+          '[0.1.0] - 2026-01-01\n'
+          '---------------------\n'
+          '\n'
+          '### Added\n'
+          '\n'
+          '- Initial release\n';
+      expect(extractUnreleasedBody(content), isNull);
+    });
+
+    test('returns body when [Unreleased] section is present', () {
+      const content =
+          '$header'
+          '\n\n'
+          '[Unreleased]\n'
+          '------------\n'
+          '\n'
+          '### Added\n'
+          '\n'
+          '- New thing\n'
+          '\n\n'
+          '[0.1.0] - 2026-01-01\n'
+          '---------------------\n'
+          '\n'
+          '- Initial release\n';
+      final body = extractUnreleasedBody(content)!;
+      expect(body, contains('### Added'));
+      expect(body, contains('- New thing'));
+      expect(body, isNot(contains('[0.1.0]')));
+    });
+
+    test('trims leading and trailing blank lines from body', () {
+      const content =
+          '$header'
+          '\n\n'
+          '[Unreleased]\n'
+          '------------\n'
+          '\n'
+          '### Added\n'
+          '\n'
+          '- Item\n'
+          '\n';
+      final body = extractUnreleasedBody(content)!;
+      expect(body, isNot(startsWith('\n')));
+      expect(body, isNot(endsWith('\n')));
+    });
+
+    test('returns null when [Unreleased] section has empty body', () {
+      const content =
+          '$header'
+          '\n\n'
+          '[Unreleased]\n'
+          '------------\n'
+          '\n'
+          '\n'
+          '[0.1.0] - 2026-01-01\n'
+          '---------------------\n'
+          '\n'
+          '- Initial release\n';
+      expect(extractUnreleasedBody(content), isNull);
+    });
+
+    test('body does not include the next versioned section', () {
+      const content =
+          '$header'
+          '\n\n'
+          '[Unreleased]\n'
+          '------------\n'
+          '\n'
+          '### Fixed\n'
+          '\n'
+          '- Fix A\n'
+          '\n\n'
+          '[0.5.9] - 2026-03-14\n'
+          '--------------------\n'
+          '\n'
+          '### Added\n'
+          '\n'
+          '- Feature B\n';
+      final body = extractUnreleasedBody(content)!;
+      expect(body, contains('Fix A'));
+      expect(body, isNot(contains('Feature B')));
+      expect(body, isNot(contains('[0.5.9]')));
+    });
+  });
+
+  group('updateUnreleasedSection', () {
+    const header =
+        'Changelog\n'
+        '=========\n'
+        '\n'
+        'All notable changes.\n'
+        '\n'
+        'The format is based on Keep a Changelog.\n';
+
+    const versionEntry =
+        '\n\n'
+        '[0.1.0] - 2026-01-01\n'
+        '---------------------\n'
+        '\n'
+        '- Initial release\n';
+
+    const versionLinkRef =
+        '\n[0.1.0]: https://github.com/wisnij/unitary/compare/v0.0.1...v0.1.0\n';
+
+    const newSection =
+        '[Unreleased]\n'
+        '------------\n'
+        '\n'
+        '### Added\n'
+        '\n'
+        '- New feature\n';
+
+    const newLinkRef =
+        '[Unreleased]: https://github.com/wisnij/unitary/compare/v0.1.0...HEAD';
+
+    test('inserts [Unreleased] section before existing versioned entries', () {
+      const content = header + versionEntry + versionLinkRef;
+      final result = updateUnreleasedSection(content, newSection, newLinkRef);
+      final unreleasedIndex = result.indexOf('[Unreleased]');
+      final versionIndex = result.indexOf('[0.1.0] - 2026-01-01');
+      expect(unreleasedIndex, greaterThanOrEqualTo(0));
+      expect(unreleasedIndex, lessThan(versionIndex));
+    });
+
+    test('inserts [Unreleased] link ref before versioned link refs', () {
+      const content = header + versionEntry + versionLinkRef;
+      final result = updateUnreleasedSection(content, newSection, newLinkRef);
+      final unreleasedLinkIndex = result.indexOf('[Unreleased]: ');
+      final versionLinkIndex = result.indexOf('[0.1.0]: ');
+      expect(unreleasedLinkIndex, greaterThanOrEqualTo(0));
+      expect(unreleasedLinkIndex, lessThan(versionLinkIndex));
+    });
+
+    test('replaces existing [Unreleased] section in-place', () {
+      const oldSection =
+          '[Unreleased]\n'
+          '------------\n'
+          '\n'
+          '### Fixed\n'
+          '\n'
+          '- Old fix\n';
+      const oldLinkRef =
+          '\n[Unreleased]: https://github.com/wisnij/unitary/compare/v0.0.9...HEAD\n';
+      const content = '$header\n\n$oldSection$versionEntry$oldLinkRef';
+      final result = updateUnreleasedSection(content, newSection, newLinkRef);
+      expect(result, contains('- New feature'));
+      expect(result, isNot(contains('- Old fix')));
+    });
+
+    test('updates link ref when replacing existing section', () {
+      const oldSection =
+          '[Unreleased]\n'
+          '------------\n'
+          '\n'
+          '### Fixed\n'
+          '\n'
+          '- Old fix\n';
+      const oldLinkRef =
+          '\n[Unreleased]: https://github.com/wisnij/unitary/compare/v0.0.9...HEAD\n';
+      const content = '$header\n\n$oldSection$versionEntry$oldLinkRef';
+      final result = updateUnreleasedSection(content, newSection, newLinkRef);
+      expect(result, contains(newLinkRef));
+      expect(result, isNot(contains('v0.0.9...HEAD')));
+    });
+
+    test('appends link ref when no link ref block exists', () {
+      const content = header + versionEntry;
+      final result = updateUnreleasedSection(content, newSection, newLinkRef);
+      expect(result, contains(newLinkRef));
+    });
+  });
+
+  group('removeUnreleasedSection', () {
+    const header =
+        'Changelog\n'
+        '=========\n'
+        '\n'
+        'All notable changes.\n'
+        '\n'
+        'The format is based on Keep a Changelog.\n';
+
+    const unreleasedSection =
+        '\n\n'
+        '[Unreleased]\n'
+        '------------\n'
+        '\n'
+        '### Added\n'
+        '\n'
+        '- Pending feature\n';
+
+    const unreleasedLinkRef =
+        '[Unreleased]: https://github.com/wisnij/unitary/compare/v0.1.0...HEAD\n';
+
+    const versionEntry =
+        '\n\n'
+        '[0.1.0] - 2026-01-01\n'
+        '---------------------\n'
+        '\n'
+        '- Initial release\n';
+
+    const versionLinkRef =
+        '[0.1.0]: https://github.com/wisnij/unitary/compare/v0.0.1...v0.1.0\n';
+
+    test('removes [Unreleased] heading, dashes, and body', () {
+      const content = '$header$unreleasedSection$versionEntry\n$versionLinkRef';
+      final result = removeUnreleasedSection(content);
+      expect(result, isNot(contains('[Unreleased]\n')));
+      expect(result, isNot(contains('### Added')));
+      expect(result, isNot(contains('- Pending feature')));
+    });
+
+    test('removes [Unreleased]: link reference', () {
+      const content =
+          '$header$unreleasedSection$versionEntry\n$unreleasedLinkRef$versionLinkRef';
+      final result = removeUnreleasedSection(content);
+      expect(result, isNot(contains('[Unreleased]:')));
+    });
+
+    test('preserves versioned entries', () {
+      const content = '$header$unreleasedSection$versionEntry\n$versionLinkRef';
+      final result = removeUnreleasedSection(content);
+      expect(result, contains('[0.1.0] - 2026-01-01'));
+      expect(result, contains('- Initial release'));
+    });
+
+    test('preserves versioned link references', () {
+      const content =
+          '$header$unreleasedSection$versionEntry\n$unreleasedLinkRef$versionLinkRef';
+      final result = removeUnreleasedSection(content);
+      expect(result, contains(versionLinkRef.trim()));
+    });
+
+    test('is a no-op when no [Unreleased] section present', () {
+      const content = '$header$versionEntry\n$versionLinkRef';
+      final result = removeUnreleasedSection(content);
+      expect(result, content);
+    });
+  });
 }

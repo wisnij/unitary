@@ -309,3 +309,191 @@ bool _startsWithSetextH2(String text) {
       lines[0].trim().isNotEmpty &&
       RegExp(r'^-+\s*$').hasMatch(lines[1]);
 }
+
+/// Returns the line index of the `[Unreleased]` setext heading in [lines],
+/// or -1 if not present.
+int _findUnreleasedHeading(List<String> lines) {
+  for (var i = 0; i < lines.length - 1; i++) {
+    if (lines[i] == '[Unreleased]' &&
+        RegExp(r'^-+\s*$').hasMatch(lines[i + 1])) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+/// Returns the line index of the first setext h2 heading at or after
+/// [fromIndex], or [lines.length] if none is found.
+int _findNextSectionStart(List<String> lines, int fromIndex) {
+  for (var i = fromIndex; i < lines.length - 1; i++) {
+    if (lines[i].trim().isNotEmpty &&
+        RegExp(r'^-+\s*$').hasMatch(lines[i + 1])) {
+      return i;
+    }
+  }
+  return lines.length;
+}
+
+/// Formats an `[Unreleased]` changelog section from [commits].
+///
+/// Returns null if no commits produce any changelog entries (i.e. all commits
+/// are of omitted types such as `test`, `chore`, `build`, `ci`, or `style`).
+String? formatUnreleasedSection(List<ParsedCommit> commits) {
+  final sections = <String, List<String>>{};
+
+  for (final commit in commits) {
+    final section = commit.changelogSection;
+    if (section == null) {
+      continue;
+    }
+    sections.putIfAbsent(section, () => []).add(commit.message);
+  }
+
+  if (sections.isEmpty) {
+    return null;
+  }
+
+  const heading = '[Unreleased]';
+  final buffer = StringBuffer();
+  buffer.writeln(heading);
+  buffer.writeln('-' * heading.length);
+
+  for (final section in _sectionOrder) {
+    final entries = sections[section];
+    if (entries == null || entries.isEmpty) {
+      continue;
+    }
+    buffer.writeln();
+    buffer.writeln('### $section');
+    buffer.writeln();
+    for (final entry in entries) {
+      buffer.writeln('- $entry');
+    }
+  }
+
+  return buffer.toString();
+}
+
+/// Formats the `[Unreleased]` link reference definition pointing to [lastTag].
+String formatUnreleasedLinkRef(String lastTag) {
+  return '[Unreleased]: $_repoUrl/compare/v$lastTag...HEAD';
+}
+
+/// Extracts the body of the `[Unreleased]` section from [changelog].
+///
+/// Returns the body text (the content after the heading and dashes lines),
+/// with leading and trailing blank lines stripped. Returns null if the
+/// `[Unreleased]` section is absent or has an empty body.
+String? extractUnreleasedBody(String changelog) {
+  final lines = changelog.split('\n');
+  final headingIndex = _findUnreleasedHeading(lines);
+  if (headingIndex < 0) {
+    return null;
+  }
+
+  final bodyStart = headingIndex + 2;
+  var bodyEnd = _findNextSectionStart(lines, bodyStart);
+
+  // Trim trailing blank lines.
+  while (bodyEnd > bodyStart && lines[bodyEnd - 1].trim().isEmpty) {
+    bodyEnd--;
+  }
+
+  // Trim leading blank lines.
+  var actualStart = bodyStart;
+  while (actualStart < bodyEnd && lines[actualStart].trim().isEmpty) {
+    actualStart++;
+  }
+
+  if (actualStart >= bodyEnd) {
+    return null;
+  }
+
+  return lines.sublist(actualStart, bodyEnd).join('\n');
+}
+
+/// Inserts or replaces the `[Unreleased]` section and its link reference in
+/// [changelog].
+///
+/// If an `[Unreleased]` section is already present it is removed first, then
+/// the new [section] is inserted at the top of the entry list (immediately
+/// after the file header). The [linkRef] is inserted before the first
+/// versioned link reference, or appended if none exist.
+String updateUnreleasedSection(
+  String changelog,
+  String section,
+  String linkRef,
+) {
+  // Remove any existing [Unreleased] section (and its link ref) first,
+  // then re-insert fresh — this handles both insert and replace uniformly.
+  var result = removeUnreleasedSection(changelog);
+
+  // Find the insertion point: after the header block (same heuristic as
+  // updateChangelog).
+  final lines = result.split('\n');
+  var insertIndex = 0;
+  var foundContent = false;
+
+  for (var i = 0; i < lines.length; i++) {
+    if (lines[i].trim().isNotEmpty) {
+      foundContent = true;
+    } else if (foundContent) {
+      final remaining = lines.skip(i + 1).join('\n').trim();
+      if (remaining.isEmpty ||
+          remaining.startsWith('## ') ||
+          _startsWithSetextH2(remaining)) {
+        insertIndex = i + 1;
+        break;
+      }
+    }
+  }
+
+  if (insertIndex == 0) {
+    insertIndex = lines.length;
+  }
+
+  final before = lines.sublist(0, insertIndex).join('\n');
+  final after = lines.sublist(insertIndex).join('\n');
+  result = '$before\n\n$section\n$after';
+
+  // Insert [Unreleased]: link reference before existing versioned link refs,
+  // or append it if none exist.
+  final resultLines = result.split('\n');
+  final versionedLinkPattern = RegExp(r'^\[[\d.]+\]:');
+  var versionedLinkIndex = -1;
+  for (var i = 0; i < resultLines.length; i++) {
+    if (versionedLinkPattern.hasMatch(resultLines[i])) {
+      versionedLinkIndex = i;
+      break;
+    }
+  }
+
+  if (versionedLinkIndex >= 0) {
+    resultLines.insert(versionedLinkIndex, linkRef);
+    return resultLines.join('\n');
+  } else {
+    return '$result\n$linkRef\n';
+  }
+}
+
+/// Removes the `[Unreleased]` section and its link reference from [changelog].
+///
+/// Returns [changelog] unchanged if no `[Unreleased]` section is present.
+String removeUnreleasedSection(String changelog) {
+  var lines = changelog.split('\n');
+  final headingIndex = _findUnreleasedHeading(lines);
+
+  if (headingIndex >= 0) {
+    final bodyStart = headingIndex + 2;
+    final nextSectionIndex = _findNextSectionStart(lines, bodyStart);
+    lines = [
+      ...lines.sublist(0, headingIndex),
+      ...lines.sublist(nextSectionIndex),
+    ];
+  }
+
+  // Remove [Unreleased]: link reference line.
+  lines = lines.where((l) => !RegExp(r'^\[Unreleased\]:').hasMatch(l)).toList();
+
+  return lines.join('\n');
+}

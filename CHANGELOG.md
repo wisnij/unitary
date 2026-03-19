@@ -7,8 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-[Unreleased]
-------------
+[0.5.11] - 2026-03-19
+---------------------
 
 ### Added
 
@@ -222,7 +222,7 @@ Phase 1: Core Domain.
 - Numeric literals with decimal point support
 - 373 passing tests
 
-[Unreleased]: https://github.com/wisnij/unitary/compare/v0.5.10...HEAD
+[0.5.11]: https://github.com/wisnij/unitary/compare/v0.5.10...v0.5.11
 [0.5.10]: https://github.com/wisnij/unitary/compare/v0.5.9...v0.5.10
 [0.5.9]: https://github.com/wisnij/unitary/compare/v0.5.8...v0.5.9
 [0.5.8]: https://github.com/wisnij/unitary/compare/v0.5.7...v0.5.8

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import '../errors.dart';
+import '../models/unit.dart';
 import '../models/unit_repository.dart';
 import 'ast.dart';
 import 'token.dart';
@@ -80,6 +81,22 @@ class Parser {
         final name = significant[1].literal as String;
         if (_repo.findFunction(name) != null) {
           return FunctionNameNode(name, inverse: true);
+        }
+      }
+
+      // Bare unit or prefix+unit name: exactly one identifier that resolves
+      // to a known unit (with or without a prefix).
+      if (significant.length == 1 &&
+          significant[0].type == TokenType.identifier) {
+        final name = significant[0].literal as String;
+        final match = _repo.findUnitWithPrefix(name);
+        if (match.prefix != null ||
+            (match.unit != null && match.unit is! PrefixUnit)) {
+          return DefinitionRequestNode(name);
+        }
+        // Bare prefix name with no following unit.
+        if (_repo.findPrefix(name) != null) {
+          return DefinitionRequestNode(name);
         }
       }
     }

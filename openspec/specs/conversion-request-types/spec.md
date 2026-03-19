@@ -112,16 +112,24 @@ former call sites of `parse()` SHALL be updated to call `parseExpression()` or
 
 ### Requirement: parseQuery() is the general entry point on ExpressionParser
 
-`ExpressionParser` SHALL expose `parseQuery(String input) → ASTNode`.  It SHALL
-return a `FunctionNameNode` when the input is a bare known-function name
-(optionally preceded by `~`); otherwise it SHALL delegate to `parseExpression()`
-and return the resulting `ExpressionNode`.
+`ExpressionParser` SHALL expose `parseQuery(String input) → ASTNode`.  It
+SHALL detect bare identifiers in the following priority order, then fall back
+to `parseExpression()`:
 
-A "bare known-function name" means the token stream consists of exactly one
-identifier that resolves to a registered function in the repository (no
-parentheses, no other tokens).  A `~` prefix is permitted before the identifier
-to set `inverse: true`.  If no repository is present, all inputs are delegated
-to `parseExpression()`.
+1. **Function name**: a bare identifier (optionally preceded by `~`) that
+   resolves to a registered function → returns `FunctionNameNode`.
+2. **Unit or prefix+unit**: a bare identifier where `findUnitWithPrefix(name)`
+   returns a `UnitMatch` with a non-null `unit` field → returns
+   `DefinitionRequestNode(name)`.
+3. **Bare prefix**: a bare identifier where `findPrefix(name)` returns a
+   non-null `PrefixUnit` → returns `DefinitionRequestNode(name)`.
+4. **Otherwise**: delegates to `parseExpression()` and returns the resulting
+   `ExpressionNode`.
+
+A "bare identifier" means the token stream consists of exactly one
+`TokenType.identifier` token (plus EOF), with no preceding `~` for cases 2
+and 3.  If no repository is present, all inputs are delegated to
+`parseExpression()`.
 
 #### Scenario: parseQuery returns FunctionNameNode for a bare forward function name
 
@@ -135,21 +143,45 @@ to `parseExpression()`.
   registered as a function
 - **THEN** the result is `FunctionNameNode("tempC", true)`
 
-#### Scenario: parseQuery delegates non-function input to parseExpression
+#### Scenario: parseQuery returns DefinitionRequestNode for a bare unit name
+
+- **WHEN** `parseQuery("meter")` is called with a repository where `meter` is a
+  unit but not a function
+- **THEN** the result is `DefinitionRequestNode("meter")`
+
+#### Scenario: parseQuery returns DefinitionRequestNode for a bare prefix+unit name
+
+- **WHEN** `parseQuery("km")` is called with a repository where `km` splits into
+  prefix `k` and unit `m`
+- **THEN** the result is `DefinitionRequestNode("km")`
+
+#### Scenario: parseQuery returns DefinitionRequestNode for a bare prefix alias
+
+- **WHEN** `parseQuery("kilo")` is called with a repository where `kilo` is a
+  prefix alias and no unit named `kilo` is registered
+- **THEN** the result is `DefinitionRequestNode("kilo")`
+
+#### Scenario: Function name takes priority over unit name in parseQuery
+
+- **WHEN** `parseQuery("abs")` is called with a repository where `abs` is both
+  a function and a unit
+- **THEN** the result is `FunctionNameNode("abs", false)`
+
+#### Scenario: Unit name takes priority over prefix name in parseQuery
+
+- **WHEN** `parseQuery("M")` is called with a repository where `M` is both a
+  unit name and a prefix name
+- **THEN** the result is `DefinitionRequestNode("M")` (unit wins)
+
+#### Scenario: parseQuery delegates non-unit, non-prefix, non-function input to parseExpression
 
 - **WHEN** `parseQuery("5 km")` is called
 - **THEN** the result is an `ExpressionNode` (same as `parseExpression("5 km")`)
 
-#### Scenario: parseQuery treats a bare unknown identifier as a unit expression
-
-- **WHEN** `parseQuery("meter")` is called with a repository where `meter` is a
-  unit but not a function
-- **THEN** the result is a `UnitNode("meter")` (an `ExpressionNode`)
-
 #### Scenario: parseQuery without a repository delegates all input to parseExpression
 
-- **WHEN** `parseQuery("tempC")` is called with no repository
-- **THEN** the result is a `UnitNode("tempC")` (an `ExpressionNode`)
+- **WHEN** `parseQuery("meter")` is called with no repository
+- **THEN** the result is a `UnitNode("meter")` (an `ExpressionNode`)
 
 ### Requirement: UnitaryFunction exposes display strings for its definition and inverse
 
@@ -249,6 +281,17 @@ both field values (passing an empty string when the output field is empty).
 
 - **WHEN** `evaluate("tempF", "tempC")` is called (both parse to `FunctionNameNode`)
 - **THEN** state is `EvaluationError`
+
+#### Scenario: DefinitionRequestNode in input with non-empty output falls back to conversion
+
+- **WHEN** `evaluate("cal", "J")` is called and `cal` is a bare unit name
+- **THEN** state reflects the conversion of `1 cal` to `J`
+
+#### Scenario: DefinitionRequestNode in output field falls back to conversion
+
+- **WHEN** `evaluate("5 km", "m")` is called and `m` parses as
+  `DefinitionRequestNode`
+- **THEN** state reflects the conversion of `5 km` to `m`
 
 ### Requirement: Bare function name input shows function definition
 

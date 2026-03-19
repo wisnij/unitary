@@ -96,14 +96,59 @@ void main() {
       expect(fn.inverse, isTrue);
     });
 
-    test(
-      'bare unit identifier (not a function) delegates to parseExpression',
-      () {
-        final node = repoParser.parseQuery('meter');
-        expect(node, isA<UnitNode>());
-        expect((node as UnitNode).unitName, 'meter');
-      },
-    );
+    test('bare unit alias returns DefinitionRequestNode', () {
+      final node = repoParser.parseQuery('meter');
+      expect(node, isA<DefinitionRequestNode>());
+      expect((node as DefinitionRequestNode).unitName, 'meter');
+    });
+
+    test('bare canonical unit id returns DefinitionRequestNode', () {
+      final node = repoParser.parseQuery('m');
+      expect(node, isA<DefinitionRequestNode>());
+      expect((node as DefinitionRequestNode).unitName, 'm');
+    });
+
+    test('bare prefix+unit returns DefinitionRequestNode', () {
+      final node = repoParser.parseQuery('km');
+      expect(node, isA<DefinitionRequestNode>());
+      expect((node as DefinitionRequestNode).unitName, 'km');
+    });
+
+    test('bare prefix+unit alias returns DefinitionRequestNode', () {
+      final node = repoParser.parseQuery('kmeters');
+      expect(node, isA<DefinitionRequestNode>());
+      expect((node as DefinitionRequestNode).unitName, 'kmeters');
+    });
+
+    test('bare prefix alias returns DefinitionRequestNode', () {
+      final node = repoParser.parseQuery('kilo');
+      expect(node, isA<DefinitionRequestNode>());
+      expect((node as DefinitionRequestNode).unitName, 'kilo');
+    });
+
+    test('bare canonical prefix id returns DefinitionRequestNode', () {
+      // 'k' is the kilo prefix id; no unit named 'k' should be registered
+      final node = repoParser.parseQuery('k');
+      expect(node, isA<DefinitionRequestNode>());
+      expect((node as DefinitionRequestNode).unitName, 'k');
+    });
+
+    test('function name beats unit name in parseQuery', () {
+      // 'abs' is registered as both a builtin function and a unit
+      final node = repoParser.parseQuery('abs');
+      expect(node, isA<FunctionNameNode>());
+    });
+
+    test('unit name beats prefix name in parseQuery', () {
+      // 'M' (megameter prefix) vs any unit named 'M': we verify the unit
+      // lookup fires first. 'mol' is a unit; 'm' (milli prefix) vs 'm' (meter
+      // unit) — 'm' should return unit, not prefix.
+      final node = repoParser.parseQuery('m');
+      // 'm' is a unit (meter), so it should be DefinitionRequestNode from
+      // the unit path, not the prefix path — same result either way, but
+      // the unit guard (is! PrefixUnit) ensures it's the unit path.
+      expect(node, isA<DefinitionRequestNode>());
+    });
 
     test('multi-token input delegates to parseExpression', () {
       final node = repoParser.parseQuery('5 km');

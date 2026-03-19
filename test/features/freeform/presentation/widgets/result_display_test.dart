@@ -183,5 +183,67 @@ void main() {
         expect(texts.first.data, 'tempC(20)');
       },
     );
+
+    testWidgets(
+      'UnitDefinitionResult renders all three lines',
+      (tester) async {
+        const state = UnitDefinitionResult(
+          aliasLine: '= calorie_th',
+          definitionLine: '= 4.184 J',
+          formattedResult: '= 4.184 kg m^2 / s^2',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('= calorie_th'), findsOneWidget);
+        expect(find.text('= 4.184 J'), findsOneWidget);
+        expect(find.text('= 4.184 kg m^2 / s^2'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'UnitDefinitionResult renders definition line and result when aliasLine is null',
+      (tester) async {
+        const state = UnitDefinitionResult(
+          aliasLine: null,
+          definitionLine: '= 4.184 J',
+          formattedResult: '= 4.184 kg m^2 / s^2',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('= 4.184 J'), findsOneWidget);
+        expect(find.text('= 4.184 kg m^2 / s^2'), findsOneWidget);
+        final texts = tester.widgetList<Text>(find.byType(Text)).toList();
+        expect(texts.length, 2);
+      },
+    );
+
+    testWidgets(
+      'UnitDefinitionResult renders alias line and result when definitionLine is null',
+      (tester) async {
+        const state = UnitDefinitionResult(
+          aliasLine: '= k m',
+          definitionLine: null,
+          formattedResult: '= 1000 m',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('= k m'), findsOneWidget);
+        expect(find.text('= 1000 m'), findsOneWidget);
+        final texts = tester.widgetList<Text>(find.byType(Text)).toList();
+        expect(texts.length, 2);
+      },
+    );
+
+    testWidgets(
+      'UnitDefinitionResult renders result only when both header lines are null',
+      (tester) async {
+        const state = UnitDefinitionResult(
+          aliasLine: null,
+          definitionLine: null,
+          formattedResult: '= 1 m',
+        );
+        await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+        expect(find.text('= 1 m'), findsOneWidget);
+        final texts = tester.widgetList<Text>(find.byType(Text)).toList();
+        expect(texts.length, 1);
+      },
+    );
   });
 }

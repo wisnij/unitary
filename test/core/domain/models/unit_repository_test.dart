@@ -402,6 +402,44 @@ void main() {
     });
   });
 
+  group('UnitRepository.findPrefix', () {
+    setUp(() {
+      repo.registerPrefix(
+        const PrefixUnit(id: 'k', aliases: ['kilo'], expression: '1000'),
+      );
+      repo.registerPrefix(
+        const PrefixUnit(id: 'm', aliases: ['milli'], expression: '0.001'),
+      );
+    });
+
+    test('finds prefix by canonical id', () {
+      final prefix = repo.findPrefix('k');
+      expect(prefix, isNotNull);
+      expect(prefix!.id, 'k');
+    });
+
+    test('finds prefix by alias', () {
+      final prefix = repo.findPrefix('kilo');
+      expect(prefix, isNotNull);
+      expect(prefix!.id, 'k');
+    });
+
+    test('returns null for unknown name', () {
+      expect(repo.findPrefix('notaprefix'), isNull);
+    });
+
+    test('returns null for a unit name that is not a prefix', () {
+      repo.register(const PrimitiveUnit(id: 'mol', aliases: ['mole']));
+      expect(repo.findPrefix('mol'), isNull);
+      expect(repo.findPrefix('mole'), isNull);
+    });
+
+    test('finds prefix via plural stripping', () {
+      // "kilos" → strip 's' → "kilo" alias
+      expect(repo.findPrefix('kilos')?.id, 'k');
+    });
+  });
+
   group('UnitRepository.allUnits', () {
     test('empty repo has no units', () {
       expect(repo.allUnits, isEmpty);

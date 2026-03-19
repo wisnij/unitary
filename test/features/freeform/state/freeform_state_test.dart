@@ -34,6 +34,28 @@ void main() {
       expect(state.outputUnit, 'km');
     });
 
+    test('UnitDefinitionResult holds all three fields', () {
+      const state = UnitDefinitionResult(
+        aliasLine: '= calorie_th',
+        definitionLine: '= 4.184 J',
+        formattedResult: '= 4.184 kg m^2 / s^2',
+      );
+      expect(state.aliasLine, '= calorie_th');
+      expect(state.definitionLine, '= 4.184 J');
+      expect(state.formattedResult, '= 4.184 kg m^2 / s^2');
+    });
+
+    test('UnitDefinitionResult accepts null header fields', () {
+      const state = UnitDefinitionResult(
+        aliasLine: null,
+        definitionLine: null,
+        formattedResult: '= 1 m',
+      );
+      expect(state.aliasLine, isNull);
+      expect(state.definitionLine, isNull);
+      expect(state.formattedResult, '= 1 m');
+    });
+
     test('FunctionDefinitionResult holds label and expression', () {
       const state = FunctionDefinitionResult(
         label: 'tempF(x) =',
@@ -80,6 +102,11 @@ void main() {
           formattedReciprocal: '= (1 / 1) m',
           outputUnit: 'm',
         ),
+        const UnitDefinitionResult(
+          aliasLine: '= calorie_th',
+          definitionLine: '= 4.184 J',
+          formattedResult: '= 4.184 kg m^2 / s^2',
+        ),
         const FunctionDefinitionResult(
           label: 'tempF(x) =',
           expression: 'x * 9|5 + 32',
@@ -97,6 +124,7 @@ void main() {
           EvaluationIdle() => 'idle',
           EvaluationSuccess() => 'success',
           ConversionSuccess() => 'conversion',
+          UnitDefinitionResult() => 'unit-definition',
           FunctionDefinitionResult() => 'function-definition',
           FunctionConversionResult() => 'function-conversion',
           EvaluationError() => 'error',

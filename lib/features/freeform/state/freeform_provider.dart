@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/errors.dart';
 import '../../../core/domain/models/quantity.dart';
+import '../../../core/domain/models/unit.dart';
 import '../../../core/domain/parser/ast.dart';
 import '../../../core/domain/parser/expression_parser.dart';
 import '../../../shared/utils/quantity_formatter.dart';
@@ -49,6 +50,12 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
         return;
       }
 
+      // Unit/prefix definition request in input field with empty output.
+      if (inputNode is DefinitionRequestNode && outputNode == null) {
+        state = _handleUnitNameInput(parser, inputNode);
+        return;
+      }
+
       // Function name in output field.
       if (outputNode is FunctionNameNode) {
         if (inputNode is! ExpressionNode) {
@@ -60,16 +67,30 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
         return;
       }
 
+      // Resolve any DefinitionRequestNode to an ExpressionNode before the
+      // standard evaluation/conversion paths (output field is non-empty).
+      final ASTNode resolvedInput = inputNode is DefinitionRequestNode
+          ? parser.parseExpression(inputNode.unitName)
+          : inputNode;
+      final ASTNode? resolvedOutput = outputNode is DefinitionRequestNode
+          ? parser.parseExpression(outputNode.unitName)
+          : outputNode;
+
       // Both sides are expressions.
-      if (outputNode == null) {
-        _evaluateSingle(parser, inputNode as ExpressionNode);
+      if (resolvedInput is! ExpressionNode) {
+        state = const EvaluationError(message: 'Input must be an expression');
+        return;
+      }
+      if (resolvedOutput == null) {
+        _evaluateSingle(parser, resolvedInput);
       } else {
-        _evaluateConversion(
-          parser,
-          inputNode as ExpressionNode,
-          outputNode as ExpressionNode,
-          output,
-        );
+        if (resolvedOutput is! ExpressionNode) {
+          state = const EvaluationError(
+            message: 'Output must be an expression',
+          );
+          return;
+        }
+        _evaluateConversion(parser, resolvedInput, resolvedOutput, output);
       }
     } on UnitaryException catch (e) {
       state = EvaluationError(message: e.message);
@@ -91,6 +112,66 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
         ? func.inverseDisplay
         : func.definitionDisplay;
     return FunctionDefinitionResult(label: label, expression: expression);
+  }
+
+  EvaluationResult _handleUnitNameInput(
+    ExpressionParser parser,
+    DefinitionRequestNode node,
+  ) {
+    final repo = parser.repo;
+    if (repo == null) {
+      return EvaluationError(
+        message: 'Unknown unit or prefix: "${node.unitName}"',
+      );
+    }
+    final settings = ref.read(settingsProvider);
+    final result = parser.evaluate(node.unitName);
+    final formatted = formatQuantity(
+      result,
+      precision: settings.precision,
+      notation: settings.notation,
+    );
+    final formattedResult = '= $formatted';
+
+    final match = repo.findUnitWithPrefix(node.unitName);
+
+    // Prefix + unit case (e.g. "km", "kmeters").
+    if (match.prefix != null) {
+      return UnitDefinitionResult(
+        aliasLine: '= ${match.prefix!.id} ${match.unit!.id}',
+        definitionLine: null,
+        formattedResult: formattedResult,
+      );
+    }
+
+    // Plain unit case (e.g. "m", "meter", "cal", "calorie_th").
+    if (match.unit != null && match.unit is! PrefixUnit) {
+      final unit = match.unit!;
+      final aliasLine = node.unitName == unit.id ? null : '= ${unit.id}';
+      final definitionLine = unit is DerivedUnit
+          ? '= ${unit.expression}'
+          : null;
+      return UnitDefinitionResult(
+        aliasLine: aliasLine,
+        definitionLine: definitionLine,
+        formattedResult: formattedResult,
+      );
+    }
+
+    // Bare prefix case (e.g. "kilo", "k").
+    final prefix = repo.findPrefix(node.unitName);
+    if (prefix != null) {
+      final aliasLine = node.unitName == prefix.id ? null : '= ${prefix.id}';
+      return UnitDefinitionResult(
+        aliasLine: aliasLine,
+        definitionLine: null,
+        formattedResult: formattedResult,
+      );
+    }
+
+    return EvaluationError(
+      message: 'Unknown unit or prefix: "${node.unitName}"',
+    );
   }
 
   EvaluationResult _handleFunctionNameOutput(

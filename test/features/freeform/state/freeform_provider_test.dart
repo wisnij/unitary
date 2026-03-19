@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
+import 'package:unitary/features/freeform/state/parser_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 
@@ -269,6 +270,157 @@ void main() {
       final state = container.read(freeformProvider);
       expect(state, isA<EvaluationError>());
       expect((state as EvaluationError).message, contains('No inverse'));
+    });
+
+    // -- Unit/prefix definition display --
+
+    test(
+      'alias for derived unit → UnitDefinitionResult with alias and definition lines',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('cal', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        // 'cal' is an alias for 'calorie_th'
+        expect(result.aliasLine, '= calorie_th');
+        expect(result.definitionLine, isNotNull);
+        expect(result.definitionLine, startsWith('= '));
+        expect(result.formattedResult, startsWith('= '));
+      },
+    );
+
+    test(
+      'alias for primitive unit → UnitDefinitionResult with alias line only',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('meter', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, '= m');
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, '= 1 m');
+      },
+    );
+
+    test(
+      'canonical derived unit id → UnitDefinitionResult with definition line only',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('calorie_th', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, isNull);
+        expect(result.definitionLine, isNotNull);
+        expect(result.definitionLine, startsWith('= '));
+        expect(result.formattedResult, startsWith('= '));
+      },
+    );
+
+    test(
+      'canonical primitive unit id → UnitDefinitionResult with result only',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('m', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, isNull);
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, '= 1 m');
+      },
+    );
+
+    test(
+      'prefix+unit alias → UnitDefinitionResult with decomposed canonical ids',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // "kmeters" → prefix "kilo" + unit "m" (via alias "meter" → plural "meters")
+        notifier.evaluate('kmeters', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, '= kilo m');
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, startsWith('= '));
+        expect(result.formattedResult, contains('m'));
+      },
+    );
+
+    test(
+      'canonical prefix+unit → UnitDefinitionResult with decomposed canonical ids',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // "km" → prefix "kilo" (alias "k") + unit "m" → alias line shows canonical ids
+        notifier.evaluate('km', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, '= kilo m');
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, '= 1000 m');
+      },
+    );
+
+    test(
+      'bare prefix alias → UnitDefinitionResult with canonical prefix id',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // "M" is the short alias for prefix "mega"; verify no unit named "M"
+        // shadows it (unit names take priority over prefix names).
+        final repo = container.read(parserProvider).repo;
+        expect(
+          repo?.findUnit('M'),
+          isNull,
+          reason: 'test assumes no unit with name or alias "M" is registered',
+        );
+        notifier.evaluate('M', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, '= mega');
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, startsWith('= '));
+      },
+    );
+
+    test(
+      'bare canonical prefix id → UnitDefinitionResult with no alias line',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // "kilo" is the canonical prefix id (its alias is "k", which is a unit)
+        notifier.evaluate('kilo', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, isNull);
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, '= 1000');
+      },
+    );
+
+    test(
+      'DefinitionRequestNode input with non-empty output falls back to conversion',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // 'cal' is a unit; with output 'J' it should convert 1 cal → J
+        notifier.evaluate('cal', 'J');
+        final state = container.read(freeformProvider);
+        expect(state, isA<ConversionSuccess>());
+        final result = state as ConversionSuccess;
+        expect(result.convertedValue, closeTo(4.184, 1e-6));
+      },
+    );
+
+    test('DefinitionRequestNode output falls back to conversion', () {
+      final notifier = container.read(freeformProvider.notifier);
+      notifier.evaluate('5 km', 'm');
+      final state = container.read(freeformProvider);
+      expect(state, isA<ConversionSuccess>());
+      final result = state as ConversionSuccess;
+      expect(result.convertedValue, closeTo(5000.0, 1e-6));
     });
   });
 }

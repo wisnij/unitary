@@ -136,31 +136,42 @@ class UnitRepository {
   /// Exact lookup in regular units only.
   Unit? _findExact(String name) => _unitLookup[name];
 
-  /// Plural-stripping lookup in regular units only.
+  /// Tries plural-stripped variants of [name] against [lookup].
   ///
   /// Tries shorter suffixes before longer ones: `s` before `es` before
   /// `ies→y`. This avoids false matches like `miles` → `mil` (0.001 inch)
   /// when the correct result is `mile` (statute mile) via simple `s` removal.
-  Unit? _findPlural(String name) {
+  static T? _findPluralIn<T>(String name, Map<String, T> lookup) {
     if (name.length > 2 && name.endsWith('s')) {
-      final found = _findExact(name.substring(0, name.length - 1));
+      final found = lookup[name.substring(0, name.length - 1)];
       if (found != null) {
         return found;
       }
     }
     if (name.length > 3 && name.endsWith('es')) {
-      final found = _findExact(name.substring(0, name.length - 2));
+      final found = lookup[name.substring(0, name.length - 2)];
       if (found != null) {
         return found;
       }
     }
     if (name.length > 4 && name.endsWith('ies')) {
-      final found = _findExact('${name.substring(0, name.length - 3)}y');
+      final found = lookup['${name.substring(0, name.length - 3)}y'];
       if (found != null) {
         return found;
       }
     }
     return null;
+  }
+
+  /// Plural-stripping lookup in regular units only.
+  Unit? _findPlural(String name) => _findPluralIn(name, _unitLookup);
+
+  /// Look up a prefix by any recognized name.
+  ///
+  /// Tries exact match first, then falls back to plural stripping
+  /// (removes trailing 'ies', 'es', or 's').  Returns null if not found.
+  PrefixUnit? findPrefix(String name) {
+    return _prefixLookup[name] ?? _findPluralIn(name, _prefixLookup);
   }
 
   /// Look up a unit by any recognized name.

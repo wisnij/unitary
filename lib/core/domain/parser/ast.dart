@@ -217,9 +217,10 @@ class FunctionNameNode extends ASTNode {
   String toString() => 'FunctionName($name, inverse: $inverse)';
 }
 
-/// A standalone unit identifier used as a definition request.
+/// A standalone unit or prefix identifier used as a definition request.
 ///
-/// Stub for future unit definition display.  Not yet implemented.
+/// Produced by [ExpressionParser.parseQuery] when the input is a single
+/// bare identifier that resolves to a known unit, prefix+unit, or prefix.
 class DefinitionRequestNode extends ASTNode {
   final String unitName;
 

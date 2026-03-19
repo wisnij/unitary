@@ -64,6 +64,48 @@ class ResultDisplay extends StatelessWidget {
           ),
           colorScheme.primary,
         ),
+      UnitDefinitionResult(
+        :final aliasLine,
+        :final definitionLine,
+        :final formattedResult,
+      ) =>
+        (
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (aliasLine != null) ...[
+                Text(
+                  aliasLine,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+              if (definitionLine != null) ...[
+                Text(
+                  definitionLine,
+                  style: TextStyle(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(height: 4),
+              ],
+              Text(
+                formattedResult,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          colorScheme.primary,
+        ),
       FunctionDefinitionResult(:final label, :final expression) => (
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,

@@ -36,6 +36,32 @@ class ConversionSuccess extends EvaluationResult {
   });
 }
 
+/// Bare unit, prefix+unit, or prefix name in input field — shows a
+/// multi-line definition block.
+///
+/// [aliasLine] is pre-formatted with a leading `"= "` and shows either the
+/// canonical unit ID (when the input was an alias), or the decomposed
+/// `"<prefix.id> <unit.id>"` form (for prefix+unit and bare prefix aliases).
+/// It is `null` when the input was already the canonical ID.
+///
+/// [definitionLine] is pre-formatted with a leading `"= "` and shows the
+/// unit's definition expression (for derived units).  It is `null` for
+/// primitive units, prefix+unit matches, and bare prefixes.
+///
+/// [formattedResult] is pre-formatted with a leading `"= "` and shows the
+/// fully-resolved quantity using the user's current precision and notation.
+class UnitDefinitionResult extends EvaluationResult {
+  final String? aliasLine;
+  final String? definitionLine;
+  final String formattedResult;
+
+  const UnitDefinitionResult({
+    required this.aliasLine,
+    required this.definitionLine,
+    required this.formattedResult,
+  });
+}
+
 /// Bare function name (forward or `~inverse`) in input field — shows the
 /// function's definition or inverse expression.
 ///

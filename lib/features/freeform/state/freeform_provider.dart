@@ -39,7 +39,9 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     try {
       final parser = ref.read(parserProvider);
 
-      final inputNode = parser.parseQuery(input);
+      final inputNode = output.trim().isEmpty
+          ? parser.parseQuery(input)
+          : parser.parseExpression(input);
       final outputNode = output.trim().isEmpty
           ? null
           : parser.parseQuery(output);
@@ -58,31 +60,21 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
 
       // Function name in output field.
       if (outputNode is FunctionNameNode) {
-        if (inputNode is! ExpressionNode) {
-          state = const EvaluationError(message: 'Input must be an expression');
-          return;
-        }
-
-        state = _handleFunctionNameOutput(parser, inputNode, outputNode);
+        state = _handleFunctionNameOutput(
+          parser,
+          inputNode as ExpressionNode,
+          outputNode,
+        );
         return;
       }
 
-      // Resolve any DefinitionRequestNode to an ExpressionNode before the
-      // standard evaluation/conversion paths (output field is non-empty).
-      final ASTNode resolvedInput = inputNode is DefinitionRequestNode
-          ? parser.parseExpression(inputNode.unitName)
-          : inputNode;
       final ASTNode? resolvedOutput = outputNode is DefinitionRequestNode
           ? parser.parseExpression(outputNode.unitName)
           : outputNode;
 
       // Both sides are expressions.
-      if (resolvedInput is! ExpressionNode) {
-        state = const EvaluationError(message: 'Input must be an expression');
-        return;
-      }
       if (resolvedOutput == null) {
-        _evaluateSingle(parser, resolvedInput);
+        _evaluateSingle(parser, inputNode as ExpressionNode);
       } else {
         if (resolvedOutput is! ExpressionNode) {
           state = const EvaluationError(
@@ -90,7 +82,12 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
           );
           return;
         }
-        _evaluateConversion(parser, resolvedInput, resolvedOutput, output);
+        _evaluateConversion(
+          parser,
+          inputNode as ExpressionNode,
+          resolvedOutput,
+          output,
+        );
       }
     } on UnitaryException catch (e) {
       state = EvaluationError(message: e.message);

@@ -250,12 +250,18 @@ void main() {
       },
     );
 
-    test('function name input + function name output → EvaluationError', () {
-      final notifier = container.read(freeformProvider.notifier);
-      notifier.evaluate('tempF', 'tempC');
-      final state = container.read(freeformProvider);
-      expect(state, isA<EvaluationError>());
-    });
+    test(
+      'function name input + function name output → EvaluationError (Unknown unit)',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // With non-empty output, input is parsed via parseExpression, so
+        // "tempF" becomes UnitNode("tempF") which fails as an unknown unit.
+        notifier.evaluate('tempF', 'tempC');
+        final state = container.read(freeformProvider);
+        expect(state, isA<EvaluationError>());
+        expect((state as EvaluationError).message, contains('Unknown unit'));
+      },
+    );
 
     test('expression input + ~funcName output → EvaluationError', () {
       final notifier = container.read(freeformProvider.notifier);
@@ -419,15 +425,30 @@ void main() {
     );
 
     test(
-      'DefinitionRequestNode input with non-empty output falls back to conversion',
+      'bare unit name input with non-empty output converts as expression',
       () {
         final notifier = container.read(freeformProvider.notifier);
-        // 'cal' is a unit; with output 'J' it should convert 1 cal → J
+        // With non-empty output, input is parsed via parseExpression, so
+        // "cal" becomes UnitNode("cal") = 1 cal, then converted to J.
         notifier.evaluate('cal', 'J');
         final state = container.read(freeformProvider);
         expect(state, isA<ConversionSuccess>());
         final result = state as ConversionSuccess;
         expect(result.convertedValue, closeTo(4.184, 1e-6));
+      },
+    );
+
+    test(
+      'bare unit name input + function name output converts via inverse',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // "stdtemp" = 273.15 K; "tempF" inverse applied to 273.15 K → 32 °F
+        notifier.evaluate('stdtemp', 'tempF');
+        final state = container.read(freeformProvider);
+        expect(state, isA<FunctionConversionResult>());
+        final result = state as FunctionConversionResult;
+        expect(result.functionName, 'tempF');
+        expect(result.formattedValue, contains('32'));
       },
     );
 

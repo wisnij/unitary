@@ -262,6 +262,12 @@ sole evaluation method.  The methods `evaluateSingle` and `evaluateConversion`
 SHALL be removed.  `freeform_screen.dart` SHALL call `evaluate()` directly with
 both field values (passing an empty string when the output field is empty).
 
+When the output field is non-empty, the input field SHALL be parsed with
+`parseExpression` rather than `parseQuery`.  Definition requests (bare unit
+names, bare prefix names, bare function names) are only valid when the output
+field is empty; when output is non-empty, the input is always treated as an
+expression.
+
 #### Scenario: evaluate with empty input clears to idle
 
 - **WHEN** `evaluate("", "")` is called
@@ -277,21 +283,29 @@ both field values (passing an empty string when the output field is empty).
 - **WHEN** `evaluate("5 km", "miles")` is called
 - **THEN** state reflects the conversion result
 
-#### Scenario: evaluate produces an error when both fields are bare function names
+#### Scenario: evaluate produces an error when input is a bare function name and output is non-empty
 
-- **WHEN** `evaluate("tempF", "tempC")` is called (both parse to `FunctionNameNode`)
-- **THEN** state is `EvaluationError`
+- **WHEN** `evaluate("tempF", "tempC")` is called
+- **THEN** state is `EvaluationError` (input parses as `UnitNode("tempF")` via
+  `parseExpression`, which fails evaluation because `tempF` is not a unit)
 
-#### Scenario: DefinitionRequestNode in input with non-empty output falls back to conversion
+#### Scenario: bare unit name input with non-empty output converts as expression
 
-- **WHEN** `evaluate("cal", "J")` is called and `cal` is a bare unit name
-- **THEN** state reflects the conversion of `1 cal` to `J`
+- **WHEN** `evaluate("cal", "J")` is called and `cal` is a registered unit
+- **THEN** state reflects the conversion of `1 cal` to `J` (input parsed via
+  `parseExpression` as `UnitNode("cal")`, evaluating to `1 cal`)
 
 #### Scenario: DefinitionRequestNode in output field falls back to conversion
 
 - **WHEN** `evaluate("5 km", "m")` is called and `m` parses as
   `DefinitionRequestNode`
 - **THEN** state reflects the conversion of `5 km` to `m`
+
+#### Scenario: bare unit name input with function name output converts via inverse
+
+- **WHEN** `evaluate("stdtemp", "tempF")` is called, `stdtemp` is a unit that
+  evaluates to `273.15 K`, and `tempF` is a registered function with an inverse
+- **THEN** state reflects applying `tempF`'s inverse to `273.15 K`, yielding `32`
 
 ### Requirement: Bare function name input shows function definition
 

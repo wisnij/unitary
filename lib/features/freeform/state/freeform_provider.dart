@@ -148,9 +148,12 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     if (match.unit != null && match.unit is! PrefixUnit) {
       final unit = match.unit!;
       final aliasLine = node.unitName == unit.id ? null : '= ${unit.id}';
-      final definitionLine = unit is DerivedUnit
+      final rawDefinitionLine = unit is DerivedUnit
           ? '= ${unit.expression}'
           : null;
+      final definitionLine = rawDefinitionLine == formattedResult
+          ? null
+          : rawDefinitionLine;
       return UnitDefinitionResult(
         aliasLine: aliasLine,
         definitionLine: definitionLine,

@@ -320,6 +320,23 @@ void main() {
     );
 
     test(
+      'derived unit whose expression equals formatted result → definitionLine omitted',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        // stdtemp (alias for standardtemp) has expression '273.15 K', which
+        // evaluates to 273.15 K — the definition line would duplicate the
+        // formatted result, so it should be suppressed.
+        notifier.evaluate('standardtemp', '');
+        final state = container.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, isNull);
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, '= 273.15 K');
+      },
+    );
+
+    test(
       'canonical primitive unit id → UnitDefinitionResult with result only',
       () {
         final notifier = container.read(freeformProvider.notifier);

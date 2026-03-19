@@ -50,7 +50,8 @@ muted text above the result when the input was not the canonical identifier,
 or when the input resolved as a prefix+unit or bare prefix with an alias.
 `definitionLine` is a pre-formatted string (prefixed with `"= "`) showing the
 unit's definition expression in small muted text; it is `null` for primitive
-units, prefix+unit matches, and bare prefixes.  `formattedResult` is a
+units, prefix+unit matches, bare prefixes, and any case where the definition
+string would be identical to `formattedResult`.  `formattedResult` is a
 pre-formatted string (prefixed with `"= "`) showing the fully-resolved
 quantity, formatted with the user's current precision and notation settings.
 
@@ -117,6 +118,20 @@ When the input field is a bare unit name that equals the canonical `unit.id`
 - **WHEN** `evaluate("m", "")` is called and `m` is a primitive unit
 - **THEN** state is `UnitDefinitionResult` with `aliasLine: null`,
   `definitionLine: null`, and `formattedResult: "= 1 m"`
+
+### Requirement: Redundant definition line is suppressed
+
+When the definition expression of a `DerivedUnit` evaluates to a formatted
+string identical to `formattedResult`, the provider SHALL set `definitionLine`
+to `null` rather than displaying the same information twice.  The comparison
+is performed on the fully-formatted strings (both prefixed with `"= "`).
+
+#### Scenario: Derived unit whose expression equals formatted result omits definition line
+
+- **WHEN** `evaluate("standardtemp", "")` is called and `standardtemp` has
+  expression `"273.15 K"` which evaluates to `273.15 K`
+- **THEN** state is `UnitDefinitionResult` with `aliasLine: null`,
+  `definitionLine: null`, and `formattedResult: "= 273.15 K"`
 
 ### Requirement: Prefix+unit input shows decomposed canonical form
 

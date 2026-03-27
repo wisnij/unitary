@@ -63,16 +63,22 @@ void main() {
       },
     );
 
-    testWidgets('Worksheet entry is disabled', (tester) async {
+    testWidgets('Worksheet entry is enabled and navigates to WorksheetScreen', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildApp());
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
 
-      // The Worksheet ListTile should be disabled.
       final worksheetTile = tester.widget<ListTile>(
         find.widgetWithText(ListTile, 'Worksheet'),
       );
-      expect(worksheetTile.enabled, isFalse);
+      expect(worksheetTile.enabled, isTrue);
+
+      await tester.tap(find.text('Worksheet'));
+      await tester.pumpAndSettle();
+      // WorksheetScreen uses a DropdownButton for navigation.
+      expect(find.byType(DropdownButton<String>), findsOneWidget);
     });
 
     testWidgets('Settings tap navigates to SettingsScreen', (tester) async {

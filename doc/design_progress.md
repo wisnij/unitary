@@ -68,6 +68,17 @@ The following areas have been thoroughly designed and documented:
 - **Settings model**: precision (2-10, default 6), notation, darkMode, evaluationMode
 - **Document**: [phase4_plan.md](phase4_plan.md)
 
+### Phase 6: Worksheet Mode
+
+- **Row model**: `WorksheetRowKind` sealed class with `UnitRow` (ratio-based) and `FunctionRow` (function forward/inverse) variants; rows store expression strings, supporting compound expressions (`m/s`, `km/hr`, `ft^2`)
+- **Temperature**: `K` and `degR` are `UnitRow`s (absolute scales starting at 0); `tempC` and `tempF` are `FunctionRow`s (non-zero origin require functions)
+- **Predefined templates**: 10 worksheets — Length, Mass, Time, Temperature, Volume, Area, Speed, Pressure, Energy, Digital Storage (binary IEC units)
+- **Conversion engine**: `computeWorksheet()` in `worksheet_engine.dart`; handles both row kinds, per-row error strings on dimension mismatch, clears all on invalid input
+- **State**: `WorksheetState` + non-`autoDispose` `WorksheetNotifier`; "last keystroke wins" source semantics; focus alone does not transfer source; per-template display value maps for in-session memory
+- **Navigation**: AppBar `DropdownButton` listing all templates; sidebar pinning deferred to future phase
+- **Persistence**: In-session only (Riverpod); Phase 7 will add sqflite for cross-session persistence
+- **Design artifacts**: `openspec/changes/worksheet-mode/`
+
 ---
 
 
@@ -76,29 +87,16 @@ Areas That Need More Detail
 
 The following areas have been identified but need deeper design work:
 
-### 1. Worksheet System
+### 1. Worksheet System — **COMPLETE (Phase 6)**
 
-**Current State**: High-level requirements defined
+Core worksheet mode is implemented.  See Phase 6 design notes above.
 
-**Needs Detail On**:
+**Still needs design for later phases**:
 
-- Detailed data model for worksheets
-  - Worksheet structure and fields
-  - How to represent "last used values"
-  - Storage format
-- State update mechanism
-  - When user types in one field, how do others update?
-  - Handling of invalid input during typing
-  - Debouncing strategy if needed
-- Pre-defined worksheet templates
-  - Which templates to include by default
-  - Structure of template definitions
-  - How users select/switch between worksheets
-- User customization
-  - Adding/removing units from worksheets
-  - Creating new worksheets from scratch
-  - Saving and loading custom worksheets
-  - UI for worksheet management
+- Cross-session persistence (Phase 7: sqflite last values)
+- Custom worksheet creation and editing (Phase 12)
+- Sidebar pinning of worksheets (future)
+- Unit list rows (`ft;in` multi-field display, future)
 
 ### 2. GNU Units Database Import
 
@@ -251,8 +249,8 @@ When resuming design work, recommended order of priority:
 2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
 3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
 4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see phase4_plan.md) — design and implementation done
-5. **GNU Units Database Import** - Needed before implementation can begin
-6. **Worksheet System** - Major user-facing feature
+5. ✅ ~~**GNU Units Database Import**~~ - **COMPLETE** — Phase 5, full pipeline implemented
+6. ✅ ~~**Worksheet System**~~ - **COMPLETE** — Phase 6, see openspec/changes/worksheet-mode/
 7. **Currency Rate Management** - Can be added after core features work
 8. **Testing Strategy** - Define before/during implementation
 9. **Error Handling Details** - Refine during implementation
@@ -276,7 +274,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: March 11, 2026*
+*Last Updated: March 27, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -389,3 +387,13 @@ Questions that arose during design but haven't been resolved:
   - `lib/core/domain/data/units.json` regenerated: 7471 units, 125 prefixes, 0 nonlinear_definition entries in unsupported section
   - `lib/core/domain/data/predefined_units.dart` regenerated: contains `registerDefinedFunctions` registering 101 defined functions and 46 function aliases
   - `_knownEvalFailures` in `predefined_units_test.dart` cleared to empty set (normaltemp, S10, ipv4classA/B/C and others now resolve via defined functions)
+- *Phase 6: Worksheet Mode (March 27, 2026)*
+  - 1309 tests passing (163 new)
+  - `WorksheetRowKind` sealed class (`UnitRow` | `FunctionRow`); `WorksheetRow` and `WorksheetTemplate` models
+  - 10 predefined templates: Length (9), Mass (6), Time (6), Temperature (4), Volume (9), Area (8), Speed (5), Pressure (6), Energy (7), Digital Storage (6)
+  - `computeWorksheet()` engine in `worksheet_engine.dart`: ratio-based for `UnitRow`, `func.call()`/`callInverse()` for `FunctionRow`, per-row error strings on dimension mismatch
+  - `WorksheetNotifier` (non-`autoDispose`): 500 ms debounce, "last keystroke wins" source, per-template in-session value maps
+  - `WorksheetScreen` with `WorksheetRowWidget` (label + expression + numeric `TextField`) and AppBar `DropdownButton` for template selection
+  - Drawer "Worksheet" tile enabled; navigates to `WorksheetScreen`
+  - Design artifacts: `openspec/changes/worksheet-mode/`
+  - Notable: `h` in codebase is Planck's constant; `degR`/`tempR` is Rankine (works as absolute scale since 0 °R = 0 K)

@@ -17,17 +17,17 @@ purchases, tracking, data harvesting, or any other monetization scheme.
 Project Status
 --------------
 
-**Current Phase:** Phase 5 Complete (Complete Unit Database)\
-**Last Updated:** March 11, 2026
+**Current Phase:** Phase 6 Complete (Worksheet Mode)\
+**Last Updated:** March 27, 2026
 
-Phases 0-5 are complete with 1146 passing tests.  The expression parser,
-evaluator, unit system foundation, advanced unit features, basic UI, and
-complete unit database are fully implemented.  Phase 5 added the GNU Units
-import pipeline (importer tool + codegen tool), a JSON intermediate unit
-database (`units.json`), and 26 new units across six categories: digital
-storage, volume, area, speed, pressure, and energy.  Post-phase-5 work
-added first-class builtin functions, GNU Units-defined functions (101
-registered, with 46 aliases), and circular definition detection.
+Phases 0-6 are complete with 1309 passing tests.  The expression parser,
+evaluator, unit system foundation, advanced unit features, basic UI, complete
+unit database, and worksheet mode are fully implemented.  Phase 6 added the
+worksheet feature: 10 predefined conversion templates (Length, Mass, Time,
+Temperature, Volume, Area, Speed, Pressure, Energy, Digital Storage), a
+real-time conversion engine supporting both unit-ratio and function-inverse
+rows (for Celsius/Fahrenheit), an AppBar dropdown for template selection, and
+in-session value retention via Riverpod state.
 
 ---
 
@@ -211,6 +211,7 @@ Current Progress
 - ✅ **Phase 4: Basic UI - Freeform Mode** — Freeform evaluation UI, settings, drawer navigation, Riverpod state management (847 tests)
 - ✅ **Phase 5: Complete Unit Database** — GNU Units import pipeline, JSON unit database, 26 new units (volume, area, speed, pressure, energy, digital storage) (852 tests)
 - ✅ **Defined Functions** — First-class builtin functions, GNU Units-defined functions (101 registered + 46 aliases), circular definition detection (1146 tests)
+- ✅ **Phase 6: Worksheet Mode** — 10 predefined templates, real-time cross-row conversion engine (unit-ratio + function-inverse), AppBar dropdown navigation, in-session state retention (1309 tests)
 
 ### Design (ready for implementation)
 

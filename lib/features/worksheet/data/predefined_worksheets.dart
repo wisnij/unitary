@@ -1,0 +1,145 @@
+import '../models/worksheet.dart';
+
+const UnitRow _unit = UnitRow();
+const FunctionRow _func = FunctionRow();
+
+/// The 10 predefined worksheet templates.
+const List<WorksheetTemplate> predefinedWorksheets = [
+  WorksheetTemplate(
+    id: 'length',
+    name: 'Length',
+    rows: [
+      WorksheetRow(label: 'millimeters', expression: 'mm', kind: _unit),
+      WorksheetRow(label: 'centimeters', expression: 'cm', kind: _unit),
+      WorksheetRow(label: 'inches', expression: 'in', kind: _unit),
+      WorksheetRow(label: 'feet', expression: 'ft', kind: _unit),
+      WorksheetRow(label: 'yards', expression: 'yd', kind: _unit),
+      WorksheetRow(label: 'meters', expression: 'm', kind: _unit),
+      WorksheetRow(label: 'kilometers', expression: 'km', kind: _unit),
+      WorksheetRow(label: 'miles', expression: 'mi', kind: _unit),
+      WorksheetRow(label: 'nautical miles', expression: 'nmi', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'mass',
+    name: 'Mass',
+    rows: [
+      WorksheetRow(label: 'milligrams', expression: 'mg', kind: _unit),
+      WorksheetRow(label: 'grams', expression: 'g', kind: _unit),
+      WorksheetRow(label: 'ounces', expression: 'oz', kind: _unit),
+      WorksheetRow(label: 'pounds', expression: 'lb', kind: _unit),
+      WorksheetRow(label: 'kilograms', expression: 'kg', kind: _unit),
+      WorksheetRow(label: 'stone', expression: 'stone', kind: _unit),
+      WorksheetRow(label: 'short tons', expression: 'uston', kind: _unit),
+      WorksheetRow(label: 'metric tons', expression: 't', kind: _unit),
+      WorksheetRow(label: 'long tons', expression: 'brton', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'time',
+    name: 'Time',
+    rows: [
+      WorksheetRow(label: 'milliseconds', expression: 'ms', kind: _unit),
+      WorksheetRow(label: 'seconds', expression: 's', kind: _unit),
+      WorksheetRow(label: 'minutes', expression: 'min', kind: _unit),
+      WorksheetRow(label: 'hours', expression: 'hr', kind: _unit),
+      WorksheetRow(label: 'days', expression: 'd', kind: _unit),
+      WorksheetRow(label: 'weeks', expression: 'wk', kind: _unit),
+      WorksheetRow(label: 'years', expression: 'year', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'temperature',
+    name: 'Temperature',
+    rows: [
+      WorksheetRow(label: 'Kelvin', expression: 'K', kind: _unit),
+      WorksheetRow(label: 'Celsius', expression: 'tempC', kind: _func),
+      WorksheetRow(label: 'Fahrenheit', expression: 'tempF', kind: _func),
+      WorksheetRow(label: 'Rankine', expression: 'degR', kind: _unit),
+      WorksheetRow(label: 'Réaumur', expression: 'tempreaumur', kind: _func),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'volume',
+    name: 'Volume',
+    rows: [
+      WorksheetRow(label: 'milliliters', expression: 'mL', kind: _unit),
+      WorksheetRow(label: 'teaspoons', expression: 'tsp', kind: _unit),
+      WorksheetRow(label: 'tablespoons', expression: 'tbsp', kind: _unit),
+      WorksheetRow(label: 'fluid ounces', expression: 'floz', kind: _unit),
+      WorksheetRow(label: 'cups', expression: 'cup', kind: _unit),
+      WorksheetRow(label: 'pints', expression: 'pt', kind: _unit),
+      WorksheetRow(label: 'quarts', expression: 'qt', kind: _unit),
+      WorksheetRow(label: 'liters', expression: 'L', kind: _unit),
+      WorksheetRow(label: 'gallons', expression: 'gal', kind: _unit),
+      WorksheetRow(label: 'barrels', expression: 'bbl', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'area',
+    name: 'Area',
+    rows: [
+      WorksheetRow(label: 'sq centimeters', expression: 'cm^2', kind: _unit),
+      WorksheetRow(label: 'sq inches', expression: 'in^2', kind: _unit),
+      WorksheetRow(label: 'sq feet', expression: 'ft^2', kind: _unit),
+      WorksheetRow(label: 'sq meters', expression: 'm^2', kind: _unit),
+      WorksheetRow(label: 'acres', expression: 'acre', kind: _unit),
+      WorksheetRow(label: 'hectares', expression: 'ha', kind: _unit),
+      WorksheetRow(label: 'sq kilometers', expression: 'km^2', kind: _unit),
+      WorksheetRow(label: 'sq miles', expression: 'mi^2', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'speed',
+    name: 'Speed',
+    rows: [
+      WorksheetRow(label: 'km/hour', expression: 'km/hr', kind: _unit),
+      WorksheetRow(label: 'feet/sec', expression: 'ft/s', kind: _unit),
+      WorksheetRow(label: 'miles/hour', expression: 'mph', kind: _unit),
+      WorksheetRow(label: 'knots', expression: 'knot', kind: _unit),
+      WorksheetRow(label: 'meters/sec', expression: 'm/s', kind: _unit),
+      WorksheetRow(label: 'Mach (STP)', expression: 'mach', kind: _unit),
+      WorksheetRow(label: 'km/sec', expression: 'km/s', kind: _unit),
+      WorksheetRow(label: 'light speed', expression: 'c', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'pressure',
+    name: 'Pressure',
+    rows: [
+      WorksheetRow(label: 'pascals', expression: 'Pa', kind: _unit),
+      WorksheetRow(label: 'mmHg', expression: 'mmHg', kind: _unit),
+      WorksheetRow(label: 'kilopascals', expression: 'kPa', kind: _unit),
+      WorksheetRow(label: 'pounds/sq inch', expression: 'psi', kind: _unit),
+      WorksheetRow(label: 'bar', expression: 'bar', kind: _unit),
+      WorksheetRow(label: 'atmospheres', expression: 'atm', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'energy',
+    name: 'Energy',
+    rows: [
+      WorksheetRow(label: 'electron volts', expression: 'eV', kind: _unit),
+      WorksheetRow(label: 'ergs', expression: 'erg', kind: _unit),
+      WorksheetRow(label: 'joules', expression: 'J', kind: _unit),
+      WorksheetRow(label: 'calories', expression: 'cal', kind: _unit),
+      WorksheetRow(label: 'kilojoules', expression: 'kJ', kind: _unit),
+      WorksheetRow(label: 'BTU', expression: 'BTU', kind: _unit),
+      WorksheetRow(label: 'kilocalories', expression: 'kcal', kind: _unit),
+      WorksheetRow(label: 'kilowatt-hours', expression: 'kWh', kind: _unit),
+      WorksheetRow(label: 'tons of TNT', expression: 'ton tnt', kind: _unit),
+    ],
+  ),
+  WorksheetTemplate(
+    id: 'digital-storage',
+    name: 'Digital Storage',
+    rows: [
+      WorksheetRow(label: 'bits', expression: 'bit', kind: _unit),
+      WorksheetRow(label: 'bytes', expression: 'B', kind: _unit),
+      WorksheetRow(label: 'kibibytes', expression: 'KiB', kind: _unit),
+      WorksheetRow(label: 'mebibytes', expression: 'MiB', kind: _unit),
+      WorksheetRow(label: 'gibibytes', expression: 'GiB', kind: _unit),
+      WorksheetRow(label: 'tebibytes', expression: 'TiB', kind: _unit),
+    ],
+  ),
+];

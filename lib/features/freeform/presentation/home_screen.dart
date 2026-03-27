@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../about/presentation/about_screen.dart';
 import '../../settings/presentation/settings_screen.dart';
+import '../../worksheet/presentation/worksheet_screen.dart';
 import 'freeform_screen.dart';
 
 /// Main app screen with drawer navigation.
@@ -32,11 +33,18 @@ class HomeScreen extends StatelessWidget {
                     selected: true,
                     onTap: () => Navigator.pop(context),
                   ),
-                  const ListTile(
-                    leading: Icon(Icons.table_chart),
-                    title: Text('Worksheet'),
-                    enabled: false,
-                    onTap: null,
+                  ListTile(
+                    leading: const Icon(Icons.table_chart),
+                    title: const Text('Worksheet'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute<void>(
+                          builder: (_) => const WorksheetScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),

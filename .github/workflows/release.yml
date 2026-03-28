@@ -44,12 +44,12 @@ jobs:
       - name: Build Android APK
         run: >-
           flutter build apk
-          --dart-define=BUILD_METADATA=${{ env.BUILD_METADATA }}
+          --dart-define=BUILD_METADATA='${{ env.BUILD_METADATA }}'
           --release
       - name: Build web
         run: >-
           flutter build web
-          --dart-define=BUILD_METADATA=${{ env.BUILD_METADATA }}
+          --dart-define=BUILD_METADATA='${{ env.BUILD_METADATA }}'
           --release
           --wasm
       - name: Prepare Android APK

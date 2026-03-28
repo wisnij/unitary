@@ -1,10 +1,19 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/parser/ast.dart';
+import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
 import 'package:unitary/features/worksheet/models/worksheet.dart';
 
 void main() {
+  late ExpressionParser parser;
+
   group('predefinedWorksheets', () {
+    setUpAll(() {
+      parser = ExpressionParser(repo: UnitRepository.withPredefinedUnits());
+    });
+
     test('contains exactly 10 templates', () {
       expect(predefinedWorksheets, hasLength(10));
     });
@@ -17,6 +26,65 @@ void main() {
     test('all templates have non-empty rows', () {
       for (final template in predefinedWorksheets) {
         expect(template.rows, isNotEmpty, reason: '${template.id} has no rows');
+      }
+    });
+
+    test('every row kind matches parseQuery result', () {
+      for (final template in predefinedWorksheets) {
+        for (final row in template.rows) {
+          final node = parser.parseQuery(row.expression);
+          if (node is FunctionNameNode) {
+            expect(
+              row.kind,
+              isA<FunctionRow>(),
+              reason:
+                  '${template.id}/${row.expression}: '
+                  'parseQuery returned FunctionNameNode but kind is ${row.kind.runtimeType}',
+            );
+          } else {
+            expect(
+              row.kind,
+              isA<UnitRow>(),
+              reason:
+                  '${template.id}/${row.expression}: '
+                  'parseQuery returned ${node.runtimeType} but kind is ${row.kind.runtimeType}',
+            );
+          }
+        }
+      }
+    });
+
+    test('all-UnitRow templates are ordered smallest to largest', () {
+      for (final template in predefinedWorksheets) {
+        if (template.rows.any((r) => r.kind is! UnitRow)) {
+          continue;
+        }
+        double? prevValue;
+        String? prevExpression;
+        for (final row in template.rows) {
+          final qty = parser.evaluate(row.expression);
+          if (prevValue != null) {
+            if (qty.value == prevValue) {
+              expect(
+                row.expression.compareTo(prevExpression!) >= 0,
+                isTrue,
+                reason:
+                    '${template.id}: equal-magnitude rows "${row.expression}" and '
+                    '"$prevExpression" are in wrong expression order',
+              );
+            } else {
+              expect(
+                qty.value,
+                greaterThanOrEqualTo(prevValue),
+                reason:
+                    '${template.id}: "${row.expression}" (${qty.value}) is smaller '
+                    'than "$prevExpression" ($prevValue)',
+              );
+            }
+          }
+          prevValue = qty.value;
+          prevExpression = row.expression;
+        }
       }
     });
 
@@ -46,13 +114,13 @@ void main() {
           expressions,
           containsAll([
             'µm',
-            'm',
-            'cm',
             'mm',
-            'km',
+            'cm',
             'in',
             'ft',
             'yd',
+            'm',
+            'km',
             'mi',
             'nmi',
           ]),
@@ -76,9 +144,23 @@ void main() {
         }
       });
 
-      test('contains stone, shortton, longton', () {
+      test('contains expected expressions', () {
         final expressions = template.rows.map((r) => r.expression).toList();
-        expect(expressions, containsAll(['stone', 'uston', 'brton']));
+        expect(
+          expressions,
+          containsAll([
+            'µg',
+            'mg',
+            'g',
+            'oz',
+            'lb',
+            'kg',
+            'stone',
+            'uston',
+            't',
+            'brton',
+          ]),
+        );
       });
     });
 
@@ -130,38 +212,79 @@ void main() {
         expect(template.rows, hasLength(6));
       });
 
-      test('K row is UnitRow', () {
-        final row = template.rows.firstWhere((r) => r.expression == 'K');
-        expect(row.kind, isA<UnitRow>());
-      });
-
-      test('tempC row is FunctionRow', () {
-        final row = template.rows.firstWhere((r) => r.expression == 'tempC');
-        expect(row.kind, isA<FunctionRow>());
-      });
-
-      test('tempF row is FunctionRow', () {
-        final row = template.rows.firstWhere((r) => r.expression == 'tempF');
-        expect(row.kind, isA<FunctionRow>());
-      });
-
-      test('degR row is UnitRow', () {
-        final row = template.rows.firstWhere((r) => r.expression == 'degR');
-        expect(row.kind, isA<UnitRow>());
-      });
-
-      test('tempreaumur row is FunctionRow', () {
-        final row = template.rows.firstWhere(
-          (r) => r.expression == 'tempreaumur',
+      test('contains expected expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(
+          expressions,
+          containsAll([
+            'K',
+            'tempC',
+            'tempF',
+            'degR',
+            'tempreaumur',
+            'gasmark',
+          ]),
         );
-        expect(row.kind, isA<FunctionRow>());
+      });
+    });
+
+    group('volume template', () {
+      late WorksheetTemplate template;
+      setUp(() {
+        template = predefinedWorksheets.firstWhere((t) => t.id == 'volume');
       });
 
-      test('gasmark row is FunctionRow', () {
-        final row = template.rows.firstWhere(
-          (r) => r.expression == 'gasmark',
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
+      });
+
+      test('contains expected expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(
+          expressions,
+          containsAll([
+            'mL',
+            'tsp',
+            'tbsp',
+            'floz',
+            'cup',
+            'pt',
+            'qt',
+            'L',
+            'gal',
+            'bbl',
+          ]),
         );
-        expect(row.kind, isA<FunctionRow>());
+      });
+    });
+
+    group('area template', () {
+      late WorksheetTemplate template;
+      setUp(() {
+        template = predefinedWorksheets.firstWhere((t) => t.id == 'area');
+      });
+
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
+      });
+
+      test('contains expected expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(
+          expressions,
+          containsAll([
+            'mm^2',
+            'cm^2',
+            'in^2',
+            'ft^2',
+            'yd^2',
+            'm^2',
+            'acre',
+            'ha',
+            'km^2',
+            'mi^2',
+          ]),
+        );
       });
     });
 
@@ -175,18 +298,89 @@ void main() {
         expect(template.rows, hasLength(10));
       });
 
-      test('contains expected expressions', () {
-        final expressions = template.rows.map((r) => r.expression).toList();
-        expect(
-          expressions,
-          containsAll(['m/min', 'in/s', 'm/s', 'km/hr', 'mach', 'km/s', 'c']),
-        );
-      });
-
       test('all rows are UnitRow', () {
         for (final row in template.rows) {
           expect(row.kind, isA<UnitRow>());
         }
+      });
+
+      test('contains expected expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(
+          expressions,
+          containsAll([
+            'm/min',
+            'in/s',
+            'km/hr',
+            'ft/s',
+            'mph',
+            'knot',
+            'm/s',
+            'mach',
+            'km/s',
+            'c',
+          ]),
+        );
+      });
+    });
+
+    group('pressure template', () {
+      late WorksheetTemplate template;
+      setUp(() {
+        template = predefinedWorksheets.firstWhere((t) => t.id == 'pressure');
+      });
+
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
+      });
+
+      test('contains expected expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(
+          expressions,
+          containsAll([
+            'Pa',
+            'mbar',
+            'mmHg',
+            'torr',
+            'kPa',
+            'inHg',
+            'psi',
+            'bar',
+            'atm',
+            'MPa',
+          ]),
+        );
+      });
+    });
+
+    group('energy template', () {
+      late WorksheetTemplate template;
+      setUp(() {
+        template = predefinedWorksheets.firstWhere((t) => t.id == 'energy');
+      });
+
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
+      });
+
+      test('contains expected expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(
+          expressions,
+          containsAll([
+            'eV',
+            'erg',
+            'J',
+            'cal_th',
+            'kJ',
+            'BTU',
+            'Wh',
+            'kcal',
+            'kWh',
+            'ton tnt',
+          ]),
+        );
       });
     });
 
@@ -219,53 +413,6 @@ void main() {
             'TiB',
           ]),
         );
-      });
-
-      test('SI units appear before corresponding IEC units', () {
-        final expressions = template.rows.map((r) => r.expression).toList();
-        expect(expressions.indexOf('kB'), lessThan(expressions.indexOf('KiB')));
-        expect(expressions.indexOf('MB'), lessThan(expressions.indexOf('MiB')));
-        expect(expressions.indexOf('GB'), lessThan(expressions.indexOf('GiB')));
-        expect(expressions.indexOf('TB'), lessThan(expressions.indexOf('TiB')));
-      });
-    });
-
-    group('energy template', () {
-      late WorksheetTemplate template;
-      setUp(() {
-        template = predefinedWorksheets.firstWhere((t) => t.id == 'energy');
-      });
-
-      test('has 10 rows', () {
-        expect(template.rows, hasLength(10));
-      });
-
-      test('small calories row uses cal_th expression', () {
-        final row = template.rows.firstWhere((r) => r.expression == 'cal_th');
-        expect(row.label, 'small calories');
-      });
-
-      test('food Calories row uses kcal expression', () {
-        final row = template.rows.firstWhere((r) => r.expression == 'kcal');
-        expect(row.label, 'food Calories');
-      });
-
-      test('contains watt-hours', () {
-        final expressions = template.rows.map((r) => r.expression).toList();
-        expect(expressions, contains('Wh'));
-      });
-    });
-
-    group('area template', () {
-      late WorksheetTemplate template;
-      setUp(() {
-        template = predefinedWorksheets.firstWhere((t) => t.id == 'area');
-      });
-
-      test('contains compound expressions', () {
-        final expressions = template.rows.map((r) => r.expression).toList();
-        expect(expressions, contains('m^2'));
-        expect(expressions, contains('ft^2'));
       });
     });
   });

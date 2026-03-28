@@ -119,8 +119,8 @@ const List<WorksheetTemplate> predefinedWorksheets = [
     rows: [
       WorksheetRow(label: 'pascals', expression: 'Pa', kind: _unit),
       WorksheetRow(label: 'millibars', expression: 'mbar', kind: _unit),
-      WorksheetRow(label: 'mm mercury', expression: 'mmHg', kind: _unit),
       WorksheetRow(label: 'torr', expression: 'torr', kind: _unit),
+      WorksheetRow(label: 'mm mercury', expression: 'mmHg', kind: _unit),
       WorksheetRow(label: 'kilopascals', expression: 'kPa', kind: _unit),
       WorksheetRow(label: 'inches mercury', expression: 'inHg', kind: _unit),
       WorksheetRow(label: 'pounds/sq inch', expression: 'psi', kind: _unit),

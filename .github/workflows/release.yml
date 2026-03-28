@@ -36,9 +36,9 @@ jobs:
       - run: flutter pub get
       - name: Set up environment
         run: |
-          BUILD_TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          echo "BUILD_METADATA=${BUILD_TIMESTAMP}.${SHORT_SHA}" >> $GITHUB_ENV
+          build_timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')
+          description=$(git describe --long)
+          echo "BUILD_METADATA=${build_timestamp}-${description}" >> $GITHUB_ENV
           echo "VERSION=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
       - name: Build Android APK
         run: >-

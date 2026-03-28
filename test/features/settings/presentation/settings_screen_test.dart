@@ -30,7 +30,7 @@ void main() {
       expect(find.text('Settings'), findsOneWidget); // AppBar title.
       expect(find.text('Display'), findsOneWidget);
       expect(find.text('Appearance'), findsOneWidget);
-      expect(find.text('Behavior'), findsOneWidget);
+      expect(find.text('Freeform behavior'), findsOneWidget);
       expect(find.text('About'), findsNothing);
     });
 

@@ -73,7 +73,7 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
-          const _SectionHeader(title: 'Behavior'),
+          const _SectionHeader(title: 'Freeform behavior'),
           RadioGroup<EvaluationMode>(
             groupValue: settings.evaluationMode,
             onChanged: (value) {

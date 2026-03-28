@@ -8,6 +8,7 @@ import 'package:unitary/features/freeform/presentation/home_screen.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
+import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
 
 void main() {
   late SettingsRepository repo;
@@ -23,6 +24,14 @@ void main() {
       overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
       child: const MaterialApp(home: HomeScreen()),
     );
+  }
+
+  /// Navigate to worksheet mode: open drawer and tap 'Worksheet'.
+  Future<void> navigateToWorksheet(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Worksheet'));
+    await tester.pumpAndSettle();
   }
 
   group('HomeScreen', () {
@@ -63,7 +72,7 @@ void main() {
       },
     );
 
-    testWidgets('Worksheet entry is enabled and navigates to WorksheetScreen', (
+    testWidgets('Worksheet entry is enabled and shows worksheet content', (
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
@@ -77,7 +86,7 @@ void main() {
 
       await tester.tap(find.text('Worksheet'));
       await tester.pumpAndSettle();
-      // WorksheetScreen uses a DropdownButton for navigation.
+      // WorksheetScreen with dropdown in AppBar.
       expect(find.byType(DropdownButton<String>), findsOneWidget);
     });
 
@@ -120,6 +129,105 @@ void main() {
       await tester.pumpWidget(buildApp());
       // FreeformScreen renders input/output fields.
       expect(find.text('Convert from'), findsOneWidget);
+    });
+  });
+
+  group('HomeScreen — worksheet navigation', () {
+    testWidgets('worksheet AppBar shows hamburger icon, not back arrow', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await navigateToWorksheet(tester);
+
+      expect(find.byIcon(Icons.menu), findsOneWidget);
+      expect(find.byIcon(Icons.arrow_back), findsNothing);
+    });
+
+    testWidgets('hamburger icon on worksheet screen opens the drawer', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await navigateToWorksheet(tester);
+
+      await tester.tap(find.byIcon(Icons.menu));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Freeform'), findsOneWidget);
+      expect(find.text('Worksheet'), findsOneWidget);
+    });
+
+    testWidgets(
+      'Worksheet drawer tile is selected when on worksheet screen',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+        await navigateToWorksheet(tester);
+
+        await tester.tap(find.byIcon(Icons.menu));
+        await tester.pumpAndSettle();
+
+        final worksheetTile = tester.widget<ListTile>(
+          find.widgetWithText(ListTile, 'Worksheet'),
+        );
+        final freeformTile = tester.widget<ListTile>(
+          find.widgetWithText(ListTile, 'Freeform'),
+        );
+        expect(worksheetTile.selected, isTrue);
+        expect(freeformTile.selected, isFalse);
+      },
+    );
+
+    testWidgets(
+      'Freeform drawer tile is selected when on freeform screen',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        await tester.tap(find.byIcon(Icons.menu));
+        await tester.pumpAndSettle();
+
+        final freeformTile = tester.widget<ListTile>(
+          find.widgetWithText(ListTile, 'Freeform'),
+        );
+        final worksheetTile = tester.widget<ListTile>(
+          find.widgetWithText(ListTile, 'Worksheet'),
+        );
+        expect(freeformTile.selected, isTrue);
+        expect(worksheetTile.selected, isFalse);
+      },
+    );
+
+    testWidgets('dropdown lists all template names', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await navigateToWorksheet(tester);
+
+      // Open the dropdown.
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+
+      for (final template in predefinedWorksheets) {
+        expect(
+          find.text(template.name),
+          findsWidgets, // may appear in button + list
+          reason: '${template.name} not in dropdown',
+        );
+      }
+    });
+
+    testWidgets('selecting a template from dropdown switches worksheet', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await navigateToWorksheet(tester);
+
+      // Open dropdown and select Speed.
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Speed').last);
+      await tester.pumpAndSettle();
+
+      final speedTemplate = predefinedWorksheets.firstWhere(
+        (t) => t.id == 'speed',
+      );
+      expect(find.text(speedTemplate.rows.first.label), findsOneWidget);
     });
   });
 }

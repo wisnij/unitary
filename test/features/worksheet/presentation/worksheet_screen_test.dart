@@ -22,7 +22,7 @@ void main() {
       overrides: [
         settingsRepositoryProvider.overrideWithValue(settingsRepo),
       ],
-      child: const MaterialApp(home: WorksheetScreen()),
+      child: const MaterialApp(home: Scaffold(body: WorksheetScreen())),
     );
   }
 
@@ -47,39 +47,6 @@ void main() {
     testWidgets('shows row expression as secondary label', (tester) async {
       await tester.pumpWidget(buildApp());
       expect(find.text('ft'), findsOneWidget);
-    });
-
-    testWidgets('dropdown lists all template names', (tester) async {
-      await tester.pumpWidget(buildApp());
-
-      // Open the dropdown.
-      await tester.tap(find.byType(DropdownButton<String>));
-      await tester.pumpAndSettle();
-
-      for (final template in predefinedWorksheets) {
-        expect(
-          find.text(template.name),
-          findsWidgets, // may appear in button + list
-          reason: '${template.name} not in dropdown',
-        );
-      }
-    });
-
-    testWidgets('selecting a template from dropdown switches worksheet', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-
-      // Open dropdown and select Speed.
-      await tester.tap(find.byType(DropdownButton<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Speed').last);
-      await tester.pumpAndSettle();
-
-      final speedTemplate = predefinedWorksheets.firstWhere(
-        (t) => t.id == 'speed',
-      );
-      expect(find.text(speedTemplate.rows.first.label), findsOneWidget);
     });
 
     testWidgets('active row is not overwritten when engine updates', (

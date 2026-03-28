@@ -71,10 +71,6 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     ref.read(worksheetProvider.notifier).onRowFocused(worksheetId, rowIndex);
   }
 
-  void _onSelectWorksheet(String id) {
-    ref.read(worksheetProvider.notifier).selectWorksheet(id);
-  }
-
   @override
   Widget build(BuildContext context) {
     final worksheetState = ref.watch(worksheetProvider);
@@ -88,51 +84,46 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     // Sync non-active controller texts from state after each rebuild.
     _syncControllers(template, values, activeIndex);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: _WorksheetDropdown(
-          templates: predefinedWorksheets,
-          selectedId: activeId,
-          onChanged: _onSelectWorksheet,
-        ),
-      ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: template.rows.length,
-        itemBuilder: (context, i) {
-          final row = template.rows[i];
-          final controllers = _controllersFor(template);
-          return WorksheetRowWidget(
-            key: ValueKey('${template.id}_row_$i'),
-            label: row.label,
-            expression: row.expression,
-            controller: controllers[i],
-            isActive: activeIndex == i,
-            onChanged: (text) => _onRowChanged(activeId, i, text),
-            onFocused: () => _onRowFocused(activeId, i),
-            onLabelLongPress: (activeIndex != null && activeIndex != i)
-                ? () {
-                    final sourceValue = values[activeIndex];
-                    if (sourceValue.isEmpty) {
-                      return;
-                    }
-                    controllers[i].text = sourceValue;
-                    _onRowChanged(activeId, i, sourceValue);
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: template.rows.length,
+      itemBuilder: (context, i) {
+        final row = template.rows[i];
+        final controllers = _controllersFor(template);
+        return WorksheetRowWidget(
+          key: ValueKey('${template.id}_row_$i'),
+          label: row.label,
+          expression: row.expression,
+          controller: controllers[i],
+          isActive: activeIndex == i,
+          onChanged: (text) => _onRowChanged(activeId, i, text),
+          onFocused: () => _onRowFocused(activeId, i),
+          onLabelLongPress: (activeIndex != null && activeIndex != i)
+              ? () {
+                  final sourceValue = values[activeIndex];
+                  if (sourceValue.isEmpty) {
+                    return;
                   }
-                : null,
-          );
-        },
-      ),
+                  controllers[i].text = sourceValue;
+                  _onRowChanged(activeId, i, sourceValue);
+                }
+              : null,
+        );
+      },
     );
   }
 }
 
-class _WorksheetDropdown extends StatelessWidget {
+/// Dropdown widget for selecting a worksheet template.
+///
+/// Used as the AppBar title in [HomeScreen] when worksheet mode is active.
+class WorksheetDropdown extends StatelessWidget {
   final List<WorksheetTemplate> templates;
   final String selectedId;
   final ValueChanged<String> onChanged;
 
-  const _WorksheetDropdown({
+  const WorksheetDropdown({
+    super.key,
     required this.templates,
     required this.selectedId,
     required this.onChanged,

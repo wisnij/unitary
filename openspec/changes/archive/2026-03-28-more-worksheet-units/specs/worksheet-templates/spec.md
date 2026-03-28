@@ -1,39 +1,4 @@
-# Worksheet Templates
-
-## Purpose
-
-Defines the data models and predefined template registry for worksheet mode.
-Covers `WorksheetRow`, `WorksheetRowKind`, and `WorksheetTemplate`, along with
-the full set of 10 predefined conversion templates.
-
-## Requirements
-
-### Requirement: WorksheetRow model
-A `WorksheetRow` SHALL have a display `label` (String), an `expression` (String
-parseable by `ExpressionParser`), and a `WorksheetRowKind`.
-
-`WorksheetRowKind` is a sealed class with two variants:
-- `UnitRow`: the expression evaluates to a `Quantity`; conversion is
-  ratio-based (`value / unitQty.value`).
-- `FunctionRow`: the expression is a bare function name registered in
-  `UnitRepository`; conversion uses the function's `call()` (forward) and
-  `callInverse()` (inverse).
-
-#### Scenario: UnitRow construction
-- **WHEN** a `WorksheetRow` is constructed with kind `UnitRow` and expression `"ft"`
-- **THEN** its `label`, `expression`, and `kind` are accessible and `kind` is a `UnitRow`
-
-#### Scenario: FunctionRow construction
-- **WHEN** a `WorksheetRow` is constructed with kind `FunctionRow` and expression `"tempC"`
-- **THEN** its `kind` is a `FunctionRow`
-
-### Requirement: WorksheetTemplate model
-A `WorksheetTemplate` SHALL have a unique `id` (String), a display `name`
-(String), and a non-empty ordered list of `WorksheetRow` objects.
-
-#### Scenario: Template construction
-- **WHEN** a `WorksheetTemplate` is constructed with id `"length"`, name `"Length"`, and a list of rows
-- **THEN** its `id`, `name`, and `rows` are accessible
+## MODIFIED Requirements
 
 ### Requirement: Predefined worksheet templates
 The application SHALL provide exactly 10 predefined `WorksheetTemplate`

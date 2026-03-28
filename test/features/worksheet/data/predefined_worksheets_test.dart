@@ -26,8 +26,8 @@ void main() {
         template = predefinedWorksheets.firstWhere((t) => t.id == 'length');
       });
 
-      test('has 9 rows', () {
-        expect(template.rows, hasLength(9));
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
       });
 
       test('all rows are UnitRow', () {
@@ -44,7 +44,18 @@ void main() {
         final expressions = template.rows.map((r) => r.expression).toList();
         expect(
           expressions,
-          containsAll(['m', 'cm', 'mm', 'km', 'in', 'ft', 'yd', 'mi', 'nmi']),
+          containsAll([
+            'µm',
+            'm',
+            'cm',
+            'mm',
+            'km',
+            'in',
+            'ft',
+            'yd',
+            'mi',
+            'nmi',
+          ]),
         );
       });
     });
@@ -55,8 +66,8 @@ void main() {
         template = predefinedWorksheets.firstWhere((t) => t.id == 'mass');
       });
 
-      test('has 9 rows', () {
-        expect(template.rows, hasLength(9));
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
       });
 
       test('all rows are UnitRow', () {
@@ -77,8 +88,8 @@ void main() {
         template = predefinedWorksheets.firstWhere((t) => t.id == 'time');
       });
 
-      test('has 7 rows', () {
-        expect(template.rows, hasLength(7));
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
       });
 
       test('all rows are UnitRow', () {
@@ -87,11 +98,23 @@ void main() {
         }
       });
 
-      test('uses d, wk, year expressions', () {
+      test('contains expected expressions', () {
         final expressions = template.rows.map((r) => r.expression).toList();
-        expect(expressions, contains('d'));
-        expect(expressions, contains('wk'));
-        expect(expressions, contains('year'));
+        expect(
+          expressions,
+          containsAll([
+            'ns',
+            'µs',
+            'ms',
+            's',
+            'min',
+            'hr',
+            'd',
+            'wk',
+            'yr',
+            'century',
+          ]),
+        );
       });
     });
 
@@ -103,8 +126,8 @@ void main() {
         );
       });
 
-      test('has 5 rows', () {
-        expect(template.rows, hasLength(5));
+      test('has 6 rows', () {
+        expect(template.rows, hasLength(6));
       });
 
       test('K row is UnitRow', () {
@@ -133,6 +156,13 @@ void main() {
         );
         expect(row.kind, isA<FunctionRow>());
       });
+
+      test('gasmark row is FunctionRow', () {
+        final row = template.rows.firstWhere(
+          (r) => r.expression == 'gasmark',
+        );
+        expect(row.kind, isA<FunctionRow>());
+      });
     });
 
     group('speed template', () {
@@ -141,11 +171,15 @@ void main() {
         template = predefinedWorksheets.firstWhere((t) => t.id == 'speed');
       });
 
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
+      });
+
       test('contains expected expressions', () {
         final expressions = template.rows.map((r) => r.expression).toList();
         expect(
           expressions,
-          containsAll(['m/s', 'km/hr', 'mach', 'km/s', 'c']),
+          containsAll(['m/min', 'in/s', 'm/s', 'km/hr', 'mach', 'km/s', 'c']),
         );
       });
 
@@ -164,16 +198,61 @@ void main() {
         );
       });
 
-      test('has 6 rows', () {
-        expect(template.rows, hasLength(6));
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
       });
 
-      test('uses binary units', () {
+      test('contains SI and IEC units interleaved', () {
         final expressions = template.rows.map((r) => r.expression).toList();
         expect(
           expressions,
-          containsAll(['bit', 'B', 'KiB', 'MiB', 'GiB', 'TiB']),
+          containsAll([
+            'bit',
+            'B',
+            'kB',
+            'KiB',
+            'MB',
+            'MiB',
+            'GB',
+            'GiB',
+            'TB',
+            'TiB',
+          ]),
         );
+      });
+
+      test('SI units appear before corresponding IEC units', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(expressions.indexOf('kB'), lessThan(expressions.indexOf('KiB')));
+        expect(expressions.indexOf('MB'), lessThan(expressions.indexOf('MiB')));
+        expect(expressions.indexOf('GB'), lessThan(expressions.indexOf('GiB')));
+        expect(expressions.indexOf('TB'), lessThan(expressions.indexOf('TiB')));
+      });
+    });
+
+    group('energy template', () {
+      late WorksheetTemplate template;
+      setUp(() {
+        template = predefinedWorksheets.firstWhere((t) => t.id == 'energy');
+      });
+
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
+      });
+
+      test('small calories row uses cal_th expression', () {
+        final row = template.rows.firstWhere((r) => r.expression == 'cal_th');
+        expect(row.label, 'small calories');
+      });
+
+      test('food Calories row uses kcal expression', () {
+        final row = template.rows.firstWhere((r) => r.expression == 'kcal');
+        expect(row.label, 'food Calories');
+      });
+
+      test('contains watt-hours', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(expressions, contains('Wh'));
       });
     });
 

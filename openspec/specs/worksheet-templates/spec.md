@@ -51,7 +51,7 @@ The 10 templates and their rows:
 | Volume | `volume` | milliliters: mL, teaspoons: tsp, tablespoons: tbsp, fluid ounces: floz, cups: cup, pints: pt, quarts: qt, liters: L, gallons: gal, barrels: bbl — all `UnitRow` |
 | Area | `area` | sq millimeters: mm^2, sq centimeters: cm^2, sq inches: in^2, sq feet: ft^2, sq yards: yd^2, sq meters: m^2, acres: acre, hectares: ha, sq kilometers: km^2, sq miles: mi^2 — all `UnitRow` |
 | Speed | `speed` | meters/minute: m/min, inches/sec: in/s, km/hour: km/hr, feet/sec: ft/s, miles/hour: mph, knots: knot, meters/sec: m/s, Mach (STP): mach, km/sec: km/s, light speed: c — all `UnitRow` |
-| Pressure | `pressure` | pascals: Pa, millibars: mbar, mm mercury: mmHg, torr: torr, kilopascals: kPa, inches mercury: inHg, pounds/sq inch: psi, bar: bar, atmospheres: atm, megapascals: MPa — all `UnitRow` |
+| Pressure | `pressure` | pascals: Pa, millibars: mbar, mm mercury: mmHg, torr: Torr, kilopascals: kPa, inches mercury: inHg, pounds/sq inch: psi, bar: bar, atmospheres: atm, megapascals: MPa — all `UnitRow` |
 | Energy | `energy` | electron volts: eV, ergs: erg, joules: J, small calories: cal_th, kilojoules: kJ, BTU: BTU, watt-hours: Wh, food Calories: kcal, kilowatt-hours: kWh, tons of TNT: ton tnt — all `UnitRow` |
 | Digital Storage | `digital-storage` | bits: bit, bytes: B, kilobytes: kB, kibibytes: KiB, megabytes: MB, mebibytes: MiB, gigabytes: GB, gibibytes: GiB, terabytes: TB, tebibytes: TiB — all `UnitRow` |
 
@@ -133,10 +133,10 @@ smallest-to-largest order): `mL`, `tsp`, `tbsp`, `floz`, `cup`, `pt`, `qt`,
 ### Requirement: Pressure template rows
 
 The `pressure` template SHALL contain exactly the following expressions (in
-smallest-to-largest order): `Pa`, `mbar`, `torr`, `mmHg`, `kPa`, `inHg`,
+smallest-to-largest order): `Pa`, `mbar`, `Torr`, `mmHg`, `kPa`, `inHg`,
 `psi`, `bar`, `atm`, `MPa` — all `UnitRow`.
 
 #### Scenario: Pressure template expressions
 
 - **WHEN** the `pressure` template is retrieved from the registry
-- **THEN** its rows contain all of: `Pa`, `mbar`, `mmHg`, `torr`, `kPa`, `inHg`, `psi`, `bar`, `atm`, `MPa`
+- **THEN** its rows contain all of: `Pa`, `mbar`, `mmHg`, `Torr`, `kPa`, `inHg`, `psi`, `bar`, `atm`, `MPa`

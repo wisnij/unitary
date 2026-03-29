@@ -342,7 +342,7 @@ void main() {
             'Pa',
             'mbar',
             'mmHg',
-            'torr',
+            'Torr',
             'kPa',
             'inHg',
             'psi',

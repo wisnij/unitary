@@ -5888,7 +5888,10 @@
         "file": "tool/gnu_units/definitions.units",
         "line": 1620
       },
-      "definition": "atm / 760"
+      "definition": "atm / 760",
+      "aliases": [
+        "Torr"
+      ]
     },
     "tor": {
       "type": "alias",

@@ -2494,6 +2494,7 @@ void _registerUnits(UnitRepository repo) {
   repo.register(
     const DerivedUnit(
       id: 'torr',
+      aliases: ['Torr'],
       expression: 'atm / 760',
     ),
   );

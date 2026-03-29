@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/predefined_worksheets.dart';
 import '../models/worksheet.dart';
+import '../services/worksheet_engine.dart';
 import '../state/worksheet_provider.dart';
 import 'widgets/worksheet_row_widget.dart';
 
@@ -46,7 +47,7 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
   /// overwriting what the user is currently typing.
   void _syncControllers(
     WorksheetTemplate template,
-    List<String> values,
+    List<WorksheetCellResult> values,
     int? activeIndex,
   ) {
     final controllers = _controllersFor(template);
@@ -54,7 +55,7 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
       if (i == activeIndex) {
         continue; // let the user's raw text stand
       }
-      final newText = values[i];
+      final newText = values[i].text;
       if (controllers[i].text != newText) {
         controllers[i].text = newText;
       }
@@ -96,16 +97,17 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
           expression: row.expression,
           controller: controllers[i],
           isActive: activeIndex == i,
+          isError: values[i].isError,
           onChanged: (text) => _onRowChanged(activeId, i, text),
           onFocused: () => _onRowFocused(activeId, i),
           onLabelLongPress: (activeIndex != null && activeIndex != i)
               ? () {
-                  final sourceValue = values[activeIndex];
-                  if (sourceValue.isEmpty) {
+                  final sourceText = values[activeIndex].text;
+                  if (sourceText.isEmpty) {
                     return;
                   }
-                  controllers[i].text = sourceValue;
-                  _onRowChanged(activeId, i, sourceValue);
+                  controllers[i].text = sourceText;
+                  _onRowChanged(activeId, i, sourceText);
                 }
               : null,
         );

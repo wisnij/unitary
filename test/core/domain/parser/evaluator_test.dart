@@ -247,12 +247,12 @@ void main() {
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
-    test('asin(2) throws EvalException', () {
-      expect(() => evalFn('asin(2)'), throwsA(isA<EvalException>()));
+    test('asin(2) throws BoundsException', () {
+      expect(() => evalFn('asin(2)'), throwsA(isA<BoundsException>()));
     });
 
-    test('acos(2) throws EvalException', () {
-      expect(() => evalFn('acos(2)'), throwsA(isA<EvalException>()));
+    test('acos(2) throws BoundsException', () {
+      expect(() => evalFn('acos(2)'), throwsA(isA<BoundsException>()));
     });
 
     test('sin(5 m) throws DimensionException', () {
@@ -282,12 +282,12 @@ void main() {
       expect(result.value, closeTo(math.e, 1e-10));
     });
 
-    test('ln(0) throws EvalException', () {
-      expect(() => evalFn('ln(0)'), throwsA(isA<EvalException>()));
+    test('ln(0) throws BoundsException', () {
+      expect(() => evalFn('ln(0)'), throwsA(isA<BoundsException>()));
     });
 
-    test('ln(-1) throws EvalException', () {
-      expect(() => evalFn('ln(-1)'), throwsA(isA<EvalException>()));
+    test('ln(-1) throws BoundsException', () {
+      expect(() => evalFn('ln(-1)'), throwsA(isA<BoundsException>()));
     });
 
     test('ln(5 m) throws DimensionException', () {
@@ -326,12 +326,12 @@ void main() {
       expect(evalFn('log2(8)').isDimensionless, isTrue);
     });
 
-    test('log2(0) throws EvalException (ln domain violation)', () {
-      expect(() => evalFn('log2(0)'), throwsA(isA<EvalException>()));
+    test('log2(0) throws BoundsException (ln domain violation)', () {
+      expect(() => evalFn('log2(0)'), throwsA(isA<BoundsException>()));
     });
 
-    test('log2(-1) throws EvalException (ln domain violation)', () {
-      expect(() => evalFn('log2(-1)'), throwsA(isA<EvalException>()));
+    test('log2(-1) throws BoundsException (ln domain violation)', () {
+      expect(() => evalFn('log2(-1)'), throwsA(isA<BoundsException>()));
     });
   });
 

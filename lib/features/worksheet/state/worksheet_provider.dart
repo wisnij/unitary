@@ -60,8 +60,8 @@ class WorksheetNotifier extends Notifier<WorksheetState> {
     final current = state.valuesFor(worksheetId, template.rows.length);
 
     // Update source row immediately with raw text; mark it active.
-    final updated = List<String>.from(current);
-    updated[rowIndex] = text;
+    final updated = List<WorksheetCellResult>.from(current);
+    updated[rowIndex] = WorksheetCellResult.value(text);
 
     state = state.copyWith(
       activeRowIndex: rowIndex,
@@ -92,13 +92,13 @@ class WorksheetNotifier extends Notifier<WorksheetState> {
     );
 
     final current = state.valuesFor(worksheetId, template.rows.length);
-    final updated = List<String>.from(current);
+    final updated = List<WorksheetCellResult>.from(current);
 
     for (var i = 0; i < result.values.length; i++) {
       if (i == sourceIndex) {
         continue; // preserve raw text
       }
-      updated[i] = result.values[i] ?? '';
+      updated[i] = result.values[i] ?? const WorksheetCellResult.value('');
     }
 
     state = state.copyWith(

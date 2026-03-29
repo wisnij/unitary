@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Show more specific error messages in worksheets
 - Add "Torr" as an alias of the torr unit
 
 ### Fixed

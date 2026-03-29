@@ -216,7 +216,7 @@ abstract class UnitaryFunction {
         ? q.value / spec.quantity!.value
         : q.value;
     if (!spec.isWithinBounds(qNorm)) {
-      throw EvalException(
+      throw BoundsException(
         "Function '$id': value must be within ${spec.boundsString()}, got $qNorm",
       );
     }

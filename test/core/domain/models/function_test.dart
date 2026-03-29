@@ -392,13 +392,13 @@ void main() {
   });
 
   group('UnitaryFunction: call() - min/max bound validation', () {
-    test('value below closed min is rejected', () {
+    test('value below closed min throws BoundsException', () {
       final f = _IdentityFunction(
         domain: [const QuantitySpec(min: Bound(-1.0, closed: true))],
       );
       expect(
         () => f.call([Quantity.dimensionless(-2.0)]),
-        throwsA(isA<EvalException>()),
+        throwsA(isA<BoundsException>()),
       );
     });
 
@@ -412,23 +412,23 @@ void main() {
       );
     });
 
-    test('value equal to open min is rejected', () {
+    test('value equal to open min throws BoundsException', () {
       final f = _IdentityFunction(
         domain: [const QuantitySpec(min: Bound(0.0, closed: false))],
       );
       expect(
         () => f.call([Quantity.dimensionless(0.0)]),
-        throwsA(isA<EvalException>()),
+        throwsA(isA<BoundsException>()),
       );
     });
 
-    test('value above closed max is rejected', () {
+    test('value above closed max throws BoundsException', () {
       final f = _IdentityFunction(
         domain: [const QuantitySpec(max: Bound(1.0, closed: true))],
       );
       expect(
         () => f.call([Quantity.dimensionless(2.0)]),
-        throwsA(isA<EvalException>()),
+        throwsA(isA<BoundsException>()),
       );
     });
 
@@ -442,13 +442,13 @@ void main() {
       );
     });
 
-    test('value equal to open max is rejected', () {
+    test('value equal to open max throws BoundsException', () {
       final f = _IdentityFunction(
         domain: [const QuantitySpec(max: Bound(1.0, closed: false))],
       );
       expect(
         () => f.call([Quantity.dimensionless(1.0)]),
-        throwsA(isA<EvalException>()),
+        throwsA(isA<BoundsException>()),
       );
     });
   });
@@ -468,7 +468,7 @@ void main() {
       );
     });
 
-    test('return value violating range bound throws EvalException', () {
+    test('return value violating range bound throws BoundsException', () {
       // Function returns 10.0; range max is 5.0 (closed)
       final f = _FixedOutputFunction(
         id: 'limited',
@@ -478,7 +478,7 @@ void main() {
       );
       expect(
         () => f.call([]),
-        throwsA(isA<EvalException>()),
+        throwsA(isA<BoundsException>()),
       );
     });
 
@@ -532,7 +532,7 @@ void main() {
       );
       expect(
         () => f.callInverse([Quantity.dimensionless(2.0)]),
-        throwsA(isA<EvalException>()),
+        throwsA(isA<BoundsException>()),
       );
       // value within range passes
       expect(f.callInverse([Quantity.dimensionless(0.5)]).value, 0.5);
@@ -552,7 +552,7 @@ void main() {
       // _IdentityFunction returns its arg, so result = arg = -1 → domain violation
       expect(
         () => f.callInverse([Quantity.dimensionless(-1.0)]),
-        throwsA(isA<EvalException>()),
+        throwsA(isA<BoundsException>()),
       );
     });
   });
@@ -732,19 +732,19 @@ void main() {
         expect(result.value, closeTo(40.0, 1e-10)); // y=20.0, factor=2.0
       });
 
-      test('input below domain throws EvalException', () {
+      test('input below domain throws BoundsException', () {
         final f = makeSimple();
         expect(
           () => f.call([Quantity.dimensionless(0.5)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
 
-      test('input above domain throws EvalException', () {
+      test('input above domain throws BoundsException', () {
         final f = makeSimple();
         expect(
           () => f.call([Quantity.dimensionless(3.5)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
     });
@@ -784,23 +784,23 @@ void main() {
         expect(result.dimension.isDimensionless, isTrue);
       });
 
-      test('y below yMin throws EvalException before segment scan', () {
+      test('y below yMin throws BoundsException before segment scan', () {
         final f = makeSimple();
         expect(
           () => f.callInverse([
             Quantity(5.0, Dimension({'K': 1})),
           ]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
 
-      test('y above yMax throws EvalException before segment scan', () {
+      test('y above yMax throws BoundsException before segment scan', () {
         final f = makeSimple();
         expect(
           () => f.callInverse([
             Quantity(35.0, Dimension({'K': 1})),
           ]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
 
@@ -839,7 +839,7 @@ void main() {
 
       test(
         'outputUnit.value > 1: value that appears in-bounds before normalization '
-        'but is out-of-bounds after normalization throws EvalException',
+        'but is out-of-bounds after normalization throws BoundsException',
         () {
           // outputUnit.value = 10.0; range bounds are raw y in [10, 30].
           // SI value 20.0 would pass a naive [10, 30] check,
@@ -854,7 +854,7 @@ void main() {
             () => f.callInverse([
               Quantity(20.0, Dimension({'K': 1})),
             ]),
-            throwsA(isA<EvalException>()),
+            throwsA(isA<BoundsException>()),
           );
         },
       );

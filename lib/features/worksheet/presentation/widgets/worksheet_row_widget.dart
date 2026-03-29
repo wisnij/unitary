@@ -11,6 +11,7 @@ class WorksheetRowWidget extends StatelessWidget {
   final String expression;
   final TextEditingController controller;
   final bool isActive;
+  final bool isError;
   final ValueChanged<String> onChanged;
   final VoidCallback onFocused;
   final VoidCallback? onLabelLongPress;
@@ -21,6 +22,7 @@ class WorksheetRowWidget extends StatelessWidget {
     required this.expression,
     required this.controller,
     required this.isActive,
+    this.isError = false,
     required this.onChanged,
     required this.onFocused,
     this.onLabelLongPress,
@@ -85,6 +87,11 @@ class WorksheetRowWidget extends StatelessWidget {
                 },
                 child: TextField(
                   controller: controller,
+                  style: isError
+                      ? TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        )
+                      : null,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                     signed: true,

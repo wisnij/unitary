@@ -74,3 +74,17 @@ class DimensionException extends UnitaryException {
 
   DimensionException(this.message);
 }
+
+/// Error when a value falls outside the domain or range bounds of a function.
+class BoundsException extends UnitaryException {
+  @override
+  final String message;
+
+  @override
+  final int? line = null;
+
+  @override
+  final int? column = null;
+
+  BoundsException(this.message);
+}

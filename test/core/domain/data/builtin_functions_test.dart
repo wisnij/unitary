@@ -217,10 +217,10 @@ void main() {
         expect(result.dimension, radianDim);
       });
 
-      test('asin(1.5) throws EvalException (max bound violated)', () {
+      test('asin(1.5) throws BoundsException (max bound violated)', () {
         expect(
           () => asinFn.call([Quantity.dimensionless(1.5)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
     });
@@ -232,10 +232,10 @@ void main() {
         expect(result.dimension, radianDim);
       });
 
-      test('acos(-2.0) throws EvalException (min bound violated)', () {
+      test('acos(-2.0) throws BoundsException (min bound violated)', () {
         expect(
           () => acosFn.call([Quantity.dimensionless(-2.0)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
     });
@@ -293,17 +293,17 @@ void main() {
         expect(result.isDimensionless, isTrue);
       });
 
-      test('ln(0) throws EvalException (open min bound violated)', () {
+      test('ln(0) throws BoundsException (open min bound violated)', () {
         expect(
           () => lnFn.call([Quantity.dimensionless(0.0)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
 
-      test('ln(-1) throws EvalException (min bound violated)', () {
+      test('ln(-1) throws BoundsException (min bound violated)', () {
         expect(
           () => lnFn.call([Quantity.dimensionless(-1.0)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
     });
@@ -315,17 +315,17 @@ void main() {
         expect(result.isDimensionless, isTrue);
       });
 
-      test('log(0) throws EvalException (open min bound violated)', () {
+      test('log(0) throws BoundsException (open min bound violated)', () {
         expect(
           () => logFn.call([Quantity.dimensionless(0.0)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
 
-      test('log(-1) throws EvalException (min bound violated)', () {
+      test('log(-1) throws BoundsException (min bound violated)', () {
         expect(
           () => logFn.call([Quantity.dimensionless(-1.0)]),
-          throwsA(isA<EvalException>()),
+          throwsA(isA<BoundsException>()),
         );
       });
     });

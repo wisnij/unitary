@@ -73,7 +73,7 @@ void main() {
       final values = container
           .read(worksheetProvider)
           .valuesFor('length', template.rows.length);
-      expect(values[0], '42');
+      expect(values[0].text, '42');
     });
 
     test('empty input clears all other rows', () {
@@ -88,7 +88,7 @@ void main() {
           .valuesFor('length', template.rows.length);
       // All non-source rows should be blank.
       for (var i = 1; i < values.length; i++) {
-        expect(values[i], '', reason: 'row $i should be blank');
+        expect(values[i].text, '', reason: 'row $i should be blank');
       }
     });
 
@@ -105,7 +105,7 @@ void main() {
       final lengthValues = container
           .read(worksheetProvider)
           .valuesFor('length', lengthTemplate.rows.length);
-      expect(lengthValues[0], '5');
+      expect(lengthValues[0].text, '5');
     });
 
     test('other rows update immediately on change', () {
@@ -115,8 +115,8 @@ void main() {
           .read(worksheetProvider)
           .valuesFor('length', template.rows.length);
       // cm row should have a value (~100) immediately.
-      expect(values[1], isNotEmpty);
-      expect(double.tryParse(values[1]), isNotNull);
+      expect(values[1].text, isNotEmpty);
+      expect(double.tryParse(values[1].text), isNotNull);
     });
 
     test(
@@ -128,7 +128,10 @@ void main() {
           worksheetValues: {},
         );
         final values = state.valuesFor('length', 3);
-        expect(values, equals(['', '', '']));
+        expect(
+          values.map((v) => v.text).toList(),
+          equals(['', '', '']),
+        );
       },
     );
   });

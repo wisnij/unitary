@@ -32,9 +32,21 @@ void main() {
       );
       expect(result.values[0], isNull); // source preserved
       expect(result.values[1], isNotNull);
-      expect(double.parse(result.values[1]!), closeTo(100.0, 0.001));
+      expect(double.parse(result.values[1]!.text), closeTo(100.0, 0.001));
       expect(result.values[2], isNotNull);
-      expect(double.parse(result.values[2]!), closeTo(3.28084, 0.0001));
+      expect(double.parse(result.values[2]!.text), closeTo(3.28084, 0.0001));
+    });
+
+    test('successful conversion result has isError false', () {
+      final result = computeWorksheet(
+        rows: lengthRows,
+        sourceIndex: 0,
+        sourceText: '1',
+        parser: parser,
+        settings: settings,
+      );
+      expect(result.values[1]!.isError, isFalse);
+      expect(result.values[2]!.isError, isFalse);
     });
 
     test('source row is always null in result', () {
@@ -63,7 +75,7 @@ void main() {
         settings: settings,
       );
       expect(result.values[0], isNull);
-      expect(double.parse(result.values[1]!), closeTo(3.6, 0.001));
+      expect(double.parse(result.values[1]!.text), closeTo(3.6, 0.001));
     });
 
     test('empty input clears all rows', () {
@@ -113,9 +125,18 @@ void main() {
           settings: settings,
         );
         expect(result.values[1], isNull); // source
-        expect(double.parse(result.values[0]!), closeTo(273.15, 0.01)); // K
-        expect(double.parse(result.values[2]!), closeTo(32.0, 0.01)); // tempF
-        expect(double.parse(result.values[3]!), closeTo(491.67, 0.01)); // R
+        expect(
+          double.parse(result.values[0]!.text),
+          closeTo(273.15, 0.01),
+        ); // K
+        expect(
+          double.parse(result.values[2]!.text),
+          closeTo(32.0, 0.01),
+        ); // tempF
+        expect(
+          double.parse(result.values[3]!.text),
+          closeTo(491.67, 0.01),
+        ); // R
       });
 
       test('tempC(100) → K=373.15, tempF=212', () {
@@ -126,8 +147,14 @@ void main() {
           parser: parser,
           settings: settings,
         );
-        expect(double.parse(result.values[0]!), closeTo(373.15, 0.01));
-        expect(double.parse(result.values[2]!), closeTo(212.0, 0.01));
+        expect(
+          double.parse(result.values[0]!.text),
+          closeTo(373.15, 0.01),
+        );
+        expect(
+          double.parse(result.values[2]!.text),
+          closeTo(212.0, 0.01),
+        );
       });
 
       test('K source → celsius and fahrenheit', () {
@@ -140,15 +167,15 @@ void main() {
         );
         expect(result.values[0], isNull);
         expect(
-          double.parse(result.values[1]!),
+          double.parse(result.values[1]!.text),
           closeTo(100.0, 0.01),
         ); // celsius
         expect(
-          double.parse(result.values[2]!),
+          double.parse(result.values[2]!.text),
           closeTo(212.0, 0.01),
         ); // fahrenheit
         expect(
-          double.parse(result.values[3]!),
+          double.parse(result.values[3]!.text),
           closeTo(671.67, 0.01),
         ); // rankine
       });
@@ -162,24 +189,74 @@ void main() {
           settings: settings,
         );
         expect(result.values[2], isNull);
-        expect(double.parse(result.values[1]!), closeTo(100.0, 0.01));
-        expect(double.parse(result.values[0]!), closeTo(373.15, 0.01));
+        expect(double.parse(result.values[1]!.text), closeTo(100.0, 0.01));
+        expect(double.parse(result.values[0]!.text), closeTo(373.15, 0.01));
       });
     });
 
-    test('dimension mismatch produces error string', () {
-      const mixedRows = [
-        WorksheetRow(label: 'meters', expression: 'm', kind: UnitRow()),
-        WorksheetRow(label: 'kilograms', expression: 'kg', kind: UnitRow()),
-      ];
-      final result = computeWorksheet(
-        rows: mixedRows,
-        sourceIndex: 0,
-        sourceText: '1',
-        parser: parser,
-        settings: settings,
-      );
-      expect(result.values[1], 'error');
+    group('error labels', () {
+      test('dimension mismatch produces "wrong unit type" error', () {
+        const mixedRows = [
+          WorksheetRow(label: 'meters', expression: 'm', kind: UnitRow()),
+          WorksheetRow(
+            label: 'kilograms',
+            expression: 'kg',
+            kind: UnitRow(),
+          ),
+        ];
+        final result = computeWorksheet(
+          rows: mixedRows,
+          sourceIndex: 0,
+          sourceText: '1',
+          parser: parser,
+          settings: settings,
+        );
+        expect(result.values[1]!.isError, isTrue);
+        expect(result.values[1]!.text, 'wrong unit type');
+      });
+
+      test('out-of-domain function value produces "out of bounds" error', () {
+        // tempC range spec requires K >= 0. A source K value of -1 is below
+        // absolute zero, so callInverse on the tempC target throws BoundsException.
+        const rows = [
+          WorksheetRow(label: 'kelvin', expression: 'K', kind: UnitRow()),
+          WorksheetRow(
+            label: 'celsius',
+            expression: 'tempC',
+            kind: FunctionRow(),
+          ),
+        ];
+        final result = computeWorksheet(
+          rows: rows,
+          sourceIndex: 0,
+          sourceText: '-1',
+          parser: parser,
+          settings: settings,
+        );
+        expect(result.values[1]!.isError, isTrue);
+        expect(result.values[1]!.text, 'out of bounds');
+      });
+
+      test('no-inverse FunctionRow produces "no inverse" error', () {
+        // abs has no inverse.
+        const rows = [
+          WorksheetRow(
+            label: 'celsius',
+            expression: 'tempC',
+            kind: FunctionRow(),
+          ),
+          WorksheetRow(label: 'abs', expression: 'abs', kind: FunctionRow()),
+        ];
+        final result = computeWorksheet(
+          rows: rows,
+          sourceIndex: 0,
+          sourceText: '20',
+          parser: parser,
+          settings: settings,
+        );
+        expect(result.values[1]!.isError, isTrue);
+        expect(result.values[1]!.text, 'no inverse');
+      });
     });
 
     test('negative source value converts correctly', () {
@@ -203,7 +280,7 @@ void main() {
         settings: settings,
       );
       // -40 C = -40 F
-      expect(double.parse(result.values[1]!), closeTo(-40.0, 0.01));
+      expect(double.parse(result.values[1]!.text), closeTo(-40.0, 0.01));
     });
   });
 }

@@ -148,7 +148,9 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
       final rawDefinitionLine = unit is DerivedUnit
           ? '= ${unit.expression}'
           : null;
-      final definitionLine = rawDefinitionLine == formattedResult
+      final definitionLine =
+          _normalizeWhitespace(rawDefinitionLine) ==
+              _normalizeWhitespace(formattedResult)
           ? null
           : rawDefinitionLine;
       return UnitDefinitionResult(
@@ -291,4 +293,8 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
   void clear() {
     state = const EvaluationIdle();
   }
+
+  /// Strips all whitespace so that strings differing only in spacing compare
+  /// as equal (e.g. `"= m/s"` and `"= m / s"` both become `"=m/s"`).
+  String? _normalizeWhitespace(String? s) => s?.replaceAll(RegExp(r'\s+'), '');
 }

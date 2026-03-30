@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:unitary/core/domain/models/unit.dart';
+import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/freeform/state/parser_provider.dart';
@@ -339,6 +342,38 @@ void main() {
         expect(result.aliasLine, isNull);
         expect(result.definitionLine, isNull);
         expect(result.formattedResult, '= 273.15 K');
+      },
+    );
+
+    test(
+      'derived unit whose expression matches formatted result up to spacing → definitionLine omitted',
+      () async {
+        // Register a synthetic unit with expression '1 m/s' (no spaces around
+        // '/').  The formatter produces '1 m / s' (spaces around '/'), so the
+        // two strings differ only in whitespace — definitionLine should be
+        // suppressed.
+        final repo = UnitRepository.withPredefinedUnits();
+        repo.register(
+          const DerivedUnit(id: '_test_mps', expression: '1 m/s'),
+        );
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final testSettings = SettingsRepository(prefs);
+        final testContainer = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(testSettings),
+            parserProvider.overrideWithValue(ExpressionParser(repo: repo)),
+          ],
+        );
+        addTearDown(testContainer.dispose);
+
+        testContainer.read(freeformProvider.notifier).evaluate('_test_mps', '');
+        final state = testContainer.read(freeformProvider);
+        expect(state, isA<UnitDefinitionResult>());
+        final result = state as UnitDefinitionResult;
+        expect(result.aliasLine, isNull);
+        expect(result.definitionLine, isNull);
+        expect(result.formattedResult, '= 1 m / s');
       },
     );
 

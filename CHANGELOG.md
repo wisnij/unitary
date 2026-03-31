@@ -7,6 +7,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+[Unreleased]
+------------
+
+### Added
+
+- List conformable units from the freeform entry page
+
+
 [0.6.2] - 2026-03-30
 --------------------
 
@@ -266,6 +274,7 @@ Phase 1: Core Domain.
 - Numeric literals with decimal point support
 - 373 passing tests
 
+[Unreleased]: https://github.com/wisnij/unitary/compare/v0.6.2...HEAD
 [0.6.2]: https://github.com/wisnij/unitary/compare/v0.6.1...v0.6.2
 [0.6.1]: https://github.com/wisnij/unitary/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/wisnij/unitary/compare/v0.5.12...v0.6.0

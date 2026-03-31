@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
+import 'package:unitary/features/freeform/state/conformable_browse_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
@@ -199,6 +200,209 @@ void main() {
       await tester.pump();
 
       expect(find.byIcon(Icons.error_outline), findsOneWidget);
+    });
+  });
+
+  group('FreeformScreen — conformable-units modal', () {
+    testWidgets('pressing button with pending debounce force-evaluates first', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      // Type an expression — debounce has NOT fired yet.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 m',
+      );
+      await tester.pump(); // no 500ms wait
+
+      // The debounce hasn't fired, so the modal is not yet open.
+      expect(find.byType(DraggableScrollableSheet), findsNothing);
+
+      // Trigger browse via provider (simulates AppBar button press).
+      // FreeformScreen force-evaluates and attempts to open the modal.
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(FreeformScreen)),
+      );
+      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.pumpAndSettle();
+
+      // After force-eval, evaluation succeeded and the modal is open.
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+    });
+
+    testWidgets('modal does not open when force-evaluate errors', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 +', // invalid expression
+      );
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(FreeformScreen)),
+      );
+      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.pumpAndSettle();
+
+      // No modal bottom sheet should appear.
+      expect(find.byType(DraggableScrollableSheet), findsNothing);
+    });
+
+    testWidgets('modal opens for unit definition input (e.g. "byte")', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'byte',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(FreeformScreen)),
+      );
+      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.pumpAndSettle();
+
+      // Modal should open — 'byte' resolves to the digital-storage dimension.
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+      expect(find.text('bit'), findsOneWidget);
+    });
+
+    testWidgets('modal shows conformable entries for evaluated dimension', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      // Use '5 bit' — digital storage has only ~6 conformable units, all
+      // visible at once; 'bit' and 'byte' are near the top alphabetically.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 bit',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(FreeformScreen)),
+      );
+      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.pumpAndSettle();
+
+      // Modal opened — 'bit' and 'byte' are visible digital-storage units.
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+      expect(find.text('bit'), findsOneWidget);
+      expect(find.text('byte'), findsOneWidget);
+    });
+
+    testWidgets('primitive unit item shows [primitive unit] subtitle', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      // 'bit' is the primitive digital-storage unit and sorts first
+      // alphabetically, so it is immediately visible in the modal.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 bit',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(FreeformScreen)),
+      );
+      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.pumpAndSettle();
+
+      expect(find.text('[primitive unit]'), findsWidgets);
+    });
+
+    testWidgets(
+      'alias item shows "name = target" in title and target expression as subtitle',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // 'byte' has alias 'B'; byte's expression is '8 bit'.
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 bit',
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(FreeformScreen)),
+        );
+        container.read(conformableBrowseRequestProvider.notifier).trigger();
+        await tester.pumpAndSettle();
+
+        // 'B = byte' should appear as a title in the modal.
+        expect(find.text('B = byte'), findsOneWidget);
+        // The subtitle shows byte's definition expression.
+        expect(find.text('8 bit'), findsWidgets);
+      },
+    );
+
+    testWidgets('tapping entry fills empty Convert-to field', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 bit',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(FreeformScreen)),
+      );
+      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('byte'));
+      await tester.pumpAndSettle();
+
+      final outputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'byte'),
+      );
+      expect(outputField.controller?.text, 'byte');
+    });
+
+    testWidgets('tapping entry overwrites existing Convert-to text', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 bit',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'byte',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(FreeformScreen)),
+      );
+      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('bit'));
+      await tester.pumpAndSettle();
+
+      final outputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'bit'),
+      );
+      expect(outputField.controller?.text, 'bit');
     });
   });
 }

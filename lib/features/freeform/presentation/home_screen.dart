@@ -6,6 +6,9 @@ import '../../settings/presentation/settings_screen.dart';
 import '../../worksheet/data/predefined_worksheets.dart';
 import '../../worksheet/presentation/worksheet_screen.dart';
 import '../../worksheet/state/worksheet_provider.dart';
+import '../state/conformable_browse_provider.dart';
+import '../state/freeform_provider.dart';
+import '../state/freeform_state.dart';
 import 'freeform_screen.dart';
 
 enum _TopLevelPage { freeform, worksheet }
@@ -32,6 +35,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget build(BuildContext context) {
     final worksheetState = ref.watch(worksheetProvider);
 
+    final freeformResult = ref.watch(freeformProvider);
+    final browseEnabled =
+        _currentPage == _TopLevelPage.freeform &&
+        (freeformResult is EvaluationSuccess ||
+            freeformResult is ConversionSuccess ||
+            freeformResult is UnitDefinitionResult ||
+            freeformResult is FunctionConversionResult);
+
     return Scaffold(
       appBar: AppBar(
         title: _currentPage == _TopLevelPage.worksheet
@@ -42,6 +53,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ref.read(worksheetProvider.notifier).selectWorksheet(id),
               )
             : const Text('Unitary'),
+        actions: [
+          if (_currentPage == _TopLevelPage.freeform)
+            IconButton(
+              icon: const Icon(Icons.balance),
+              tooltip: 'Browse conformable units',
+              onPressed: browseEnabled
+                  ? () => ref
+                        .read(conformableBrowseRequestProvider.notifier)
+                        .trigger()
+                  : null,
+            ),
+        ],
       ),
       drawer: Drawer(
         child: Column(

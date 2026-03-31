@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:unitary/core/domain/models/dimension.dart';
+import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/freeform/presentation/home_screen.dart';
+import 'package:unitary/features/freeform/state/freeform_provider.dart';
+import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
@@ -230,4 +234,214 @@ void main() {
       expect(find.text(speedTemplate.rows.first.label), findsOneWidget);
     });
   });
+
+  group('HomeScreen — conformable-units button', () {
+    final browseButtonFinder = find.byIcon(Icons.balance);
+
+    testWidgets('button is present on freeform page', (tester) async {
+      await tester.pumpWidget(buildApp());
+      expect(browseButtonFinder, findsOneWidget);
+    });
+
+    testWidgets('button is absent on worksheet page', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await navigateToWorksheet(tester);
+      expect(browseButtonFinder, findsNothing);
+    });
+
+    testWidgets('button is disabled when freeformProvider is idle', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      final btn = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.balance),
+      );
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets(
+      'button is enabled when freeformProvider is EvaluationSuccess',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformProvider.overrideWith(
+                () => _StubFreeformNotifier(
+                  EvaluationSuccess(
+                    result: _stubQty,
+                    formattedResult: '= 5',
+                  ),
+                ),
+              ),
+            ],
+            child: const MaterialApp(home: HomeScreen()),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is enabled when freeformProvider is ConversionSuccess',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformProvider.overrideWith(
+                () => _StubFreeformNotifier(
+                  const ConversionSuccess(
+                    convertedValue: 2.0,
+                    formattedResult: '= 2 ft',
+                    formattedReciprocal: '= (1 / 0.5) ft',
+                    outputUnit: 'ft',
+                  ),
+                ),
+              ),
+            ],
+            child: const MaterialApp(home: HomeScreen()),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is enabled when freeformProvider is UnitDefinitionResult',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformProvider.overrideWith(
+                () => _StubFreeformNotifier(
+                  const UnitDefinitionResult(
+                    aliasLine: null,
+                    definitionLine: null,
+                    formattedResult: '= 8 bit',
+                  ),
+                ),
+              ),
+            ],
+            child: const MaterialApp(home: HomeScreen()),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is enabled when freeformProvider is FunctionConversionResult',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformProvider.overrideWith(
+                () => _StubFreeformNotifier(
+                  const FunctionConversionResult(
+                    functionName: 'tempC',
+                    formattedValue: '26.85',
+                  ),
+                ),
+              ),
+            ],
+            child: const MaterialApp(home: HomeScreen()),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is disabled when freeformProvider is FunctionDefinitionResult',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformProvider.overrideWith(
+                () => _StubFreeformNotifier(
+                  const FunctionDefinitionResult(
+                    label: 'tempC(x) =',
+                    expression: 'x + 273.15',
+                  ),
+                ),
+              ),
+            ],
+            child: const MaterialApp(home: HomeScreen()),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNull);
+      },
+    );
+
+    testWidgets('button is disabled when freeformProvider is EvaluationError', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            freeformProvider.overrideWith(
+              () => _StubFreeformNotifier(
+                const EvaluationError(message: 'oops'),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: HomeScreen()),
+        ),
+      );
+      await tester.pump();
+      final btn = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.balance),
+      );
+      expect(btn.onPressed, isNull);
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Test helpers
+// ---------------------------------------------------------------------------
+
+final _stubQty = Quantity(1.0, Dimension.dimensionless);
+
+class _StubFreeformNotifier extends FreeformNotifier {
+  final EvaluationResult _initial;
+  _StubFreeformNotifier(this._initial);
+
+  @override
+  EvaluationResult build() => _initial;
 }

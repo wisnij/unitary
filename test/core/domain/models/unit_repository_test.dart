@@ -26,6 +26,34 @@ class _TestFn extends UnitaryFunction {
   Quantity evaluate(List<Quantity> args, [Object? context]) => args[0];
 }
 
+// A test function with a configurable range, used for findConformable tests.
+class _TestFnWithRange extends UnitaryFunction {
+  _TestFnWithRange(
+    String id, {
+    required Quantity? rangeQty,
+    super.aliases,
+  }) : super(
+         id: id,
+         arity: 1,
+         range: rangeQty == null ? null : QuantitySpec(quantity: rangeQty),
+       );
+
+  @override
+  bool get hasInverse => false;
+
+  @override
+  List<String> get params => const ['x'];
+
+  @override
+  String? get definitionDisplay => null;
+
+  @override
+  String? get inverseDisplay => null;
+
+  @override
+  Quantity evaluate(List<Quantity> args, [Object? context]) => args[0];
+}
+
 void main() {
   late UnitRepository repo;
 
@@ -581,6 +609,237 @@ void main() {
 
     test('findFunction("log10") returns null', () {
       expect(fullRepo.findFunction('log10'), isNull);
+    });
+  });
+
+  group('ConformableEntry', () {
+    test('constructed for a derived unit', () {
+      const entry = ConformableEntry(
+        name: 'cal',
+        definitionExpression: '4.184 J',
+      );
+      expect(entry.name, 'cal');
+      expect(entry.definitionExpression, '4.184 J');
+      expect(entry.functionLabel, isNull);
+    });
+
+    test('constructed for a function', () {
+      const entry = ConformableEntry(
+        name: 'tempC',
+        functionLabel: '[function]',
+      );
+      expect(entry.name, 'tempC');
+      expect(entry.definitionExpression, isNull);
+      expect(entry.functionLabel, '[function]');
+    });
+
+    test('constructed for a primitive unit', () {
+      const entry = ConformableEntry(name: 'm');
+      expect(entry.name, 'm');
+      expect(entry.definitionExpression, isNull);
+      expect(entry.functionLabel, isNull);
+      expect(entry.aliasFor, isNull);
+    });
+
+    test('constructed for an alias', () {
+      const entry = ConformableEntry(name: 'metre', aliasFor: 'm');
+      expect(entry.name, 'metre');
+      expect(entry.aliasFor, 'm');
+      expect(entry.definitionExpression, isNull);
+      expect(entry.functionLabel, isNull);
+    });
+  });
+
+  group('UnitRepository.findConformable', () {
+    late UnitRepository repo;
+    // Length dimension: {m: 1}
+    late Dimension lengthDim;
+    // Mass dimension: {kg: 1}
+    late Dimension massDim;
+
+    setUp(() {
+      repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'm', aliases: ['metre', 'meter']));
+      repo.register(const PrimitiveUnit(id: 'kg'));
+      repo.register(
+        const DerivedUnit(id: 'ft', expression: '0.3048 m'),
+      );
+      lengthDim = Dimension({'m': 1});
+      massDim = Dimension({'kg': 1});
+    });
+
+    test('returns units with matching dimension', () {
+      final entries = repo.findConformable(lengthDim);
+      final names = entries.map((e) => e.name).toList();
+      expect(names, containsAll(['m', 'ft']));
+    });
+
+    test('excludes units with non-matching dimension', () {
+      final entries = repo.findConformable(lengthDim);
+      final names = entries.map((e) => e.name).toSet();
+      expect(names, isNot(contains('kg')));
+    });
+
+    test('excludes PrefixUnit entries', () {
+      repo.registerPrefix(
+        const PrefixUnit(id: 'kilo', expression: '1000', aliases: ['k']),
+      );
+      // kilo resolves as a dimensionless scalar — but the key check is type.
+      final entries = repo.findConformable(Dimension.dimensionless);
+      final names = entries.map((e) => e.name).toSet();
+      expect(names, isNot(contains('kilo')));
+    });
+
+    test('silently excludes unresolvable units', () {
+      // A DerivedUnit whose expression references an unknown unit will throw.
+      repo.register(
+        const DerivedUnit(id: 'bad_unit', expression: 'undefined_unit_xyz'),
+      );
+      expect(
+        () => repo.findConformable(lengthDim),
+        returnsNormally,
+      );
+      final names = repo.findConformable(lengthDim).map((e) => e.name).toSet();
+      expect(names, isNot(contains('bad_unit')));
+    });
+
+    test('results are sorted case-insensitively', () {
+      repo.register(const DerivedUnit(id: 'Zeta', expression: '2 m'));
+      repo.register(const DerivedUnit(id: 'alpha_m', expression: '3 m'));
+      repo.register(const DerivedUnit(id: 'Beta_m', expression: '4 m'));
+      final entries = repo.findConformable(lengthDim);
+      final names = entries.map((e) => e.name).toList();
+      // Find the relative positions of our three new units.
+      final iAlpha = names.indexOf('alpha_m');
+      final iBeta = names.indexOf('Beta_m');
+      final iZeta = names.indexOf('Zeta');
+      expect(iAlpha, lessThan(iBeta));
+      expect(iBeta, lessThan(iZeta));
+    });
+
+    test('derived unit entry has definitionExpression, null functionLabel', () {
+      final entry = repo
+          .findConformable(lengthDim)
+          .firstWhere((e) => e.name == 'ft');
+      expect(entry.definitionExpression, '0.3048 m');
+      expect(entry.functionLabel, isNull);
+    });
+
+    test(
+      'primitive unit entry has null definitionExpression and functionLabel',
+      () {
+        final entry = repo
+            .findConformable(lengthDim)
+            .firstWhere((e) => e.name == 'm');
+        expect(entry.definitionExpression, isNull);
+        expect(entry.functionLabel, isNull);
+      },
+    );
+
+    test(
+      'non-piecewise function with matching range is included with [function] label',
+      () {
+        final rangeQty = Quantity(1.0, lengthDim);
+        repo.registerFunction(_TestFnWithRange('myFunc', rangeQty: rangeQty));
+        final entry = repo
+            .findConformable(lengthDim)
+            .firstWhere((e) => e.name == 'myFunc');
+        expect(entry.functionLabel, '[function]');
+        expect(entry.definitionExpression, isNull);
+      },
+    );
+
+    test(
+      'PiecewiseFunction with matching range gets [piecewise linear function] label',
+      () {
+        final rangeQty = Quantity(1.0, lengthDim);
+        repo.registerFunction(
+          PiecewiseFunction(
+            id: 'pwFunc',
+            points: const [(0.0, 0.0), (1.0, 1.0)],
+            noerror: false,
+            outputUnit: rangeQty,
+          ),
+        );
+        final entry = repo
+            .findConformable(lengthDim)
+            .firstWhere((e) => e.name == 'pwFunc');
+        expect(entry.functionLabel, '[piecewise linear function]');
+      },
+    );
+
+    test('function with null range is excluded', () {
+      repo.registerFunction(_TestFnWithRange('noRange', rangeQty: null));
+      final names = repo.findConformable(lengthDim).map((e) => e.name).toSet();
+      expect(names, isNot(contains('noRange')));
+    });
+
+    test('function with non-matching range dimension is excluded', () {
+      final massRangeQty = Quantity(1.0, massDim);
+      repo.registerFunction(
+        _TestFnWithRange('massFunc', rangeQty: massRangeQty),
+      );
+      final names = repo.findConformable(lengthDim).map((e) => e.name).toSet();
+      expect(names, isNot(contains('massFunc')));
+    });
+
+    test('repeated calls return equivalent results', () {
+      final first = repo.findConformable(lengthDim);
+      final second = repo.findConformable(lengthDim);
+      expect(
+        first.map((e) => e.name).toList(),
+        equals(second.map((e) => e.name).toList()),
+      );
+    });
+
+    test('unit aliases are included with aliasFor set', () {
+      final entries = repo.findConformable(lengthDim);
+      final names = entries.map((e) => e.name).toSet();
+      expect(names, containsAll(['metre', 'meter']));
+
+      // 'm' is a primitive, so alias entries have no definitionExpression.
+      final metreEntry = entries.firstWhere((e) => e.name == 'metre');
+      expect(metreEntry.aliasFor, 'm');
+      expect(metreEntry.definitionExpression, isNull);
+      expect(metreEntry.functionLabel, isNull);
+    });
+
+    test('derived unit alias carries the target expression', () {
+      repo.register(
+        const DerivedUnit(
+          id: 'km',
+          expression: '1000 m',
+          aliases: ['kilometre'],
+        ),
+      );
+      final entries = repo.findConformable(lengthDim);
+      final aliasEntry = entries.firstWhere((e) => e.name == 'kilometre');
+      expect(aliasEntry.aliasFor, 'km');
+      expect(aliasEntry.definitionExpression, '1000 m');
+      expect(aliasEntry.functionLabel, isNull);
+    });
+
+    test('unit aliases are sorted among other entries', () {
+      final entries = repo.findConformable(lengthDim);
+      final names = entries.map((e) => e.name).toList();
+      // 'meter' and 'metre' sort between 'm' and ... check ordering is correct.
+      final iM = names.indexOf('m');
+      final iMeter = names.indexOf('meter');
+      final iMetre = names.indexOf('metre');
+      expect(iM, lessThan(iMeter));
+      expect(iMeter, lessThan(iMetre));
+    });
+
+    test('function aliases are included with aliasFor set', () {
+      final rangeQty = Quantity(1.0, lengthDim);
+      repo.registerFunction(
+        _TestFnWithRange('myFunc', rangeQty: rangeQty, aliases: ['myAlias']),
+      );
+      final entries = repo.findConformable(lengthDim);
+      final aliasEntry = entries.firstWhere((e) => e.name == 'myAlias');
+      expect(aliasEntry.aliasFor, 'myFunc');
+      expect(aliasEntry.functionLabel, '[function]');
+      expect(aliasEntry.definitionExpression, isNull);
     });
   });
 }

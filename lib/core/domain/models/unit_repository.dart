@@ -1,7 +1,39 @@
 import '../data/builtin_functions.dart';
 import '../data/predefined_units.dart';
+import '../services/unit_resolver.dart';
+import 'dimension.dart';
 import 'function.dart';
+import 'quantity.dart';
 import 'unit.dart';
+
+/// Describes a unit or function whose dimension is conformable with a query.
+///
+/// Returned by [UnitRepository.findConformable].  Exactly one of
+/// [definitionExpression], [functionLabel], and [aliasFor] may be non-null;
+/// all are null for primitive units.
+class ConformableEntry {
+  /// Primary registration name of the unit or function.
+  final String name;
+
+  /// Definition expression of a [DerivedUnit] (e.g. `'4.184 J'`), or null
+  /// for primitive units, functions, and aliases.
+  final String? definitionExpression;
+
+  /// Bracketed type label for function entries (`'[function]'` or
+  /// `'[piecewise linear function]'`), or null for unit and alias entries.
+  final String? functionLabel;
+
+  /// Primary ID of the unit or function this name is an alias for, or null
+  /// if this entry is not an alias.
+  final String? aliasFor;
+
+  const ConformableEntry({
+    required this.name,
+    this.definitionExpression,
+    this.functionLabel,
+    this.aliasFor,
+  });
+}
 
 /// Result of a unit lookup that may include a prefix.
 class UnitMatch {
@@ -41,6 +73,14 @@ class UnitRepository {
 
   /// Maps every function name (id + aliases) to its function.
   final Map<String, UnitaryFunction> _functionLookup = {};
+
+  /// Lazy cache of resolved quantities keyed by unit primary ID.
+  ///
+  /// A `null` value means the unit failed to resolve (circular definition,
+  /// unsupported expression, etc.) and should be excluded from conformable
+  /// results.  The entry is absent until the unit has been resolved at least
+  /// once.
+  final Map<String, Quantity?> _resolvedQuantityCache = {};
 
   /// Creates an empty repository.
   UnitRepository();
@@ -245,4 +285,82 @@ class UnitRepository {
 
   /// IDs of all registered dimensionless primitive units.
   Set<String> get dimensionlessIds => Set.unmodifiable(_dimensionlessIds);
+
+  /// Returns all registered units and functions whose dimension is conformable
+  /// with [target], sorted case-insensitively by name.
+  ///
+  /// Each registered primary unit (excluding [PrefixUnit]) is resolved to its
+  /// base-unit [Quantity]; the result is cached for subsequent calls.  Units
+  /// that throw during resolution are silently excluded.
+  ///
+  /// Functions are included when their [UnitaryFunction.range] has a
+  /// [QuantitySpec.quantity] whose dimension equals [target].  Functions with
+  /// no range constraint are excluded.
+  List<ConformableEntry> findConformable(Dimension target) {
+    final results = <ConformableEntry>[];
+
+    for (final unit in _units.values) {
+      if (unit is PrefixUnit) {
+        continue;
+      }
+
+      final Quantity? resolved;
+      if (_resolvedQuantityCache.containsKey(unit.id)) {
+        resolved = _resolvedQuantityCache[unit.id];
+      } else {
+        Quantity? q;
+        try {
+          q = resolveUnit(unit, this);
+        } catch (_) {
+          q = null;
+        }
+        _resolvedQuantityCache[unit.id] = q;
+        resolved = q;
+      }
+
+      if (resolved == null || resolved.dimension != target) {
+        continue;
+      }
+
+      final expression = unit is DerivedUnit ? unit.expression : null;
+      results.add(
+        ConformableEntry(name: unit.id, definitionExpression: expression),
+      );
+      for (final alias in unit.aliases) {
+        results.add(
+          ConformableEntry(
+            name: alias,
+            definitionExpression: expression,
+            aliasFor: unit.id,
+          ),
+        );
+      }
+    }
+
+    for (final func in _functions.values) {
+      final rangeDim = func.range?.quantity?.dimension;
+      if (rangeDim == null || rangeDim != target) {
+        continue;
+      }
+
+      final label = func is PiecewiseFunction
+          ? '[piecewise linear function]'
+          : '[function]';
+      results.add(ConformableEntry(name: func.id, functionLabel: label));
+      for (final alias in func.aliases) {
+        results.add(
+          ConformableEntry(
+            name: alias,
+            functionLabel: label,
+            aliasFor: func.id,
+          ),
+        );
+      }
+    }
+
+    results.sort(
+      (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+    );
+    return results;
+  }
 }

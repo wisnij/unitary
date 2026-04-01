@@ -103,6 +103,10 @@ class Dimension {
   /// exponents), meaning quantities with these dimensions are conformable.
   bool isConformableWith(Dimension other) => this == other;
 
+  /// Whether this dimension is the exact reciprocal of [other] (all exponents
+  /// of [other] negated), meaning a reciprocal conversion is possible.
+  bool isReciprocalOf(Dimension other) => this == other.power(-1);
+
   /// Returns a human-readable string like `kg m / s^2`.
   ///
   /// Units are sorted alphabetically.  Positive exponents appear in

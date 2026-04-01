@@ -142,6 +142,62 @@ class ResultDisplay extends StatelessWidget {
         ),
         colorScheme.primary,
       ),
+      ReciprocalConversionSuccess(
+        :final reciprocalInputLabel,
+        :final formattedResult,
+        :final formattedReciprocal,
+      ) =>
+        (
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.info_outline,
+                    color: colorScheme.tertiary,
+                    size: 16,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'reciprocal conversion',
+                    style: TextStyle(
+                      color: colorScheme.tertiary,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                reciprocalInputLabel,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                formattedResult,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                formattedReciprocal,
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          colorScheme.primary,
+        ),
       EvaluationError(:final message) => (
         Row(
           children: [

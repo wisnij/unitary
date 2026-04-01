@@ -84,6 +84,20 @@ void main() {
       expect(state.formattedValue, '20');
     });
 
+    test('ReciprocalConversionSuccess holds all fields', () {
+      const state = ReciprocalConversionSuccess(
+        reciprocalInputLabel: '1 / mph',
+        formattedResult: '= 2.2369363 s/m',
+        formattedReciprocal: '= (1 / 0.44704) s/m',
+        outputUnit: 's/m',
+      );
+      expect(state, isA<EvaluationResult>());
+      expect(state.reciprocalInputLabel, '1 / mph');
+      expect(state.formattedResult, '= 2.2369363 s/m');
+      expect(state.formattedReciprocal, '= (1 / 0.44704) s/m');
+      expect(state.outputUnit, 's/m');
+    });
+
     test('EvaluationError holds error message', () {
       const state = EvaluationError(message: 'Parse error at 1:5');
       expect(state.message, 'Parse error at 1:5');
@@ -115,6 +129,12 @@ void main() {
           functionName: 'tempC',
           formattedValue: '20',
         ),
+        const ReciprocalConversionSuccess(
+          reciprocalInputLabel: '1 / mph',
+          formattedResult: '= 2.2369363 s/m',
+          formattedReciprocal: '= (1 / 0.44704) s/m',
+          outputUnit: 's/m',
+        ),
         const EvaluationError(message: 'error'),
       ];
 
@@ -127,6 +147,7 @@ void main() {
           UnitDefinitionResult() => 'unit-definition',
           FunctionDefinitionResult() => 'function-definition',
           FunctionConversionResult() => 'function-conversion',
+          ReciprocalConversionSuccess() => 'reciprocal-conversion',
           EvaluationError() => 'error',
         };
         expect(label, isNotEmpty);

@@ -76,6 +76,40 @@ void main() {
       expect(success.formattedReciprocal, endsWith(') km'));
     });
 
+    test(
+      'evaluate reciprocal dimensions produce ReciprocalConversionSuccess',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('mph', 's/m');
+        final state = container.read(freeformProvider);
+        expect(state, isA<ReciprocalConversionSuccess>());
+        final success = state as ReciprocalConversionSuccess;
+        expect(success.outputUnit, 's/m');
+        expect(success.formattedResult, startsWith('= '));
+        expect(success.formattedResult, contains('s/m'));
+        expect(success.formattedReciprocal, startsWith('= (1 / '));
+      },
+    );
+
+    test('evaluate reciprocal conversion value is correct', () {
+      final notifier = container.read(freeformProvider.notifier);
+      notifier.evaluate('mph', 's/m');
+      final state =
+          container.read(freeformProvider) as ReciprocalConversionSuccess;
+      // 1 / (mph_in_base * sm_in_base) ≈ 2.2369363
+      expect(state.formattedResult, contains('2.236936'));
+    });
+
+    test(
+      'evaluate conformable expressions still produce ConversionSuccess',
+      () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('mph', 'm/s');
+        final state = container.read(freeformProvider);
+        expect(state, isA<ConversionSuccess>());
+      },
+    );
+
     test('evaluate conversion fails for non-conformable expressions', () {
       final notifier = container.read(freeformProvider.notifier);
       notifier.evaluate('5 ft', '3 kg');
@@ -494,6 +528,35 @@ void main() {
       expect(state, isA<ConversionSuccess>());
       final result = state as ConversionSuccess;
       expect(result.convertedValue, closeTo(5000.0, 1e-6));
+    });
+
+    group('reciprocal input label formatting', () {
+      test('plain unit name produces label without parentheses', () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('mph', 's/m');
+        final state =
+            container.read(freeformProvider) as ReciprocalConversionSuccess;
+        expect(state.reciprocalInputLabel, '1 / mph');
+      });
+
+      test('expression with division produces label with parentheses', () {
+        final notifier = container.read(freeformProvider.notifier);
+        notifier.evaluate('mile/hour', 's/m');
+        final state =
+            container.read(freeformProvider) as ReciprocalConversionSuccess;
+        expect(state.reciprocalInputLabel, '1 / (mile/hour)');
+      });
+
+      test(
+        'leading and trailing whitespace is trimmed before building label',
+        () {
+          final notifier = container.read(freeformProvider.notifier);
+          notifier.evaluate('  mph  ', 's/m');
+          final state =
+              container.read(freeformProvider) as ReciprocalConversionSuccess;
+          expect(state.reciprocalInputLabel, '1 / mph');
+        },
+      );
     });
   });
 }

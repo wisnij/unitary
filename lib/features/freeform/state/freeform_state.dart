@@ -93,6 +93,28 @@ class FunctionConversionResult extends EvaluationResult {
   });
 }
 
+/// Reciprocal-dimension conversion succeeded.
+///
+/// [reciprocalInputLabel] is the pre-formatted reciprocal of the input
+/// expression (e.g. `"1 / mph"` or `"1 / (mile/hour)"`).
+/// [formattedResult] is the primary value line (e.g. `"= 2.2369363 s/m"`).
+/// [formattedReciprocal] is the secondary value line
+/// (e.g. `"= (1 / 0.44704) s/m"`).
+/// [outputUnit] is the raw output unit string as entered by the user.
+class ReciprocalConversionSuccess extends EvaluationResult {
+  final String reciprocalInputLabel;
+  final String formattedResult;
+  final String formattedReciprocal;
+  final String outputUnit;
+
+  const ReciprocalConversionSuccess({
+    required this.reciprocalInputLabel,
+    required this.formattedResult,
+    required this.formattedReciprocal,
+    required this.outputUnit,
+  });
+}
+
 /// Evaluation failed with an error message.
 class EvaluationError extends EvaluationResult {
   final String message;

@@ -275,6 +275,40 @@ void main() {
     });
   });
 
+  group('Dimension.isReciprocalOf', () {
+    test('reciprocal dimensions return true', () {
+      final a = Dimension({'s': 1, 'm': -1});
+      final b = Dimension({'m': 1, 's': -1});
+      expect(a.isReciprocalOf(b), isTrue);
+    });
+
+    test('same dimensions are not reciprocals', () {
+      final a = Dimension({'m': 1});
+      final b = Dimension({'m': 1});
+      expect(a.isReciprocalOf(b), isFalse);
+    });
+
+    test('unrelated dimensions are not reciprocals', () {
+      final a = Dimension({'m': 1});
+      final b = Dimension({'kg': 1});
+      expect(a.isReciprocalOf(b), isFalse);
+    });
+
+    test('dimensionless is its own reciprocal', () {
+      expect(
+        Dimension.dimensionless.isReciprocalOf(Dimension.dimensionless),
+        isTrue,
+      );
+    });
+
+    test('multi-component reciprocal', () {
+      final velocity = Dimension({'m': 1, 's': -1});
+      final inverseVelocity = Dimension({'s': 1, 'm': -1});
+      expect(velocity.isReciprocalOf(inverseVelocity), isTrue);
+      expect(inverseVelocity.isReciprocalOf(velocity), isTrue);
+    });
+  });
+
   group('Dimension.canonicalRepresentation', () {
     test('dimensionless shows as 1', () {
       expect(Dimension.dimensionless.canonicalRepresentation(), '1');

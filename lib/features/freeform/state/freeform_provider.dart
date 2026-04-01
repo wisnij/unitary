@@ -86,6 +86,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
           parser,
           inputNode as ExpressionNode,
           resolvedOutput,
+          input,
           output,
         );
       }
@@ -231,6 +232,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     ExpressionParser parser,
     ExpressionNode inputNode,
     ExpressionNode outputNode,
+    String input,
     String output,
   ) {
     final settings = ref.read(settingsProvider);
@@ -238,11 +240,34 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     final outputQty = parser.evaluateNode(outputNode);
 
     if (!_isConversionConformable(parser, inputQty, outputQty)) {
-      state = EvaluationError(
-        message:
-            'Cannot convert ${inputQty.dimension.canonicalRepresentation()} '
-            'to ${outputQty.dimension.canonicalRepresentation()}',
-      );
+      if (_isReciprocalConversion(parser, inputQty, outputQty)) {
+        final outputUnit = output.trim();
+        final formattedUnit = formatOutputUnit(outputUnit);
+        final convertedValue = 1.0 / (inputQty.value * outputQty.value);
+        final reciprocalValue = inputQty.value * outputQty.value;
+        final formatted = formatValue(
+          convertedValue,
+          precision: settings.precision,
+          notation: settings.notation,
+        );
+        final formattedReciprocal = formatValue(
+          reciprocalValue,
+          precision: settings.precision,
+          notation: settings.notation,
+        );
+        state = ReciprocalConversionSuccess(
+          reciprocalInputLabel: _buildReciprocalInputLabel(input),
+          formattedResult: '= $formatted $formattedUnit',
+          formattedReciprocal: '= (1 / $formattedReciprocal) $formattedUnit',
+          outputUnit: outputUnit,
+        );
+      } else {
+        state = EvaluationError(
+          message:
+              'Cannot convert ${inputQty.dimension.canonicalRepresentation()} '
+              'to ${outputQty.dimension.canonicalRepresentation()}',
+        );
+      }
       return;
     }
 
@@ -266,6 +291,35 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
       formattedReciprocal: '= (1 / $formattedReciprocal) $formattedUnit',
       outputUnit: outputUnit,
     );
+  }
+
+  /// Returns `"1 / <expr>"`, wrapping [input] in parentheses when it contains
+  /// a `/` character to keep the label syntactically unambiguous.
+  String _buildReciprocalInputLabel(String input) {
+    final trimmed = input.trim();
+    final expr = trimmed.contains('/') ? '($trimmed)' : trimmed;
+    return '1 / $expr';
+  }
+
+  /// Checks whether two quantities have reciprocal dimensions (all exponents
+  /// flipped), applying the same dimensionless-unit stripping used by
+  /// [_isConversionConformable].
+  bool _isReciprocalConversion(
+    ExpressionParser parser,
+    Quantity inputQty,
+    Quantity outputQty,
+  ) {
+    final dimensionlessIds = parser.repo?.dimensionlessIds;
+    if (dimensionlessIds != null && dimensionlessIds.isNotEmpty) {
+      final strippedInput = inputQty.dimension.removeDimensions(
+        dimensionlessIds,
+      );
+      final strippedOutput = outputQty.dimension.removeDimensions(
+        dimensionlessIds,
+      );
+      return strippedInput.isReciprocalOf(strippedOutput);
+    }
+    return inputQty.dimension.isReciprocalOf(outputQty.dimension);
   }
 
   /// Checks whether two quantities are conformable for conversion, stripping

@@ -231,6 +231,35 @@ void main() {
       expect(find.byType(DraggableScrollableSheet), findsOneWidget);
     });
 
+    testWidgets(
+      'modal opens after force-evaluate produces ReciprocalConversionSuccess',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(buildApp());
+
+        // Enter an input whose dimension is the reciprocal of the output.
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          'm/s',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+          's/m',
+        );
+        await tester.pump();
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(FreeformScreen)),
+        );
+        container.read(conformableBrowseRequestProvider.notifier).trigger();
+        await tester.pumpAndSettle();
+
+        // Reciprocal conversion succeeded — modal should open.
+        expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+      },
+    );
+
     testWidgets('modal does not open when force-evaluate errors', (
       tester,
     ) async {

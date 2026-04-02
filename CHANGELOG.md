@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Support reciprocal conversions in freeform mode
 
+### Fixed
+
+- Allow browsing conformable units from reciprocal conversion
+
 
 [0.6.3] - 2026-03-31
 --------------------

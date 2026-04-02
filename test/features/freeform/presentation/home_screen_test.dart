@@ -407,6 +407,37 @@ void main() {
       },
     );
 
+    testWidgets(
+      'button is enabled when freeformProvider is ReciprocalConversionSuccess',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformProvider.overrideWith(
+                () => _StubFreeformNotifier(
+                  const ReciprocalConversionSuccess(
+                    reciprocalInputLabel: '1 / mph',
+                    formattedResult: '= 2.2369363 s/m',
+                    formattedReciprocal: '= 0.44704 m/s',
+                    outputUnit: 's/m',
+                  ),
+                ),
+              ),
+            ],
+            child: const MaterialApp(home: HomeScreen()),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
     testWidgets('button is disabled when freeformProvider is EvaluationError', (
       tester,
     ) async {

@@ -38,10 +38,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final freeformResult = ref.watch(freeformProvider);
     final browseEnabled =
         _currentPage == _TopLevelPage.freeform &&
-        (freeformResult is EvaluationSuccess ||
-            freeformResult is ConversionSuccess ||
-            freeformResult is UnitDefinitionResult ||
-            freeformResult is FunctionConversionResult);
+        conformableBrowseEnabled(freeformResult);
 
     return Scaffold(
       appBar: AppBar(

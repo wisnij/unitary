@@ -121,3 +121,21 @@ class EvaluationError extends EvaluationResult {
 
   const EvaluationError({required this.message});
 }
+
+/// Returns `true` when [result] carries a well-defined quantity that supports
+/// browsing conformable units.
+///
+/// Uses an exhaustive switch so that any future [EvaluationResult] subtype
+/// that is not explicitly handled will produce a compile error.
+bool conformableBrowseEnabled(EvaluationResult result) {
+  return switch (result) {
+    EvaluationSuccess() => true,
+    ConversionSuccess() => true,
+    UnitDefinitionResult() => true,
+    FunctionConversionResult() => true,
+    ReciprocalConversionSuccess() => true,
+    EvaluationIdle() => false,
+    EvaluationError() => false,
+    FunctionDefinitionResult() => false,
+  };
+}

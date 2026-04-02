@@ -44,10 +44,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
             return;
           }
           final result = ref.read(freeformProvider);
-          if (result is EvaluationSuccess ||
-              result is ConversionSuccess ||
-              result is UnitDefinitionResult ||
-              result is FunctionConversionResult) {
+          if (conformableBrowseEnabled(result)) {
             _showConformableModal(context);
           }
         });

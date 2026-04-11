@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a Browse page for viewing unit and function definitions
 
+### Fixed
+
+- Handle implicit multiplication with an inverse function call
+
 
 [0.6.4] - 2026-04-02
 --------------------

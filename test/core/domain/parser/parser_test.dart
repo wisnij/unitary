@@ -779,5 +779,32 @@ void main() {
         throwsA(isA<ParseException>()),
       );
     });
+
+    test('implicit multiply: number followed by ~name(args)', () {
+      // "2 ~sqrt(4)" should parse as 2 * ~sqrt(4), i.e. implicit multiplication
+      // between a number literal and an inverse function call.
+      final node = parseWithRepo('2 ~sqrt(4)', repo);
+      expect(node, isA<BinaryOpNode>());
+      final bin = node as BinaryOpNode;
+      expect(bin.operator, TokenType.times);
+      expect(bin.left, isA<NumberNode>());
+      expect(bin.right, isA<FunctionCallNode>());
+      final fn = bin.right as FunctionCallNode;
+      expect(fn.name, 'sqrt');
+      expect(fn.inverse, isTrue);
+    });
+
+    test('implicit multiply: identifier followed by ~name(args)', () {
+      // "m ~sqrt(4)" should parse as m * ~sqrt(4).
+      final node = parseWithRepo('m ~sqrt(4)', repo);
+      expect(node, isA<BinaryOpNode>());
+      final bin = node as BinaryOpNode;
+      expect(bin.operator, TokenType.times);
+      expect(bin.left, isA<UnitNode>());
+      expect(bin.right, isA<FunctionCallNode>());
+      final fn = bin.right as FunctionCallNode;
+      expect(fn.name, 'sqrt');
+      expect(fn.inverse, isTrue);
+    });
   });
 }

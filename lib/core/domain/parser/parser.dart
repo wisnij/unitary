@@ -172,7 +172,8 @@ class Parser {
   bool _startsImplicitMultiply() {
     return _check(TokenType.number) ||
         _check(TokenType.identifier) ||
-        _check(TokenType.leftParen);
+        _check(TokenType.leftParen) ||
+        _check(TokenType.inverse);
   }
 
   /// ```

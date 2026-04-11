@@ -63,6 +63,7 @@ const Map<String, String> predefinedDimensionLabels = {
   'kg m^2 / A s^3': 'Voltage',
   'kg m^2 / A^2 s^2': 'Inductance',
   'kg m^2 / A^2 s^3': 'Electric resistance',
+  'kg m^2 / A^2 s^4': 'Elastance',
   'kg m^2 / K mol s^2': 'Molar heat capacity',
   'kg m^2 / K s^2': 'Entropy; heat capacity',
   'kg m^2 / K s^3': 'Thermal conductance',

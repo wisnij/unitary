@@ -165,6 +165,9 @@
     "kg m^2 / A^2 s^3": {
       "label": "Electric resistance"
     },
+    "kg m^2 / A^2 s^4": {
+      "label": "Elastance"
+    },
     "kg m^2 / K mol s^2": {
       "label": "Molar heat capacity"
     },

@@ -186,52 +186,52 @@ void main() {
     });
 
     group('boundsString', () {
-      test('no bounds → (,)', () {
-        expect(const QuantitySpec().boundsString(), '(,)');
+      test('no bounds → (−∞, ∞)', () {
+        expect(const QuantitySpec().boundsString(), '(−∞, ∞)');
       });
 
-      test('closed min only → [0,)', () {
+      test('closed min only → [0, ∞)', () {
         const spec = QuantitySpec(min: Bound(0.0, closed: true));
-        expect(spec.boundsString(), '[0,)');
+        expect(spec.boundsString(), '[0, ∞)');
       });
 
-      test('open min only → (0,)', () {
+      test('open min only → (0, ∞)', () {
         const spec = QuantitySpec(min: Bound(0.0, closed: false));
-        expect(spec.boundsString(), '(0,)');
+        expect(spec.boundsString(), '(0, ∞)');
       });
 
-      test('closed max only → (,5]', () {
+      test('closed max only → (−∞, 5]', () {
         const spec = QuantitySpec(max: Bound(5.0, closed: true));
-        expect(spec.boundsString(), '(,5]');
+        expect(spec.boundsString(), '(−∞, 5]');
       });
 
-      test('open max only → (,5)', () {
+      test('open max only → (−∞, 5)', () {
         const spec = QuantitySpec(max: Bound(5.0, closed: false));
-        expect(spec.boundsString(), '(,5)');
+        expect(spec.boundsString(), '(−∞, 5)');
       });
 
-      test('closed min and max → [-1,1]', () {
+      test('closed min and max → [-1, 1]', () {
         const spec = QuantitySpec(
           min: Bound(-1.0, closed: true),
           max: Bound(1.0, closed: true),
         );
-        expect(spec.boundsString(), '[-1,1]');
+        expect(spec.boundsString(), '[-1, 1]');
       });
 
-      test('open min closed max → (0,1]', () {
+      test('open min closed max → (0, 1]', () {
         const spec = QuantitySpec(
           min: Bound(0.0, closed: false),
           max: Bound(1.0, closed: true),
         );
-        expect(spec.boundsString(), '(0,1]');
+        expect(spec.boundsString(), '(0, 1]');
       });
 
-      test('closed min open max → [0,1)', () {
+      test('closed min open max → [0, 1)', () {
         const spec = QuantitySpec(
           min: Bound(0.0, closed: true),
           max: Bound(1.0, closed: false),
         );
-        expect(spec.boundsString(), '[0,1)');
+        expect(spec.boundsString(), '[0, 1)');
       });
     });
   });

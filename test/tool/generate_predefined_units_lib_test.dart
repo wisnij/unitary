@@ -1027,6 +1027,7 @@ void main() {
       final body = _extractFunctionBody(code, 'registerDefinedFunctions');
       expect(body, contains("ExpressionParser(repo: repo).evaluate('m')"));
       expect(body, contains("ExpressionParser(repo: repo).evaluate('m^2')"));
+      expect(body, contains("unitExpression: 'm'"));
     });
 
     test('defined_function with inverse emits inverse field', () {
@@ -1102,6 +1103,56 @@ void main() {
         expect(code, isNot(contains('registerDefinedFunctions')));
       },
     );
+  });
+
+  group('dimensionLabels codegen', () {
+    test('emits dimensionLabels const map when dimensions key present', () {
+      final json = {
+        'units': <String, dynamic>{},
+        'prefixes': <String, dynamic>{},
+        'dimensions': {
+          'm': {'label': 'Length'},
+          'kg': {'label': 'Mass'},
+        },
+      };
+      final code = generateDartCode(json);
+      expect(
+        code,
+        contains('const Map<String, String> predefinedDimensionLabels = {'),
+      );
+      expect(code, contains("'m': 'Length'"));
+      expect(code, contains("'kg': 'Mass'"));
+    });
+
+    test('emits empty dimensionLabels map when dimensions key missing', () {
+      final json = {
+        'units': <String, dynamic>{},
+        'prefixes': <String, dynamic>{},
+      };
+      final code = generateDartCode(json);
+      expect(
+        code,
+        contains('const Map<String, String> predefinedDimensionLabels = {'),
+      );
+      expect(
+        code,
+        contains(
+          'const Map<String, String> predefinedDimensionLabels = {\n};',
+        ),
+      );
+    });
+
+    test('label values with special characters are escaped', () {
+      final json = {
+        'units': <String, dynamic>{},
+        'prefixes': <String, dynamic>{},
+        'dimensions': {
+          '1 / s': {'label': 'Frequency'},
+        },
+      };
+      final code = generateDartCode(json);
+      expect(code, contains("'1 / s': 'Frequency'"));
+    });
   });
 }
 

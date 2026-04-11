@@ -23,6 +23,11 @@ class QuantitySpec {
   /// [PiecewiseFunction] output unit resolution).
   final Quantity? quantity;
 
+  /// The original unit expression string from the function definition
+  /// (e.g. `'deg'`, `'m/s2'`).  Used for display purposes; null when
+  /// the spec was not built from a named unit expression.
+  final String? unitExpression;
+
   /// Lower bound on the value; null means no lower bound.
   final Bound? min;
 
@@ -36,6 +41,7 @@ class QuantitySpec {
 
   const QuantitySpec({
     this.quantity,
+    this.unitExpression,
     this.min,
     this.max,
     this.acceptDimensionless = false,
@@ -58,23 +64,24 @@ class QuantitySpec {
 
   /// Returns the domain/range interval in mathematical notation.
   ///
-  /// Square brackets denote closed bounds; parentheses denote open or absent
-  /// bounds.  Examples: `[0,)`, `(-1,1]`, `(,)`.
+  /// Square brackets denote closed bounds; parentheses denote open bounds.
+  /// Absent bounds are shown as −∞ or ∞.
+  /// Examples: `[0, ∞)`, `(−∞, 273.15)`, `(−∞, ∞)`.
   String boundsString() {
     String fmt(double v) => stripTrailingZeros(v.toString());
     final String lower;
     if (min == null) {
-      lower = '(';
+      lower = '(−∞';
     } else {
       lower = min!.closed ? '[${fmt(min!.value)}' : '(${fmt(min!.value)}';
     }
     final String upper;
     if (max == null) {
-      upper = ')';
+      upper = '∞)';
     } else {
       upper = max!.closed ? '${fmt(max!.value)}]' : '${fmt(max!.value)})';
     }
-    return '$lower,$upper';
+    return '$lower, $upper';
   }
 }
 
@@ -288,16 +295,22 @@ class PiecewiseFunction extends UnitaryFunction {
   /// [outputUnit] encodes the SI conversion factor and dimension of the output.
   /// Domain and range specs (including x/y bounds) are derived from [points]
   /// and [outputUnit] by [_makeDomain] and [_makeRange].
+  ///
+  /// [outputUnitExpression] is the unit expression string shown in the
+  /// piecewise table output column header (e.g. `'K'`, `'degR'`).  When null
+  /// the header falls back to the canonical dimension string.  The input
+  /// column is always dimensionless so no corresponding parameter is needed.
   PiecewiseFunction({
     required super.id,
     super.aliases,
     required this.points,
     required this.noerror,
     required Quantity outputUnit,
+    String? outputUnitExpression,
   }) : super(
          arity: 1,
          domain: _makeDomain(points),
-         range: _makeRange(points, outputUnit),
+         range: _makeRange(points, outputUnit, outputUnitExpression),
        );
 
   static List<QuantitySpec> _makeDomain(List<(double, double)> points) {
@@ -316,6 +329,7 @@ class PiecewiseFunction extends UnitaryFunction {
   static QuantitySpec _makeRange(
     List<(double, double)> points,
     Quantity outputUnit,
+    String? unitExpression,
   ) {
     var yMin = double.infinity;
     var yMax = double.negativeInfinity;
@@ -329,6 +343,7 @@ class PiecewiseFunction extends UnitaryFunction {
     }
     return QuantitySpec(
       quantity: outputUnit,
+      unitExpression: unitExpression,
       min: Bound(yMin, closed: true),
       max: Bound(yMax, closed: true),
     );

@@ -6,6 +6,96 @@ import '../models/unit.dart';
 import '../models/unit_repository.dart';
 import '../parser/expression_parser.dart';
 
+/// Maps canonical dimension representation to human-readable group label.
+const Map<String, String> predefinedDimensionLabels = {
+  '1': 'Dimensionless',
+  '1 / m': 'Wavenumber',
+  '1 / m^2': 'Fuel efficiency',
+  '1 / m^3': 'Number density',
+  '1 / s': 'Frequency',
+  'A': 'Electric current',
+  'A / m': 'Magnetic field strength',
+  'A / m^2': 'Current density',
+  'A m': 'Magnetic pole strength',
+  'A m s': 'Electric dipole moment',
+  'A m^2': 'Magnetic dipole moment',
+  'A s': 'Electric charge',
+  'A s / kg': 'Radiation exposure',
+  'A s / m^2': 'Electric flux density',
+  'A s / m^3': 'Electric charge density',
+  'A^2 s^3 / kg m^2': 'Electric conductance',
+  'A^2 s^3 / kg m^3': 'Electric conductivity',
+  'A^2 s^4 / kg m^2': 'Capacitance',
+  'A^2 s^4 / kg m^3': 'Permittivity',
+  'K': 'Temperature',
+  'K s^3 / kg': 'Thermal insulation',
+  'K s^3 / kg m': 'Thermal resistivity',
+  'K s^3 / kg m^2': 'Thermal resistance',
+  'US\$': 'Money',
+  'bit': 'Information',
+  'bit / s': 'Bit rate',
+  'cd': 'Luminous intensity',
+  'cd / m^2': 'Luminance',
+  'cd s sr': 'Luminous energy',
+  'cd sr': 'Luminous flux',
+  'cd sr / m^2': 'Illuminance',
+  'event / s': 'Radioactivity',
+  'kg': 'Mass',
+  'kg / A s^2': 'Magnetic flux density',
+  'kg / K s^3': 'Thermal admittance',
+  'kg / m': 'Linear density',
+  'kg / m s': 'Viscosity',
+  'kg / m s^2': 'Pressure; energy density; stress',
+  'kg / m^2': 'Surface density',
+  'kg / m^2 s^2': 'Specific weight',
+  'kg / m^3': 'Density',
+  'kg / s^2': 'Surface tension',
+  'kg / s^3': 'Heat flux density; irradiance',
+  'kg / s^3 sr': 'Radiance',
+  'kg m': 'Momentum',
+  'kg m / A s^3': 'Electric field strength',
+  'kg m / A^2 s^2': 'Permeability',
+  'kg m / K s^3': 'Thermal conductivity',
+  'kg m / s': 'Momentum',
+  'kg m / s^2': 'Force',
+  'kg m^2': 'Moment of inertia',
+  'kg m^2 / A s^2': 'Magnetic flux',
+  'kg m^2 / A s^3': 'Voltage',
+  'kg m^2 / A^2 s^2': 'Inductance',
+  'kg m^2 / A^2 s^3': 'Electric resistance',
+  'kg m^2 / K mol s^2': 'Molar heat capacity',
+  'kg m^2 / K s^2': 'Entropy; heat capacity',
+  'kg m^2 / K s^3': 'Thermal conductance',
+  'kg m^2 / mol s^2': 'Molar energy',
+  'kg m^2 / s': 'Action',
+  'kg m^2 / s^2': 'Energy; work; torque',
+  'kg m^2 / s^3': 'Power; radiant flux',
+  'kg m^2 / s^3 sr': 'Radiant intensity',
+  'kg m^3 / A s^3': 'Electric flux',
+  'kg m^3 / A^2 s^3': 'Resistivity',
+  'm': 'Length',
+  'm / s': 'Speed',
+  'm / s^2': 'Acceleration',
+  'm^2': 'Area',
+  'm^2 / K s^2': 'Specific heat capacity',
+  'm^2 / s': 'Kinematic viscosity; thermal diffusivity',
+  'm^2 / s^2': 'Radiation dose; specific energy',
+  'm^3': 'Volume',
+  'm^3 / kg': 'Specific volume',
+  'm^3 / mol': 'Molar volume',
+  'm^3 / s': 'Fluid flow',
+  'mol': 'Amount of substance',
+  'mol / m^3': 'Molar concentration',
+  'mol / m^3 s': 'Catalytic activity concentration',
+  'mol / s': 'Catalytic activity',
+  'radian': 'Angle',
+  'radian / s': 'Angular velocity',
+  'radian / s^2': 'Angular acceleration',
+  's': 'Time',
+  'sr': 'Solid angle',
+  'wholenote': 'Musical note length',
+};
+
 /// Registers all predefined units into the given [repo].
 void registerPredefinedUnits(UnitRepository repo) {
   _registerUnits(repo);
@@ -38837,6 +38927,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'gasmark',
         outputUnit: output,
+        outputUnitExpression: 'degR',
         noerror: false,
         points: const [
           (0.0625, 634.67),
@@ -38863,6 +38954,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'sugar_conc_bpe',
         outputUnit: output,
+        outputUnitExpression: 'K',
         noerror: false,
         points: const [
           (0.0, 0.0),
@@ -38967,6 +39059,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'brix',
         outputUnit: output,
+        outputUnitExpression: '0.99717g/cm^3',
         noerror: false,
         points: const [
           (0.0, 1.0),
@@ -39075,6 +39168,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'UScpi',
         outputUnit: output,
+        outputUnitExpression: '1',
         noerror: true,
         points: const [
           (1913.0833333333333, 9.8),
@@ -40441,6 +40535,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'brwiregauge',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (-6.0, 0.5),
@@ -40471,6 +40566,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'plategauge',
         outputUnit: output,
+        outputUnitExpression: '(oz/ft^2)/(480*lb/ft^3)',
         noerror: false,
         points: const [
           (-5.0, 300.0),
@@ -40495,6 +40591,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'stdgauge',
         outputUnit: output,
+        outputUnitExpression: '(oz/ft^2)/(501.84*lb/ft^3)',
         noerror: false,
         points: const [
           (-5.0, 300.0),
@@ -40517,6 +40614,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'zincgauge',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (1.0, 0.002),
@@ -40537,6 +40635,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'drillgauge',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (1.0, 0.228),
@@ -40655,6 +40754,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'npsOD',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.125, 0.405),
@@ -40690,6 +40790,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'nps40',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.125, 0.269),
@@ -40725,6 +40826,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'nps80',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.125, 0.215),
@@ -40760,6 +40862,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'nps40s',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.125, 0.269),
@@ -40795,6 +40898,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'nps80s',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.125, 0.215),
@@ -40830,6 +40934,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'DN',
         outputUnit: output,
+        outputUnitExpression: '1',
         noerror: false,
         points: const [
           (6.0, 0.125),
@@ -40867,6 +40972,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'copperTubeOD',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.375, 0.5),
@@ -40895,6 +41001,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'copperTypeK',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.25, 0.305),
@@ -40925,6 +41032,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'copperTypeL',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.25, 0.315),
@@ -40955,6 +41063,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'copperTypeM',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.375, 0.45),
@@ -40983,6 +41092,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'copperTypeACR',
         outputUnit: output,
+        outputUnitExpression: 'in',
         noerror: false,
         points: const [
           (0.25, 0.2),
@@ -41009,6 +41119,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'grit_P',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (12.0, 1815.0),
@@ -41049,6 +41160,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'grit_F',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (4.0, 4890.0),
@@ -41100,6 +41212,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'ansibonded',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (4.0, 4890.0),
@@ -41148,6 +41261,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'ansicoated',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: true,
         points: const [
           (4.0, 4890.0),
@@ -41201,6 +41315,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'jisgrit',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (150.0, 75.0),
@@ -41232,6 +41347,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'grit_A',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (16.0, 15.3),
@@ -41257,6 +41373,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'meshtyler',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (2.5, 8000.0),
@@ -41301,6 +41418,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'sieve',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (3.5, 5600.0),
@@ -41346,6 +41464,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'meshbritish',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (3.0, 5657.0),
@@ -41388,6 +41507,7 @@ void registerPiecewiseFunctions(UnitRepository repo) {
       PiecewiseFunction(
         id: 'meshtamis',
         outputUnit: output,
+        outputUnitExpression: 'micron',
         noerror: false,
         points: const [
           (17.0, 40.0),
@@ -41434,10 +41554,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'circum/ 2 pi',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: 'm'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41455,10 +41576,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '2 ~circum(circum_d)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: 'm'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41475,10 +41597,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'sqrt(circlearea/pi)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: 'm'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm^2',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41495,10 +41618,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '2 ~circlearea(circlearea_d)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: 'm'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm^2',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41516,10 +41640,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'cuberoot(spherevolume/4|3 pi)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: 'm'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm^3',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41537,10 +41662,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '2 ~spherevolume(spherevolume_d)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: 'm'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm^3',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41592,10 +41718,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '(-log(pH liters/mol))',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'mol/liter',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -41615,11 +41742,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-273.15, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'K',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41639,11 +41768,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-459.67, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'K',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41662,11 +41793,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-218.52, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'K',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41685,12 +41818,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: true),
             max: const Bound(17.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm/s',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41709,12 +41844,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: true),
             max: const Bound(17.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm/s',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -41733,11 +41870,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'K',
             min: const Bound(170.0, closed: true),
             max: const Bound(283.15, closed: true),
           ),
           QuantitySpec(
             quantity: domainUnit1,
+            unitExpression: 'mph',
             min: const Bound(3.0, closed: true),
           ),
         ],
@@ -41757,11 +41896,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'K',
             min: const Bound(170.0, closed: true),
             max: const Bound(283.15, closed: true),
           ),
           QuantitySpec(
             quantity: domainUnit1,
+            unitExpression: 'mph',
             min: const Bound(3.0, closed: true),
           ),
         ],
@@ -41781,10 +41922,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'K',
             min: const Bound(0.0, closed: true),
           ),
           QuantitySpec(
             quantity: domainUnit1,
+            unitExpression: '1',
             min: const Bound(0.0, closed: true),
             max: const Bound(1.0, closed: true),
           ),
@@ -41804,10 +41947,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'm',
             min: const Bound(0.0, closed: false),
           ),
           QuantitySpec(
             quantity: domainUnit1,
+            unitExpression: 'kg',
             min: const Bound(0.0, closed: false),
           ),
         ],
@@ -41825,9 +41970,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log2(bril/lambert)+100',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'lambert'),
       ),
     );
   }
@@ -41843,10 +41988,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log2(ev100 s100/k1250)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'cd/m^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -41863,10 +42009,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log2(iv100 s100 / c250)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'lx',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -41885,11 +42032,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-2.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.5, closed: true),
         ),
       ),
@@ -41906,10 +42055,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log2(s / Tv)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 's',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -41926,10 +42076,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log2((N_speed/lx s) Sval)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -41946,10 +42097,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log2(Bv / (K_lum N_speed))',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'cd/m^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -41966,10 +42118,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log2(Iv / (C_illum N_speed))',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'lx',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -41988,10 +42141,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: false),
           ),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: '1'),
       ),
     );
   }
@@ -42007,10 +42161,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '(1 + 10 log(Sdeg))',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42030,12 +42185,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: false),
             max: const Bound(1.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.5, closed: true),
         ),
       ),
@@ -42054,11 +42211,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.5, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.5, closed: true),
         ),
       ),
@@ -42076,11 +42235,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'degree',
             min: const Bound(0.0, closed: true),
             max: const Bound(90.0, closed: true),
           ),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: '1'),
       ),
     );
   }
@@ -42097,11 +42257,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'degree',
             min: const Bound(0.0, closed: true),
             max: const Bound(90.0, closed: true),
           ),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: '1'),
       ),
     );
   }
@@ -42117,11 +42278,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'degree',
             min: const Bound(0.0, closed: true),
             max: const Bound(90.0, closed: true),
           ),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: '1'),
       ),
     );
   }
@@ -42137,11 +42299,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'degree',
             min: const Bound(0.0, closed: true),
             max: const Bound(90.0, closed: true),
           ),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: '1'),
       ),
     );
   }
@@ -42158,10 +42321,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'lx',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42181,10 +42346,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'cd/m^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42204,10 +42371,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'cd/m^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42227,10 +42396,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'cd/m^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42249,10 +42420,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'cd/m^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42269,9 +42442,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '(shoesize_men+(-shoe_men0))/shoesize_delta',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'inch'),
       ),
     );
   }
@@ -42286,9 +42459,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '(shoesize_women+(-shoe_women0))/shoesize_delta',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'inch'),
       ),
     );
   }
@@ -42303,9 +42476,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '(shoesize_boys+(-shoe_boys0))/shoesize_delta',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'inch'),
       ),
     );
   }
@@ -42320,9 +42493,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '(shoesize_girls+(-shoe_girls0))/shoesize_delta',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'inch'),
       ),
     );
   }
@@ -42339,12 +42512,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(4.0, closed: true),
             max: const Bound(100.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'cup',
           min: const Bound(0.04, closed: true),
           max: const Bound(1.0, closed: true),
         ),
@@ -42364,12 +42539,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'K',
             min: const Bound(0.0, closed: true),
             max: const Bound(39.1636, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(0.99717, closed: true),
           max: const Bound(1.5144619, closed: true),
         ),
@@ -42389,12 +42566,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'K',
             min: const Bound(373.15, closed: true),
             max: const Bound(412.3136, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(0.99717, closed: true),
           max: const Bound(1.5144619, closed: true),
         ),
@@ -42414,12 +42593,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(212.0, closed: true),
             max: const Bound(282.49448, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(0.99717, closed: true),
           max: const Bound(1.5144619, closed: true),
         ),
@@ -42439,12 +42620,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(100.0, closed: true),
             max: const Bound(139.1636, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(0.99717, closed: true),
           max: const Bound(1.5144619, closed: true),
         ),
@@ -42464,12 +42647,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: true),
             max: const Bound(145.0, closed: false),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(1.0, closed: true),
         ),
       ),
@@ -42488,11 +42673,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-200.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -42511,11 +42698,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-1000.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -42534,11 +42723,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-131.5, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'g/cm^3',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -42558,11 +42749,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: false),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42579,10 +42772,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'log(bel)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42600,10 +42794,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '10 log(decibel)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42620,10 +42815,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBW/W)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'W',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42640,10 +42836,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBk/kW)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'W',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42660,10 +42857,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBf/fW)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'W',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42680,10 +42878,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBm/mW)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'W',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42700,10 +42899,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dBm(dBmW)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'W',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42720,10 +42920,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBJ/J)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'J',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42740,9 +42941,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dB_amplitude^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: '1'),
       ),
     );
   }
@@ -42757,10 +42958,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBV^2 / V^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'V',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42777,10 +42979,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBmV^2/mV^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'V',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42797,10 +43000,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBuV^2 / microV^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'V',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42817,10 +43021,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBA^2 / A^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'A',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42837,10 +43042,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBmA^2/mA^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'A',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42857,10 +43063,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBuA^2 / microA^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'A',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42877,10 +43084,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBu^2 / mW 600 ohm)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'V',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42897,10 +43105,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dBu(dBv)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'V',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42917,10 +43126,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBSPL^2 / (20 microPa)^2)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'Pa',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42937,10 +43147,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBSIL / (1e-12 W/m^2))',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'W/m^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42957,10 +43168,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~dB(dBSWL/1e-12 W)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'W',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42978,10 +43190,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'ln(neper)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -42999,10 +43212,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '100 ln(centineper)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -43019,9 +43233,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~Np(Np_power)/2',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: '1'),
       ),
     );
   }
@@ -43038,12 +43252,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: true),
             max: const Bound(32.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(1.0, closed: true),
           max: const Bound(4294967296.0, closed: true),
         ),
@@ -43063,12 +43279,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(0.0, closed: true),
             max: const Bound(128.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(1.0, closed: true),
           max: const Bound(3.402823669209385e+38, closed: true),
         ),
@@ -43086,10 +43304,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '100 log(musicalcent)/log(semitone)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -43109,12 +43328,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(1913.0833333333333, closed: true),
             max: const Bound(2025.9166666666667, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '\$',
           min: const Bound(1.0, closed: true),
           max: const Bound(33.07367346938776, closed: true),
         ),
@@ -43135,12 +43356,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(1913.0833333333333, closed: true),
             max: const Bound(2025.9166666666667, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: '1',
           min: const Bound(1.0, closed: true),
           max: const Bound(33.07367346938776, closed: true),
         ),
@@ -43160,12 +43383,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'K',
             min: const Bound(253.15, closed: true),
             max: const Bound(673.15, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'Pa s',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -43184,11 +43409,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'K',
             min: const Bound(0.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'mPa s',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -43208,18 +43435,22 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'DENSITY',
             min: const Bound(0.0, closed: false),
           ),
           QuantitySpec(
             quantity: domainUnit1,
+            unitExpression: 'SPEED',
             min: const Bound(0.0, closed: true),
           ),
           QuantitySpec(
             quantity: domainUnit2,
+            unitExpression: 'LENGTH',
             min: const Bound(0.0, closed: false),
           ),
           QuantitySpec(
             quantity: domainUnit3,
+            unitExpression: 'VISCOSITY',
             min: const Bound(0.0, closed: false),
           ),
         ],
@@ -43239,12 +43470,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'm',
             min: const Bound(-5000.0, closed: true),
             max: const Bound(11000.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'K',
           min: const Bound(217.0, closed: true),
           max: const Bound(321.0, closed: true),
         ),
@@ -43264,12 +43497,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'm',
             min: const Bound(-5000.0, closed: true),
             max: const Bound(11000.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'K',
           min: const Bound(217.0, closed: true),
           max: const Bound(321.0, closed: true),
         ),
@@ -43290,12 +43525,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'm',
             min: const Bound(-5000.0, closed: true),
             max: const Bound(11000.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'Pa',
           min: const Bound(22877.0, closed: true),
           max: const Bound(177764.0, closed: true),
         ),
@@ -43315,12 +43552,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'm',
             min: const Bound(-5000.0, closed: true),
             max: const Bound(11000.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'Pa',
           min: const Bound(22877.0, closed: true),
           max: const Bound(177764.0, closed: true),
         ),
@@ -43340,11 +43579,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'm',
             min: const Bound(-5000.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm',
           min: const Bound(-5004.0, closed: true),
         ),
       ),
@@ -43363,11 +43604,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'deg',
             min: const Bound(0.0, closed: true),
             max: const Bound(90.0, closed: true),
           ),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'm/s2'),
       ),
     );
   }
@@ -43384,11 +43626,12 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'deg',
             min: const Bound(0.0, closed: true),
             max: const Bound(90.0, closed: true),
           ),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'm'),
       ),
     );
   }
@@ -43405,11 +43648,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: 'Pa',
             min: const Bound(-101325.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'Pa',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -43428,11 +43673,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-14.6959487755135, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'Pa',
           min: const Bound(0.0, closed: true),
         ),
       ),
@@ -43450,10 +43697,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '36+(-39)ln(200 wiregauge/in)/ln(92)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -43471,10 +43719,11 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: '~awg(~circlearea_d(wiregaugeA))',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm^2',
           min: const Bound(0.0, closed: false),
         ),
       ),
@@ -43493,12 +43742,14 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(-3.0, closed: true),
             max: const Bound(24.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'm',
           min: const Bound(0.0005334, closed: true),
           max: const Bound(0.0094488, closed: true),
         ),
@@ -43518,11 +43769,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(2.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'in',
           min: const Bound(1.6252, closed: true),
         ),
       ),
@@ -43541,11 +43794,13 @@ void registerDefinedFunctions(UnitRepository repo) {
         domain: [
           QuantitySpec(
             quantity: domainUnit0,
+            unitExpression: '1',
             min: const Bound(1.0, closed: true),
           ),
         ],
         range: QuantitySpec(
           quantity: rangeUnit,
+          unitExpression: 'mm',
           min: const Bound(0.040840704, closed: true),
         ),
       ),
@@ -43562,9 +43817,9 @@ void registerDefinedFunctions(UnitRepository repo) {
         inverse: 'euringsize/mm + (-40)',
         noerror: false,
         domain: [
-          QuantitySpec(quantity: domainUnit0),
+          QuantitySpec(quantity: domainUnit0, unitExpression: '1'),
         ],
-        range: QuantitySpec(quantity: rangeUnit),
+        range: QuantitySpec(quantity: rangeUnit, unitExpression: 'mm'),
       ),
     );
   }

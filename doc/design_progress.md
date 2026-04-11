@@ -251,9 +251,10 @@ When resuming design work, recommended order of priority:
 4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see phase4_plan.md) — design and implementation done
 5. ✅ ~~**GNU Units Database Import**~~ - **COMPLETE** — Phase 5, full pipeline implemented
 6. ✅ ~~**Worksheet System**~~ - **COMPLETE** — Phase 6, see openspec/changes/worksheet-mode/
-7. **Currency Rate Management** - Can be added after core features work
-8. **Testing Strategy** - Define before/during implementation
-9. **Error Handling Details** - Refine during implementation
+7. ✅ ~~**Browse Mode**~~ - **COMPLETE** — Phase 7, see openspec/changes/browse-units/
+8. **Currency Rate Management** - Can be added after core features work
+9. **Testing Strategy** - Define before/during implementation
+10. **Error Handling Details** - Refine during implementation
 
 ---
 
@@ -274,7 +275,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: March 27, 2026*
+*Last Updated: April 7, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -397,3 +398,13 @@ Questions that arose during design but haven't been resolved:
   - Drawer "Worksheet" tile enabled; navigates to `WorksheetScreen`
   - Design artifacts: `openspec/changes/worksheet-mode/`
   - Notable: `h` in codebase is Planck's constant; `degR`/`tempR` is Rankine (works as absolute scale since 0 °R = 0 K)
+- *Phase 7: Browse Mode (April 7, 2026)*
+  - 1436 tests passing (127 new)
+  - `BrowseEntry` value class in `lib/core/domain/models/` (kind, name, primaryId, aliasFor, summaryLine, dimension)
+  - `"dimensions"` key in `units-supplementary.json`: map of canonical representation → `{"label": "…"}`; merged by codegen into `units.json`; emitted as `const Map<String, String> predefinedDimensionLabels` in `predefined_units.dart`
+  - `UnitRepository.buildBrowseCatalog()`: builds flat `List<BrowseEntry>` from all units (excl. PrefixUnit), prefixes, and functions; aliases as separate entries; dimension resolved via `_resolvedQuantityCache`
+  - `BrowserNotifier` (non-`autoDispose`): both alphabetical and dimension indices built eagerly in `build()`; dimension view default (all collapsed); alphabetical view default (all expanded); search filtering with auto-expand; collapse state preserved across searches; `BrowserState.searchVisible` toggles search bar
+  - `BrowserScreen`: body-only `Column` widget (no Scaffold); `HomeScreen` provides AppBar with search and view-mode toggle buttons via `Consumer` widgets
+  - `UnitEntryDetailScreen`: dispatches by `BrowseEntryKind`; shows name, aliases, description, definition, resolved quantity (units only), domain/range (functions only), piecewise control-point table (`PiecewiseFunction` only); accepts optional `UnitRepository` for testing
+  - Drawer "Browse" tile added between Worksheet and the divider; navigates to `BrowserScreen`
+  - Design artifacts: `openspec/changes/browse-units/`

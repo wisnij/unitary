@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/models/browse_entry.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
@@ -840,6 +841,110 @@ void main() {
       expect(aliasEntry.aliasFor, 'myFunc');
       expect(aliasEntry.functionLabel, '[function]');
       expect(aliasEntry.definitionExpression, isNull);
+    });
+  });
+
+  group('buildBrowseCatalog', () {
+    late UnitRepository repo;
+
+    setUp(() {
+      repo = UnitRepository();
+
+      repo.register(const PrimitiveUnit(id: 'm', aliases: ['meter', 'metre']));
+      repo.register(
+        const DerivedUnit(
+          id: 'km',
+          aliases: ['kilometre'],
+          expression: '1000 m',
+        ),
+      );
+      repo.register(const PrimitiveUnit(id: 'kg'));
+      repo.registerPrefix(
+        const PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1e3'),
+      );
+      repo.registerFunction(_TestFn('myFunc', aliases: ['myAlias']));
+    });
+
+    test('primary unit entries are present', () {
+      final catalog = repo.buildBrowseCatalog();
+      final names = catalog.map((e) => e.name).toSet();
+      expect(names, containsAll(['m', 'km', 'kg']));
+    });
+
+    test('unit aliases appear as separate entries', () {
+      final catalog = repo.buildBrowseCatalog();
+      final meterAlias = catalog.firstWhere((e) => e.name == 'meter');
+      expect(meterAlias.primaryId, 'm');
+      expect(meterAlias.aliasFor, 'm');
+      expect(meterAlias.isAlias, isTrue);
+      expect(meterAlias.kind, BrowseEntryKind.unit);
+    });
+
+    test('prefix entries are present', () {
+      final catalog = repo.buildBrowseCatalog();
+      final names = catalog.map((e) => e.name).toSet();
+      expect(names, containsAll(['kilo', 'k']));
+    });
+
+    test('prefix alias entry has aliasFor set', () {
+      final catalog = repo.buildBrowseCatalog();
+      final kAlias = catalog.firstWhere((e) => e.name == 'k');
+      expect(kAlias.primaryId, 'kilo');
+      expect(kAlias.aliasFor, 'kilo');
+      expect(kAlias.kind, BrowseEntryKind.prefix);
+    });
+
+    test('function entries are present', () {
+      final catalog = repo.buildBrowseCatalog();
+      final names = catalog.map((e) => e.name).toSet();
+      expect(names, containsAll(['myFunc', 'myAlias']));
+    });
+
+    test('function alias entry has aliasFor set', () {
+      final catalog = repo.buildBrowseCatalog();
+      final alias = catalog.firstWhere((e) => e.name == 'myAlias');
+      expect(alias.primaryId, 'myFunc');
+      expect(alias.aliasFor, 'myFunc');
+      expect(alias.kind, BrowseEntryKind.function);
+    });
+
+    test('primitive unit summaryLine is [primitive unit]', () {
+      final catalog = repo.buildBrowseCatalog();
+      final m = catalog.firstWhere((e) => e.name == 'm');
+      expect(m.summaryLine, '[primitive unit]');
+    });
+
+    test('derived unit summaryLine is expression', () {
+      final catalog = repo.buildBrowseCatalog();
+      final km = catalog.firstWhere((e) => e.name == 'km');
+      expect(km.summaryLine, '1000 m');
+    });
+
+    test('alias inherits summaryLine from primary', () {
+      final catalog = repo.buildBrowseCatalog();
+      final alias = catalog.firstWhere((e) => e.name == 'kilometre');
+      expect(alias.summaryLine, '1000 m');
+    });
+
+    test('function summaryLine is [function]', () {
+      final catalog = repo.buildBrowseCatalog();
+      final fn = catalog.firstWhere((e) => e.name == 'myFunc');
+      expect(fn.summaryLine, '[function]');
+    });
+
+    test('unresolvable unit has null dimension', () {
+      repo.register(const DerivedUnit(id: 'bad', expression: 'unknownXYZ'));
+      final catalog = repo.buildBrowseCatalog();
+      final bad = catalog.firstWhere((e) => e.name == 'bad');
+      expect(bad.dimension, isNull);
+    });
+
+    test('PrefixUnit instances are not included in unit entries', () {
+      final catalog = repo.buildBrowseCatalog();
+      // 'kilo' and 'k' should appear as prefix kind, not unit kind
+      for (final e in catalog.where((e) => e.name == 'kilo' || e.name == 'k')) {
+        expect(e.kind, BrowseEntryKind.prefix);
+      }
     });
   });
 }

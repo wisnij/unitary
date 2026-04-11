@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../about/presentation/about_screen.dart';
+import '../../browser/presentation/browser_screen.dart';
+import '../../browser/state/browser_provider.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../worksheet/data/predefined_worksheets.dart';
 import '../../worksheet/presentation/worksheet_screen.dart';
@@ -11,7 +13,7 @@ import '../state/freeform_provider.dart';
 import '../state/freeform_state.dart';
 import 'freeform_screen.dart';
 
-enum _TopLevelPage { freeform, worksheet }
+enum _TopLevelPage { freeform, worksheet, browser }
 
 /// Main app screen with drawer navigation.
 class HomeScreen extends ConsumerStatefulWidget {
@@ -42,14 +44,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: _currentPage == _TopLevelPage.worksheet
-            ? WorksheetDropdown(
-                templates: predefinedWorksheets,
-                selectedId: worksheetState.worksheetId,
-                onChanged: (id) =>
-                    ref.read(worksheetProvider.notifier).selectWorksheet(id),
-              )
-            : const Text('Unitary'),
+        title: switch (_currentPage) {
+          _TopLevelPage.worksheet => WorksheetDropdown(
+            templates: predefinedWorksheets,
+            selectedId: worksheetState.worksheetId,
+            onChanged: (id) =>
+                ref.read(worksheetProvider.notifier).selectWorksheet(id),
+          ),
+          _TopLevelPage.browser => const Text('Browse'),
+          _ => const Text('Unitary'),
+        },
         actions: [
           if (_currentPage == _TopLevelPage.freeform)
             IconButton(
@@ -61,6 +65,37 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         .trigger()
                   : null,
             ),
+          if (_currentPage == _TopLevelPage.browser) ...[
+            Consumer(
+              builder: (context, ref, child) => IconButton(
+                icon: const Icon(Icons.search),
+                tooltip: 'Search',
+                onPressed: ref.read(browserProvider.notifier).toggleSearch,
+              ),
+            ),
+            Consumer(
+              builder: (context, ref, child) {
+                final isAlpha =
+                    ref.watch(
+                      browserProvider.select((s) => s.viewMode),
+                    ) ==
+                    BrowseViewMode.alphabetical;
+                return IconButton(
+                  icon: Icon(isAlpha ? Icons.category : Icons.sort_by_alpha),
+                  tooltip: isAlpha
+                      ? 'Group by dimension'
+                      : 'Sort alphabetically',
+                  onPressed: () => ref
+                      .read(browserProvider.notifier)
+                      .setViewMode(
+                        isAlpha
+                            ? BrowseViewMode.dimension
+                            : BrowseViewMode.alphabetical,
+                      ),
+                );
+              },
+            ),
+          ],
         ],
       ),
       drawer: Drawer(
@@ -88,6 +123,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     title: const Text('Worksheet'),
                     selected: _currentPage == _TopLevelPage.worksheet,
                     onTap: () => _switchPage(context, _TopLevelPage.worksheet),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.library_books),
+                    title: const Text('Browse'),
+                    selected: _currentPage == _TopLevelPage.browser,
+                    onTap: () => _switchPage(context, _TopLevelPage.browser),
                   ),
                 ],
               ),
@@ -122,9 +163,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
       ),
-      body: _currentPage == _TopLevelPage.worksheet
-          ? const WorksheetScreen()
-          : const FreeformScreen(),
+      body: switch (_currentPage) {
+        _TopLevelPage.worksheet => const WorksheetScreen(),
+        _TopLevelPage.browser => const BrowserScreen(),
+        _ => const FreeformScreen(),
+      },
     );
   }
 }

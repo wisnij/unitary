@@ -26,8 +26,8 @@ dynamic recursiveMerge(dynamic base, dynamic supplementary) {
 
 /// Merges [supplementary] into [parsed] using [recursiveMerge].
 ///
-/// Both maps must use the three-section format (`'units'`, `'prefixes'`,
-/// `'unsupported'`). Supplementary fields overlay parsed fields where both
+/// Both maps use the section format (`'units'`, `'prefixes'`, `'unsupported'`,
+/// `'dimensions'`). Supplementary fields overlay parsed fields where both
 /// exist; supplementary-only sections and entries are added as-is.
 Map<String, dynamic> mergeSupplementary(
   Map<String, dynamic> parsed,
@@ -307,6 +307,24 @@ String generateDartCode(Map<String, dynamic> unitsJson) {
   }
   buf.writeln();
 
+  // Dimension labels constant.
+  final rawDimensions = unitsJson['dimensions'];
+  final dimensionsSection = rawDimensions == null
+      ? <String, dynamic>{}
+      : Map<String, dynamic>.from(rawDimensions as Map);
+  buf.writeln(
+    '/// Maps canonical dimension representation to human-readable group label.',
+  );
+  buf.writeln('const Map<String, String> predefinedDimensionLabels = {');
+  for (final entry in dimensionsSection.entries) {
+    final key = entry.key;
+    final data = entry.value as Map<String, dynamic>;
+    final label = data['label'] as String;
+    buf.writeln('  ${_q(key)}: ${_q(label)},');
+  }
+  buf.writeln('};');
+  buf.writeln();
+
   // Top-level registerPredefinedUnits function.
   buf.writeln('/// Registers all predefined units into the given [repo].');
   buf.writeln('void registerPredefinedUnits(UnitRepository repo) {');
@@ -504,6 +522,7 @@ void _emitPiecewise(
   buf.writeln('    repo.registerFunction(PiecewiseFunction(');
   buf.writeln('      id: ${_q(id)},');
   buf.writeln('      outputUnit: output,');
+  buf.writeln('      outputUnitExpression: ${_q(outputUnit)},');
   buf.writeln('      noerror: $noerror,');
   buf.writeln('      points: const [${points.join(', ')}],');
   buf.writeln('    ));');
@@ -608,7 +627,9 @@ void _emitDefinedFunction(
       final constPrefix = hasQuantity ? '' : 'const ';
       buf.write('        ${constPrefix}QuantitySpec(');
       if (hasQuantity) {
-        buf.write('quantity: domainUnit$i');
+        buf.write(
+          'quantity: domainUnit$i, unitExpression: ${_q(domainUnits[i])}',
+        );
       }
       if (i < domainBounds.length) {
         // Parse the bounds string, e.g. "[170,283.15]" or "(0,)".
@@ -639,6 +660,7 @@ void _emitDefinedFunction(
     final parts = <String>[];
     if (rangeUnit != null) {
       parts.add('quantity: rangeUnit');
+      parts.add('unitExpression: ${_q(rangeUnit)}');
     }
     // Use 'const' when there is no runtime 'quantity' arg.
     final isConstSpec = rangeUnit == null;

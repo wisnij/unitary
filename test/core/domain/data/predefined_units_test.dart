@@ -1,11 +1,13 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/data/predefined_units.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
+import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 /// Units whose expressions use language features the evaluator does not yet
@@ -114,6 +116,44 @@ void main() {
       );
       expect(f.range!.quantity!.value, closeTo(5.0 / 9.0, 1e-10));
     });
+  });
+
+  group('Dimension labels', () {
+    test(
+      'every predefinedDimensionLabels key is in canonical primitive-unit form',
+      () {
+        // Each key in predefinedDimensionLabels is intended to be the
+        // canonical representation of a dimension expressed in primitive units
+        // (e.g. 'kg m^2 / s^2', not 'J').  To verify this we parse each key
+        // as a unit expression, resolve the resulting quantity's dimension, and
+        // check that canonicalRepresentation() round-trips back to the same
+        // string.  A mismatch means the key uses a derived unit name or is
+        // otherwise not in canonical form.
+        final badKeys = <String>[];
+
+        for (final key in predefinedDimensionLabels.keys) {
+          try {
+            final result = ExpressionParser(repo: repo).evaluate(key);
+            if (result.dimension.canonicalRepresentation() != key) {
+              badKeys.add(key);
+            }
+          } catch (_) {
+            badKeys.add(key);
+          }
+        }
+
+        badKeys.sort();
+        expect(
+          badKeys,
+          isEmpty,
+          reason:
+              'These dimension label keys are not in canonical primitive-unit '
+              'form (either they use a derived unit name, or '
+              'canonicalRepresentation() does not round-trip): '
+              '${badKeys.join(', ')}',
+        );
+      },
+    );
   });
 
   group('Evaluation', () {

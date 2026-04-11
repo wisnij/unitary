@@ -17,17 +17,18 @@ purchases, tracking, data harvesting, or any other monetization scheme.
 Project Status
 --------------
 
-**Current Phase:** Phase 6 Complete (Worksheet Mode)\
-**Last Updated:** March 27, 2026
+**Current Phase:** Phase 7 Complete (Browse Mode)\
+**Last Updated:** April 7, 2026
 
-Phases 0-6 are complete with 1309 passing tests.  The expression parser,
+Phases 0-7 are complete with 1436 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
-unit database, and worksheet mode are fully implemented.  Phase 6 added the
-worksheet feature: 10 predefined conversion templates (Length, Mass, Time,
-Temperature, Volume, Area, Speed, Pressure, Energy, Digital Storage), a
-real-time conversion engine supporting both unit-ratio and function-inverse
-rows (for Celsius/Fahrenheit), an AppBar dropdown for template selection, and
-in-session value retention via Riverpod state.
+unit database, worksheet mode, and unit browser are fully implemented.  Phase
+7 added the browse feature: a full-catalog browser page listing all units,
+prefixes, and functions (including aliases) in either alphabetical or
+dimension-grouped view, collapsible groups, a search bar, human-readable
+dimension labels defined in `units-supplementary.json`, and a detail page
+showing each entry's name, aliases, description, definition, resolved quantity,
+domain/range constraints, and piecewise control-point tables.
 
 ---
 
@@ -212,6 +213,7 @@ Current Progress
 - ✅ **Phase 5: Complete Unit Database** — GNU Units import pipeline, JSON unit database, 26 new units (volume, area, speed, pressure, energy, digital storage) (852 tests)
 - ✅ **Defined Functions** — First-class builtin functions, GNU Units-defined functions (101 registered + 46 aliases), circular definition detection (1146 tests)
 - ✅ **Phase 6: Worksheet Mode** — 10 predefined templates, real-time cross-row conversion engine (unit-ratio + function-inverse), AppBar dropdown navigation, in-session state retention (1309 tests)
+- ✅ **Phase 7: Browse Mode** — full-catalog browser with alphabetical and dimension-grouped views, collapsible groups, search bar, human-readable dimension labels, and detail pages (1436 tests)
 
 ### Design (ready for implementation)
 

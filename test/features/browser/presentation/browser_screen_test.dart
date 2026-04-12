@@ -11,6 +11,7 @@ import 'package:unitary/features/browser/presentation/browser_screen.dart';
 import 'package:unitary/features/browser/state/browser_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
+import 'package:unitary/shared/widgets/fast_scroll_bar.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -109,6 +110,68 @@ void main() {
       );
       await tester.pumpWidget(_buildScreen(repo));
       expect(find.text('foot = ft'), findsOneWidget);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // FastScrollBar integration
+  // ---------------------------------------------------------------------------
+
+  group('BrowserScreen — FastScrollBar integration', () {
+    testWidgets('FastScrollBar widget is present in browse list', (
+      tester,
+    ) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+      await tester.pump(); // allow post-frame callbacks
+      expect(find.byType(FastScrollBar), findsOneWidget);
+    });
+
+    testWidgets('FastScrollBar has active=true when search is inactive', (
+      tester,
+    ) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+      await tester.pump();
+
+      final widget = tester.widget<FastScrollBar>(find.byType(FastScrollBar));
+      expect(widget.active, isTrue);
+    });
+
+    testWidgets('FastScrollBar has active=false when search query is set', (
+      tester,
+    ) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+      await tester.pump();
+
+      // Open the search bar and type a query via the provider notifier.
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(BrowserScreen)),
+      );
+      container.read(browserProvider.notifier).toggleSearch();
+      container.read(browserProvider.notifier).setSearchQuery('kilo');
+      await tester.pump();
+
+      final widget = tester.widget<FastScrollBar>(find.byType(FastScrollBar));
+      expect(widget.active, isFalse);
+    });
+
+    testWidgets('thumb not rendered when search query is active', (
+      tester,
+    ) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+      await tester.pump();
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(BrowserScreen)),
+      );
+      container.read(browserProvider.notifier).toggleSearch();
+      container.read(browserProvider.notifier).setSearchQuery('m');
+      await tester.pump();
+
+      expect(find.byKey(FastScrollBar.thumbKey), findsNothing);
     });
   });
 }

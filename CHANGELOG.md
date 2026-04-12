@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Show fast-scrolling control on the browse page
 - Collapse groups by default on the alphabetical browse page
 - Show expand-all and collapse-all buttons on the browse page
 - Label energy/area as energy flux

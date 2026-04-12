@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/models/browse_entry.dart';
+import '../../../shared/widgets/fast_scroll_bar.dart';
 import '../state/browser_provider.dart';
 import 'unit_entry_detail_screen.dart';
 
@@ -84,7 +85,7 @@ class _BrowserScreenState extends ConsumerState<BrowserScreen> {
 // List view
 // ---------------------------------------------------------------------------
 
-class _BrowseListView extends StatelessWidget {
+class _BrowseListView extends StatefulWidget {
   const _BrowseListView({
     required this.groups,
     required this.collapsedGroups,
@@ -98,18 +99,36 @@ class _BrowseListView extends StatelessWidget {
   final ValueChanged<String> onToggleGroup;
 
   @override
+  State<_BrowseListView> createState() => _BrowseListViewState();
+}
+
+class _BrowseListViewState extends State<_BrowseListView> {
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Build a flat item list: header + entries interleaved.
+    // Simultaneously collect group anchors: (flat-list index, label) per header.
     final items = <_ListItem>[];
-    for (final (label, entries) in groups) {
-      final isCollapsed = !searchActive && collapsedGroups.contains(label);
+    final groupAnchors = <(int, String)>[];
+    for (final (label, entries) in widget.groups) {
+      final isCollapsed =
+          !widget.searchActive && widget.collapsedGroups.contains(label);
+      groupAnchors.add((items.length, label));
       items.add(_GroupHeaderItem(label: label, collapsed: isCollapsed));
       for (final entry in entries) {
         items.add(_EntryItem(entry: entry));
       }
     }
 
-    return ListView.builder(
+    final listView = ListView.builder(
+      controller: _scrollController,
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
@@ -117,13 +136,21 @@ class _BrowseListView extends StatelessWidget {
           return _GroupHeaderTile(
             label: item.label,
             collapsed: item.collapsed,
-            onTap: () => onToggleGroup(item.label),
+            onTap: () => widget.onToggleGroup(item.label),
           );
         } else if (item is _EntryItem) {
           return _EntryTile(entry: item.entry);
         }
         return const SizedBox.shrink();
       },
+    );
+
+    return FastScrollBar(
+      controller: _scrollController,
+      itemCount: items.length,
+      groupAnchors: groupAnchors,
+      active: !widget.searchActive,
+      child: listView,
     );
   }
 }

@@ -175,7 +175,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       // Should still show idle.
-      expect(find.text('Enter an expression'), findsOneWidget);
+      expect(find.text('Enter an expression above.'), findsOneWidget);
 
       // Evaluate button should be present.
       expect(find.widgetWithText(ElevatedButton, 'Evaluate'), findsOneWidget);

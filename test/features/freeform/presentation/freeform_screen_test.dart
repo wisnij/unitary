@@ -39,7 +39,7 @@ void main() {
 
     testWidgets('shows idle placeholder initially', (tester) async {
       await tester.pumpWidget(buildApp());
-      expect(find.text('Enter an expression'), findsOneWidget);
+      expect(find.text('Enter an expression above.'), findsOneWidget);
     });
 
     testWidgets('typing in real-time mode triggers debounced evaluation', (
@@ -53,7 +53,7 @@ void main() {
       );
       await tester.pump();
       // Before debounce fires, should still show idle.
-      expect(find.text('Enter an expression'), findsOneWidget);
+      expect(find.text('Enter an expression above.'), findsOneWidget);
 
       // Wait for debounce (500ms + buffer).
       await tester.pump(const Duration(milliseconds: 600));
@@ -88,7 +88,7 @@ void main() {
       await tester.tap(clearButton);
       await tester.pump();
 
-      expect(find.text('Enter an expression'), findsOneWidget);
+      expect(find.text('Enter an expression above.'), findsOneWidget);
     });
 
     testWidgets('conversion between two fields works', (tester) async {
@@ -106,7 +106,7 @@ void main() {
       await tester.pump();
 
       // Just verify we don't see the idle text — conversion happened.
-      expect(find.text('Enter an expression'), findsNothing);
+      expect(find.text('Enter an expression above.'), findsNothing);
     });
 
     testWidgets('on-submit mode shows evaluate button', (tester) async {
@@ -151,7 +151,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
 
       // Should still show idle — no auto-evaluation.
-      expect(find.text('Enter an expression'), findsOneWidget);
+      expect(find.text('Enter an expression above.'), findsOneWidget);
     });
 
     testWidgets('evaluate button triggers evaluation in on-submit mode', (

@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/errors.dart';
@@ -7,6 +9,7 @@ import '../../../core/domain/parser/ast.dart';
 import '../../../core/domain/parser/expression_parser.dart';
 import '../../../shared/utils/quantity_formatter.dart';
 import '../../settings/state/settings_provider.dart';
+import '../data/idle_examples.dart';
 import 'freeform_state.dart';
 import 'parser_provider.dart';
 
@@ -17,8 +20,32 @@ final freeformProvider = NotifierProvider<FreeformNotifier, EvaluationResult>(
 
 /// Manages freeform expression evaluation state.
 class FreeformNotifier extends Notifier<EvaluationResult> {
+  /// The example shown in the most recent idle state, used to avoid
+  /// repeating the same example on consecutive idle transitions.
+  String? _lastExample;
+
   @override
-  EvaluationResult build() => const EvaluationIdle();
+  EvaluationResult build() => _idle();
+
+  /// Returns a fresh [EvaluationIdle] with an example different from the
+  /// previous one, then records it as [_lastExample].
+  EvaluationIdle _idle() {
+    final example = _pickExample();
+    _lastExample = example;
+    return EvaluationIdle(example: example);
+  }
+
+  /// Picks a random entry from [idleExamples] that differs from [_lastExample].
+  String _pickExample() {
+    if (idleExamples.length <= 1) {
+      return idleExamples.first;
+    }
+    String pick;
+    do {
+      pick = idleExamples[Random().nextInt(idleExamples.length)];
+    } while (pick == _lastExample);
+    return pick;
+  }
 
   /// Evaluates the input and output fields and updates state accordingly.
   ///
@@ -32,7 +59,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
   /// - Expression input + empty or expression output → existing paths.
   void evaluate(String input, String output) {
     if (input.trim().isEmpty) {
-      state = const EvaluationIdle();
+      state = _idle();
       return;
     }
 
@@ -345,7 +372,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
 
   /// Resets to idle state.
   void clear() {
-    state = const EvaluationIdle();
+    state = _idle();
   }
 
   /// Strips all whitespace so that strings differing only in spacing compare

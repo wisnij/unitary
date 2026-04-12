@@ -51,10 +51,10 @@ These decisions were made during the Phase 4 design review:
    debounce) and on-submit (Enter key or button) modes.  User selects in
    settings.  Default: real-time.
 
-5. **Two-field conversion.** Input expression field and output unit field.
+5. **Two-field conversion.** Input expression field and output expression field.
    When only input is provided, result displays in base SI units.  When both
    are provided and conformable, result displays the converted value in the
-   output units.
+   output expression's units.
 
 6. **Result display: Converted value only.** For two-expression conversion,
    show the converted value with the output unit label (e.g., `8.04672 km`).

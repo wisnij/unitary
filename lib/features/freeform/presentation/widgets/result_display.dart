@@ -3,10 +3,15 @@ import 'package:flutter/material.dart';
 import '../../state/freeform_state.dart';
 
 /// Displays the evaluation result with appropriate styling.
+///
+/// When [result] is [EvaluationIdle] and [onTap] is provided, the idle
+/// display is tappable: tapping it invokes [onTap] (typically to fill the
+/// input field with the example expression).
 class ResultDisplay extends StatelessWidget {
   final EvaluationResult result;
+  final VoidCallback? onTap;
 
-  const ResultDisplay({super.key, required this.result});
+  const ResultDisplay({super.key, required this.result, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -14,13 +19,29 @@ class ResultDisplay extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     final (Widget child, Color borderColor) = switch (result) {
-      EvaluationIdle() => (
-        Text(
-          'Enter an expression',
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontSize: 16,
-          ),
+      EvaluationIdle(:final example) => (
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Enter an expression above.',
+              style: TextStyle(
+                color: colorScheme.onSurfaceVariant,
+                fontSize: 16,
+              ),
+            ),
+            if (example != null) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Try: $example',
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ],
         ),
         colorScheme.outline,
       ),
@@ -215,7 +236,7 @@ class ResultDisplay extends StatelessWidget {
       ),
     };
 
-    return Container(
+    final container = Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -224,5 +245,13 @@ class ResultDisplay extends StatelessWidget {
       ),
       child: child,
     );
+
+    if (result is EvaluationIdle && onTap != null) {
+      return MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: GestureDetector(onTap: onTap, child: container),
+      );
+    }
+    return container;
   }
 }

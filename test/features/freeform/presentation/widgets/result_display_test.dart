@@ -12,11 +12,51 @@ void main() {
   }
 
   group('ResultDisplay', () {
-    testWidgets('renders idle placeholder text', (tester) async {
+    testWidgets('renders idle instruction text without example', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         wrap(const ResultDisplay(result: EvaluationIdle())),
       );
-      expect(find.text('Enter an expression'), findsOneWidget);
+      expect(find.text('Enter an expression above.'), findsOneWidget);
+      expect(find.textContaining('Try:'), findsNothing);
+    });
+
+    testWidgets('renders idle instruction and Try line when example given', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        wrap(const ResultDisplay(result: EvaluationIdle(example: '60 mph'))),
+      );
+      expect(find.text('Enter an expression above.'), findsOneWidget);
+      expect(find.text('Try: 60 mph'), findsOneWidget);
+    });
+
+    testWidgets('invokes onTap when idle display is tapped', (tester) async {
+      var tapped = false;
+      await tester.pumpWidget(
+        wrap(
+          ResultDisplay(
+            result: const EvaluationIdle(example: '60 mph'),
+            onTap: () => tapped = true,
+          ),
+        ),
+      );
+      await tester.tap(find.byType(ResultDisplay));
+      expect(tapped, isTrue);
+    });
+
+    testWidgets('does not invoke onTap when null', (tester) async {
+      // Should not throw when onTap is null.
+      await tester.pumpWidget(
+        wrap(
+          const ResultDisplay(
+            result: EvaluationIdle(example: '60 mph'),
+          ),
+        ),
+      );
+      await tester.tap(find.byType(ResultDisplay), warnIfMissed: false);
+      // No assertion needed — the test passes if no exception is thrown.
     });
 
     testWidgets('renders success result text', (tester) async {
@@ -53,7 +93,7 @@ void main() {
       await tester.pumpWidget(
         wrap(const ResultDisplay(result: EvaluationIdle())),
       );
-      final text = tester.widget<Text>(find.text('Enter an expression'));
+      final text = tester.widget<Text>(find.text('Enter an expression above.'));
       expect(text.style?.color, isNotNull);
     });
 

@@ -34,6 +34,39 @@ void main() {
       expect(container.read(freeformProvider), isA<EvaluationIdle>());
     });
 
+    test('initial state has a non-null, non-empty example', () {
+      final state = container.read(freeformProvider) as EvaluationIdle;
+      expect(state.example, isNotNull);
+      expect(state.example, isNotEmpty);
+    });
+
+    test('example changes when returning to idle after evaluation', () {
+      final notifier = container.read(freeformProvider.notifier);
+      final first =
+          (container.read(freeformProvider) as EvaluationIdle).example;
+
+      // Evaluate something to leave idle, then return to idle.
+      notifier.evaluate('2 + 3', '');
+      notifier.evaluate('', '');
+
+      final second =
+          (container.read(freeformProvider) as EvaluationIdle).example;
+      expect(second, isNot(equals(first)));
+    });
+
+    test('example changes when cleared after evaluation', () {
+      final notifier = container.read(freeformProvider.notifier);
+      final first =
+          (container.read(freeformProvider) as EvaluationIdle).example;
+
+      notifier.evaluate('2 + 3', '');
+      notifier.clear();
+
+      final second =
+          (container.read(freeformProvider) as EvaluationIdle).example;
+      expect(second, isNot(equals(first)));
+    });
+
     test('evaluate succeeds for simple expression', () {
       final notifier = container.read(freeformProvider.notifier);
       notifier.evaluate('2 + 3', '');

@@ -155,7 +155,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
             controller: _inputController,
             decoration: InputDecoration(
               labelText: 'Convert from',
-              hintText: '5 miles + 3 km',
               border: const OutlineInputBorder(),
               suffixIcon: _inputController.text.isNotEmpty
                   ? IconButton(
@@ -175,14 +174,23 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
             controller: _outputController,
             decoration: const InputDecoration(
               labelText: 'Convert to (optional)',
-              hintText: 'feet',
               border: OutlineInputBorder(),
             ),
             onChanged: _onOutputChanged,
             onSubmitted: (_) => _evaluate(),
           ),
           const SizedBox(height: 24),
-          ResultDisplay(result: result),
+          ResultDisplay(
+            result: result,
+            onTap: result is EvaluationIdle && result.example != null
+                ? () {
+                    _inputController.text = result.example!;
+                    setState(() {});
+                    _cancelDebounce();
+                    _evaluate();
+                  }
+                : null,
+          ),
           if (isOnSubmit) ...[
             const SizedBox(height: 16),
             ElevatedButton(

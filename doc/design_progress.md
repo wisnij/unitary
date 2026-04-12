@@ -61,7 +61,7 @@ The following areas have been thoroughly designed and documented:
 - **State management**: Riverpod with StateNotifierProvider for mutable state, Provider for singletons
 - **Persistence**: SharedPreferences for user settings (precision, notation, dark mode, evaluation mode)
 - **Navigation**: Drawer-based with Freeform (active), Worksheet (disabled), Settings
-- **Two-field conversion**: Input expression + output unit field; result = converted value with unit label
+- **Two-field conversion**: Input expression + output expression field; result = converted value with output expression label
 - **Evaluation modes**: Real-time (500ms debounce) and on-submit; user-configurable
 - **Result formatting**: Value + canonical unit string; decimal/scientific/engineering notation
 - **Dark mode**: Three-state (system/dark/light) mapping to Flutter ThemeMode

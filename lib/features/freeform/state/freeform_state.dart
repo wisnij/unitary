@@ -5,9 +5,15 @@ sealed class EvaluationResult {
   const EvaluationResult();
 }
 
-/// No input yet — show placeholder text.
+/// No input yet — show placeholder text and an optional example expression.
+///
+/// [example] is a randomly selected expression string from the curated
+/// example list, chosen once at app launch.  It is `null` only in tests
+/// that construct the idle state directly without a selected example.
 class EvaluationIdle extends EvaluationResult {
-  const EvaluationIdle();
+  final String? example;
+
+  const EvaluationIdle({this.example});
 }
 
 /// Single expression evaluated successfully.
@@ -100,7 +106,7 @@ class FunctionConversionResult extends EvaluationResult {
 /// [formattedResult] is the primary value line (e.g. `"= 2.2369363 s/m"`).
 /// [formattedReciprocal] is the secondary value line
 /// (e.g. `"= (1 / 0.44704) s/m"`).
-/// [outputUnit] is the raw output unit string as entered by the user.
+/// [outputUnit] is the raw output expression string as entered by the user.
 class ReciprocalConversionSuccess extends EvaluationResult {
   final String reciprocalInputLabel;
   final String formattedResult;

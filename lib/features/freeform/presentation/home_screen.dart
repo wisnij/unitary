@@ -75,6 +75,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ),
             Consumer(
               builder: (context, ref, child) {
+                final searchActive = ref.watch(
+                  browserProvider.select((s) => s.searchQuery.isNotEmpty),
+                );
+                return IconButton(
+                  icon: const Icon(Icons.unfold_more),
+                  tooltip: 'Expand all',
+                  onPressed: searchActive
+                      ? null
+                      : ref.read(browserProvider.notifier).expandAll,
+                );
+              },
+            ),
+            Consumer(
+              builder: (context, ref, child) {
+                final searchActive = ref.watch(
+                  browserProvider.select((s) => s.searchQuery.isNotEmpty),
+                );
+                return IconButton(
+                  icon: const Icon(Icons.unfold_less),
+                  tooltip: 'Collapse all',
+                  onPressed: searchActive
+                      ? null
+                      : ref.read(browserProvider.notifier).collapseAll,
+                );
+              },
+            ),
+            Consumer(
+              builder: (context, ref, child) {
                 final isAlpha =
                     ref.watch(
                       browserProvider.select((s) => s.viewMode),

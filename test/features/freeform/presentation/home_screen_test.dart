@@ -3,9 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:unitary/core/domain/models/browse_entry.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
+import 'package:unitary/core/domain/models/unit.dart';
+import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
+import 'package:unitary/features/browser/state/browser_provider.dart';
 import 'package:unitary/features/freeform/presentation/home_screen.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
@@ -13,6 +17,26 @@ import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
+
+// ---------------------------------------------------------------------------
+// Lightweight test browser notifier (avoids loading all predefined units).
+// ---------------------------------------------------------------------------
+
+class _TestBrowserNotifier extends BrowserNotifier {
+  _TestBrowserNotifier(this._testRepo);
+  final UnitRepository _testRepo;
+
+  @override
+  (UnitRepository, List<BrowseEntry>) createData() =>
+      (_testRepo, _testRepo.buildBrowseCatalog());
+}
+
+UnitRepository _buildTestBrowserRepo() {
+  final repo = UnitRepository();
+  repo.register(const PrimitiveUnit(id: 'm'));
+  repo.register(const DerivedUnit(id: 'ft', expression: '0.3048 m'));
+  return repo;
+}
 
 void main() {
   late SettingsRepository repo;
@@ -23,9 +47,13 @@ void main() {
     repo = SettingsRepository(prefs);
   });
 
-  Widget buildApp() {
+  Widget buildApp({UnitRepository? browserRepo}) {
     return ProviderScope(
-      overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+      overrides: [
+        settingsRepositoryProvider.overrideWithValue(repo),
+        if (browserRepo != null)
+          browserProvider.overrideWith(() => _TestBrowserNotifier(browserRepo)),
+      ],
       child: const MaterialApp(home: HomeScreen()),
     );
   }
@@ -35,6 +63,14 @@ void main() {
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Worksheet'));
+    await tester.pumpAndSettle();
+  }
+
+  /// Navigate to browser mode: open drawer and tap 'Browse'.
+  Future<void> navigateToBrowser(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Browse'));
     await tester.pumpAndSettle();
   }
 
@@ -459,6 +495,50 @@ void main() {
         find.widgetWithIcon(IconButton, Icons.balance),
       );
       expect(btn.onPressed, isNull);
+    });
+  });
+
+  group('HomeScreen — browse AppBar buttons', () {
+    testWidgets('Expand All button is present on Browse page', (tester) async {
+      await tester.pumpWidget(
+        buildApp(browserRepo: _buildTestBrowserRepo()),
+      );
+      await navigateToBrowser(tester);
+      expect(find.byIcon(Icons.unfold_more), findsOneWidget);
+    });
+
+    testWidgets('Collapse All button is present on Browse page', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(browserRepo: _buildTestBrowserRepo()),
+      );
+      await navigateToBrowser(tester);
+      expect(find.byIcon(Icons.unfold_less), findsOneWidget);
+    });
+
+    testWidgets('Expand All and Collapse All are disabled during search', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(browserRepo: _buildTestBrowserRepo()),
+      );
+      await navigateToBrowser(tester);
+
+      // Activate the search bar and type a query.
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'm');
+      await tester.pump();
+
+      final expandBtn = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.unfold_more),
+      );
+      final collapseBtn = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.unfold_less),
+      );
+      expect(expandBtn.onPressed, isNull);
+      expect(collapseBtn.onPressed, isNull);
     });
   });
 }

@@ -144,6 +144,20 @@ class BrowserNotifier extends Notifier<BrowserState> {
     state = state.copyWith(collapsedGroups: current);
   }
 
+  /// Expands all groups in the current view by clearing the collapsed set.
+  void expandAll() {
+    state = state.copyWith(collapsedGroups: const {});
+  }
+
+  /// Collapses all groups in the current view.
+  void collapseAll() {
+    final index = state.viewMode == BrowseViewMode.alphabetical
+        ? _alphabeticalIndex
+        : (_dimensionIndex ?? const []);
+    final allLabels = index.map((g) => g.$1).toSet();
+    state = state.copyWith(collapsedGroups: allLabels);
+  }
+
   /// Toggles the search bar visibility.  Hides the bar and clears the query
   /// when currently visible.
   void toggleSearch() {

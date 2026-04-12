@@ -327,4 +327,47 @@ void main() {
       expect(mGroup.$2, isEmpty);
     });
   });
+
+  group('expandAll / collapseAll', () {
+    test('expandAll clears the collapsed set in alphabetical view', () {
+      final container = _makeContainer(repo);
+      container
+          .read(browserProvider.notifier)
+          .setViewMode(BrowseViewMode.alphabetical);
+      // Collapse a couple of groups first.
+      container.read(browserProvider.notifier).toggleGroup('M');
+      container.read(browserProvider.notifier).toggleGroup('F');
+      expect(container.read(browserProvider).collapsedGroups, isNotEmpty);
+      // expandAll should clear them all.
+      container.read(browserProvider.notifier).expandAll();
+      expect(container.read(browserProvider).collapsedGroups, isEmpty);
+    });
+
+    test('collapseAll collapses every group in alphabetical view', () {
+      final container = _makeContainer(repo);
+      container
+          .read(browserProvider.notifier)
+          .setViewMode(BrowseViewMode.alphabetical);
+      // Start fully expanded; collapseAll should add all labels.
+      expect(container.read(browserProvider).collapsedGroups, isEmpty);
+      container.read(browserProvider.notifier).collapseAll();
+      final groups = container.read(browserProvider.notifier).visibleGroups();
+      // Every group should report an empty entry list (collapsed).
+      for (final (_, entries) in groups) {
+        expect(entries, isEmpty);
+      }
+    });
+
+    test('collapseAll collapses every group in dimension view', () {
+      final container = _makeContainer(repo);
+      // Dimension view starts collapsed; expandAll first, then collapseAll.
+      container.read(browserProvider.notifier).expandAll();
+      expect(container.read(browserProvider).collapsedGroups, isEmpty);
+      container.read(browserProvider.notifier).collapseAll();
+      final groups = container.read(browserProvider.notifier).visibleGroups();
+      for (final (_, entries) in groups) {
+        expect(entries, isEmpty);
+      }
+    });
+  });
 }

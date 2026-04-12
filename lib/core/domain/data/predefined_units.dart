@@ -49,7 +49,7 @@ const Map<String, String> predefinedDimensionLabels = {
   'kg / m^2': 'Surface density',
   'kg / m^2 s^2': 'Specific weight',
   'kg / m^3': 'Density',
-  'kg / s^2': 'Surface tension',
+  'kg / s^2': 'Energy flux',
   'kg / s^3': 'Heat flux density; irradiance',
   'kg / s^3 sr': 'Radiance',
   'kg m': 'Momentum',

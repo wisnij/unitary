@@ -16,8 +16,10 @@ import 'package:unitary/features/settings/state/settings_provider.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Test notifier that uses a custom repo and starts in alphabetical view so
-/// all groups are expanded by default, making entries immediately visible.
+/// Test notifier that uses a custom repo and starts in alphabetical view with
+/// all groups forced expanded, making entries immediately visible in widget
+/// tests.  (Production default is all-collapsed; this is a deliberate override
+/// for test visibility.)
 class _TestBrowserNotifier extends BrowserNotifier {
   _TestBrowserNotifier(this._testRepo);
   final UnitRepository _testRepo;
@@ -29,7 +31,7 @@ class _TestBrowserNotifier extends BrowserNotifier {
   @override
   BrowserState build() {
     final initialState = super.build();
-    // Start in alphabetical view (all groups expanded) for easier testing.
+    // Force alphabetical view with all groups expanded for easier testing.
     return initialState.copyWith(
       viewMode: BrowseViewMode.alphabetical,
       collapsedGroups: const {},

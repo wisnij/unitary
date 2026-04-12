@@ -89,7 +89,7 @@ keyed by the case-insensitive first character of the entry name.
   character.
 - Groups SHALL be sorted A → Z with `#` last.
 - Entries within each group SHALL be sorted case-insensitively by name.
-- All groups SHALL start expanded when the alphabetical view is first entered.
+- All groups SHALL start collapsed when the alphabetical view is first entered.
 
 #### Scenario: Letter group contains correct entries
 - **WHEN** the alphabetical view is active
@@ -101,10 +101,10 @@ keyed by the case-insensitive first character of the entry name.
 - **THEN** an entry whose name begins with a digit or symbol appears in the
   `#` group
 
-#### Scenario: Groups start expanded in alphabetical view
+#### Scenario: Groups start collapsed in alphabetical view
 - **WHEN** the browser is navigated to for the first time in a session with
   the alphabetical view active
-- **THEN** all letter groups are expanded
+- **THEN** all letter groups are collapsed
 
 ---
 
@@ -167,7 +167,7 @@ state of that group.
   expanded, pointing right when collapsed.
 - Collapsed groups show only their header row; entry rows are hidden.
 - Switching between views SHALL reset each view to its default collapsed/
-  expanded state (alphabetical: all expanded; dimension: all collapsed).
+  expanded state (alphabetical: all collapsed; dimension: all collapsed).
 - The AppBar SHALL contain an **Expand All** button (tooltip "Expand all") that
   expands every group in the current view by clearing the collapsed set.
 - The AppBar SHALL contain a **Collapse All** button (tooltip "Collapse all")
@@ -184,10 +184,9 @@ state of that group.
 - **THEN** the group's entry rows become visible and the chevron points down
 
 #### Scenario: Switching views resets collapse state
-- **WHEN** the user collapses some groups in one view and then switches to the
-  other view and back
-- **THEN** the first view's groups are back to their default expanded/collapsed
-  state
+- **WHEN** the user expands some groups in the alphabetical view and then
+  switches to the dimension view and back
+- **THEN** the alphabetical view's groups are all collapsed again
 
 #### Scenario: Expand All expands every group
 - **WHEN** some groups are collapsed and the user taps the Expand All button

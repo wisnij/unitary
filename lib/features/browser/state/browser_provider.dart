@@ -110,7 +110,7 @@ class BrowserNotifier extends Notifier<BrowserState> {
   /// [BrowseViewMode.dimension].
   ///
   /// Resets [BrowserState.collapsedGroups] to each view's default:
-  /// - Alphabetical: all groups expanded (empty set).
+  /// - Alphabetical: all groups collapsed (full label set).
   /// - Dimension: all groups collapsed (full label set); triggers lazy build
   ///   of the dimension index on first switch.
   void setViewMode(BrowseViewMode mode) {
@@ -119,9 +119,10 @@ class BrowserNotifier extends Notifier<BrowserState> {
     }
 
     if (mode == BrowseViewMode.alphabetical) {
+      final allLabels = _alphabeticalIndex.map((g) => g.$1).toSet();
       state = state.copyWith(
         viewMode: mode,
-        collapsedGroups: const {},
+        collapsedGroups: allLabels,
       );
     } else {
       _ensureDimensionIndex();

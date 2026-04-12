@@ -82,12 +82,10 @@ void main() {
     test('# group collects non-letter entries', () {
       repo.register(const DerivedUnit(id: '42answer', expression: '42 m'));
       final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(
-            BrowseViewMode.alphabetical,
-          );
-      final groups = container.read(browserProvider.notifier).visibleGroups();
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      notifier.expandAll();
+      final groups = notifier.visibleGroups();
       final hashGroup = groups.where((g) => g.$1 == '#').toList();
       expect(hashGroup, isNotEmpty);
       expect(
@@ -110,12 +108,10 @@ void main() {
 
     test('entries within each group are sorted case-insensitively', () {
       final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(
-            BrowseViewMode.alphabetical,
-          );
-      final groups = container.read(browserProvider.notifier).visibleGroups();
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      notifier.expandAll();
+      final groups = notifier.visibleGroups();
       final fGroup = groups.firstWhere((g) => g.$1 == 'F');
       final names = fGroup.$2.map((e) => e.name.toLowerCase()).toList();
       final sorted = [...names]..sort();
@@ -172,12 +168,13 @@ void main() {
   });
 
   group('collapse / expand', () {
-    test('alphabetical view starts fully expanded', () {
+    test('alphabetical view starts fully collapsed', () {
       final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.alphabetical);
-      expect(container.read(browserProvider).collapsedGroups, isEmpty);
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      final collapsed = container.read(browserProvider).collapsedGroups;
+      final allLabels = notifier.visibleGroups().map((g) => g.$1).toSet();
+      expect(collapsed, equals(allLabels));
     });
 
     test('dimension view starts fully collapsed', () {
@@ -191,38 +188,43 @@ void main() {
       }
     });
 
-    test('toggleGroup expands a collapsed group', () {
+    test(
+      'toggleGroup expands a collapsed group and collapses an expanded group',
+      () {
+        final container = _makeContainer(repo);
+        final notifier = container.read(browserProvider.notifier);
+        notifier.setViewMode(BrowseViewMode.alphabetical);
+        // M starts collapsed; first toggle expands it.
+        notifier.toggleGroup('M');
+        expect(
+          container.read(browserProvider).collapsedGroups,
+          isNot(contains('M')),
+        );
+        // Second toggle collapses it again.
+        notifier.toggleGroup('M');
+        expect(container.read(browserProvider).collapsedGroups, contains('M'));
+      },
+    );
+
+    test('switching view resets collapse state', () {
       final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.alphabetical);
-      container.read(browserProvider.notifier).toggleGroup('M');
-      expect(
-        container.read(browserProvider).collapsedGroups,
-        contains('M'),
-      );
-      container.read(browserProvider.notifier).toggleGroup('M');
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      // Expand M so it differs from the default collapsed state.
+      notifier.toggleGroup('M');
       expect(
         container.read(browserProvider).collapsedGroups,
         isNot(contains('M')),
       );
-    });
-
-    test('switching view resets collapse state', () {
-      final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.alphabetical);
-      container.read(browserProvider.notifier).toggleGroup('M');
       // Switch to dimension view and back.
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.dimension);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.alphabetical);
-      // Back to alphabetical: collapsed state reset to empty.
-      expect(container.read(browserProvider).collapsedGroups, isEmpty);
+      notifier.setViewMode(BrowseViewMode.dimension);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      // Back to alphabetical: collapsed state reset to all-collapsed default.
+      final allLabels = notifier.visibleGroups().map((g) => g.$1).toSet();
+      expect(
+        container.read(browserProvider).collapsedGroups,
+        equals(allLabels),
+      );
     });
   });
 
@@ -264,15 +266,11 @@ void main() {
 
     test('entering search expands all groups', () {
       final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.alphabetical);
-      container.read(browserProvider.notifier).toggleGroup('M');
-      expect(
-        container.read(browserProvider).collapsedGroups,
-        contains('M'),
-      );
-      container.read(browserProvider.notifier).setSearchQuery('foot');
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      // Groups start collapsed; search should expand them all.
+      expect(container.read(browserProvider).collapsedGroups, isNotEmpty);
+      notifier.setSearchQuery('foot');
       expect(container.read(browserProvider).collapsedGroups, isEmpty);
     });
 
@@ -312,18 +310,19 @@ void main() {
 
     test('collapse state restored after clearing search', () {
       final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.alphabetical);
-      container.read(browserProvider.notifier).toggleGroup('M');
-      container.read(browserProvider.notifier).setSearchQuery('meter');
-      container.read(browserProvider.notifier).setSearchQuery('');
-      final groups = container.read(browserProvider.notifier).visibleGroups();
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      // Expand all, then collapse M explicitly so the pre-search state has M collapsed.
+      notifier.expandAll();
+      notifier.toggleGroup('M');
+      notifier.setSearchQuery('meter');
+      notifier.setSearchQuery('');
+      final groups = notifier.visibleGroups();
       final mGroup = groups.firstWhere(
         (g) => g.$1 == 'M',
         orElse: () => ('', const []),
       );
-      // 'M' was toggled collapsed; search cleared → back to collapsed.
+      // 'M' was collapsed before search; search cleared → back to collapsed.
       expect(mGroup.$2, isEmpty);
     });
   });
@@ -345,12 +344,12 @@ void main() {
 
     test('collapseAll collapses every group in alphabetical view', () {
       final container = _makeContainer(repo);
-      container
-          .read(browserProvider.notifier)
-          .setViewMode(BrowseViewMode.alphabetical);
-      // Start fully expanded; collapseAll should add all labels.
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      // Expand all first so collapseAll has something to do.
+      notifier.expandAll();
       expect(container.read(browserProvider).collapsedGroups, isEmpty);
-      container.read(browserProvider.notifier).collapseAll();
+      notifier.collapseAll();
       final groups = container.read(browserProvider.notifier).visibleGroups();
       // Every group should report an empty entry list (collapsed).
       for (final (_, entries) in groups) {

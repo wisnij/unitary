@@ -1,4 +1,24 @@
 repos:
+  - repo: local
+    hooks:
+      - id: import-gnu-units
+        name: Import GNU units database
+        language: system
+        entry: bash -c 'dart run tool/import_gnu_units.dart && dart run tool/generate_predefined_units.dart'
+        files: |
+          (?x)^(
+            tool/gnu_units/ |
+            tool/import_gnu_units
+          )
+      - id: generate-predefined-units
+        name: Regenerate predefined units
+        language: system
+        entry: dart run tool/generate_predefined_units.dart
+        files: |
+          (?x)^(
+            lib/core/domain/data/units-supplementary\.json |
+            tool/generate_predefined_units
+          )
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.20.0
     hooks:

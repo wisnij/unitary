@@ -79878,7 +79878,7 @@
       "label": "Density"
     },
     "kg / s^2": {
-      "label": "Energy flux"
+      "label": "Energy flux; surface tension"
     },
     "kg / s^3": {
       "label": "Heat flux density; irradiance"

@@ -62,6 +62,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   }
 
   void _onInputChanged(String _) {
+    setState(() {}); // Rebuild to update clear button and swap button states.
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();
@@ -69,10 +70,19 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   }
 
   void _onOutputChanged(String _) {
+    setState(() {}); // Rebuild to update swap button enabled state.
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();
     }
+  }
+
+  void _swap() {
+    final inputText = _inputController.text;
+    _inputController.text = _outputController.text;
+    _outputController.text = inputText;
+    _cancelDebounce();
+    _evaluate();
   }
 
   void _cancelDebounce() {
@@ -145,6 +155,8 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     final result = ref.watch(freeformProvider);
     final settings = ref.watch(settingsProvider);
     final isOnSubmit = settings.evaluationMode == EvaluationMode.onSubmit;
+    final canSwap =
+        _inputController.text.isNotEmpty && _outputController.text.isNotEmpty;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -163,13 +175,18 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                     )
                   : null,
             ),
-            onChanged: (value) {
-              setState(() {}); // Rebuild to show/hide clear button.
-              _onInputChanged(value);
-            },
+            onChanged: _onInputChanged,
             onSubmitted: (_) => _evaluate(),
           ),
-          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.swap_vert),
+                onPressed: canSwap ? _swap : null,
+              ),
+            ],
+          ),
           TextField(
             controller: _outputController,
             decoration: const InputDecoration(

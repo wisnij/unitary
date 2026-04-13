@@ -203,6 +203,118 @@ void main() {
     });
   });
 
+  group('FreeformScreen — swap button', () {
+    testWidgets('swap button is always visible between the two fields', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      expect(find.byIcon(Icons.swap_vert), findsOneWidget);
+    });
+
+    Finder findSwapButton() => find.ancestor(
+      of: find.byIcon(Icons.swap_vert),
+      matching: find.byType(IconButton),
+    );
+
+    testWidgets('swap button is disabled when both fields are empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      final btn = tester.widget<IconButton>(findSwapButton());
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('swap button is disabled when only input field has text', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 miles',
+      );
+      await tester.pump();
+      final btn = tester.widget<IconButton>(findSwapButton());
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('swap button is disabled when only output field has text', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'km',
+      );
+      await tester.pump();
+      final btn = tester.widget<IconButton>(findSwapButton());
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('swap button is enabled when both fields have text', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 miles',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'km',
+      );
+      await tester.pump();
+      final btn = tester.widget<IconButton>(findSwapButton());
+      expect(btn.onPressed, isNotNull);
+    });
+
+    testWidgets('tapping swap exchanges field contents', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 miles',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'km',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.swap_vert));
+      await tester.pump();
+
+      final inputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'km'),
+      );
+      final outputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, '5 miles'),
+      );
+      expect(inputField.controller?.text, 'km');
+      expect(outputField.controller?.text, '5 miles');
+    });
+
+    testWidgets('tapping swap triggers immediate evaluation', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 miles',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'km',
+      );
+      await tester.pump();
+
+      // Tap swap without waiting for debounce.
+      await tester.tap(find.byIcon(Icons.swap_vert));
+      await tester.pump(); // No debounce wait — should evaluate immediately.
+
+      // After swap, km is now the input; should not be showing idle state.
+      expect(find.text('Enter an expression above.'), findsNothing);
+    });
+  });
+
   group('FreeformScreen — conformable-units modal', () {
     testWidgets('pressing button with pending debounce force-evaluates first', (
       tester,

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Add swap button between the freeform input boxes
 - Add more example expressions
 
 ### Fixed

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add more example expressions
 
+### Fixed
+
+- Allow expanding and collapsing groups while searching
+
 
 [0.6.6] - 2026-04-12
 --------------------

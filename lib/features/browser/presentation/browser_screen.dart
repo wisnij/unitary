@@ -118,8 +118,7 @@ class _BrowseListViewState extends State<_BrowseListView> {
     final items = <_ListItem>[];
     final groupAnchors = <(int, String)>[];
     for (final (label, entries) in widget.groups) {
-      final isCollapsed =
-          !widget.searchActive && widget.collapsedGroups.contains(label);
+      final isCollapsed = widget.collapsedGroups.contains(label);
       groupAnchors.add((items.length, label));
       items.add(_GroupHeaderItem(label: label, collapsed: isCollapsed));
       for (final entry in entries) {

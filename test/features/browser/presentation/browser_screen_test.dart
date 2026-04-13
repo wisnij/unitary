@@ -114,6 +114,124 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // Expand/collapse during search
+  // ---------------------------------------------------------------------------
+
+  group('BrowserScreen — expand/collapse during search', () {
+    testWidgets('collapsing a group during search shows collapsed chevron', (
+      tester,
+    ) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+
+      // Start a search query so all groups are expanded.
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(BrowserScreen)),
+      );
+      container.read(browserProvider.notifier).toggleSearch();
+      container.read(browserProvider.notifier).setSearchQuery('k');
+      await tester.pump();
+
+      // Collapse the K group (contains "kilo-").
+      container.read(browserProvider.notifier).toggleGroup('K');
+      await tester.pump();
+
+      // The K group header should show the collapsed (right-pointing) chevron.
+      final headers = find.byWidgetPredicate(
+        (w) => w is Icon && w.icon == Icons.chevron_right,
+      );
+      expect(headers, findsOneWidget);
+
+      // The kilo- entry should not be visible.
+      expect(find.text('kilo-'), findsNothing);
+    });
+
+    testWidgets(
+      'expanding a collapsed group during search shows expanded chevron',
+      (
+        tester,
+      ) async {
+        final repo = _buildDecorationRepo();
+        await tester.pumpWidget(_buildScreen(repo));
+
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(BrowserScreen)),
+        );
+        container.read(browserProvider.notifier).toggleSearch();
+        container.read(browserProvider.notifier).setSearchQuery('k');
+        await tester.pump();
+
+        // Collapse then re-expand the K group.
+        container.read(browserProvider.notifier).toggleGroup('K');
+        await tester.pump();
+        container.read(browserProvider.notifier).toggleGroup('K');
+        await tester.pump();
+
+        // The K group should show the expanded (down-pointing) chevron.
+        final collapsedChevrons = find.byWidgetPredicate(
+          (w) => w is Icon && w.icon == Icons.chevron_right,
+        );
+        expect(collapsedChevrons, findsNothing);
+
+        // The kilo- entry should be visible again.
+        expect(find.text('kilo-'), findsOneWidget);
+      },
+    );
+
+    testWidgets('Expand All during search expands all groups', (tester) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(BrowserScreen)),
+      );
+      container.read(browserProvider.notifier).toggleSearch();
+      // Type a query that matches entries in multiple groups.
+      container.read(browserProvider.notifier).setSearchQuery('a');
+      container.read(browserProvider.notifier).toggleGroup('C');
+      await tester.pump();
+
+      container.read(browserProvider.notifier).expandAll();
+      await tester.pump();
+
+      // No collapsed chevrons should remain.
+      final collapsedChevrons = find.byWidgetPredicate(
+        (w) => w is Icon && w.icon == Icons.chevron_right,
+      );
+      expect(collapsedChevrons, findsNothing);
+    });
+
+    testWidgets('Collapse All during search collapses all groups', (
+      tester,
+    ) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+
+      final container = ProviderScope.containerOf(
+        tester.element(find.byType(BrowserScreen)),
+      );
+      container.read(browserProvider.notifier).toggleSearch();
+      container.read(browserProvider.notifier).setSearchQuery('a');
+      await tester.pump();
+
+      // All groups are expanded after a query change; collapse all.
+      container.read(browserProvider.notifier).collapseAll();
+      await tester.pump();
+
+      // All visible group headers should show the collapsed chevron.
+      final expandedChevrons = find.byWidgetPredicate(
+        (w) => w is Icon && w.icon == Icons.expand_more,
+      );
+      expect(expandedChevrons, findsNothing);
+
+      // No entry rows visible (circlearea, m, kilo- all hidden).
+      expect(find.text('kilo-'), findsNothing);
+      expect(find.text('m'), findsNothing);
+      expect(find.text('circlearea(r)'), findsNothing);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
   // FastScrollBar integration
   // ---------------------------------------------------------------------------
 

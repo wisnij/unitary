@@ -517,7 +517,7 @@ void main() {
       expect(find.byIcon(Icons.unfold_less), findsOneWidget);
     });
 
-    testWidgets('Expand All and Collapse All are disabled during search', (
+    testWidgets('Expand All and Collapse All are enabled during search', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -537,8 +537,8 @@ void main() {
       final collapseBtn = tester.widget<IconButton>(
         find.widgetWithIcon(IconButton, Icons.unfold_less),
       );
-      expect(expandBtn.onPressed, isNull);
-      expect(collapseBtn.onPressed, isNull);
+      expect(expandBtn.onPressed, isNotNull);
+      expect(collapseBtn.onPressed, isNotNull);
     });
   });
 }

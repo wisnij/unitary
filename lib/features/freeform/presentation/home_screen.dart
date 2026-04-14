@@ -98,7 +98,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   icon: Icon(isAlpha ? Icons.category : Icons.sort_by_alpha),
                   tooltip: isAlpha
                       ? 'Group by dimension'
-                      : 'Sort alphabetically',
+                      : 'Group alphabetically',
                   onPressed: () => ref
                       .read(browserProvider.notifier)
                       .setViewMode(

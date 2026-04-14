@@ -93,6 +93,7 @@ const Map<String, String> predefinedDimensionLabels = {
   'radian / s': 'Angular velocity',
   'radian / s^2': 'Angular acceleration',
   's': 'Time',
+  's^2 / kg m': 'Electric vehicle efficiency',
   'sr': 'Solid angle',
   'wholenote': 'Musical note length',
 };

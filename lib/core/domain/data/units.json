@@ -80009,6 +80009,9 @@
     "s": {
       "label": "Time"
     },
+    "s^2 / kg m": {
+      "label": "Electric vehicle efficiency"
+    },
     "sr": {
       "label": "Solid angle"
     },

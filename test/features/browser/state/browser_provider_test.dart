@@ -134,20 +134,58 @@ void main() {
       final groups = container.read(browserProvider.notifier).visibleGroups();
       final labels = groups.map((g) => g.$1).toList();
 
-      // 'Length' and 'Mass' are labeled; 'badUnit' has null dimension so absent.
-      final lengthIdx = labels.indexOf('Length');
-      final massIdx = labels.indexOf('Mass');
+      // 'Length (m)' and 'Mass (kg)' are labeled; 'badUnit' has null dimension so absent.
+      final lengthIdx = labels.indexOf('Length (m)');
+      final massIdx = labels.indexOf('Mass (kg)');
       expect(lengthIdx, greaterThanOrEqualTo(0));
       expect(massIdx, greaterThanOrEqualTo(0));
 
       // Any unlabeled groups come after all labeled ones.
       for (var i = 0; i < labels.length; i++) {
-        final isLabeled = labels[i] == 'Length' || labels[i] == 'Mass';
+        final isLabeled = labels[i] == 'Length (m)' || labels[i] == 'Mass (kg)';
         if (!isLabeled) {
           expect(i, greaterThan(lengthIdx));
           expect(i, greaterThan(massIdx));
         }
       }
+    });
+
+    test(
+      'labeled group header includes label and canonical representation',
+      () {
+        final container = _makeContainer(repo);
+        final notifier = container.read(browserProvider.notifier);
+        final collapsed = Set<String>.from(
+          container.read(browserProvider).collapsedGroups,
+        );
+        for (final label in collapsed) {
+          notifier.toggleGroup(label);
+        }
+        final groups = notifier.visibleGroups();
+        final labels = groups.map((g) => g.$1).toList();
+        // 'm' has label 'Length'; group header must be 'Length (m)'.
+        expect(labels, contains('Length (m)'));
+        // 'kg' has label 'Mass'; group header must be 'Mass (kg)'.
+        expect(labels, contains('Mass (kg)'));
+      },
+    );
+
+    test('unlabeled group header shows only canonical representation', () {
+      // Register a unit with a dimension that has no label entry.
+      repo.register(const PrimitiveUnit(id: 's'));
+      final container = _makeContainer(repo);
+      final notifier = container.read(browserProvider.notifier);
+      final collapsed = Set<String>.from(
+        container.read(browserProvider).collapsedGroups,
+      );
+      for (final label in collapsed) {
+        notifier.toggleGroup(label);
+      }
+      final groups = notifier.visibleGroups();
+      final labels = groups.map((g) => g.$1).toList();
+      // 's' has no label; its group header is the canonical representation only.
+      expect(labels, contains('s'));
+      expect(labels.where((l) => l.startsWith('s (')), isEmpty);
     });
 
     test('unresolvable unit is excluded from dimension groups', () {

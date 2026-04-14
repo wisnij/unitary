@@ -113,10 +113,12 @@ In the dimension view the catalog SHALL be displayed as a grouped list keyed
 by the resolved output dimension of each entry.
 
 - Each distinct `Dimension` value forms one group.
-- The group label SHALL be the value of `"label"` from the `"dimensions"` map
-  in `units.json` whose key matches `dimension.canonicalRepresentation()`.
-  If no matching key exists the label SHALL fall back to
-  `dimension.canonicalRepresentation()` itself.
+- The group label SHALL be determined as follows:
+  - If `units.json` defines a label for the canonical representation: the label
+    followed by the canonical representation in parentheses, separated by a
+    space (e.g. `"Acceleration (m / s^2)"`).
+  - If no matching key exists: the canonical representation alone
+    (e.g. `"m / s^2"`).
 - Groups with a defined label SHALL sort before groups whose label is the
   canonical fallback.  Within each tier groups SHALL be sorted
   case-insensitively by their final label.
@@ -128,17 +130,17 @@ by the resolved output dimension of each entry.
 - The dimension view is the default view when the browse page is first opened
   in a session.
 
-#### Scenario: Labeled dimension group appears with defined name
+#### Scenario: Labeled dimension group shows label and canonical representation
 - **WHEN** the dimension view is active and `units.json` defines a label for
   dimension `"m"`
 - **THEN** all entries that resolve to `Dimension({m: 1})` appear in a group
-  labelled with that defined name
+  whose header reads `"<label> (m)"` (e.g. `"Length (m)"`)
 
 #### Scenario: Unlabeled dimension falls back to canonical representation
 - **WHEN** the dimension view is active and a dimension has no entry in the
   `"dimensions"` map
 - **THEN** the group label equals the output of
-  `dimension.canonicalRepresentation()`
+  `dimension.canonicalRepresentation()` with no parenthesized suffix
 
 #### Scenario: Labeled groups sort above unlabeled groups
 - **WHEN** the dimension view is active and both labeled and unlabeled

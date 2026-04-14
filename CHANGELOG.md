@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]
 ------------
 
+### Added
+
+- Show base units next to group names in the unit browser
+- Add electric vehicle efficiency label
+
 ### Fixed
 
 - Regenerate predefined units to agree with supplementary labels

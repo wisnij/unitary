@@ -288,7 +288,11 @@ class BrowserNotifier extends Notifier<BrowserState> {
 
     String labelFor(Dimension dim) {
       final rep = dim.canonicalRepresentation();
-      return dimensionLabels[rep] ?? rep;
+      final userLabel = dimensionLabels[rep];
+      if (userLabel != null) {
+        return '$userLabel ($rep)';
+      }
+      return rep;
     }
 
     bool hasLabel(Dimension dim) {

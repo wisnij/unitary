@@ -120,6 +120,14 @@ void main() {
   });
 
   group('dimension index', () {
+    test('dimension view is the default on first open', () {
+      final container = _makeContainer(repo);
+      expect(
+        container.read(browserProvider).viewMode,
+        BrowseViewMode.dimension,
+      );
+    });
+
     test('labeled groups appear before unlabeled groups', () {
       final container = _makeContainer(repo);
       // Default view is dimension; all groups start collapsed.

@@ -1,32 +1,24 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:unitary/core/domain/models/browse_entry.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/state/browser_provider.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Creates a [ProviderContainer] whose [browserProvider] is backed by [repo].
+/// Creates a [ProviderContainer] whose [browserProvider] is backed by [repo]
+/// via [unitRepositoryProvider].
 ProviderContainer _makeContainer(UnitRepository repo) {
   final container = ProviderContainer(
     overrides: [
-      browserProvider.overrideWith(() => _TestBrowserNotifier(repo)),
+      unitRepositoryProvider.overrideWithValue(repo),
     ],
   );
   addTearDown(container.dispose);
   return container;
-}
-
-class _TestBrowserNotifier extends BrowserNotifier {
-  _TestBrowserNotifier(this._testRepo);
-  final UnitRepository _testRepo;
-
-  @override
-  (UnitRepository, List<BrowseEntry>) createData() =>
-      (_testRepo, _testRepo.buildBrowseCatalog());
 }
 
 // ---------------------------------------------------------------------------

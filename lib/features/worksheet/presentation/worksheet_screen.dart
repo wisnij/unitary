@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../shared/top_level_page.dart';
+import '../../../shared/widgets/app_drawer.dart';
 import '../data/predefined_worksheets.dart';
 import '../models/worksheet.dart';
 import '../services/worksheet_engine.dart';
@@ -9,11 +11,14 @@ import 'widgets/worksheet_row_widget.dart';
 
 /// Worksheet mode screen.
 ///
-/// Displays the currently selected worksheet as a scrollable list of labeled
-/// numeric input rows.  Typing in any row propagates computed values to all
-/// other rows immediately via [WorksheetNotifier].
+/// Owns its own [Scaffold] and [AppBar].  Navigation to other top-level pages
+/// is delegated to [onNavigate], which is called by [AppDrawer] when the user
+/// taps a navigation tile.
 class WorksheetScreen extends ConsumerStatefulWidget {
-  const WorksheetScreen({super.key});
+  const WorksheetScreen({super.key, required this.onNavigate});
+
+  /// Called when the user navigates to another top-level page via the drawer.
+  final void Function(TopLevelPage) onNavigate;
 
   @override
   ConsumerState<WorksheetScreen> createState() => _WorksheetScreenState();
@@ -85,40 +90,54 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     // Sync non-active controller texts from state after each rebuild.
     _syncControllers(template, values, activeIndex);
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: template.rows.length,
-      itemBuilder: (context, i) {
-        final row = template.rows[i];
-        final controllers = _controllersFor(template);
-        return WorksheetRowWidget(
-          key: ValueKey('${template.id}_row_$i'),
-          label: row.label,
-          expression: row.expression,
-          controller: controllers[i],
-          isActive: activeIndex == i,
-          isError: values[i].isError,
-          onChanged: (text) => _onRowChanged(activeId, i, text),
-          onFocused: () => _onRowFocused(activeId, i),
-          onLabelLongPress: (activeIndex != null && activeIndex != i)
-              ? () {
-                  final sourceText = values[activeIndex].text;
-                  if (sourceText.isEmpty) {
-                    return;
+    return Scaffold(
+      appBar: AppBar(
+        title: WorksheetDropdown(
+          templates: predefinedWorksheets,
+          selectedId: activeId,
+          onChanged: (id) =>
+              ref.read(worksheetProvider.notifier).selectWorksheet(id),
+        ),
+      ),
+      drawer: AppDrawer(
+        currentPage: TopLevelPage.worksheet,
+        onNavigate: widget.onNavigate,
+      ),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: template.rows.length,
+        itemBuilder: (context, i) {
+          final row = template.rows[i];
+          final controllers = _controllersFor(template);
+          return WorksheetRowWidget(
+            key: ValueKey('${template.id}_row_$i'),
+            label: row.label,
+            expression: row.expression,
+            controller: controllers[i],
+            isActive: activeIndex == i,
+            isError: values[i].isError,
+            onChanged: (text) => _onRowChanged(activeId, i, text),
+            onFocused: () => _onRowFocused(activeId, i),
+            onLabelLongPress: (activeIndex != null && activeIndex != i)
+                ? () {
+                    final sourceText = values[activeIndex].text;
+                    if (sourceText.isEmpty) {
+                      return;
+                    }
+                    controllers[i].text = sourceText;
+                    _onRowChanged(activeId, i, sourceText);
                   }
-                  controllers[i].text = sourceText;
-                  _onRowChanged(activeId, i, sourceText);
-                }
-              : null,
-        );
-      },
+                : null,
+          );
+        },
+      ),
     );
   }
 }
 
 /// Dropdown widget for selecting a worksheet template.
 ///
-/// Used as the AppBar title in [HomeScreen] when worksheet mode is active.
+/// Used as the AppBar title in [WorksheetScreen].
 class WorksheetDropdown extends StatelessWidget {
   final List<WorksheetTemplate> templates;
   final String selectedId;

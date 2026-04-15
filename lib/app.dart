@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'features/freeform/presentation/home_screen.dart';
 import 'features/settings/state/settings_provider.dart';
+import 'shared/home_screen.dart';
 
 class UnitaryApp extends ConsumerWidget {
   const UnitaryApp({super.key});

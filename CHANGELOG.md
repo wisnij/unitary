@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Add per-page `Scaffold`/`AppBar` and remember page states
 - Make `EvalContext.repo` non-nullable
 
 ### Fixed

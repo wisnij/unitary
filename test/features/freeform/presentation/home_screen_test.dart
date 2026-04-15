@@ -3,40 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/core/domain/models/browse_entry.dart';
-import 'package:unitary/core/domain/models/dimension.dart';
-import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
-import 'package:unitary/features/browser/state/browser_provider.dart';
-import 'package:unitary/features/freeform/presentation/home_screen.dart';
-import 'package:unitary/features/freeform/state/freeform_provider.dart';
-import 'package:unitary/features/freeform/state/freeform_state.dart';
+import 'package:unitary/features/browser/presentation/browser_screen.dart';
+import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
-
-// ---------------------------------------------------------------------------
-// Lightweight test browser notifier (avoids loading all predefined units).
-// ---------------------------------------------------------------------------
-
-class _TestBrowserNotifier extends BrowserNotifier {
-  _TestBrowserNotifier(this._testRepo);
-  final UnitRepository _testRepo;
-
-  @override
-  (UnitRepository, List<BrowseEntry>) createData() =>
-      (_testRepo, _testRepo.buildBrowseCatalog());
-}
-
-UnitRepository _buildTestBrowserRepo() {
-  final repo = UnitRepository();
-  repo.register(const PrimitiveUnit(id: 'm'));
-  repo.register(const DerivedUnit(id: 'ft', expression: '0.3048 m'));
-  return repo;
-}
+import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
+import 'package:unitary/shared/home_screen.dart';
 
 void main() {
   late SettingsRepository repo;
@@ -47,12 +25,19 @@ void main() {
     repo = SettingsRepository(prefs);
   });
 
+  UnitRepository buildTestBrowserRepo() {
+    final r = UnitRepository();
+    r.register(const PrimitiveUnit(id: 'm'));
+    r.register(const DerivedUnit(id: 'ft', expression: '0.3048 m'));
+    return r;
+  }
+
   Widget buildApp({UnitRepository? browserRepo}) {
     return ProviderScope(
       overrides: [
         settingsRepositoryProvider.overrideWithValue(repo),
         if (browserRepo != null)
-          browserProvider.overrideWith(() => _TestBrowserNotifier(browserRepo)),
+          unitRepositoryProvider.overrideWithValue(browserRepo),
       ],
       child: const MaterialApp(home: HomeScreen()),
     );
@@ -71,6 +56,14 @@ void main() {
     await tester.tap(find.byIcon(Icons.menu));
     await tester.pumpAndSettle();
     await tester.tap(find.text('Browse'));
+    await tester.pumpAndSettle();
+  }
+
+  /// Navigate to freeform mode: open drawer and tap 'Freeform'.
+  Future<void> navigateToFreeform(WidgetTester tester) async {
+    await tester.tap(find.byIcon(Icons.menu));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Freeform'));
     await tester.pumpAndSettle();
   }
 
@@ -271,237 +264,158 @@ void main() {
     });
   });
 
-  group('HomeScreen — conformable-units button', () {
-    final browseButtonFinder = find.byIcon(Icons.balance);
+  group('HomeScreen — page state preservation', () {
+    testWidgets(
+      'freeform Convert-from text survives navigation to Worksheet and back',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
 
-    testWidgets('button is present on freeform page', (tester) async {
-      await tester.pumpWidget(buildApp());
-      expect(browseButtonFinder, findsOneWidget);
-    });
+        // Type into the Convert-from field while Freeform is the active page.
+        final inputField = find
+            .descendant(
+              of: find.byType(FreeformScreen),
+              matching: find.byType(TextField),
+            )
+            .first;
+        await tester.enterText(inputField, '5 m');
+        await tester.pump();
 
-    testWidgets('button is absent on worksheet page', (tester) async {
+        await navigateToWorksheet(tester);
+        await navigateToFreeform(tester);
+
+        expect(
+          tester.widget<TextField>(inputField).controller!.text,
+          '5 m',
+        );
+      },
+    );
+
+    testWidgets(
+      'freeform Convert-from text survives navigation to Browse and back',
+      (tester) async {
+        await tester.pumpWidget(buildApp(browserRepo: buildTestBrowserRepo()));
+
+        final inputField = find
+            .descendant(
+              of: find.byType(FreeformScreen),
+              matching: find.byType(TextField),
+            )
+            .first;
+        await tester.enterText(inputField, '5 m');
+        await tester.pump();
+
+        await navigateToBrowser(tester);
+        await navigateToFreeform(tester);
+
+        expect(
+          tester.widget<TextField>(inputField).controller!.text,
+          '5 m',
+        );
+      },
+    );
+
+    testWidgets(
+      'worksheet row value survives navigation to Freeform and back',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+        await navigateToWorksheet(tester);
+
+        // Type into the first row's numeric field while Worksheet is active.
+        final rowField = find
+            .descendant(
+              of: find.byType(WorksheetScreen),
+              matching: find.byType(TextField),
+            )
+            .first;
+        await tester.enterText(rowField, '42');
+        await tester.pump();
+
+        await navigateToFreeform(tester);
+        await navigateToWorksheet(tester);
+
+        expect(
+          tester.widget<TextField>(rowField).controller!.text,
+          '42',
+        );
+      },
+    );
+
+    testWidgets('active worksheet template survives navigation', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
-      expect(browseButtonFinder, findsNothing);
+
+      // Switch to the Speed template.
+      await tester.tap(find.byType(DropdownButton<String>));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Speed').last);
+      await tester.pumpAndSettle();
+
+      await navigateToFreeform(tester);
+      await navigateToWorksheet(tester);
+
+      // Speed template should still be active.
+      final speedTemplate = predefinedWorksheets.firstWhere(
+        (t) => t.id == 'speed',
+      );
+      expect(find.text(speedTemplate.rows.first.label), findsOneWidget);
     });
 
-    testWidgets('button is disabled when freeformProvider is idle', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-      final btn = tester.widget<IconButton>(
-        find.widgetWithIcon(IconButton, Icons.balance),
+    testWidgets('browse search query survives navigation', (tester) async {
+      await tester.pumpWidget(buildApp(browserRepo: buildTestBrowserRepo()));
+      await navigateToBrowser(tester);
+
+      // Open search bar and type a query.
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      final searchField = find.descendant(
+        of: find.byType(BrowserScreen),
+        matching: find.byType(TextField),
       );
-      expect(btn.onPressed, isNull);
-    });
-
-    testWidgets(
-      'button is enabled when freeformProvider is EvaluationSuccess',
-      (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformProvider.overrideWith(
-                () => _StubFreeformNotifier(
-                  EvaluationSuccess(
-                    result: _stubQty,
-                    formattedResult: '= 5',
-                  ),
-                ),
-              ),
-            ],
-            child: const MaterialApp(home: HomeScreen()),
-          ),
-        );
-        await tester.pump();
-        final btn = tester.widget<IconButton>(
-          find.widgetWithIcon(IconButton, Icons.balance),
-        );
-        expect(btn.onPressed, isNotNull);
-      },
-    );
-
-    testWidgets(
-      'button is enabled when freeformProvider is ConversionSuccess',
-      (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformProvider.overrideWith(
-                () => _StubFreeformNotifier(
-                  const ConversionSuccess(
-                    convertedValue: 2.0,
-                    formattedResult: '= 2 ft',
-                    formattedReciprocal: '= (1 / 0.5) ft',
-                    outputUnit: 'ft',
-                  ),
-                ),
-              ),
-            ],
-            child: const MaterialApp(home: HomeScreen()),
-          ),
-        );
-        await tester.pump();
-        final btn = tester.widget<IconButton>(
-          find.widgetWithIcon(IconButton, Icons.balance),
-        );
-        expect(btn.onPressed, isNotNull);
-      },
-    );
-
-    testWidgets(
-      'button is enabled when freeformProvider is UnitDefinitionResult',
-      (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformProvider.overrideWith(
-                () => _StubFreeformNotifier(
-                  const UnitDefinitionResult(
-                    aliasLine: null,
-                    definitionLine: null,
-                    formattedResult: '= 8 bit',
-                  ),
-                ),
-              ),
-            ],
-            child: const MaterialApp(home: HomeScreen()),
-          ),
-        );
-        await tester.pump();
-        final btn = tester.widget<IconButton>(
-          find.widgetWithIcon(IconButton, Icons.balance),
-        );
-        expect(btn.onPressed, isNotNull);
-      },
-    );
-
-    testWidgets(
-      'button is enabled when freeformProvider is FunctionConversionResult',
-      (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformProvider.overrideWith(
-                () => _StubFreeformNotifier(
-                  const FunctionConversionResult(
-                    functionName: 'tempC',
-                    formattedValue: '26.85',
-                  ),
-                ),
-              ),
-            ],
-            child: const MaterialApp(home: HomeScreen()),
-          ),
-        );
-        await tester.pump();
-        final btn = tester.widget<IconButton>(
-          find.widgetWithIcon(IconButton, Icons.balance),
-        );
-        expect(btn.onPressed, isNotNull);
-      },
-    );
-
-    testWidgets(
-      'button is disabled when freeformProvider is FunctionDefinitionResult',
-      (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformProvider.overrideWith(
-                () => _StubFreeformNotifier(
-                  const FunctionDefinitionResult(
-                    label: 'tempC(x) =',
-                    expression: 'x + 273.15',
-                  ),
-                ),
-              ),
-            ],
-            child: const MaterialApp(home: HomeScreen()),
-          ),
-        );
-        await tester.pump();
-        final btn = tester.widget<IconButton>(
-          find.widgetWithIcon(IconButton, Icons.balance),
-        );
-        expect(btn.onPressed, isNull);
-      },
-    );
-
-    testWidgets(
-      'button is enabled when freeformProvider is ReciprocalConversionSuccess',
-      (
-        tester,
-      ) async {
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformProvider.overrideWith(
-                () => _StubFreeformNotifier(
-                  const ReciprocalConversionSuccess(
-                    reciprocalInputLabel: '1 / mph',
-                    formattedResult: '= 2.2369363 s/m',
-                    formattedReciprocal: '= 0.44704 m/s',
-                    outputUnit: 's/m',
-                  ),
-                ),
-              ),
-            ],
-            child: const MaterialApp(home: HomeScreen()),
-          ),
-        );
-        await tester.pump();
-        final btn = tester.widget<IconButton>(
-          find.widgetWithIcon(IconButton, Icons.balance),
-        );
-        expect(btn.onPressed, isNotNull);
-      },
-    );
-
-    testWidgets('button is disabled when freeformProvider is EvaluationError', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(repo),
-            freeformProvider.overrideWith(
-              () => _StubFreeformNotifier(
-                const EvaluationError(message: 'oops'),
-              ),
-            ),
-          ],
-          child: const MaterialApp(home: HomeScreen()),
-        ),
-      );
+      await tester.enterText(searchField, 'xyz');
       await tester.pump();
-      final btn = tester.widget<IconButton>(
-        find.widgetWithIcon(IconButton, Icons.balance),
+
+      await navigateToFreeform(tester);
+      await navigateToBrowser(tester);
+
+      // Search bar should still be visible and retain the query text.
+      expect(searchField, findsOneWidget);
+      expect(
+        tester.widget<TextField>(searchField).controller!.text,
+        'xyz',
       );
-      expect(btn.onPressed, isNull);
     });
+
+    testWidgets(
+      'browse expand-all state survives navigation',
+      (tester) async {
+        await tester.pumpWidget(buildApp(browserRepo: buildTestBrowserRepo()));
+        await navigateToBrowser(tester);
+
+        // Default: dimension view with all groups collapsed.
+        // Expand all so the provider state has collapsedGroups = {}.
+        await tester.tap(find.byIcon(Icons.unfold_more));
+        await tester.pump();
+
+        await navigateToFreeform(tester);
+        await navigateToBrowser(tester);
+
+        // All groups should still be expanded — no chevron_right icons.
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is Icon && w.icon == Icons.chevron_right,
+          ),
+          findsNothing,
+        );
+      },
+    );
   });
 
-  group('HomeScreen — browse AppBar buttons', () {
+  group('HomeScreen — browse navigation', () {
     testWidgets('Expand All button is present on Browse page', (tester) async {
       await tester.pumpWidget(
-        buildApp(browserRepo: _buildTestBrowserRepo()),
+        buildApp(browserRepo: buildTestBrowserRepo()),
       );
       await navigateToBrowser(tester);
       expect(find.byIcon(Icons.unfold_more), findsOneWidget);
@@ -511,48 +425,32 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        buildApp(browserRepo: _buildTestBrowserRepo()),
+        buildApp(browserRepo: buildTestBrowserRepo()),
       );
       await navigateToBrowser(tester);
       expect(find.byIcon(Icons.unfold_less), findsOneWidget);
     });
 
-    testWidgets('Expand All and Collapse All are enabled during search', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        buildApp(browserRepo: _buildTestBrowserRepo()),
-      );
-      await navigateToBrowser(tester);
+    testWidgets(
+      'Browse drawer tile is selected when on browse screen',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(browserRepo: buildTestBrowserRepo()),
+        );
+        await navigateToBrowser(tester);
 
-      // Activate the search bar and type a query.
-      await tester.tap(find.byIcon(Icons.search));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'm');
-      await tester.pump();
+        await tester.tap(find.byIcon(Icons.menu));
+        await tester.pumpAndSettle();
 
-      final expandBtn = tester.widget<IconButton>(
-        find.widgetWithIcon(IconButton, Icons.unfold_more),
-      );
-      final collapseBtn = tester.widget<IconButton>(
-        find.widgetWithIcon(IconButton, Icons.unfold_less),
-      );
-      expect(expandBtn.onPressed, isNotNull);
-      expect(collapseBtn.onPressed, isNotNull);
-    });
+        final browseTile = tester.widget<ListTile>(
+          find.widgetWithText(ListTile, 'Browse'),
+        );
+        final freeformTile = tester.widget<ListTile>(
+          find.widgetWithText(ListTile, 'Freeform'),
+        );
+        expect(browseTile.selected, isTrue);
+        expect(freeformTile.selected, isFalse);
+      },
+    );
   });
-}
-
-// ---------------------------------------------------------------------------
-// Test helpers
-// ---------------------------------------------------------------------------
-
-final _stubQty = Quantity(1.0, Dimension.dimensionless);
-
-class _StubFreeformNotifier extends FreeformNotifier {
-  final EvaluationResult _initial;
-  _StubFreeformNotifier(this._initial);
-
-  @override
-  EvaluationResult build() => _initial;
 }

@@ -2,20 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/models/browse_entry.dart';
+import '../../../shared/top_level_page.dart';
+import '../../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/fast_scroll_bar.dart';
 import '../state/browser_provider.dart';
 import 'unit_entry_detail_screen.dart';
 
-/// Body widget for the unit browser page.
+/// Unit browser screen.
 ///
 /// Displays units, prefixes, and functions in either alphabetical or dimension
 /// view.  Groups are collapsible.  A search bar can filter entries by name.
 ///
-/// This widget does not own a [Scaffold]; the parent (HomeScreen) provides the
-/// AppBar.  Use [BrowserScreen.buildAppBarActions] to get the AppBar action
-/// buttons for the active browser state.
+/// Owns its own [Scaffold] and [AppBar].  Navigation to other top-level pages
+/// is delegated to [onNavigate], which is called by [AppDrawer] when the user
+/// taps a navigation tile.
 class BrowserScreen extends ConsumerStatefulWidget {
-  const BrowserScreen({super.key});
+  const BrowserScreen({super.key, required this.onNavigate});
+
+  /// Called when the user navigates to another top-level page via the drawer.
+  final void Function(TopLevelPage) onNavigate;
 
   @override
   ConsumerState<BrowserScreen> createState() => _BrowserScreenState();
@@ -42,41 +47,75 @@ class _BrowserScreenState extends ConsumerState<BrowserScreen> {
     final state = ref.watch(browserProvider);
     final notifier = ref.read(browserProvider.notifier);
     final groups = notifier.visibleGroups();
+    final isAlpha = state.viewMode == BrowseViewMode.alphabetical;
 
-    return Column(
-      children: [
-        // Search bar (shown when active).
-        if (state.searchVisible)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            child: TextField(
-              controller: _searchController,
-              autofocus: true,
-              decoration: InputDecoration(
-                hintText: 'Search units…',
-                isDense: true,
-                border: const OutlineInputBorder(),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
-                  onPressed: () {
-                    _searchController.clear();
-                    notifier.setSearchQuery('');
-                  },
-                ),
-              ),
-              onChanged: notifier.setSearchQuery,
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Browse'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: notifier.toggleSearch,
+          ),
+          IconButton(
+            icon: const Icon(Icons.unfold_more),
+            tooltip: 'Expand all',
+            onPressed: notifier.expandAll,
+          ),
+          IconButton(
+            icon: const Icon(Icons.unfold_less),
+            tooltip: 'Collapse all',
+            onPressed: notifier.collapseAll,
+          ),
+          IconButton(
+            icon: Icon(isAlpha ? Icons.category : Icons.sort_by_alpha),
+            tooltip: isAlpha ? 'Group by dimension' : 'Group alphabetically',
+            onPressed: () => notifier.setViewMode(
+              isAlpha ? BrowseViewMode.dimension : BrowseViewMode.alphabetical,
             ),
           ),
-        // Main list.
-        Expanded(
-          child: _BrowseListView(
-            groups: groups,
-            collapsedGroups: state.collapsedGroups,
-            searchActive: state.searchQuery.isNotEmpty,
-            onToggleGroup: notifier.toggleGroup,
+        ],
+      ),
+      drawer: AppDrawer(
+        currentPage: TopLevelPage.browser,
+        onNavigate: widget.onNavigate,
+      ),
+      body: Column(
+        children: [
+          // Search bar (shown when active).
+          if (state.searchVisible)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: InputDecoration(
+                  hintText: 'Search units…',
+                  isDense: true,
+                  border: const OutlineInputBorder(),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      _searchController.clear();
+                      notifier.setSearchQuery('');
+                    },
+                  ),
+                ),
+                onChanged: notifier.setSearchQuery,
+              ),
+            ),
+          // Main list.
+          Expanded(
+            child: _BrowseListView(
+              groups: groups,
+              collapsedGroups: state.collapsedGroups,
+              searchActive: state.searchQuery.isNotEmpty,
+              onToggleGroup: notifier.toggleGroup,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

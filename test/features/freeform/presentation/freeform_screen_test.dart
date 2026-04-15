@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:unitary/core/domain/models/dimension.dart';
+import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
-import 'package:unitary/features/freeform/state/conformable_browse_provider.dart';
+import 'package:unitary/features/freeform/state/freeform_provider.dart';
+import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
@@ -18,11 +21,20 @@ void main() {
     settingsRepo = SettingsRepository(prefs);
   });
 
-  Widget buildApp({EvaluationMode evaluationMode = EvaluationMode.realtime}) {
+  Widget buildApp({
+    EvaluationMode evaluationMode = EvaluationMode.realtime,
+    EvaluationResult? freeformState,
+  }) {
     return ProviderScope(
-      overrides: [settingsRepositoryProvider.overrideWithValue(settingsRepo)],
-      child: const MaterialApp(
-        home: Scaffold(body: FreeformScreen()),
+      overrides: [
+        settingsRepositoryProvider.overrideWithValue(settingsRepo),
+        if (freeformState != null)
+          freeformProvider.overrideWith(
+            () => _StubFreeformNotifier(freeformState),
+          ),
+      ],
+      child: MaterialApp(
+        home: FreeformScreen(onNavigate: (_) {}),
       ),
     );
   }
@@ -119,9 +131,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
-          child: const MaterialApp(
-            home: Scaffold(body: FreeformScreen()),
-          ),
+          child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
 
@@ -138,9 +148,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
-          child: const MaterialApp(
-            home: Scaffold(body: FreeformScreen()),
-          ),
+          child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
 
@@ -166,9 +174,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
-          child: const MaterialApp(
-            home: Scaffold(body: FreeformScreen()),
-          ),
+          child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
 
@@ -315,39 +321,188 @@ void main() {
     });
   });
 
+  group('FreeformScreen — conformable-units button', () {
+    final browseButtonFinder = find.byIcon(Icons.balance);
+
+    testWidgets('button is present in AppBar', (tester) async {
+      await tester.pumpWidget(buildApp());
+      expect(browseButtonFinder, findsOneWidget);
+    });
+
+    testWidgets('button is disabled when freeformProvider is idle', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildApp(freeformState: const EvaluationIdle()),
+      );
+      await tester.pump();
+      final btn = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.balance),
+      );
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets(
+      'button is enabled when freeformProvider is EvaluationSuccess',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: EvaluationSuccess(
+              result: _stubQty,
+              formattedResult: '= 5',
+            ),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is enabled when freeformProvider is ConversionSuccess',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const ConversionSuccess(
+              convertedValue: 2.0,
+              formattedResult: '= 2 ft',
+              formattedReciprocal: '= (1 / 0.5) ft',
+              outputUnit: 'ft',
+            ),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is enabled when freeformProvider is UnitDefinitionResult',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const UnitDefinitionResult(
+              aliasLine: null,
+              definitionLine: null,
+              formattedResult: '= 8 bit',
+            ),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is enabled when freeformProvider is FunctionConversionResult',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const FunctionConversionResult(
+              functionName: 'tempC',
+              formattedValue: '26.85',
+            ),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is disabled when freeformProvider is FunctionDefinitionResult',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const FunctionDefinitionResult(
+              label: 'tempC(x) =',
+              expression: 'x + 273.15',
+            ),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNull);
+      },
+    );
+
+    testWidgets(
+      'button is enabled when freeformProvider is ReciprocalConversionSuccess',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const ReciprocalConversionSuccess(
+              reciprocalInputLabel: '1 / mph',
+              formattedResult: '= 2.2369363 s/m',
+              formattedReciprocal: '= 0.44704 m/s',
+              outputUnit: 's/m',
+            ),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNotNull);
+      },
+    );
+
+    testWidgets(
+      'button is disabled when freeformProvider is EvaluationError',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const EvaluationError(message: 'oops'),
+          ),
+        );
+        await tester.pump();
+        final btn = tester.widget<IconButton>(
+          find.widgetWithIcon(IconButton, Icons.balance),
+        );
+        expect(btn.onPressed, isNull);
+      },
+    );
+  });
+
   group('FreeformScreen — conformable-units modal', () {
-    testWidgets('pressing button with pending debounce force-evaluates first', (
+    /// Evaluate [expression] and tap the balance button to open the modal.
+    Future<void> openModal(WidgetTester tester, String expression) async {
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        expression,
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+      // Button is now enabled — tap it.
+      await tester.tap(find.byIcon(Icons.balance));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('button opens conformable-units modal when state is valid', (
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
-
-      // Type an expression — debounce has NOT fired yet.
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        '5 m',
-      );
-      await tester.pump(); // no 500ms wait
-
-      // The debounce hasn't fired, so the modal is not yet open.
-      expect(find.byType(DraggableScrollableSheet), findsNothing);
-
-      // Trigger browse via provider (simulates AppBar button press).
-      // FreeformScreen force-evaluates and attempts to open the modal.
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(FreeformScreen)),
-      );
-      container.read(conformableBrowseRequestProvider.notifier).trigger();
-      await tester.pumpAndSettle();
-
-      // After force-eval, evaluation succeeded and the modal is open.
+      await openModal(tester, '5 m');
       expect(find.byType(DraggableScrollableSheet), findsOneWidget);
     });
 
     testWidgets(
-      'modal opens after force-evaluate produces ReciprocalConversionSuccess',
-      (
-        tester,
-      ) async {
+      'modal opens after evaluation produces ReciprocalConversionSuccess',
+      (tester) async {
         await tester.pumpWidget(buildApp());
 
         // Enter an input whose dimension is the reciprocal of the output.
@@ -359,12 +514,10 @@ void main() {
           find.widgetWithText(TextField, 'Convert to (optional)'),
           's/m',
         );
+        await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pump();
 
-        final container = ProviderScope.containerOf(
-          tester.element(find.byType(FreeformScreen)),
-        );
-        container.read(conformableBrowseRequestProvider.notifier).trigger();
+        await tester.tap(find.byIcon(Icons.balance));
         await tester.pumpAndSettle();
 
         // Reciprocal conversion succeeded — modal should open.
@@ -372,23 +525,28 @@ void main() {
       },
     );
 
-    testWidgets('modal does not open when force-evaluate errors', (
-      tester,
-    ) async {
+    testWidgets('modal does not open when evaluation errors', (tester) async {
       await tester.pumpWidget(buildApp());
 
+      // Evaluate a valid expression first so the button becomes enabled.
       await tester.enterText(
         find.widgetWithText(TextField, 'Convert from'),
-        '5 +', // invalid expression
+        '5 m',
       );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
 
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(FreeformScreen)),
+      // Now change input to invalid — debounce hasn't fired so state is still valid.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 +',
       );
-      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      // Do NOT wait for debounce — button is still enabled from previous state.
+
+      await tester.tap(find.byIcon(Icons.balance));
       await tester.pumpAndSettle();
 
-      // No modal bottom sheet should appear.
+      // _showConformableModal evaluates current text ('5 +') → parse error → no modal.
       expect(find.byType(DraggableScrollableSheet), findsNothing);
     });
 
@@ -396,19 +554,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        'byte',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(FreeformScreen)),
-      );
-      container.read(conformableBrowseRequestProvider.notifier).trigger();
-      await tester.pumpAndSettle();
+      await openModal(tester, 'byte');
 
       // Modal should open — 'byte' resolves to the digital-storage dimension.
       expect(find.byType(DraggableScrollableSheet), findsOneWidget);
@@ -419,21 +565,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
-
-      // Use '5 bit' — digital storage has only ~6 conformable units, all
-      // visible at once; 'bit' and 'byte' are near the top alphabetically.
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        '5 bit',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(FreeformScreen)),
-      );
-      container.read(conformableBrowseRequestProvider.notifier).trigger();
-      await tester.pumpAndSettle();
+      await openModal(tester, '5 bit');
 
       // Modal opened — 'bit' and 'byte' are visible digital-storage units.
       expect(find.byType(DraggableScrollableSheet), findsOneWidget);
@@ -445,22 +577,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
-
-      // 'bit' is the primitive digital-storage unit and sorts first
-      // alphabetically, so it is immediately visible in the modal.
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        '5 bit',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(FreeformScreen)),
-      );
-      container.read(conformableBrowseRequestProvider.notifier).trigger();
-      await tester.pumpAndSettle();
-
+      await openModal(tester, '5 bit');
       expect(find.text('[primitive unit]'), findsWidgets);
     });
 
@@ -468,20 +585,7 @@ void main() {
       'alias item shows "name = target" in title and target expression as subtitle',
       (tester) async {
         await tester.pumpWidget(buildApp());
-
-        // 'byte' has alias 'B'; byte's expression is '8 bit'.
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Convert from'),
-          '5 bit',
-        );
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.pump();
-
-        final container = ProviderScope.containerOf(
-          tester.element(find.byType(FreeformScreen)),
-        );
-        container.read(conformableBrowseRequestProvider.notifier).trigger();
-        await tester.pumpAndSettle();
+        await openModal(tester, '5 bit');
 
         // 'B = byte' should appear as a title in the modal.
         expect(find.text('B = byte'), findsOneWidget);
@@ -492,19 +596,7 @@ void main() {
 
     testWidgets('tapping entry fills empty Convert-to field', (tester) async {
       await tester.pumpWidget(buildApp());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        '5 bit',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(FreeformScreen)),
-      );
-      container.read(conformableBrowseRequestProvider.notifier).trigger();
-      await tester.pumpAndSettle();
+      await openModal(tester, '5 bit');
 
       await tester.tap(find.text('byte'));
       await tester.pumpAndSettle();
@@ -531,10 +623,7 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(FreeformScreen)),
-      );
-      container.read(conformableBrowseRequestProvider.notifier).trigger();
+      await tester.tap(find.byIcon(Icons.balance));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('bit'));
@@ -546,4 +635,18 @@ void main() {
       expect(outputField.controller?.text, 'bit');
     });
   });
+}
+
+// ---------------------------------------------------------------------------
+// Test helpers
+// ---------------------------------------------------------------------------
+
+final _stubQty = Quantity(1.0, Dimension.dimensionless);
+
+class _StubFreeformNotifier extends FreeformNotifier {
+  final EvaluationResult _initial;
+  _StubFreeformNotifier(this._initial);
+
+  @override
+  EvaluationResult build() => _initial;
 }

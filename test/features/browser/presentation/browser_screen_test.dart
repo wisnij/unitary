@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/core/domain/models/browse_entry.dart';
 import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
 import 'package:unitary/features/browser/state/browser_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
@@ -17,18 +17,11 @@ import 'package:unitary/shared/widgets/fast_scroll_bar.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/// Test notifier that uses a custom repo and starts in alphabetical view with
-/// all groups forced expanded, making entries immediately visible in widget
-/// tests.  (Production default is all-collapsed; this is a deliberate override
-/// for test visibility.)
+/// Test notifier that starts in alphabetical view with all groups expanded,
+/// making entries immediately visible in widget tests.
+/// (Production default is all-collapsed; this is a deliberate override for
+/// test visibility.)
 class _TestBrowserNotifier extends BrowserNotifier {
-  _TestBrowserNotifier(this._testRepo);
-  final UnitRepository _testRepo;
-
-  @override
-  (UnitRepository, List<BrowseEntry>) createData() =>
-      (_testRepo, _testRepo.buildBrowseCatalog());
-
   @override
   BrowserState build() {
     final initialState = super.build();
@@ -51,10 +44,13 @@ Future<void> _setUpSettings() async {
 Widget _buildScreen(UnitRepository repo) {
   return ProviderScope(
     overrides: [
-      browserProvider.overrideWith(() => _TestBrowserNotifier(repo)),
+      unitRepositoryProvider.overrideWithValue(repo),
+      browserProvider.overrideWith(_TestBrowserNotifier.new),
       settingsRepositoryProvider.overrideWithValue(_settingsRepo),
     ],
-    child: const MaterialApp(home: Scaffold(body: BrowserScreen())),
+    child: MaterialApp(
+      home: BrowserScreen(onNavigate: (_) {}),
+    ),
   );
 }
 
@@ -290,6 +286,46 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(FastScrollBar.thumbKey), findsNothing);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // AppBar buttons
+  // ---------------------------------------------------------------------------
+
+  group('BrowserScreen — AppBar buttons', () {
+    testWidgets('Expand All button is present in AppBar', (tester) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+      expect(find.byIcon(Icons.unfold_more), findsOneWidget);
+    });
+
+    testWidgets('Collapse All button is present in AppBar', (tester) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+      expect(find.byIcon(Icons.unfold_less), findsOneWidget);
+    });
+
+    testWidgets('Expand All and Collapse All are enabled during search', (
+      tester,
+    ) async {
+      final repo = _buildDecorationRepo();
+      await tester.pumpWidget(_buildScreen(repo));
+
+      // Activate the search bar and type a query.
+      await tester.tap(find.byIcon(Icons.search));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField), 'm');
+      await tester.pump();
+
+      final expandBtn = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.unfold_more),
+      );
+      final collapseBtn = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.unfold_less),
+      );
+      expect(expandBtn.onPressed, isNotNull);
+      expect(collapseBtn.onPressed, isNotNull);
     });
   });
 }

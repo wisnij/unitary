@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/domain/models/browse_entry.dart';
 import '../../../core/domain/models/dimension.dart';
 import '../../../core/domain/models/unit_repository.dart';
+import '../../../core/domain/models/unit_repository_provider.dart';
 
 /// Whether the browse list is grouped alphabetically or by dimension.
 enum BrowseViewMode { alphabetical, dimension }
@@ -72,24 +73,16 @@ class BrowserNotifier extends Notifier<BrowserState> {
   /// query is cleared.
   Set<String>? _preSearchCollapsedGroups;
 
-  /// Returns the [UnitRepository] and catalog to use.
-  ///
-  /// Override in tests to inject a custom repository.
-  (UnitRepository, List<BrowseEntry>) createData() {
-    final repo = UnitRepository.withPredefinedUnits();
-    return (repo, repo.buildBrowseCatalog());
-  }
-
   @override
   BrowserState build() {
-    final (repoResult, catalogResult) = createData();
-    _repo = repoResult;
-    _catalog = catalogResult;
+    // unitRepositoryProvider is read once at startup (shared with parserProvider).
+    // Both BrowserNotifier.build() and parserProvider run at app startup when
+    // IndexedStack initialises all three screens simultaneously.
+    _repo = ref.read(unitRepositoryProvider);
+    _catalog = _repo.buildBrowseCatalog();
     _alphabeticalIndex = buildAlphabeticalIndex(_catalog);
 
-    // Build the dimension index eagerly: build() is already called lazily
-    // (on first provider read, i.e. when the user opens the browser), so
-    // there is no app-startup cost.  Starting in dimension view means we
+    // Build the dimension index eagerly: starting in dimension view means we
     // need the index and its group labels immediately for collapsedGroups.
     _dimensionIndex = _buildDimensionIndex(_catalog, _repo.dimensionLabels);
     final allDimensionLabels = _dimensionIndex!.map((g) => g.$1).toSet();

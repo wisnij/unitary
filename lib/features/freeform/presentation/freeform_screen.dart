@@ -7,17 +7,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/domain/errors.dart';
 import '../../../core/domain/models/quantity.dart';
 import '../../../core/domain/models/unit_repository.dart';
+import '../../../shared/top_level_page.dart';
+import '../../../shared/widgets/app_drawer.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
-import '../state/conformable_browse_provider.dart';
 import '../state/freeform_provider.dart';
 import '../state/freeform_state.dart';
 import '../state/parser_provider.dart';
 import 'widgets/result_display.dart';
 
 /// Freeform expression evaluation screen.
+///
+/// Owns its own [Scaffold] and [AppBar].  Navigation to other top-level pages
+/// is delegated to [onNavigate], which is called by [AppDrawer] when the user
+/// taps a navigation tile.
 class FreeformScreen extends ConsumerStatefulWidget {
-  const FreeformScreen({super.key});
+  const FreeformScreen({super.key, required this.onNavigate});
+
+  /// Called when the user navigates to another top-level page via the drawer.
+  final void Function(TopLevelPage) onNavigate;
 
   @override
   ConsumerState<FreeformScreen> createState() => _FreeformScreenState();
@@ -27,34 +35,9 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   final _inputController = TextEditingController();
   final _outputController = TextEditingController();
   Timer? _debounceTimer;
-  ProviderSubscription<int>? _browseSubscription;
-
-  @override
-  void initState() {
-    super.initState();
-    // Use listenManual so the subscription survives widget rebuilds.
-    _browseSubscription = ref.listenManual<int>(
-      conformableBrowseRequestProvider,
-      (_, next) {
-        _cancelDebounce();
-        _evaluate();
-        // Defer modal to post-frame so it is not shown during a build pass.
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) {
-            return;
-          }
-          final result = ref.read(freeformProvider);
-          if (conformableBrowseEnabled(result)) {
-            _showConformableModal(context);
-          }
-        });
-      },
-    );
-  }
 
   @override
   void dispose() {
-    _browseSubscription?.close();
     _debounceTimer?.cancel();
     _inputController.dispose();
     _outputController.dispose();
@@ -153,65 +136,84 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     final isOnSubmit = settings.evaluationMode == EvaluationMode.onSubmit;
     final canSwap =
         _inputController.text.isNotEmpty && _outputController.text.isNotEmpty;
+    final browseEnabled = conformableBrowseEnabled(result);
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextField(
-            controller: _inputController,
-            decoration: InputDecoration(
-              labelText: 'Convert from',
-              border: const OutlineInputBorder(),
-              suffixIcon: _inputController.text.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: _clear,
-                    )
-                  : null,
-            ),
-            onChanged: _onInputChanged,
-            onSubmitted: (_) => _evaluate(),
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.swap_vert),
-                onPressed: canSwap ? _swap : null,
-              ),
-            ],
-          ),
-          TextField(
-            controller: _outputController,
-            decoration: const InputDecoration(
-              labelText: 'Convert to (optional)',
-              border: OutlineInputBorder(),
-            ),
-            onChanged: _onOutputChanged,
-            onSubmitted: (_) => _evaluate(),
-          ),
-          const SizedBox(height: 24),
-          ResultDisplay(
-            result: result,
-            onTap: result is EvaluationIdle && result.example != null
-                ? () {
-                    _inputController.text = result.example!;
-                    setState(() {});
-                    _cancelDebounce();
-                    _evaluate();
-                  }
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Unitary'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.balance),
+            tooltip: 'Browse conformable units',
+            onPressed: browseEnabled
+                ? () => _showConformableModal(context)
                 : null,
           ),
-          if (isOnSubmit) ...[
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _evaluate,
-              child: const Text('Evaluate'),
-            ),
-          ],
         ],
+      ),
+      drawer: AppDrawer(
+        currentPage: TopLevelPage.freeform,
+        onNavigate: widget.onNavigate,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextField(
+              controller: _inputController,
+              decoration: InputDecoration(
+                labelText: 'Convert from',
+                border: const OutlineInputBorder(),
+                suffixIcon: _inputController.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clear,
+                      )
+                    : null,
+              ),
+              onChanged: _onInputChanged,
+              onSubmitted: (_) => _evaluate(),
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.swap_vert),
+                  onPressed: canSwap ? _swap : null,
+                ),
+              ],
+            ),
+            TextField(
+              controller: _outputController,
+              decoration: const InputDecoration(
+                labelText: 'Convert to (optional)',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: _onOutputChanged,
+              onSubmitted: (_) => _evaluate(),
+            ),
+            const SizedBox(height: 24),
+            ResultDisplay(
+              result: result,
+              onTap: result is EvaluationIdle && result.example != null
+                  ? () {
+                      _inputController.text = result.example!;
+                      setState(() {});
+                      _cancelDebounce();
+                      _evaluate();
+                    }
+                  : null,
+            ),
+            if (isOnSubmit) ...[
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _evaluate,
+                child: const Text('Evaluate'),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

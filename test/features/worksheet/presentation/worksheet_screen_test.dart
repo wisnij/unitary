@@ -22,7 +22,9 @@ void main() {
       overrides: [
         settingsRepositoryProvider.overrideWithValue(settingsRepo),
       ],
-      child: const MaterialApp(home: Scaffold(body: WorksheetScreen())),
+      child: MaterialApp(
+        home: WorksheetScreen(onNavigate: (_) {}),
+      ),
     );
   }
 

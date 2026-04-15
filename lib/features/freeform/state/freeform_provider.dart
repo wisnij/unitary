@@ -126,7 +126,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     ExpressionParser parser,
     FunctionNameNode node,
   ) {
-    final func = parser.repo?.findFunction(node.name);
+    final func = parser.repo.findFunction(node.name);
     if (func == null) {
       return EvaluationError(message: 'Unknown function: "${node.name}"');
     }
@@ -144,11 +144,6 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     DefinitionRequestNode node,
   ) {
     final repo = parser.repo;
-    if (repo == null) {
-      return EvaluationError(
-        message: 'Unknown unit or prefix: "${node.unitName}"',
-      );
-    }
     final settings = ref.read(settingsProvider);
     final result = parser.evaluate(node.unitName);
     final formatted = formatQuantity(
@@ -215,7 +210,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
       );
     }
 
-    final func = parser.repo?.findFunction(outputNode.name);
+    final func = parser.repo.findFunction(outputNode.name);
     if (func == null) {
       return EvaluationError(
         message: 'Unknown function: "${outputNode.name}"',
@@ -336,8 +331,8 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     Quantity inputQty,
     Quantity outputQty,
   ) {
-    final dimensionlessIds = parser.repo?.dimensionlessIds;
-    if (dimensionlessIds != null && dimensionlessIds.isNotEmpty) {
+    final dimensionlessIds = parser.repo.dimensionlessIds;
+    if (dimensionlessIds.isNotEmpty) {
       final strippedInput = inputQty.dimension.removeDimensions(
         dimensionlessIds,
       );
@@ -359,8 +354,8 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
     if (inputQty.isConformableWith(outputQty)) {
       return true;
     }
-    final dimensionlessIds = parser.repo?.dimensionlessIds;
-    if (dimensionlessIds == null || dimensionlessIds.isEmpty) {
+    final dimensionlessIds = parser.repo.dimensionlessIds;
+    if (dimensionlessIds.isEmpty) {
       return false;
     }
     final strippedInput = inputQty.dimension.removeDimensions(dimensionlessIds);

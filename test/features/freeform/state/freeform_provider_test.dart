@@ -497,7 +497,7 @@ void main() {
         // shadows it (unit names take priority over prefix names).
         final repo = container.read(parserProvider).repo;
         expect(
-          repo?.findUnit('M'),
+          repo.findUnit('M'),
           isNull,
           reason: 'test assumes no unit with name or alias "M" is registered',
         );

@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Show base units next to group names in the unit browser
 - Add electric vehicle efficiency label
 
+### Changed
+
+- Make `EvalContext.repo` non-nullable
+
 ### Fixed
 
 - Consistent labels for group-by buttons

@@ -7,8 +7,8 @@ import 'token.dart';
 
 /// Convenience class that ties the lexer, parser, and evaluator together.
 class ExpressionParser {
-  /// Optional unit repository for unit-aware evaluation.
-  final UnitRepository? repo;
+  /// Unit repository for unit-aware evaluation.
+  final UnitRepository repo;
 
   /// Active unit-resolution stack, threaded through from [resolveUnit] to
   /// detect circular definitions.
@@ -17,7 +17,7 @@ class ExpressionParser {
   /// Optional variable bindings that shadow unit lookups during evaluation.
   final Map<String, Quantity>? variables;
 
-  ExpressionParser({this.repo, Set<String>? visited, this.variables})
+  ExpressionParser({required this.repo, Set<String>? visited, this.variables})
     : visited = visited ?? <String>{};
 
   /// Lex, parse, and evaluate an expression string.
@@ -41,7 +41,6 @@ class ExpressionParser {
   /// function identifier (optionally preceded by `~`).  Otherwise delegates
   /// to [Parser.parseExpression] and returns the resulting [ExpressionNode].
   ///
-  /// If no [repo] is present, all inputs are delegated to [parseExpression].
   ASTNode parseQuery(String input) =>
       Parser(tokenize(input), repo: repo).parseQuery();
 

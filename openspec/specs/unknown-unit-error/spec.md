@@ -2,7 +2,8 @@
 
 When the evaluator encounters an identifier that is not found in the provided
 unit repository, it SHALL throw an `EvalException` with a message that includes
-the unrecognized unit name.
+the unrecognized unit name.  A unit repository MUST always be provided; there
+is no null-repo fallback mode.
 
 #### Scenario: Unrecognized unit with repo throws EvalException
 
@@ -13,11 +14,6 @@ the unrecognized unit name.
 
 - **WHEN** an expression contains a known unit combined with an unknown unit (e.g. `5 m + 3 wakalixes`)
 - **THEN** an `EvalException` is thrown
-
-#### Scenario: No repo still produces raw dimension (Phase 1 mode)
-
-- **WHEN** `ExpressionParser()` (no repo) evaluates an expression with an unrecognized identifier
-- **THEN** the identifier is treated as a raw dimension and no exception is thrown
 
 #### Scenario: Known unit evaluates successfully
 

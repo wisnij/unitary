@@ -13,10 +13,14 @@ import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/core/domain/parser/lexer.dart';
 import 'package:unitary/core/domain/parser/parser.dart';
 
+import '../../../helpers/passthrough_unit_repository.dart';
+
+final _passthroughRepo = PassthroughUnitRepository();
+
 Quantity eval(String input) {
   final tokens = Lexer(input).scanTokens();
-  final ast = Parser(tokens).parseExpression();
-  return ast.evaluate(const EvalContext());
+  final ast = Parser(tokens, repo: _passthroughRepo).parseExpression();
+  return ast.evaluate(EvalContext(repo: _passthroughRepo));
 }
 
 Quantity evalWithRepo(String input, UnitRepository repo) {
@@ -363,10 +367,11 @@ void main() {
       expect(result.isDimensionless, isTrue);
     });
 
-    test('throws EvalException when context.repo is null', () {
+    test('throws EvalException for unknown function name', () {
+      final repo = UnitRepository();
       const node = FunctionCallNode('sin', [NumberNode(0.0)]);
       expect(
-        () => node.evaluate(const EvalContext()),
+        () => node.evaluate(EvalContext(repo: repo)),
         throwsA(isA<EvalException>()),
       );
     });
@@ -406,8 +411,8 @@ void main() {
       expect(result.value, closeTo(0.0, 1e-10));
     });
 
-    test('unit(expr) = unit * expr (no repo)', () {
-      // Without a repo, 'foo' is not a function, so foo(1) parses as foo * 1
+    test('unit(expr) = unit * expr (unregistered function)', () {
+      // 'foo' is not a registered function, so foo(1) parses as foo * 1
       // which evaluates to Quantity(1, {foo: 1}), not an error.
       final result = eval('foo(1)');
       expect(result.value, 1.0);
@@ -526,17 +531,18 @@ void main() {
       );
     });
 
-    test('null repo preserves Phase 1 behavior', () {
-      // Verify a few existing-style evaluations still work with no repo.
+    test('passthrough repo produces raw dimension for known-looking names', () {
+      // PassthroughUnitRepository accepts any identifier and returns a
+      // synthetic PrimitiveUnit, so eval() (which uses it) produces raw
+      // dimensions rather than throwing.
       final result = eval('5 m');
       expect(result.value, 5.0);
       expect(result.dimension, Dimension({'m': 1}));
     });
 
     test(
-      'null repo falls back to raw dimension for unrecognized identifiers',
+      'passthrough repo produces raw dimension for unrecognized identifiers',
       () {
-        // With no repo, unknown names produce raw dimensions (Phase 1 behavior).
         final result = eval('5 wakalixes');
         expect(result.value, 5.0);
         expect(result.dimension, Dimension({'wakalixes': 1}));

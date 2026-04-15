@@ -1,5 +1,4 @@
 import '../errors.dart';
-import '../models/dimension.dart';
 import '../models/quantity.dart';
 import '../models/unit_repository.dart';
 import '../services/unit_resolver.dart';
@@ -7,9 +6,8 @@ import 'token.dart';
 
 /// Evaluation context passed to AST nodes during evaluation.
 class EvalContext {
-  /// Unit repository for resolving unit names.  Null means Phase 1
-  /// behavior (all identifiers treated as raw dimensions).
-  final UnitRepository? repo;
+  /// Unit repository for resolving unit names.
+  final UnitRepository repo;
 
   /// Set of unit IDs currently being resolved (the active resolution stack).
   /// Used to detect circular unit definitions.
@@ -21,7 +19,7 @@ class EvalContext {
   final Map<String, Quantity>? variables;
 
   const EvalContext({
-    this.repo,
+    required this.repo,
     this.visited = const <String>{},
     this.variables,
   });
@@ -64,11 +62,9 @@ class NumberNode extends ExpressionNode {
 
 /// A unit identifier.
 ///
-/// When the evaluation context has a unit repository, the unit name is
-/// resolved to its base-unit representation.  If the unit is not found
-/// in the repository, an [EvalException] is thrown.  If no repository
-/// is provided (Phase 1 / parser-isolation mode), identifiers fall back
-/// to raw dimensions.
+/// The unit name is resolved to its base-unit representation via the
+/// repository in the evaluation context.  If the unit is not found,
+/// an [EvalException] is thrown.
 class UnitNode extends ExpressionNode {
   final String unitName;
 
@@ -81,21 +77,23 @@ class UnitNode extends ExpressionNode {
       return context.variables![unitName]!;
     }
 
-    final repo = context.repo;
-    if (repo == null) {
-      // No repo: Phase 1 behavior (raw dimension).
-      return Quantity(1.0, Dimension({unitName: 1}));
-    }
-
-    final result = repo.findUnitWithPrefix(unitName);
+    final result = context.repo.findUnitWithPrefix(unitName);
     if (result.unit == null) {
       throw EvalException('Unknown unit: "$unitName"');
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
-    final unitQuantity = resolveUnit(result.unit!, repo, context.visited);
+    final unitQuantity = resolveUnit(
+      result.unit!,
+      context.repo,
+      context.visited,
+    );
     if (result.prefix != null) {
-      final prefixQuantity = resolveUnit(result.prefix!, repo, context.visited);
+      final prefixQuantity = resolveUnit(
+        result.prefix!,
+        context.repo,
+        context.visited,
+      );
       return prefixQuantity.multiply(unitQuantity);
     }
     return unitQuantity;
@@ -181,13 +179,7 @@ class FunctionCallNode extends ExpressionNode {
 
   @override
   Quantity evaluate(EvalContext context) {
-    final repo = context.repo;
-    if (repo == null) {
-      throw EvalException(
-        "No repository; cannot call function '$name'",
-      );
-    }
-    final func = repo.findFunction(name);
+    final func = context.repo.findFunction(name);
     if (func == null) {
       throw EvalException("Unknown function: '$name'");
     }

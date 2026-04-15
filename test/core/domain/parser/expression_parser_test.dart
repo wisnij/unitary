@@ -5,6 +5,8 @@ import 'package:unitary/core/domain/parser/ast.dart';
 import 'package:unitary/core/domain/parser/expression_parser.dart';
 import 'package:unitary/core/domain/parser/token.dart';
 
+import '../../../helpers/passthrough_unit_repository.dart';
+
 void main() {
   final parser = ExpressionParser(repo: UnitRepository.withPredefinedUnits());
 
@@ -69,12 +71,12 @@ void main() {
   group('ExpressionParser.parseQuery', () {
     late UnitRepository repo;
     late ExpressionParser repoParser;
-    late ExpressionParser noRepoParser;
+    late ExpressionParser passthroughParser;
 
     setUp(() {
       repo = UnitRepository.withPredefinedUnits();
       repoParser = ExpressionParser(repo: repo);
-      noRepoParser = ExpressionParser();
+      passthroughParser = ExpressionParser(repo: PassthroughUnitRepository());
     });
 
     test(
@@ -160,12 +162,15 @@ void main() {
       expect(node, isA<FunctionCallNode>());
     });
 
-    test('without a repository all inputs delegate to parseExpression', () {
-      final node = noRepoParser.parseQuery('tempF');
-      // Without repo, "tempF" is treated as a raw UnitNode.
-      expect(node, isA<ExpressionNode>());
-      expect(node, isNot(isA<FunctionNameNode>()));
-    });
+    test(
+      'without registered functions parseQuery does not return FunctionNameNode',
+      () {
+        final node = passthroughParser.parseQuery('tempF');
+        // PassthroughUnitRepository has no functions registered, so "tempF"
+        // is not recognized as a function.
+        expect(node, isNot(isA<FunctionNameNode>()));
+      },
+    );
   });
 
   group('ExpressionParser.tokenize', () {
@@ -196,9 +201,11 @@ void main() {
       expect(result.dimension, Dimension({'m': 1}));
     });
 
-    test('evaluate without repo uses raw dimension (Phase 1 behavior)', () {
-      final noRepoParser = ExpressionParser();
-      final result = noRepoParser.evaluate('5 m');
+    test('passthrough repo produces raw dimension for unrecognized names', () {
+      final passthroughParser = ExpressionParser(
+        repo: PassthroughUnitRepository(),
+      );
+      final result = passthroughParser.evaluate('5 m');
       expect(result.value, 5.0);
       expect(result.dimension, Dimension({'m': 1}));
     });

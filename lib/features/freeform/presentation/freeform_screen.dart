@@ -109,10 +109,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   void _showConformableModal(BuildContext context) {
     final parser = ref.read(parserProvider);
-    final repo = parser.repo;
-    if (repo == null) {
-      return;
-    }
 
     final Quantity inputQty;
     try {
@@ -122,7 +118,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     }
 
     final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
-    final entries = repo.findConformable(inputQty.dimension);
+    final entries = parser.repo.findConformable(inputQty.dimension);
     if (kDebugMode) {
       stopwatch!.stop();
       debugPrint(

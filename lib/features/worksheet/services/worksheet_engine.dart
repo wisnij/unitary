@@ -107,7 +107,7 @@ Quantity _funcRowBase(
   String functionName,
   double value,
 ) {
-  final func = parser.repo?.findFunction(functionName);
+  final func = parser.repo.findFunction(functionName);
   if (func == null) {
     throw EvalException('Unknown function: "$functionName"');
   }
@@ -176,7 +176,7 @@ double _funcRowTarget(
   String functionName,
   Quantity base,
 ) {
-  final func = parser.repo?.findFunction(functionName);
+  final func = parser.repo.findFunction(functionName);
   if (func == null) {
     throw EvalException('Unknown function: "$functionName"');
   }

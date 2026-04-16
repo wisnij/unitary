@@ -16,7 +16,7 @@ Implementation Phases
 **Tasks:**
 
 - [x] Install Flutter SDK (3.38.9) and Dart SDK (3.10.8)
-- [x] Create new Flutter project (`flutter create`, org `com.wisnij`, version 0.1.0+1)
+- [x] Create new Flutter project (`flutter create`, org `dev.wisnij`, version 0.1.0+1)
 - [x] Set up version control (Git/GitHub)
 - [x] Configure project structure (layered architecture: core/domain, core/data, features, shared)
 - [x] Set up linting and code formatting (`flutter_lints` + project-specific rules in `analysis_options.yaml`)

@@ -9,7 +9,7 @@ void main() {
     setUp(() {
       PackageInfo.setMockInitialValues(
         appName: 'unitary',
-        packageName: 'com.wisnij.unitary',
+        packageName: 'dev.wisnij.unitary',
         version: '1.2.3',
         buildNumber: '42',
         buildSignature: '',

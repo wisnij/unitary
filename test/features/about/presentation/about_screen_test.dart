@@ -36,7 +36,7 @@ void main() {
     repo = SettingsRepository(prefs);
     PackageInfo.setMockInitialValues(
       appName: 'unitary',
-      packageName: 'com.wisnij.unitary',
+      packageName: 'dev.wisnij.unitary',
       version: '1.2.3',
       buildNumber: '',
       buildSignature: '',

@@ -1,4 +1,4 @@
-package com.wisnij.unitary
+package dev.wisnij.unitary
 
 import io.flutter.embedding.android.FlutterActivity
 

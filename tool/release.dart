@@ -126,7 +126,7 @@ void _runChangelog({required bool dryRun}) {
       stdout.writeln(
         'No changelog entries and no CHANGELOG.md — nothing to do.',
       );
-      return;
+      exit(1);
     }
     changelogFile.writeAsStringSync(
       'Changelog\n'
@@ -149,6 +149,7 @@ void _runChangelog({required bool dryRun}) {
 
   if (newContent == currentContent) {
     stdout.writeln('No changes to CHANGELOG.md.');
+    exit(1);
   } else {
     changelogFile.writeAsStringSync(newContent);
     if (section == null) {

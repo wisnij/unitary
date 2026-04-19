@@ -4,7 +4,6 @@ import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
-import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 void main() {
   group('PrimitiveUnit', () {
@@ -130,7 +129,7 @@ void main() {
         const PrefixUnit(id: 'kilo', aliases: ['k'], expression: '1000'),
       );
       final prefix = repo.allPrefixes.first;
-      final q = resolveUnit(prefix, repo);
+      final q = repo.resolveUnit(prefix);
       expect(q.value, closeTo(1000.0, 1e-10));
       expect(q.isDimensionless, isTrue);
     });
@@ -165,28 +164,28 @@ void main() {
 
     test('resolveUnit returns 1 with self-dimension', () {
       final unit = repo.getUnit('m');
-      final q = resolveUnit(unit, repo);
+      final q = repo.resolveUnit(unit);
       expect(q.value, 1.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
     test('resolveUnit scaled by value', () {
       final unit = repo.getUnit('m');
-      final q = resolveUnit(unit, repo).multiply(Quantity.dimensionless(5.0));
+      final q = repo.resolveUnit(unit).multiply(Quantity.dimensionless(5.0));
       expect(q.value, 5.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
     test('resolveUnit scaled by zero', () {
       final unit = repo.getUnit('m');
-      final q = resolveUnit(unit, repo).multiply(Quantity.dimensionless(0.0));
+      final q = repo.resolveUnit(unit).multiply(Quantity.dimensionless(0.0));
       expect(q.value, 0.0);
       expect(q.dimension, Dimension({'m': 1}));
     });
 
     test('resolveUnit scaled by negative value', () {
       final unit = repo.getUnit('m');
-      final q = resolveUnit(unit, repo).multiply(Quantity.dimensionless(-3.14));
+      final q = repo.resolveUnit(unit).multiply(Quantity.dimensionless(-3.14));
       expect(q.value, -3.14);
       expect(q.dimension, Dimension({'m': 1}));
     });
@@ -195,7 +194,7 @@ void main() {
       final repo2 = UnitRepository();
       repo2.register(const PrimitiveUnit(id: 'kg'));
       final unit = repo2.getUnit('kg');
-      final q = resolveUnit(unit, repo2);
+      final q = repo2.resolveUnit(unit);
       expect(q.dimension, Dimension({'kg': 1}));
     });
   });
@@ -205,7 +204,7 @@ void main() {
       final repo = UnitRepository();
       repo.register(const DerivedUnit(id: 'bad', expression: 'bad'));
       expect(
-        () => resolveUnit(repo.getUnit('bad'), repo),
+        () => repo.resolveUnit(repo.getUnit('bad')),
         throwsA(isA<EvalException>()),
       );
     });
@@ -215,7 +214,7 @@ void main() {
       repo.register(const DerivedUnit(id: 'cycleA', expression: '2 cycleB'));
       repo.register(const DerivedUnit(id: 'cycleB', expression: '3 cycleA'));
       expect(
-        () => resolveUnit(repo.getUnit('cycleA'), repo),
+        () => repo.resolveUnit(repo.getUnit('cycleA')),
         throwsA(isA<EvalException>()),
       );
     });
@@ -226,7 +225,7 @@ void main() {
       repo.register(const DerivedUnit(id: 'B', expression: '2 base'));
       repo.register(const DerivedUnit(id: 'C', expression: '3 B'));
       repo.register(const DerivedUnit(id: 'A', expression: 'B + C'));
-      expect(() => resolveUnit(repo.getUnit('A'), repo), returnsNormally);
+      expect(() => repo.resolveUnit(repo.getUnit('A')), returnsNormally);
     });
 
     test('linear chain (A → B → C → primitive) resolves without error', () {
@@ -235,7 +234,7 @@ void main() {
       repo.register(const DerivedUnit(id: 'C', expression: '10 base'));
       repo.register(const DerivedUnit(id: 'B', expression: '5 C'));
       repo.register(const DerivedUnit(id: 'A', expression: '2 B'));
-      expect(() => resolveUnit(repo.getUnit('A'), repo), returnsNormally);
+      expect(() => repo.resolveUnit(repo.getUnit('A')), returnsNormally);
     });
   });
 }

@@ -1,6 +1,7 @@
 import '../data/builtin_functions.dart';
 import '../data/predefined_units.dart';
-import '../services/unit_resolver.dart';
+import '../errors.dart';
+import '../parser/expression_parser.dart';
 import 'browse_entry.dart';
 import 'dimension.dart';
 import 'function.dart';
@@ -75,13 +76,13 @@ class UnitRepository {
   /// Maps every function name (id + aliases) to its function.
   final Map<String, UnitaryFunction> _functionLookup = {};
 
-  /// Lazy cache of resolved quantities keyed by unit primary ID.
+  /// Lazy cache of successfully resolved quantities, keyed by [_cacheKey].
   ///
-  /// A `null` value means the unit failed to resolve (circular definition,
-  /// unsupported expression, etc.) and should be excluded from conformable
-  /// results.  The entry is absent until the unit has been resolved at least
-  /// once.
-  final Map<String, Quantity?> _resolvedQuantityCache = {};
+  /// An entry is absent until the unit has been resolved at least once
+  /// successfully.  Failed resolutions are not cached; callers that need
+  /// null-on-failure semantics (e.g. [buildBrowseCatalog]) catch exceptions
+  /// from [resolveUnit] themselves.
+  final Map<String, Quantity> _resolvedQuantityCache = {};
 
   /// Maps canonical dimension representation strings to human-readable group
   /// labels, used by the unit browser for the dimension-grouped view.
@@ -296,6 +297,68 @@ class UnitRepository {
   /// IDs of all registered dimensionless primitive units.
   Set<String> get dimensionlessIds => Set.unmodifiable(_dimensionlessIds);
 
+  /// Returns the cache key for [unit] in [_resolvedQuantityCache].
+  ///
+  /// Uses `"${unit.id}-"` for [PrefixUnit] instances to avoid collisions with
+  /// regular units that share the same id (e.g. the `m` meter unit and the
+  /// `m` milli prefix).  This matches the convention used by the [visited]
+  /// cycle-detection set in [_resolveUnit].
+  String _cacheKey(Unit unit) => unit is PrefixUnit ? '${unit.id}-' : unit.id;
+
+  /// Resolves [unit] to its base-unit [Quantity] representation.
+  ///
+  /// This is the core resolution logic: [PrimitiveUnit] returns an identity
+  /// quantity; [DerivedUnit] evaluates its expression via [ExpressionParser].
+  /// [visited] is the set of unit IDs currently on the resolution stack and is
+  /// threaded through recursive calls to detect circular definitions.
+  Quantity _resolveUnit(Unit unit, [Set<String>? visited]) {
+    final seen = (visited == null || visited.isEmpty) ? <String>{} : visited;
+    final key = _cacheKey(unit);
+    if (seen.contains(key)) {
+      throw EvalException('Circular unit definition detected for "${unit.id}"');
+    }
+    seen.add(key);
+    try {
+      if (unit is PrimitiveUnit) {
+        return Quantity(1.0, Dimension({unit.id: 1}));
+      } else if (unit is DerivedUnit) {
+        return ExpressionParser(
+          repo: this,
+          visited: seen,
+        ).evaluate(unit.expression);
+      }
+      throw UnsupportedError('Unknown Unit type: ${unit.runtimeType}');
+    } finally {
+      seen.remove(key);
+    }
+  }
+
+  /// Resolves [unit] to its base-unit [Quantity] representation, using the
+  /// resolved-quantity cache to avoid redundant resolution.
+  ///
+  /// Returns the [Quantity] equivalent to 1 of [unit] expressed in primitive
+  /// base units.  The result is cached on first call; subsequent calls for the
+  /// same unit return the cached value without re-executing the resolution
+  /// chain.  Failed resolutions are not cached — the original exception
+  /// propagates on every call for a unit that cannot be resolved.
+  ///
+  /// [visited] is the set of unit IDs currently on the resolution stack.  It
+  /// is only forwarded to [_resolveUnit] on a cache miss and is used to detect
+  /// circular definitions.
+  ///
+  /// Throws [EvalException] if the unit's definition is circular or otherwise
+  /// invalid.
+  Quantity resolveUnit(Unit unit, [Set<String>? visited]) {
+    final key = _cacheKey(unit);
+    final cached = _resolvedQuantityCache[key];
+    if (cached != null) {
+      return cached;
+    }
+    final result = _resolveUnit(unit, visited);
+    _resolvedQuantityCache[key] = result;
+    return result;
+  }
+
   /// Returns the complete browsable catalog of all registered units, prefixes,
   /// and functions, with each alias as its own [BrowseEntry].
   ///
@@ -311,18 +374,11 @@ class UnitRepository {
         continue;
       }
 
-      final Quantity? resolved;
-      if (_resolvedQuantityCache.containsKey(unit.id)) {
-        resolved = _resolvedQuantityCache[unit.id];
-      } else {
-        Quantity? q;
-        try {
-          q = resolveUnit(unit, this);
-        } catch (_) {
-          q = null;
-        }
-        _resolvedQuantityCache[unit.id] = q;
-        resolved = q;
+      Quantity? resolved;
+      try {
+        resolved = resolveUnit(unit);
+      } catch (_) {
+        resolved = null;
       }
 
       final dimension = resolved?.dimension;
@@ -360,18 +416,11 @@ class UnitRepository {
 
     // Prefixes.
     for (final prefix in _prefixes.values) {
-      final Quantity? resolved;
-      if (_resolvedQuantityCache.containsKey(prefix.id)) {
-        resolved = _resolvedQuantityCache[prefix.id];
-      } else {
-        Quantity? q;
-        try {
-          q = resolveUnit(prefix, this);
-        } catch (_) {
-          q = null;
-        }
-        _resolvedQuantityCache[prefix.id] = q;
-        resolved = q;
+      Quantity? resolved;
+      try {
+        resolved = resolveUnit(prefix);
+      } catch (_) {
+        resolved = null;
       }
 
       final dimension = resolved?.dimension;
@@ -457,18 +506,11 @@ class UnitRepository {
         continue;
       }
 
-      final Quantity? resolved;
-      if (_resolvedQuantityCache.containsKey(unit.id)) {
-        resolved = _resolvedQuantityCache[unit.id];
-      } else {
-        Quantity? q;
-        try {
-          q = resolveUnit(unit, this);
-        } catch (_) {
-          q = null;
-        }
-        _resolvedQuantityCache[unit.id] = q;
-        resolved = q;
+      Quantity? resolved;
+      try {
+        resolved = resolveUnit(unit);
+      } catch (_) {
+        resolved = null;
       }
 
       if (resolved == null || resolved.dimension != target) {

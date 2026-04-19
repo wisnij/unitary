@@ -7,7 +7,6 @@ import '../../../core/domain/models/function.dart';
 import '../../../core/domain/models/quantity.dart';
 import '../../../core/domain/models/unit.dart';
 import '../../../core/domain/models/unit_repository.dart';
-import '../../../core/domain/services/unit_resolver.dart';
 import '../../../shared/utils/quantity_formatter.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
@@ -175,7 +174,7 @@ class _UnitDetailBody extends StatelessWidget {
     // Resolved quantity.
     Quantity? resolved;
     try {
-      resolved = resolveUnit(unit, repo);
+      resolved = repo.resolveUnit(unit);
     } catch (_) {
       resolved = null;
     }

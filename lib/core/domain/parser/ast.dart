@@ -1,7 +1,6 @@
 import '../errors.dart';
 import '../models/quantity.dart';
 import '../models/unit_repository.dart';
-import '../services/unit_resolver.dart';
 import 'token.dart';
 
 /// Evaluation context passed to AST nodes during evaluation.
@@ -83,15 +82,13 @@ class UnitNode extends ExpressionNode {
     }
 
     // Resolve to base units: 1 <unit> = quantity in primitives.
-    final unitQuantity = resolveUnit(
+    final unitQuantity = context.repo.resolveUnit(
       result.unit!,
-      context.repo,
       context.visited,
     );
     if (result.prefix != null) {
-      final prefixQuantity = resolveUnit(
+      final prefixQuantity = context.repo.resolveUnit(
         result.prefix!,
-        context.repo,
         context.visited,
       );
       return prefixQuantity.multiply(unitQuantity);

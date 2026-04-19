@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/browse_entry.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
-import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 // A minimal test function for registry tests.
 class _TestFn extends UnitaryFunction {
@@ -111,7 +111,7 @@ void main() {
       () {
         repo.register(const PrimitiveUnit(id: 'kg'));
         expect(
-          resolveUnit(repo.getUnit('kg'), repo).dimension,
+          repo.resolveUnit(repo.getUnit('kg')).dimension,
           Dimension({'kg': 1}),
         );
       },
@@ -945,6 +945,61 @@ void main() {
       for (final e in catalog.where((e) => e.name == 'kilo' || e.name == 'k')) {
         expect(e.kind, BrowseEntryKind.prefix);
       }
+    });
+  });
+
+  group('UnitRepository.resolveUnit caching', () {
+    test('second call returns same quantity (cached)', () {
+      final repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'base'));
+      repo.register(const DerivedUnit(id: 'unit', expression: '5 base'));
+      final unit = repo.getUnit('unit');
+      final first = repo.resolveUnit(unit);
+      final second = repo.resolveUnit(unit);
+      expect(second.value, equals(first.value));
+      expect(second.dimension, equals(first.dimension));
+    });
+
+    test('failed resolution re-throws on every call', () {
+      final repo = UnitRepository();
+      repo.register(const DerivedUnit(id: 'bad', expression: 'bad'));
+      final unit = repo.getUnit('bad');
+      expect(() => repo.resolveUnit(unit), throwsA(isA<EvalException>()));
+      // Second call must also throw, not silently succeed or change type.
+      expect(() => repo.resolveUnit(unit), throwsA(isA<EvalException>()));
+    });
+  });
+
+  group('UnitRepository.resolveUnit cache key collision', () {
+    // Builds a repo with a DerivedUnit 'm' = 1000 base and a PrefixUnit
+    // 'm' = 0.001.  Without namespace-qualified cache keys these collide and
+    // whichever is resolved first poisons the entry for the other.
+    UnitRepository buildCollisionRepo() {
+      final repo = UnitRepository();
+      repo.register(const PrimitiveUnit(id: 'base'));
+      repo.register(const DerivedUnit(id: 'm', expression: '1000 base'));
+      repo.registerPrefix(const PrefixUnit(id: 'm', expression: '0.001'));
+      return repo;
+    }
+
+    test('unit resolved before prefix', () {
+      final repo = buildCollisionRepo();
+      final unitQ = repo.resolveUnit(repo.getUnit('m'));
+      final prefixQ = repo.resolveUnit(repo.findPrefix('m')!);
+      expect(unitQ.value, closeTo(1000.0, 1e-10));
+      expect(unitQ.dimension, Dimension({'base': 1}));
+      expect(prefixQ.value, closeTo(0.001, 1e-10));
+      expect(prefixQ.isDimensionless, isTrue);
+    });
+
+    test('prefix resolved before unit', () {
+      final repo = buildCollisionRepo();
+      final prefixQ = repo.resolveUnit(repo.findPrefix('m')!);
+      final unitQ = repo.resolveUnit(repo.getUnit('m'));
+      expect(unitQ.value, closeTo(1000.0, 1e-10));
+      expect(unitQ.dimension, Dimension({'base': 1}));
+      expect(prefixQ.value, closeTo(0.001, 1e-10));
+      expect(prefixQ.isDimensionless, isTrue);
     });
   });
 }

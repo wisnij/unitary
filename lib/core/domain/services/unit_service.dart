@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import '../models/dimension.dart';
 import '../models/quantity.dart';
 import '../models/unit_repository.dart';
-import 'unit_resolver.dart';
 
 /// Reduce a quantity to primitive base units.
 ///
@@ -33,7 +32,7 @@ Quantity reduce(Quantity quantity, UnitRepository repo) {
     }
 
     // Resolve to base units.
-    final baseQuantity = resolveUnit(unit, repo);
+    final baseQuantity = repo.resolveUnit(unit);
     value *= math.pow(baseQuantity.value, exponent);
 
     // Replace with primitive dimension entries.

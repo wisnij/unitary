@@ -8,7 +8,6 @@ import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
 import 'package:unitary/core/domain/parser/expression_parser.dart';
-import 'package:unitary/core/domain/services/unit_resolver.dart';
 
 /// Units whose expressions use language features the evaluator does not yet
 /// support.  When support is added, remove the affected IDs and the test will
@@ -163,7 +162,7 @@ void main() {
 
       for (final unit in repo.allUnits) {
         try {
-          resolveUnit(unit, repo);
+          repo.resolveUnit(unit);
           if (_knownEvalFailures.contains(unit.id)) {
             unexpectedPasses.add(unit.id);
           }

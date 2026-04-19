@@ -1,12 +1,26 @@
-# Fast Scroll Bar Spec
+## ADDED Requirements
 
-## Purpose
+### Requirement: Drag handle appearance
+The `FastScrollBar` thumb SHALL be styled to communicate that it is a draggable
+handle, not a passive indicator.
 
-Define the requirements for `FastScrollBar`, a draggable thumb overlay that
-enables fast navigation of long scrollable lists and displays a group-label
-bubble while dragging.
+- The thumb SHALL use a pill shape wider than a standard scrollbar (≥ 10 dp).
+- The thumb SHALL display three short horizontal grip lines centred vertically
+  within the pill, visually indicating vertical drag affordance.
+- The grip lines SHALL be rendered in a colour that contrasts with the pill
+  background and remains legible in both light and dark themes.
 
-## Requirements
+#### Scenario: Thumb displays grip lines
+- **WHEN** the thumb is visible
+- **THEN** three horizontal grip lines are visible centred within the pill
+
+#### Scenario: Grip lines visible in dark theme
+- **WHEN** the app is in dark mode and the thumb is visible
+- **THEN** the grip lines are visually distinct from the pill background
+
+---
+
+## MODIFIED Requirements
 
 ### Requirement: Draggable scroll thumb
 The `FastScrollBar` widget SHALL display a draggable thumb on the right edge of
@@ -40,26 +54,6 @@ its child scrollable area when the content is taller than the viewport.
 - **WHEN** the thumb is visible
 - **THEN** the draggable hit area extends at least 44 dp from the right edge,
   regardless of the visual thumb width
-
----
-
-### Requirement: Drag handle appearance
-The `FastScrollBar` thumb SHALL be styled to communicate that it is a draggable
-handle, not a passive indicator.
-
-- The thumb SHALL use a pill shape wider than a standard scrollbar (≥ 10 dp).
-- The thumb SHALL display three short horizontal grip lines centred vertically
-  within the pill, visually indicating vertical drag affordance.
-- The grip lines SHALL be rendered in a colour that contrasts with the pill
-  background and remains legible in both light and dark themes.
-
-#### Scenario: Thumb displays grip lines
-- **WHEN** the thumb is visible
-- **THEN** three horizontal grip lines are visible centred within the pill
-
-#### Scenario: Grip lines visible in dark theme
-- **WHEN** the app is in dark mode and the thumb is visible
-- **THEN** the grip lines are visually distinct from the pill background
 
 ---
 
@@ -105,40 +99,3 @@ neighbours.
 #### Scenario: Panel hidden when not dragging
 - **WHEN** the user is not actively dragging the thumb
 - **THEN** no label panel is shown
-
----
-
-### Requirement: Thumb fade visibility
-The thumb SHALL fade in when the list is scrolled and fade out after a short
-idle period.
-
-- The thumb SHALL fade in (become fully visible) whenever the
-  `ScrollController` emits a scroll event.
-- After the last scroll event, the thumb SHALL fade out after an idle timeout
-  of approximately 1.5 seconds.
-- While the thumb is being dragged, the idle timer SHALL be suspended and the
-  thumb SHALL remain fully visible.
-- When the drag ends, the idle timer SHALL restart.
-
-#### Scenario: Thumb fades in on scroll
-- **WHEN** the user scrolls the list
-- **THEN** the thumb becomes visible
-
-#### Scenario: Thumb fades out after idle
-- **WHEN** the user stops scrolling and does not interact with the thumb for
-  approximately 1.5 seconds
-- **THEN** the thumb fades out and is no longer visible
-
-#### Scenario: Thumb stays visible while dragging
-- **WHEN** the user is actively dragging the thumb
-- **THEN** the thumb remains fully visible regardless of idle timeout
-
----
-
-### Requirement: Active flag suppresses overlay
-When the `active` parameter is `false`, `FastScrollBar` SHALL render only its
-`child` with no thumb or label bubble.
-
-#### Scenario: Thumb hidden when inactive
-- **WHEN** `FastScrollBar.active` is `false`
-- **THEN** neither the thumb nor any label bubble is visible

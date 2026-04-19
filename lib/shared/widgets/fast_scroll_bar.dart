@@ -2,9 +2,38 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+// ---------------------------------------------------------------------------
+// File-level constants (shared between state and sub-widgets)
+// ---------------------------------------------------------------------------
+
+// Thumb dimensions.
+const _thumbWidth = 12.0;
+const _thumbHitWidth = 44.0;
+const _thumbHeight = 48.0;
+const _thumbRightPadding = 4.0;
+
+// Peek panel.
+const _peekNeighbourCount = 2;
+const _panelRightOffset = _thumbRightPadding + _thumbHitWidth + 8.0;
+
+// Approximate row heights for peek-panel vertical positioning.
+// These are used to align the current-group row with the thumb centre;
+// small inaccuracies are acceptable since they only affect visual alignment.
+const _approxNeighbourRowHeight = 22.0;
+const _approxCurrentRowHalfHeight = 13.0;
+const _panelTopPadding = 8.0;
+
+// Animation.
+const _fadeInDuration = Duration(milliseconds: 200);
+const _idleTimeout = Duration(milliseconds: 1500);
+
+// ---------------------------------------------------------------------------
+// FastScrollBar
+// ---------------------------------------------------------------------------
+
 /// Wraps a scrollable [child] and overlays a draggable thumb on the right
-/// edge.  While the thumb is dragged, a label bubble shows the current group
-/// name derived from [groupAnchors].
+/// edge.  While the thumb is dragged, a peek panel shows the current group
+/// and its immediate neighbours derived from [groupAnchors].
 ///
 /// Set [active] to `false` to suppress the overlay entirely (e.g. during
 /// search, when the filtered list is short).
@@ -35,9 +64,13 @@ class FastScrollBar extends StatefulWidget {
   @visibleForTesting
   static const thumbKey = ValueKey<String>('fast_scroll_bar_thumb');
 
-  /// Key applied to the label bubble — used in widget tests.
+  /// Key applied to the peek panel — used in widget tests.
   @visibleForTesting
-  static const labelKey = ValueKey<String>('fast_scroll_bar_label');
+  static const peekPanelKey = ValueKey<String>('fast_scroll_bar_peek_panel');
+
+  /// Key applied to the grip-lines [Column] inside the thumb — used in widget tests.
+  @visibleForTesting
+  static const gripLinesKey = ValueKey<String>('fast_scroll_bar_grip_lines');
 
   /// Key applied to the [FadeTransition] wrapping the thumb overlay — used
   /// in widget tests to read the current opacity value.
@@ -72,18 +105,44 @@ class FastScrollBar extends StatefulWidget {
     return label;
   }
 
+  /// Returns the index of the current group within [anchors] for a given
+  /// scroll [fraction] and [itemCount].
+  ///
+  /// Uses the same "last anchor whose item index ≤ target" algorithm as
+  /// [labelForFraction].  Returns `-1` when [anchors] is empty or
+  /// [itemCount] is zero.
+  ///
+  /// Exposed as a public static method for unit testing.
+  static int groupIndexForFraction(
+    double fraction,
+    List<(int, String)> anchors,
+    int itemCount,
+  ) {
+    if (anchors.isEmpty || itemCount <= 0) {
+      return -1;
+    }
+    final target = (fraction * itemCount).round().clamp(0, itemCount - 1);
+    var index = 0;
+    for (var i = 0; i < anchors.length; i++) {
+      if (anchors[i].$1 <= target) {
+        index = i;
+      } else {
+        break;
+      }
+    }
+    return index;
+  }
+
   @override
   State<FastScrollBar> createState() => _FastScrollBarState();
 }
 
+// ---------------------------------------------------------------------------
+// _FastScrollBarState
+// ---------------------------------------------------------------------------
+
 class _FastScrollBarState extends State<FastScrollBar>
     with SingleTickerProviderStateMixin {
-  static const _thumbWidth = 6.0;
-  static const _thumbHeight = 48.0;
-  static const _thumbRightPadding = 4.0;
-  static const _fadeInDuration = Duration(milliseconds: 200);
-  static const _idleTimeout = Duration(milliseconds: 1500);
-
   late AnimationController _fadeController;
   Timer? _hideTimer;
 
@@ -107,7 +166,6 @@ class _FastScrollBarState extends State<FastScrollBar>
       vsync: this,
     );
     widget.controller.addListener(_onScroll);
-    // After the first frame the controller is attached; check initial metrics.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _onScroll();
@@ -217,6 +275,22 @@ class _FastScrollBarState extends State<FastScrollBar>
   }
 
   // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  /// Computes the top position for the peek panel so that the current-group
+  /// row aligns vertically with the thumb centre.
+  double _peekPanelTop(double thumbTop, int currentGroupIndex) {
+    final thumbCenter = thumbTop + _thumbHeight / 2;
+    final neighboursAbove = currentGroupIndex.clamp(0, _peekNeighbourCount);
+    final offsetToCurrentCenter =
+        _panelTopPadding +
+        neighboursAbove * _approxNeighbourRowHeight +
+        _approxCurrentRowHalfHeight;
+    return (thumbCenter - offsetToCurrentCenter).clamp(0.0, _listHeight - 20.0);
+  }
+
+  // ---------------------------------------------------------------------------
   // Build
   // ---------------------------------------------------------------------------
 
@@ -226,19 +300,26 @@ class _FastScrollBarState extends State<FastScrollBar>
       return widget.child;
     }
 
+    // Suppress the native platform scrollbar: FastScrollBar provides its own.
+    final child = ScrollConfiguration(
+      behavior: const _NoScrollbarBehavior(),
+      child: widget.child,
+    );
+
     return LayoutBuilder(
       builder: (context, constraints) {
         _listHeight = constraints.maxHeight;
 
         if (!_hasScrollableContent) {
-          return widget.child;
+          return child;
         }
 
         final thumbTop = (_thumbFraction * (_listHeight - _thumbHeight)).clamp(
           0.0,
           _listHeight - _thumbHeight,
         );
-        final label = FastScrollBar.labelForFraction(
+
+        final currentGroupIndex = FastScrollBar.groupIndexForFraction(
           _thumbFraction,
           widget.groupAnchors,
           widget.itemCount,
@@ -246,7 +327,7 @@ class _FastScrollBarState extends State<FastScrollBar>
 
         return Stack(
           children: [
-            widget.child,
+            child,
             FadeTransition(
               key: FastScrollBar.overlayKey,
               opacity: _fadeController,
@@ -261,19 +342,24 @@ class _FastScrollBarState extends State<FastScrollBar>
                       onVerticalDragStart: _onDragStart,
                       onVerticalDragUpdate: _onDragUpdate,
                       onVerticalDragEnd: _onDragEnd,
-                      child: const _ThumbWidget(),
+                      child: const SizedBox(
+                        width: _thumbHitWidth,
+                        height: _thumbHeight,
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: _ThumbWidget(),
+                        ),
+                      ),
                     ),
                   ),
-                  if (_isDragging && label.isNotEmpty)
+                  if (_isDragging && currentGroupIndex >= 0)
                     Positioned(
-                      right: _thumbRightPadding + _thumbWidth + 8.0,
-                      top: (thumbTop + _thumbHeight / 2 - 20.0).clamp(
-                        0.0,
-                        _listHeight - 40.0,
-                      ),
-                      child: _LabelBubble(
-                        key: FastScrollBar.labelKey,
-                        label: label,
+                      right: _panelRightOffset,
+                      top: _peekPanelTop(thumbTop, currentGroupIndex),
+                      child: _PeekPanel(
+                        key: FastScrollBar.peekPanelKey,
+                        currentIndex: currentGroupIndex,
+                        anchors: widget.groupAnchors,
                       ),
                     ),
                 ],
@@ -295,40 +381,121 @@ class _ThumbWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final gripColor = theme.colorScheme.onSurface.withValues(alpha: 0.4);
     return Container(
-      width: 6.0,
-      height: 48.0,
+      width: _thumbWidth,
+      height: _thumbHeight,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.6),
-        borderRadius: BorderRadius.circular(3.0),
+        color: theme.colorScheme.primary.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(6.0),
+      ),
+      child: Column(
+        key: FastScrollBar.gripLinesKey,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _GripLine(color: gripColor),
+          const SizedBox(height: 5.0),
+          _GripLine(color: gripColor),
+          const SizedBox(height: 5.0),
+          _GripLine(color: gripColor),
+        ],
       ),
     );
   }
 }
 
-class _LabelBubble extends StatelessWidget {
-  const _LabelBubble({super.key, required this.label});
+class _GripLine extends StatelessWidget {
+  const _GripLine({required this.color});
 
-  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 8.0,
+      height: 2.0,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(1.0),
+      ),
+    );
+  }
+}
+
+class _PeekPanel extends StatelessWidget {
+  const _PeekPanel({
+    super.key,
+    required this.currentIndex,
+    required this.anchors,
+  });
+
+  final int currentIndex;
+  final List<(int, String)> anchors;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
+    final firstIndex = (currentIndex - _peekNeighbourCount).clamp(
+      0,
+      anchors.length - 1,
+    );
+    final lastIndex = (currentIndex + _peekNeighbourCount).clamp(
+      0,
+      anchors.length - 1,
+    );
+
+    final rows = <Widget>[];
+    for (var i = firstIndex; i <= lastIndex; i++) {
+      if (rows.isNotEmpty) {
+        rows.add(const SizedBox(height: 2.0));
+      }
+      final isCurrent = i == currentIndex;
+      rows.add(
+        Text(
+          anchors[i].$2,
+          textAlign: TextAlign.right,
+          style: isCurrent
+              ? theme.textTheme.titleMedium?.copyWith(
+                  color: theme.colorScheme.onPrimary,
+                  fontWeight: FontWeight.bold,
+                )
+              : theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.65),
+                ),
+        ),
+      );
+    }
+
+    final maxWidth = MediaQuery.sizeOf(context).width * 0.6;
     return Container(
-      constraints: const BoxConstraints(minWidth: 40.0),
+      constraints: BoxConstraints(maxWidth: maxWidth.clamp(0.0, 220.0)),
       padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
       decoration: BoxDecoration(
         color: theme.colorScheme.primary,
         borderRadius: BorderRadius.circular(8.0),
       ),
-      child: Text(
-        label,
-        textAlign: TextAlign.center,
-        style: theme.textTheme.titleMedium?.copyWith(
-          color: theme.colorScheme.onPrimary,
-          fontWeight: FontWeight.bold,
-        ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: rows,
       ),
     );
+  }
+}
+
+/// A [ScrollBehavior] that suppresses the platform-provided scrollbar widget,
+/// used by [FastScrollBar] so only the custom thumb is shown.
+class _NoScrollbarBehavior extends ScrollBehavior {
+  const _NoScrollbarBehavior();
+
+  @override
+  Widget buildScrollbar(
+    BuildContext context,
+    Widget child,
+    ScrollableDetails details,
+  ) {
+    return child;
   }
 }

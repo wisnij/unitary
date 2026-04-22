@@ -3,8 +3,28 @@ import '../models/worksheet.dart';
 const UnitRow _unit = UnitRow();
 const FunctionRow _func = FunctionRow();
 
-/// The 10 predefined worksheet templates.
+/// The 11 predefined worksheet templates.
 const List<WorksheetTemplate> predefinedWorksheets = [
+  WorksheetTemplate(
+    id: 'angle',
+    name: 'Angle',
+    rows: [
+      WorksheetRow(label: 'milli-arcsecond', expression: 'mas', kind: _unit),
+      WorksheetRow(label: 'arcsecond', expression: 'arcsec', kind: _unit),
+      WorksheetRow(
+        label: 'second of longitude',
+        expression: 'seclongitude',
+        kind: _unit,
+      ),
+      WorksheetRow(label: 'arcminute', expression: 'arcmin', kind: _unit),
+      WorksheetRow(label: 'gradian', expression: 'gon', kind: _unit),
+      WorksheetRow(label: 'degree', expression: 'degree', kind: _unit),
+      WorksheetRow(label: 'radian', expression: 'radian', kind: _unit),
+      WorksheetRow(label: 'sextant', expression: 'sextant', kind: _unit),
+      WorksheetRow(label: 'right angle', expression: 'rightangle', kind: _unit),
+      WorksheetRow(label: 'turn', expression: 'circle', kind: _unit),
+    ],
+  ),
   WorksheetTemplate(
     id: 'area',
     name: 'Area',

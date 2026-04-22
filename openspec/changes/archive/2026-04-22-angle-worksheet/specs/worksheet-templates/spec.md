@@ -1,39 +1,4 @@
-# Worksheet Templates
-
-## Purpose
-
-Defines the data models and predefined template registry for worksheet mode.
-Covers `WorksheetRow`, `WorksheetRowKind`, and `WorksheetTemplate`, along with
-the full set of 11 predefined conversion templates.
-
-## Requirements
-
-### Requirement: WorksheetRow model
-A `WorksheetRow` SHALL have a display `label` (String), an `expression` (String
-parseable by `ExpressionParser`), and a `WorksheetRowKind`.
-
-`WorksheetRowKind` is a sealed class with two variants:
-- `UnitRow`: the expression evaluates to a `Quantity`; conversion is
-  ratio-based (`value / unitQty.value`).
-- `FunctionRow`: the expression is a bare function name registered in
-  `UnitRepository`; conversion uses the function's `call()` (forward) and
-  `callInverse()` (inverse).
-
-#### Scenario: UnitRow construction
-- **WHEN** a `WorksheetRow` is constructed with kind `UnitRow` and expression `"ft"`
-- **THEN** its `label`, `expression`, and `kind` are accessible and `kind` is a `UnitRow`
-
-#### Scenario: FunctionRow construction
-- **WHEN** a `WorksheetRow` is constructed with kind `FunctionRow` and expression `"tempC"`
-- **THEN** its `kind` is a `FunctionRow`
-
-### Requirement: WorksheetTemplate model
-A `WorksheetTemplate` SHALL have a unique `id` (String), a display `name`
-(String), and a non-empty ordered list of `WorksheetRow` objects.
-
-#### Scenario: Template construction
-- **WHEN** a `WorksheetTemplate` is constructed with id `"length"`, name `"Length"`, and a list of rows
-- **THEN** its `id`, `name`, and `rows` are accessible
+## MODIFIED Requirements
 
 ### Requirement: Predefined worksheet templates
 The application SHALL provide exactly 11 predefined `WorksheetTemplate`
@@ -84,76 +49,33 @@ The 11 templates and their rows:
 - **WHEN** the `digital-storage` template is retrieved from the registry
 - **THEN** it has 10 rows with SI decimal units (kB, MB, GB, TB) interleaved with IEC binary units (KiB, MiB, GiB, TiB) in magnitude order: bit, B, kB, KiB, MB, MiB, GB, GiB, TB, TiB
 
-### Requirement: Each row's kind is consistent with its expression as parsed by the registry
-
-For every row in every predefined template, the `kind` field SHALL be consistent
-with how `ExpressionParser.parseQuery(row.expression)` classifies the expression
-against the live `UnitRepository`:
-
-- `FunctionNameNode` → row kind SHALL be `FunctionRow`
-- Any other node type (`DefinitionRequestNode`, any `ExpressionNode`) → row kind SHALL be `UnitRow`
-
-#### Scenario: UnitRow expression resolves to a non-function node
-
-- **WHEN** `parseQuery` is called with the `expression` of a `UnitRow` from any predefined template
-- **THEN** the result is NOT a `FunctionNameNode`
-
-#### Scenario: FunctionRow expression resolves to a FunctionNameNode
-
-- **WHEN** `parseQuery` is called with the `expression` of a `FunctionRow` from any predefined template
-- **THEN** the result IS a `FunctionNameNode`
-
-### Requirement: All-UnitRow templates are ordered smallest to largest
-
-For any predefined template whose rows are all `UnitRow`, evaluating each row's
-expression with `ExpressionParser.evaluate` SHALL yield `Quantity` values in
-non-decreasing order.  When two adjacent rows produce the same `Quantity.value`,
-their expression strings SHALL be in non-decreasing lexicographic order.
-
-#### Scenario: All-UnitRow template rows are in ascending magnitude order
-
-- **WHEN** each row expression in an all-`UnitRow` template is evaluated to a `Quantity`
-- **THEN** the resulting `.value` sequence is non-decreasing from first to last row
-
-#### Scenario: Equal-magnitude rows are ordered by expression string
-
-- **WHEN** two adjacent rows in an all-`UnitRow` template evaluate to the same `Quantity.value`
-- **THEN** the earlier row's expression string is lexicographically ≤ the later row's expression string
+## ADDED Requirements
 
 ### Requirement: Angle template rows
-
 The `angle` template SHALL contain exactly the following 10 rows (all `UnitRow`,
-in smallest-to-largest order): `mas`, `arcsec`, `seclongitude`, `arcmin`,
-`gon`, `degree`, `radian`, `sextant`, `rightangle`, `circle`.
+in smallest-to-largest order):
+
+| Label | Expression |
+|-------|-----------|
+| milli-arcsecond | `mas` |
+| arcsecond | `arcsec` |
+| second of longitude | `seclongitude` |
+| arcminute | `arcmin` |
+| gradian | `gon` |
+| degree | `degree` |
+| radian | `radian` |
+| sextant | `sextant` |
+| right angle | `rightangle` |
+| turn | `circle` |
 
 #### Scenario: Angle template expressions
-
 - **WHEN** the `angle` template is retrieved from the registry
 - **THEN** it has 10 rows with expressions (in order): `mas`, `arcsec`, `seclongitude`, `arcmin`, `gon`, `degree`, `radian`, `sextant`, `rightangle`, `circle`
 
 #### Scenario: Angle template all UnitRows
-
 - **WHEN** the `angle` template is retrieved from the registry
 - **THEN** every row has kind `UnitRow`
 
-### Requirement: Volume template rows
-
-The `volume` template SHALL contain exactly the following expressions (in
-smallest-to-largest order): `mL`, `tsp`, `tbsp`, `floz`, `cup`, `pt`, `qt`,
-`L`, `gal`, `bbl` — all `UnitRow`.
-
-#### Scenario: Volume template expressions
-
-- **WHEN** the `volume` template is retrieved from the registry
-- **THEN** its rows contain all of: `mL`, `tsp`, `tbsp`, `floz`, `cup`, `pt`, `qt`, `L`, `gal`, `bbl`
-
-### Requirement: Pressure template rows
-
-The `pressure` template SHALL contain exactly the following expressions (in
-smallest-to-largest order): `Pa`, `mbar`, `Torr`, `mmHg`, `kPa`, `inHg`,
-`psi`, `bar`, `atm`, `MPa` — all `UnitRow`.
-
-#### Scenario: Pressure template expressions
-
-- **WHEN** the `pressure` template is retrieved from the registry
-- **THEN** its rows contain all of: `Pa`, `mbar`, `mmHg`, `Torr`, `kPa`, `inHg`, `psi`, `bar`, `atm`, `MPa`
+#### Scenario: Angle template rows in ascending magnitude order
+- **WHEN** each row expression in the `angle` template is evaluated to a `Quantity`
+- **THEN** the resulting `.value` sequence is non-decreasing from first to last row

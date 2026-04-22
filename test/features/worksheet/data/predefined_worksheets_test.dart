@@ -14,8 +14,8 @@ void main() {
       parser = ExpressionParser(repo: UnitRepository.withPredefinedUnits());
     });
 
-    test('contains exactly 10 templates', () {
-      expect(predefinedWorksheets, hasLength(10));
+    test('contains exactly 11 templates', () {
+      expect(predefinedWorksheets, hasLength(11));
     });
 
     test('all template ids are distinct', () {
@@ -86,6 +86,51 @@ void main() {
           prevExpression = row.expression;
         }
       }
+    });
+
+    group('angle template', () {
+      late WorksheetTemplate template;
+      setUp(() {
+        template = predefinedWorksheets.firstWhere((t) => t.id == 'angle');
+      });
+
+      test('has id "angle" and name "Angle"', () {
+        expect(template.id, equals('angle'));
+        expect(template.name, equals('Angle'));
+      });
+
+      test('has 10 rows', () {
+        expect(template.rows, hasLength(10));
+      });
+
+      test('all rows are UnitRow', () {
+        for (final row in template.rows) {
+          expect(
+            row.kind,
+            isA<UnitRow>(),
+            reason: '${row.expression} is not UnitRow',
+          );
+        }
+      });
+
+      test('contains expected expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toList();
+        expect(
+          expressions,
+          containsAll([
+            'mas',
+            'arcsec',
+            'seclongitude',
+            'arcmin',
+            'gon',
+            'degree',
+            'radian',
+            'sextant',
+            'rightangle',
+            'circle',
+          ]),
+        );
+      });
     });
 
     group('length template', () {

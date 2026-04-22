@@ -93,7 +93,10 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     return Scaffold(
       appBar: AppBar(
         title: WorksheetDropdown(
-          templates: predefinedWorksheets,
+          templates: [...predefinedWorksheets]
+            ..sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+            ),
           selectedId: activeId,
           onChanged: (id) =>
               ref.read(worksheetProvider.notifier).selectWorksheet(id),

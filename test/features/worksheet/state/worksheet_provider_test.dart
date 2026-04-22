@@ -25,9 +25,9 @@ void main() {
   });
 
   group('WorksheetNotifier', () {
-    test('initial state uses first template and no active row', () {
+    test('initial state uses length template and no active row', () {
       final state = container.read(worksheetProvider);
-      expect(state.worksheetId, predefinedWorksheets.first.id);
+      expect(state.worksheetId, 'length');
       expect(state.activeRowIndex, isNull);
     });
 

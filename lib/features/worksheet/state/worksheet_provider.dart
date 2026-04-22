@@ -22,8 +22,8 @@ final worksheetProvider = NotifierProvider<WorksheetNotifier, WorksheetState>(
 class WorksheetNotifier extends Notifier<WorksheetState> {
   @override
   WorksheetState build() {
-    return WorksheetState(
-      worksheetId: predefinedWorksheets.first.id,
+    return const WorksheetState(
+      worksheetId: 'length',
       activeRowIndex: null,
       worksheetValues: {},
     );

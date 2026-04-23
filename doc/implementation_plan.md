@@ -224,29 +224,46 @@ Implementation Phases
 
 ---
 
-### Phase 6: Worksheet Mode (Weeks 15-17)
+### Phase 6: Worksheet Mode (Weeks 15-17) — COMPLETE
 
 **Goals:** Multi-unit worksheet interface
 
 **Tasks:**
 
 1. Implement Worksheet domain model
+   - [x] `WorksheetRowKind` sealed class: `UnitRow` (ratio-based) and `FunctionRow` (function forward/inverse)
+   - [x] `WorksheetRow` and `WorksheetTemplate` data models
+   - [x] Row expressions support compound units (`m/s`, `km/hr`, `ft^2`)
+
 2. Create worksheet UI components
-   - Multi-field input grid
-   - Unit selectors per field
-   - Real-time updates
+   - [x] Multi-row input grid with label, expression, and numeric value fields
+   - [x] Real-time cross-row updates with 500ms debounce
+   - [x] Per-row error display on dimension mismatch
 
 3. Build worksheet management
-   - Load pre-defined worksheets
-   - Switch between worksheets
-   - Dimension navigation
+   - [x] 11 predefined templates: Length (9), Mass (6), Time (6), Temperature (4), Volume (9), Area (8), Speed (5), Pressure (6), Energy (7), Digital Storage (6), Angle (8)
+   - [x] AppBar `DropdownButton` for template switching, sorted alphabetically
+   - [x] More specific error messages in worksheets
 
 4. Implement state management
-   - Reactive updates across fields
-   - Input validation
-   - Error handling
+   - [x] `WorksheetNotifier` (non-`autoDispose`) with per-template in-session value maps
+   - [x] "Last keystroke wins" source semantics; focus alone does not transfer source
+   - [x] Reactive updates across all rows when source value changes
+   - [x] Clears all rows on invalid source input
 
-**Deliverable:** Worksheet mode functional with pre-defined worksheets
+5. Conversion engine
+   - [x] `computeWorksheet()` in `worksheet_engine.dart`
+   - [x] Ratio-based conversion for `UnitRow`s
+   - [x] `func.call()`/`callInverse()` for `FunctionRow`s (e.g., temperature)
+   - [x] Per-row error strings on dimension mismatch
+
+**Deliverable:** Worksheet mode functional with pre-defined worksheets ✓
+
+**Test Coverage:** 1309 tests passing (163 new)
+
+**Completed:** March 27, 2026
+
+**Design Artifacts:** `openspec/changes/worksheet-mode/`
 
 ---
 

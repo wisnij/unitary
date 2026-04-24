@@ -9,9 +9,19 @@ import '../../../core/domain/parser/ast.dart';
 import '../../../core/domain/parser/expression_parser.dart';
 import '../../../shared/utils/quantity_formatter.dart';
 import '../../settings/state/settings_provider.dart';
+import '../data/freeform_repository.dart';
 import '../data/idle_examples.dart';
 import 'freeform_state.dart';
 import 'parser_provider.dart';
+
+/// Provides the [FreeformRepository] instance.
+///
+/// Must be overridden in [ProviderScope] with an initialized repository.
+final freeformRepositoryProvider = Provider<FreeformRepository>(
+  (ref) => throw UnimplementedError(
+    'freeformRepositoryProvider must be overridden',
+  ),
+);
 
 /// Provides the current freeform evaluation state.
 final freeformProvider = NotifierProvider<FreeformNotifier, EvaluationResult>(

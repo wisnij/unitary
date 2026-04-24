@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
+import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 import 'package:unitary/features/worksheet/state/worksheet_state.dart';
 
@@ -14,9 +15,13 @@ void main() {
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
-    final repository = SettingsRepository(prefs);
+    final settingsRepo = SettingsRepository(prefs);
+    final worksheetRepo = WorksheetRepository(prefs);
     container = ProviderContainer(
-      overrides: [settingsRepositoryProvider.overrideWithValue(repository)],
+      overrides: [
+        settingsRepositoryProvider.overrideWithValue(settingsRepo),
+        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+      ],
     );
   });
 
@@ -134,5 +139,124 @@ void main() {
         );
       },
     );
+  });
+
+  group('WorksheetNotifier persistence', () {
+    test(
+      'build initialises from empty persist state with default template',
+      () {
+        final state = container.read(worksheetProvider);
+        expect(state.worksheetId, 'length');
+        expect(state.worksheetValues, isEmpty);
+      },
+    );
+
+    test('build restores active worksheet ID from persisted state', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final worksheetRepo = WorksheetRepository(prefs);
+      await worksheetRepo.save(
+        const WorksheetPersistState(
+          activeWorksheetId: 'mass',
+          sources: {},
+        ),
+      );
+      final settingsRepo = SettingsRepository(prefs);
+      final c = ProviderContainer(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(settingsRepo),
+          worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+        ],
+      );
+      addTearDown(c.dispose);
+      expect(c.read(worksheetProvider).worksheetId, 'mass');
+    });
+
+    test(
+      'build seeds worksheet values by running engine for persisted sources',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final worksheetRepo = WorksheetRepository(prefs);
+        await worksheetRepo.save(
+          const WorksheetPersistState(
+            activeWorksheetId: 'length',
+            sources: {
+              'length': WorksheetSourceEntry(rowIndex: 0, text: '1'),
+            },
+          ),
+        );
+        final settingsRepo = SettingsRepository(prefs);
+        final c = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(settingsRepo),
+            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        final template = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'length',
+        );
+        final values = c
+            .read(worksheetProvider)
+            .valuesFor('length', template.rows.length);
+        // Source row preserved as raw text.
+        expect(values[0].text, '1');
+        // Other rows derived — should be non-empty numeric values.
+        expect(values[1].text, isNotEmpty);
+        expect(double.tryParse(values[1].text), isNotNull);
+      },
+    );
+
+    test(
+      'engine error on restore is isolated to the affected template',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final worksheetRepo = WorksheetRepository(prefs);
+        await worksheetRepo.save(
+          const WorksheetPersistState(
+            activeWorksheetId: 'length',
+            sources: {
+              'length': WorksheetSourceEntry(
+                rowIndex: 0,
+                text: 'not_a_real_unit_xyz',
+              ),
+            },
+          ),
+        );
+        final settingsRepo = SettingsRepository(prefs);
+        final c = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(settingsRepo),
+            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        // Should not throw.
+        expect(() => c.read(worksheetProvider), returnsNormally);
+      },
+    );
+
+    test('onRowChanged writes through to the repository', () async {
+      container
+          .read(worksheetProvider.notifier)
+          .onRowChanged('length', 0, '5 ft');
+
+      final prefs = await SharedPreferences.getInstance();
+      final persisted = WorksheetRepository(prefs).load();
+      expect(persisted.sources['length']!.rowIndex, 0);
+      expect(persisted.sources['length']!.text, '5 ft');
+    });
+
+    test('selectWorksheet writes through the updated active ID', () async {
+      container.read(worksheetProvider.notifier).selectWorksheet('mass');
+
+      final prefs = await SharedPreferences.getInstance();
+      final persisted = WorksheetRepository(prefs).load();
+      expect(persisted.activeWorksheetId, 'mass');
+    });
   });
 }

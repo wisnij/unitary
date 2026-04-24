@@ -258,5 +258,51 @@ void main() {
       final persisted = WorksheetRepository(prefs).load();
       expect(persisted.activeWorksheetId, 'mass');
     });
+
+    test('multiple templates are restored independently', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final worksheetRepo = WorksheetRepository(prefs);
+      await worksheetRepo.save(
+        const WorksheetPersistState(
+          activeWorksheetId: 'length',
+          sources: {
+            'length': WorksheetSourceEntry(rowIndex: 0, text: '1'),
+            'mass': WorksheetSourceEntry(rowIndex: 0, text: '2'),
+          },
+        ),
+      );
+      final settingsRepo = SettingsRepository(prefs);
+      final c = ProviderContainer(
+        overrides: [
+          settingsRepositoryProvider.overrideWithValue(settingsRepo),
+          worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      final lengthTemplate = predefinedWorksheets.firstWhere(
+        (t) => t.id == 'length',
+      );
+      final massTemplate = predefinedWorksheets.firstWhere(
+        (t) => t.id == 'mass',
+      );
+
+      final lengthValues = c
+          .read(worksheetProvider)
+          .valuesFor('length', lengthTemplate.rows.length);
+      final massValues = c
+          .read(worksheetProvider)
+          .valuesFor('mass', massTemplate.rows.length);
+
+      // Each template's source row shows its own persisted value.
+      expect(lengthValues[0].text, '1');
+      expect(massValues[0].text, '2');
+
+      // Each template's other rows are derived independently.
+      expect(lengthValues[1].text, isNotEmpty);
+      expect(massValues[1].text, isNotEmpty);
+      expect(lengthValues[1].text, isNot(equals(massValues[1].text)));
+    });
   });
 }

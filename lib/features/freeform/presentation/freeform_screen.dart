@@ -92,6 +92,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     final inputText = _inputController.text;
     _inputController.text = _outputController.text;
     _outputController.text = inputText;
+    _saveToRepository();
     _cancelDebounce();
     _evaluate();
   }
@@ -115,6 +116,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   void _clear() {
     _inputController.clear();
     _outputController.clear();
+    _saveToRepository();
     ref.read(freeformProvider.notifier).clear();
   }
 
@@ -153,6 +155,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   void _fillOutputField(String name) {
     _outputController.text = name;
+    _saveToRepository();
     _cancelDebounce();
     _evaluate();
   }

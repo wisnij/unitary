@@ -719,6 +719,57 @@ void main() {
       // Should show the evaluated result, not idle text.
       expect(find.text('Enter an expression above.'), findsNothing);
     });
+
+    testWidgets('idle state shown when persisted input is whitespace-only', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final repo = FreeformRepository(prefs);
+      await repo.save('   ', '');
+
+      await tester.pumpWidget(buildApp(freeformRepository: repo));
+      await tester.pump();
+
+      expect(find.text('Enter an expression above.'), findsOneWidget);
+    });
+
+    testWidgets('swap persists the exchanged field values', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 ft',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'm',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.swap_vert));
+      await tester.pump();
+
+      final (:input, :output) = freeformRepo.load();
+      expect(input, 'm');
+      expect(output, '5 ft');
+    });
+
+    testWidgets('clear persists empty field values', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 ft',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pump();
+
+      final (:input, :output) = freeformRepo.load();
+      expect(input, '');
+      expect(output, '');
+    });
   });
 }
 

@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]
 ------------
 
+### Added
+
+- Persist inputs and worksheet selection between sessions
+
 ### Documentation
 
 - Update Phase 6 in the implementation plan

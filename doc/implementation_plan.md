@@ -267,24 +267,35 @@ Implementation Phases
 
 ---
 
-### Phase 7: Persistence (Weeks 18-19)
+### Phase 7: Persistence (Weeks 18-19) — COMPLETE
 
 **Goals:** Save user data and preferences
 
 **Tasks:**
 
-1. Set up local database (sqflite)
-2. Implement PreferencesRepository
-3. Implement WorksheetRepository
+1. ~~Set up local database (sqflite)~~ → **Deferred to Phase 12** — SharedPreferences
+   is sufficient for current data; sqflite reserved for custom worksheets
+2. ~~Implement PreferencesRepository~~ → **Already done in Phase 4** (settings persist
+   via `SettingsRepository` + SharedPreferences)
+3. [x] Implement `WorksheetRepository` — persists active template ID and per-template
+   source `(rowIndex, text)` as a single JSON key in SharedPreferences
 4. Add persistence for:
-   - User preferences
-   - Worksheet last values
-   - Favorite units
+   - [x] User preferences — done (Phase 4)
+   - [x] Worksheet last values — active template + per-template source row restored on launch
+   - [x] Freeform input fields — "Convert from" / "Convert to" text restored on launch
+   - ~~Favorite units~~ → deferred to Phase 12
+5. [x] Restore state on app launch — `WorksheetNotifier.build()` re-runs engine per
+   persisted source; `FreeformScreen.initState()` restores controller text and
+   defers re-evaluation to post-frame callback
+6. [x] Test save/load cycle — repository tests + notifier/screen persistence tests
 
-5. Restore state on app launch
-6. Test save/load cycle
+**Deliverable:** App remembers settings, worksheet values, and freeform inputs between sessions ✓
 
-**Deliverable:** App remembers settings and worksheet values between sessions
+**Test Coverage:** 1593 tests passing (157 new)
+
+**Completed:** April 24, 2026
+
+**Design Artifacts:** `openspec/changes/user-data-persistence/`
 
 ---
 

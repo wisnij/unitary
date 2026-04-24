@@ -6,22 +6,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
+import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 
 void main() {
   late SettingsRepository settingsRepo;
+  late WorksheetRepository worksheetRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     settingsRepo = SettingsRepository(prefs);
+    worksheetRepo = WorksheetRepository(prefs);
   });
 
   Widget buildApp() {
     return ProviderScope(
       overrides: [
         settingsRepositoryProvider.overrideWithValue(settingsRepo),
+        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
       ],
       child: MaterialApp(
         home: WorksheetScreen(onNavigate: (_) {}),

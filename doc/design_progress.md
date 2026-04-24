@@ -76,7 +76,7 @@ The following areas have been thoroughly designed and documented:
 - **Conversion engine**: `computeWorksheet()` in `worksheet_engine.dart`; handles both row kinds, per-row error strings on dimension mismatch, clears all on invalid input
 - **State**: `WorksheetState` + non-`autoDispose` `WorksheetNotifier`; "last keystroke wins" source semantics; focus alone does not transfer source; per-template display value maps for in-session memory
 - **Navigation**: AppBar `DropdownButton` listing all templates; sidebar pinning deferred to future phase
-- **Persistence**: In-session only (Riverpod); Phase 7 will add sqflite for cross-session persistence
+- **Persistence**: Cross-session via SharedPreferences (`WorksheetRepository`); `WorksheetNotifier` restores last-active template and per-template source values on launch
 - **Design artifacts**: `openspec/changes/worksheet-mode/`
 
 ---
@@ -93,7 +93,6 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
 
 **Still needs design for later phases**:
 
-- Cross-session persistence (Phase 7: sqflite last values)
 - Custom worksheet creation and editing (Phase 12)
 - Sidebar pinning of worksheets (future)
 - Unit list rows (`ft;in` multi-field display, future)
@@ -252,9 +251,10 @@ When resuming design work, recommended order of priority:
 5. ✅ ~~**GNU Units Database Import**~~ - **COMPLETE** — Phase 5, full pipeline implemented
 6. ✅ ~~**Worksheet System**~~ - **COMPLETE** — Phase 6, see openspec/changes/worksheet-mode/
 7. ✅ ~~**Browse Mode**~~ - **COMPLETE** — Phase 7, see openspec/changes/browse-units/
-8. **Currency Rate Management** - Can be added after core features work
-9. **Testing Strategy** - Define before/during implementation
-10. **Error Handling Details** - Refine during implementation
+8. ✅ ~~**User Data Persistence**~~ - **COMPLETE** — Phase 7 (persistence), see openspec/changes/user-data-persistence/
+9. **Currency Rate Management** - Can be added after core features work
+10. **Testing Strategy** - Define before/during implementation
+11. **Error Handling Details** - Refine during implementation
 
 ---
 
@@ -275,7 +275,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: April 7, 2026*
+*Last Updated: April 24, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -408,3 +408,12 @@ Questions that arose during design but haven't been resolved:
   - `UnitEntryDetailScreen`: dispatches by `BrowseEntryKind`; shows name, aliases, description, definition, resolved quantity (units only), domain/range (functions only), piecewise control-point table (`PiecewiseFunction` only); accepts optional `UnitRepository` for testing
   - Drawer "Browse" tile added between Worksheet and the divider; navigates to `BrowserScreen`
   - Design artifacts: `openspec/changes/browse-units/`
+- *User Data Persistence (April 24, 2026)*
+  - 1593 tests passing (157 new)
+  - `WorksheetRepository` + `WorksheetPersistState` + `WorksheetSourceEntry` in `lib/features/worksheet/data/`; persists active template ID and per-template source `(rowIndex, text)` as a single JSON key in SharedPreferences
+  - `worksheetRepositoryProvider` (must-override) in `worksheet_provider.dart`; `WorksheetNotifier.build()` restores state and re-runs engine for each persisted source; `onRowChanged` and `selectWorksheet` write-through on every change
+  - `FreeformRepository` in `lib/features/freeform/data/`; persists "Convert from" and "Convert to" strings as two separate SharedPreferences keys
+  - `freeformRepositoryProvider` (must-override) in `freeform_provider.dart`; `FreeformScreen.initState()` restores controller text and defers evaluation to post-frame callback via `addPostFrameCallback`
+  - `main()` constructs all three repositories after `SharedPreferences.getInstance()` and injects them via `ProviderScope` overrides
+  - No new package dependencies; `sqflite` deferred to Phase 12
+  - Design artifacts: `openspec/changes/user-data-persistence/`

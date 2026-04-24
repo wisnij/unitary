@@ -8,21 +8,29 @@ import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
+import 'package:unitary/features/freeform/data/freeform_repository.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
+import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
+import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
+import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 import 'package:unitary/shared/home_screen.dart';
 
 void main() {
   late SettingsRepository repo;
+  late WorksheetRepository worksheetRepo;
+  late FreeformRepository freeformRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     repo = SettingsRepository(prefs);
+    worksheetRepo = WorksheetRepository(prefs);
+    freeformRepo = FreeformRepository(prefs);
   });
 
   UnitRepository buildTestBrowserRepo() {
@@ -36,6 +44,8 @@ void main() {
     return ProviderScope(
       overrides: [
         settingsRepositoryProvider.overrideWithValue(repo),
+        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+        freeformRepositoryProvider.overrideWithValue(freeformRepo),
         if (browserRepo != null)
           unitRepositoryProvider.overrideWithValue(browserRepo),
       ],

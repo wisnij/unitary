@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
+import 'package:unitary/features/freeform/data/freeform_repository.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
@@ -14,20 +15,26 @@ import 'package:unitary/features/settings/state/settings_provider.dart';
 
 void main() {
   late SettingsRepository settingsRepo;
+  late FreeformRepository freeformRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     settingsRepo = SettingsRepository(prefs);
+    freeformRepo = FreeformRepository(prefs);
   });
 
   Widget buildApp({
     EvaluationMode evaluationMode = EvaluationMode.realtime,
     EvaluationResult? freeformState,
+    FreeformRepository? freeformRepository,
   }) {
     return ProviderScope(
       overrides: [
         settingsRepositoryProvider.overrideWithValue(settingsRepo),
+        freeformRepositoryProvider.overrideWithValue(
+          freeformRepository ?? freeformRepo,
+        ),
         if (freeformState != null)
           freeformProvider.overrideWith(
             () => _StubFreeformNotifier(freeformState),
@@ -127,10 +134,14 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
       final repo = SettingsRepository(prefs);
+      final freeformRepoLocal = FreeformRepository(prefs);
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            freeformRepositoryProvider.overrideWithValue(freeformRepoLocal),
+          ],
           child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
@@ -144,10 +155,14 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
       final repo = SettingsRepository(prefs);
+      final freeformRepoLocal = FreeformRepository(prefs);
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            freeformRepositoryProvider.overrideWithValue(freeformRepoLocal),
+          ],
           child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
@@ -170,10 +185,14 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
       final repo = SettingsRepository(prefs);
+      final freeformRepoLocal = FreeformRepository(prefs);
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            freeformRepositoryProvider.overrideWithValue(freeformRepoLocal),
+          ],
           child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
@@ -633,6 +652,123 @@ void main() {
         find.widgetWithText(TextField, 'bit'),
       );
       expect(outputField.controller?.text, 'bit');
+    });
+  });
+
+  group('FreeformScreen — persistence restore', () {
+    testWidgets('controllers are empty when repository has no saved data', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await tester.pump();
+
+      final inputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Convert from'),
+      );
+      final outputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+      );
+      expect(inputField.controller?.text, '');
+      expect(outputField.controller?.text, '');
+    });
+
+    testWidgets('input controller is pre-populated from saved data', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final repo = FreeformRepository(prefs);
+      await repo.save('5 ft', '');
+
+      await tester.pumpWidget(buildApp(freeformRepository: repo));
+      await tester.pump();
+
+      final inputFields = find.byType(TextField);
+      final firstController = tester
+          .widget<TextField>(inputFields.first)
+          .controller!;
+      expect(firstController.text, '5 ft');
+    });
+
+    testWidgets('both controllers are pre-populated from saved data', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final repo = FreeformRepository(prefs);
+      await repo.save('5 ft', 'm');
+
+      await tester.pumpWidget(buildApp(freeformRepository: repo));
+      await tester.pump();
+
+      final textFields = tester.widgetList<TextField>(find.byType(TextField));
+      final texts = textFields.map((f) => f.controller?.text ?? '').toList();
+      expect(texts, containsAll(['5 ft', 'm']));
+    });
+
+    testWidgets('result display is populated without user interaction when '
+        'input is non-empty on restore', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final repo = FreeformRepository(prefs);
+      await repo.save('2 + 3', '');
+
+      await tester.pumpWidget(buildApp(freeformRepository: repo));
+      await tester.pump();
+
+      // Should show the evaluated result, not idle text.
+      expect(find.text('Enter an expression above.'), findsNothing);
+    });
+
+    testWidgets('idle state shown when persisted input is whitespace-only', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final repo = FreeformRepository(prefs);
+      await repo.save('   ', '');
+
+      await tester.pumpWidget(buildApp(freeformRepository: repo));
+      await tester.pump();
+
+      expect(find.text('Enter an expression above.'), findsOneWidget);
+    });
+
+    testWidgets('swap persists the exchanged field values', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 ft',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'm',
+      );
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.swap_vert));
+      await tester.pump();
+
+      final (:input, :output) = freeformRepo.load();
+      expect(input, 'm');
+      expect(output, '5 ft');
+    });
+
+    testWidgets('clear persists empty field values', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 ft',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pump();
+
+      final (:input, :output) = freeformRepo.load();
+      expect(input, '');
+      expect(output, '');
     });
   });
 }

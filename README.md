@@ -17,18 +17,15 @@ purchases, tracking, data harvesting, or any other monetization scheme.
 Project Status
 --------------
 
-**Current Phase:** Phase 7 Complete (Browse Mode)\
-**Last Updated:** April 7, 2026
+**Current Phase:** Phase 7 Complete (User Data Persistence)\
+**Last Updated:** April 24, 2026
 
-Phases 0-7 are complete with 1436 passing tests.  The expression parser,
+Phases 0-7 are complete with 1593 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
-unit database, worksheet mode, and unit browser are fully implemented.  Phase
-7 added the browse feature: a full-catalog browser page listing all units,
-prefixes, and functions (including aliases) in either alphabetical or
-dimension-grouped view, collapsible groups, a search bar, human-readable
-dimension labels defined in `units-supplementary.json`, and a detail page
-showing each entry's name, aliases, description, definition, resolved quantity,
-domain/range constraints, and piecewise control-point tables.
+unit database, worksheet mode, unit browser, and cross-session data persistence
+are fully implemented.  The latest update added user data persistence: freeform
+input fields and worksheet values (active template + per-template source values)
+are now saved to SharedPreferences and restored on every app launch.
 
 ---
 
@@ -214,6 +211,7 @@ Current Progress
 - ✅ **Defined Functions** — First-class builtin functions, GNU Units-defined functions (101 registered + 46 aliases), circular definition detection (1146 tests)
 - ✅ **Phase 6: Worksheet Mode** — 10 predefined templates, real-time cross-row conversion engine (unit-ratio + function-inverse), AppBar dropdown navigation, in-session state retention (1309 tests)
 - ✅ **Phase 7: Browse Mode** — full-catalog browser with alphabetical and dimension-grouped views, collapsible groups, search bar, human-readable dimension labels, and detail pages (1436 tests)
+- ✅ **User Data Persistence** — freeform fields and worksheet state (active template + per-template source values) persisted via SharedPreferences and restored on launch (1593 tests)
 
 ### Design (ready for implementation)
 

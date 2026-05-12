@@ -39,18 +39,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   @override
   void initState() {
     super.initState();
-    final (:input, :output) = ref.read(freeformRepositoryProvider).load();
-    _inputController.text = input;
-    _outputController.text = output;
-    if (input.trim().isNotEmpty) {
-      // Defer evaluation to post-frame: Riverpod blocks provider mutations
-      // during the widget-tree build phase (which includes initState).
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          _evaluate();
-        }
-      });
-    }
   }
 
   @override
@@ -63,7 +51,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   void _onInputChanged(String _) {
     setState(() {}); // Rebuild to update clear button and swap button states.
-    _saveToRepository();
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();
@@ -72,27 +59,16 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   void _onOutputChanged(String _) {
     setState(() {}); // Rebuild to update swap button enabled state.
-    _saveToRepository();
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();
     }
   }
 
-  void _saveToRepository() {
-    ref
-        .read(freeformRepositoryProvider)
-        .save(
-          _inputController.text,
-          _outputController.text,
-        );
-  }
-
   void _swap() {
     final inputText = _inputController.text;
     _inputController.text = _outputController.text;
     _outputController.text = inputText;
-    _saveToRepository();
     _cancelDebounce();
     _evaluate();
   }
@@ -116,7 +92,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   void _clear() {
     _inputController.clear();
     _outputController.clear();
-    _saveToRepository();
     ref.read(freeformProvider.notifier).clear();
   }
 
@@ -155,7 +130,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   void _fillOutputField(String name) {
     _outputController.text = name;
-    _saveToRepository();
     _cancelDebounce();
     _evaluate();
   }

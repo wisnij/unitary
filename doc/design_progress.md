@@ -412,8 +412,13 @@ Questions that arose during design but haven't been resolved:
   - 1593 tests passing (157 new)
   - `WorksheetRepository` + `WorksheetPersistState` + `WorksheetSourceEntry` in `lib/features/worksheet/data/`; persists active template ID and per-template source `(rowIndex, text)` as a single JSON key in SharedPreferences
   - `worksheetRepositoryProvider` (must-override) in `worksheet_provider.dart`; `WorksheetNotifier.build()` restores state and re-runs engine for each persisted source; `onRowChanged` and `selectWorksheet` write-through on every change
-  - `FreeformRepository` in `lib/features/freeform/data/`; persists "Convert from" and "Convert to" strings as two separate SharedPreferences keys
-  - `freeformRepositoryProvider` (must-override) in `freeform_provider.dart`; `FreeformScreen.initState()` restores controller text and defers evaluation to post-frame callback via `addPostFrameCallback`
-  - `main()` constructs all three repositories after `SharedPreferences.getInstance()` and injects them via `ProviderScope` overrides
+  - Freeform input persistence was also added here but later removed (see below)
   - No new package dependencies; `sqflite` deferred to Phase 12
   - Design artifacts: `openspec/changes/user-data-persistence/`
+- *Remove freeform persistence (May 2026)*
+  - 1583 tests passing (10 removed)
+  - Freeform "Convert from" / "Convert to" fields no longer persist across sessions — restoring stale expressions proved more awkward than helpful in practice
+  - `FreeformRepository` deleted; `freeformRepositoryProvider` removed; `FreeformScreen.initState()` restore logic removed
+  - Orphaned SharedPreferences keys (`freeformInput`, `freeformOutput`) cleaned up on first launch after upgrade
+  - Worksheet persistence (active template + per-template source values) is unchanged
+  - Design artifacts: `openspec/changes/remove-freeform-persistence/`

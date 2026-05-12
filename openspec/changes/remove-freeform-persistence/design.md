@@ -28,7 +28,7 @@ Keeping it behind a flag would add complexity with no current benefit.
 **Clear persisted keys from `SharedPreferences` at startup** (via a one-time migration)
 rather than leaving orphaned data in storage.  This keeps the preferences store clean
 and avoids confusion if freeform persistence is ever re-introduced in the future.
-Concretely: delete keys `freeform_from` and `freeform_to` from `SharedPreferences`
+Concretely: delete keys `freeformInput` and `freeformOutput` from `SharedPreferences`
 on first launch after this change.  Since the keys are simply absent going forward,
 no version flag is needed — the deletion is idempotent.
 
@@ -45,7 +45,7 @@ Simpler to implement, but leaves stale data indefinitely.
 ## Migration Plan
 
 1. On app launch in `main()`, after `SharedPreferences.getInstance()`, call
-   `prefs.remove('freeform_from')` and `prefs.remove('freeform_to')`.
+   `prefs.remove('freeformInput')` and `prefs.remove('freeformOutput')`.
 2. Remove `FreeformRepository`, its provider, and the `ProviderScope` override.
 3. Remove persistence wiring from `FreeformScreen.initState()`.
 4. Delete repository source and test files.

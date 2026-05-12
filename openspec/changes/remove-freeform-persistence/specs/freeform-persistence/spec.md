@@ -3,8 +3,8 @@
 ### Requirement: Freeform input fields are persisted across sessions
 **Reason**: In practice, restoring stale freeform expressions was more disorienting
 than convenient.  Users expect the freeform screen to start blank each session.
-**Migration**: No user action required.  Existing persisted keys (`freeform_from`,
-`freeform_to`) are automatically removed from SharedPreferences on the first launch
+**Migration**: No user action required.  Existing persisted keys (`freeformInput`,
+`freeformOutput`) are automatically removed from SharedPreferences on the first launch
 after this change.
 
 ### Requirement: Freeform result is evaluated immediately after restore

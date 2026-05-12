@@ -65,7 +65,7 @@ void _runChangelog({required bool dryRun}) {
   final tagCheckResult = Process.runSync('git', ['tag', '-l', lastTag]);
   final hasLastTag = (tagCheckResult.stdout as String).trim().isNotEmpty;
 
-  final logArgs = ['log', '--format=%H %s'];
+  final logArgs = ['log', '--first-parent', '--format=%H %s'];
   if (hasLastTag) {
     logArgs.add('$lastTag..HEAD');
   }
@@ -216,7 +216,7 @@ void _runRelease(BumpType bumpType, {required bool dryRun}) {
   final tagCheckResult = Process.runSync('git', ['tag', '-l', lastTag]);
   final hasLastTag = (tagCheckResult.stdout as String).trim().isNotEmpty;
 
-  final logArgs = ['log', '--format=%H %s'];
+  final logArgs = ['log', '--first-parent', '--format=%H %s'];
   if (hasLastTag) {
     logArgs.add('$lastTag..HEAD');
   }

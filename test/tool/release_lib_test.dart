@@ -150,6 +150,18 @@ void main() {
         expect(c, isNull);
       });
 
+      test('conventional subject on a merge commit is parsed normally', () {
+        // With --first-parent, a merge commit whose subject was manually set to
+        // a conventional form (e.g. "feat: ...") passes through the guard and is
+        // classified like any other commit.
+        final c = ParsedCommit.parse(
+          'abc1234 feat: Remove freeform persistence',
+        );
+        expect(c, isNotNull);
+        expect(c!.type, 'feat');
+        expect(c.message, 'Remove freeform persistence');
+      });
+
       test('handles colon with no space after prefix', () {
         final c = ParsedCommit.parse('abc1234 feat:no space')!;
         expect(c.type, 'feat');
@@ -582,6 +594,26 @@ void main() {
         lessThan(result.indexOf('### Documentation')),
       );
     });
+
+    test(
+      'first-parent list: feature-branch commits absent, merge commit included',
+      () {
+        // Simulates the commit list produced by `git log --first-parent`:
+        // only the merge commit (conventional subject) and direct main commits
+        // appear; individual feature-branch commits (wip, fix typo, etc.) are
+        // never in the list.
+        final commits = [
+          ParsedCommit.parse('aaa feat: Add worksheet persistence')!,
+          ParsedCommit.parse('bbb fix: Correct rounding in formatter')!,
+          ParsedCommit.parse('ccc chore: bump SDK constraint')!,
+        ];
+        final result = formatUnreleasedSection(commits)!;
+        expect(result, contains('Add worksheet persistence'));
+        expect(result, contains('Correct rounding in formatter'));
+        expect(result, isNot(contains('wip')));
+        expect(result, isNot(contains('fix typo')));
+      },
+    );
   });
 
   group('formatUnreleasedLinkRef', () {

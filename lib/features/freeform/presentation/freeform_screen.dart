@@ -11,6 +11,8 @@ import '../../../shared/top_level_page.dart';
 import '../../../shared/widgets/app_drawer.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
+import '../data/freeform_history_repository.dart';
+import '../state/freeform_history_provider.dart';
 import '../state/freeform_provider.dart';
 import '../state/freeform_state.dart';
 import '../state/parser_provider.dart';
@@ -134,9 +136,17 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     _evaluate();
   }
 
+  void _restoreHistoryEntry(FreeformHistoryEntry entry) {
+    _inputController.text = entry.from;
+    _outputController.text = entry.to;
+    _cancelDebounce();
+    _evaluate();
+  }
+
   @override
   Widget build(BuildContext context) {
     final result = ref.watch(freeformProvider);
+    final history = ref.watch(freeformHistoryProvider);
     final settings = ref.watch(settingsProvider);
     final isOnSubmit = settings.evaluationMode == EvaluationMode.onSubmit;
     final canSwap =
@@ -217,9 +227,54 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                 child: const Text('Evaluate'),
               ),
             ],
+            if (history.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _HistorySection(
+                entries: history,
+                onTap: _restoreHistoryEntry,
+              ),
+            ],
           ],
         ),
       ),
+    );
+  }
+}
+
+/// History section listing past successful freeform conversions.
+class _HistorySection extends StatelessWidget {
+  final List<FreeformHistoryEntry> entries;
+  final void Function(FreeformHistoryEntry) onTap;
+
+  const _HistorySection({required this.entries, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          'History',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 4),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: entries.length,
+          itemBuilder: (_, index) {
+            final entry = entries[index];
+            return ListTile(
+              dense: true,
+              title: Text(entry.from),
+              subtitle: Text(entry.to.isNotEmpty ? entry.to : '—'),
+              onTap: () => onTap(entry),
+            );
+          },
+        ),
+      ],
     );
   }
 }

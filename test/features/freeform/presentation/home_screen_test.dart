@@ -8,7 +8,9 @@ import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
+import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
+import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
@@ -21,12 +23,14 @@ import 'package:unitary/shared/home_screen.dart';
 void main() {
   late SettingsRepository repo;
   late WorksheetRepository worksheetRepo;
+  late FreeformHistoryRepository historyRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     repo = SettingsRepository(prefs);
     worksheetRepo = WorksheetRepository(prefs);
+    historyRepo = FreeformHistoryRepository(prefs);
   });
 
   UnitRepository buildTestBrowserRepo() {
@@ -41,6 +45,7 @@ void main() {
       overrides: [
         settingsRepositoryProvider.overrideWithValue(repo),
         worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
         if (browserRepo != null)
           unitRepositoryProvider.overrideWithValue(browserRepo),
       ],

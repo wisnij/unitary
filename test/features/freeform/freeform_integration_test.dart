@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/app.dart';
+import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
+import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
@@ -12,12 +14,14 @@ import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 void main() {
   late SettingsRepository repo;
   late WorksheetRepository worksheetRepo;
+  late FreeformHistoryRepository historyRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     repo = SettingsRepository(prefs);
     worksheetRepo = WorksheetRepository(prefs);
+    historyRepo = FreeformHistoryRepository(prefs);
   });
 
   Widget buildApp() {
@@ -25,6 +29,7 @@ void main() {
       overrides: [
         settingsRepositoryProvider.overrideWithValue(repo),
         worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
       ],
       child: const UnitaryApp(),
     );

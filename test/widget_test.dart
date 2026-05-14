@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/app.dart';
+import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
+import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
@@ -14,12 +16,14 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     final settingsRepo = SettingsRepository(prefs);
     final worksheetRepo = WorksheetRepository(prefs);
+    final historyRepo = FreeformHistoryRepository(prefs);
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           settingsRepositoryProvider.overrideWithValue(settingsRepo),
           worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+          freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
         ],
         child: const UnitaryApp(),
       ),

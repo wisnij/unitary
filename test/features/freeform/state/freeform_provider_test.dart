@@ -606,29 +606,40 @@ void main() {
       List<FreeformHistoryEntry> readHistory() =>
           container.read(freeformHistoryProvider);
 
-      test('records on EvaluationSuccess', () {
+      test('records on EvaluationSuccess with formattedResult', () {
         container.read(freeformProvider.notifier).evaluate('2 + 3', '');
         expect(container.read(freeformProvider), isA<EvaluationSuccess>());
         expect(readHistory(), isNotEmpty);
         expect(readHistory().first.from, '2 + 3');
         expect(readHistory().first.to, '');
+        expect(readHistory().first.result, '5');
       });
 
-      test('records on ConversionSuccess', () {
-        container.read(freeformProvider.notifier).evaluate('5 miles', 'km');
-        expect(container.read(freeformProvider), isA<ConversionSuccess>());
-        expect(readHistory().first.from, '5 miles');
-        expect(readHistory().first.to, 'km');
-      });
+      test(
+        'records on ConversionSuccess with result stripped of "= " prefix',
+        () {
+          container.read(freeformProvider.notifier).evaluate('5 miles', 'km');
+          expect(container.read(freeformProvider), isA<ConversionSuccess>());
+          expect(readHistory().first.from, '5 miles');
+          expect(readHistory().first.to, 'km');
+          expect(readHistory().first.result, startsWith('8.04672'));
+          expect(readHistory().first.result, contains('km'));
+          expect(readHistory().first.result, isNot(startsWith('= ')));
+        },
+      );
 
-      test('records on UnitDefinitionResult', () {
-        container.read(freeformProvider.notifier).evaluate('meter', '');
-        expect(container.read(freeformProvider), isA<UnitDefinitionResult>());
-        expect(readHistory(), isNotEmpty);
-        expect(readHistory().first.from, 'meter');
-      });
+      test(
+        'records on UnitDefinitionResult with result stripped of "= " prefix',
+        () {
+          container.read(freeformProvider.notifier).evaluate('meter', '');
+          expect(container.read(freeformProvider), isA<UnitDefinitionResult>());
+          expect(readHistory(), isNotEmpty);
+          expect(readHistory().first.from, 'meter');
+          expect(readHistory().first.result, '1 m');
+        },
+      );
 
-      test('records on FunctionDefinitionResult', () {
+      test('records on FunctionDefinitionResult with empty result', () {
         container.read(freeformProvider.notifier).evaluate('tempF', '');
         expect(
           container.read(freeformProvider),
@@ -636,9 +647,10 @@ void main() {
         );
         expect(readHistory(), isNotEmpty);
         expect(readHistory().first.from, 'tempF');
+        expect(readHistory().first.result, '');
       });
 
-      test('records on FunctionConversionResult', () {
+      test('records on FunctionConversionResult as functionName(value)', () {
         container
             .read(freeformProvider.notifier)
             .evaluate('tempF(68)', 'tempC');
@@ -649,18 +661,25 @@ void main() {
         expect(readHistory(), isNotEmpty);
         expect(readHistory().first.from, 'tempF(68)');
         expect(readHistory().first.to, 'tempC');
+        expect(readHistory().first.result, startsWith('tempC('));
+        expect(readHistory().first.result, contains('20'));
       });
 
-      test('records on ReciprocalConversionSuccess', () {
-        container.read(freeformProvider.notifier).evaluate('mph', 's/m');
-        expect(
-          container.read(freeformProvider),
-          isA<ReciprocalConversionSuccess>(),
-        );
-        expect(readHistory(), isNotEmpty);
-        expect(readHistory().first.from, 'mph');
-        expect(readHistory().first.to, 's/m');
-      });
+      test(
+        'records on ReciprocalConversionSuccess with result stripped of "= " prefix',
+        () {
+          container.read(freeformProvider.notifier).evaluate('mph', 's/m');
+          expect(
+            container.read(freeformProvider),
+            isA<ReciprocalConversionSuccess>(),
+          );
+          expect(readHistory(), isNotEmpty);
+          expect(readHistory().first.from, 'mph');
+          expect(readHistory().first.to, 's/m');
+          expect(readHistory().first.result, isNot(startsWith('= ')));
+          expect(readHistory().first.result, contains('s/m'));
+        },
+      );
 
       test('does not record on EvaluationError', () {
         container.read(freeformProvider.notifier).evaluate('5 +', '');

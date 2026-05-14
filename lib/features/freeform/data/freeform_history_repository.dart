@@ -2,20 +2,30 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// A single freeform history entry capturing the (from, to) field values at
-/// the moment a successful evaluation was produced.
+/// A single freeform history entry capturing the (from, to) field values and
+/// the formatted result at the moment a successful evaluation was produced.
 class FreeformHistoryEntry {
   final String from;
   final String to;
 
-  const FreeformHistoryEntry({required this.from, required this.to});
+  /// The formatted output of the evaluation (e.g. `"8.04672 km"`).  Empty
+  /// when no numeric result is available (e.g. function-definition lookups)
+  /// or when loading an entry saved before this field was introduced.
+  final String result;
 
-  Map<String, Object> toJson() => {'from': from, 'to': to};
+  const FreeformHistoryEntry({
+    required this.from,
+    required this.to,
+    this.result = '',
+  });
+
+  Map<String, Object> toJson() => {'from': from, 'to': to, 'result': result};
 
   static FreeformHistoryEntry fromJson(Map<Object?, Object?> json) {
     return FreeformHistoryEntry(
       from: json['from'] as String,
       to: json['to'] as String,
+      result: (json['result'] as String?) ?? '',
     );
   }
 

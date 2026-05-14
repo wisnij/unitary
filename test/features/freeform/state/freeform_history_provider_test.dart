@@ -54,7 +54,7 @@ void main() {
     group('record()', () {
       test('prepends a new entry', () async {
         final notifier = container.read(freeformHistoryProvider.notifier);
-        await notifier.record('5 km', 'mi');
+        await notifier.record('5 km', 'mi', '');
         final history = container.read(freeformHistoryProvider);
         expect(history.length, 1);
         expect(history[0].from, '5 km');
@@ -63,7 +63,7 @@ void main() {
 
       test('trims whitespace from from and to values', () async {
         final notifier = container.read(freeformHistoryProvider.notifier);
-        await notifier.record('  5 km  ', '  mi  ');
+        await notifier.record('  5 km  ', '  mi  ', '');
         final history = container.read(freeformHistoryProvider);
         expect(history[0].from, '5 km');
         expect(history[0].to, 'mi');
@@ -71,14 +71,14 @@ void main() {
 
       test('stores empty to field as empty string', () async {
         final notifier = container.read(freeformHistoryProvider.notifier);
-        await notifier.record('5 km', '');
+        await notifier.record('5 km', '', '');
         expect(container.read(freeformHistoryProvider)[0].to, '');
       });
 
       test('new entries are prepended before older ones', () async {
         final notifier = container.read(freeformHistoryProvider.notifier);
-        await notifier.record('5 km', 'mi');
-        await notifier.record('100 degF', 'tempC');
+        await notifier.record('5 km', 'mi', '');
+        await notifier.record('100 degF', 'tempC', '');
         final history = container.read(freeformHistoryProvider);
         expect(history[0].from, '100 degF');
         expect(history[1].from, '5 km');
@@ -86,9 +86,9 @@ void main() {
 
       test('deduplicates: existing pair is removed and re-prepended', () async {
         final notifier = container.read(freeformHistoryProvider.notifier);
-        await notifier.record('5 km', 'mi');
-        await notifier.record('100 degF', 'tempC');
-        await notifier.record('5 km', 'mi');
+        await notifier.record('5 km', 'mi', '');
+        await notifier.record('100 degF', 'tempC', '');
+        await notifier.record('5 km', 'mi', '');
         final history = container.read(freeformHistoryProvider);
         expect(history.length, 2);
         expect(history[0].from, '5 km');
@@ -99,14 +99,14 @@ void main() {
         final notifier = container.read(freeformHistoryProvider.notifier);
         // Fill to cap.
         for (var i = 0; i < FreeformHistoryRepository.maxEntries; i++) {
-          await notifier.record('$i km', 'mi');
+          await notifier.record('$i km', 'mi', '');
         }
         expect(
           container.read(freeformHistoryProvider).length,
           FreeformHistoryRepository.maxEntries,
         );
         // Re-submit the oldest entry (now at the end).
-        await notifier.record('0 km', 'mi');
+        await notifier.record('0 km', 'mi', '');
         expect(
           container.read(freeformHistoryProvider).length,
           FreeformHistoryRepository.maxEntries,
@@ -117,9 +117,9 @@ void main() {
       test('drops oldest entry when cap is exceeded', () async {
         final notifier = container.read(freeformHistoryProvider.notifier);
         for (var i = 0; i < FreeformHistoryRepository.maxEntries; i++) {
-          await notifier.record('$i km', 'mi');
+          await notifier.record('$i km', 'mi', '');
         }
-        await notifier.record('new entry', '');
+        await notifier.record('new entry', '', '');
         final history = container.read(freeformHistoryProvider);
         expect(history.length, FreeformHistoryRepository.maxEntries);
         expect(history[0].from, 'new entry');
@@ -128,7 +128,7 @@ void main() {
 
       test('persists entries to repository', () async {
         final notifier = container.read(freeformHistoryProvider.notifier);
-        await notifier.record('5 km', 'mi');
+        await notifier.record('5 km', 'mi', '');
         final saved = repo.load();
         expect(saved.length, 1);
         expect(saved[0].from, '5 km');

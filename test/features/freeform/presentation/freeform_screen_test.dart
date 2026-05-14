@@ -677,7 +677,7 @@ void main() {
       expect(find.text('5 km'), findsWidgets);
     });
 
-    testWidgets('history section shows em dash for empty to field', (
+    testWidgets('history entry shows only from when to is empty', (
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
@@ -689,29 +689,33 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      expect(find.text('—'), findsOneWidget);
+      expect(find.text('5 km'), findsWidgets);
+      expect(find.text('—'), findsNothing);
     });
 
-    testWidgets('history section shows to value when both fields are set', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
+    testWidgets(
+      'history entry shows "from = formattedResult" when both fields are set',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        '5 miles',
-      );
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert to (optional)'),
-        'km',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 miles',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+          'km',
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
 
-      expect(find.text('History'), findsOneWidget);
-      // 'km' appears in both the output field and the history entry subtitle.
-      expect(find.text('km'), findsWidgets);
-    });
+        expect(find.text('History'), findsOneWidget);
+        // Entry should show "5 miles = <result> km", not just "5 miles = km".
+        expect(find.textContaining('5 miles = '), findsOneWidget);
+        expect(find.textContaining('km'), findsWidgets);
+        expect(find.text('5 miles = km'), findsNothing);
+      },
+    );
 
     testWidgets('tapping a history entry restores both fields', (tester) async {
       await tester.pumpWidget(buildApp());
@@ -732,8 +736,8 @@ void main() {
       await tester.tap(find.byIcon(Icons.clear));
       await tester.pump();
 
-      // Tap the history entry.
-      await tester.tap(find.text('5 miles'));
+      // Tap the history entry (shown as "5 miles = <result> km").
+      await tester.tap(find.textContaining('5 miles = '));
       await tester.pump();
 
       final inputField = tester.widget<TextField>(
@@ -765,8 +769,8 @@ void main() {
       // Idle state now.
       expect(find.text('Enter an expression above.'), findsOneWidget);
 
-      // Tap the history entry — should evaluate immediately.
-      await tester.tap(find.text('5 km').last);
+      // Tap the history entry (shown as "5 km = <result>").
+      await tester.tap(find.textContaining('5 km = '));
       await tester.pump();
 
       // Should no longer show idle after tap.

@@ -266,10 +266,12 @@ class _HistorySection extends StatelessWidget {
           itemCount: entries.length,
           itemBuilder: (_, index) {
             final entry = entries[index];
+            final label = entry.result.isNotEmpty
+                ? '${entry.from} = ${entry.result}'
+                : entry.from;
             return ListTile(
               dense: true,
-              title: Text(entry.from),
-              subtitle: Text(entry.to.isNotEmpty ? entry.to : '—'),
+              title: Text(label),
               onTap: () => onTap(entry),
             );
           },

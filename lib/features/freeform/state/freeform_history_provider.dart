@@ -24,14 +24,20 @@ class FreeformHistoryNotifier extends Notifier<List<FreeformHistoryEntry>> {
     return ref.read(freeformHistoryRepositoryProvider).load();
   }
 
-  /// Records a (from, to) pair, applying deduplication and the 100-entry cap.
+  /// Records a (from, to, result) entry, applying deduplication and the
+  /// 100-entry cap.
   ///
-  /// Trims both values.  If an identical (from, to) pair already exists, it is
-  /// moved to the top.  Entries are truncated to [FreeformHistoryRepository.maxEntries].
-  Future<void> record(String from, String to) async {
+  /// Trims [from] and [to].  If an identical (from, to) pair already exists,
+  /// it is moved to the top with the updated [result].  Entries are truncated
+  /// to [FreeformHistoryRepository.maxEntries].
+  Future<void> record(String from, String to, String result) async {
     final trimmedFrom = from.trim();
     final trimmedTo = to.trim();
-    final entry = FreeformHistoryEntry(from: trimmedFrom, to: trimmedTo);
+    final entry = FreeformHistoryEntry(
+      from: trimmedFrom,
+      to: trimmedTo,
+      result: result,
+    );
 
     final updated = [
       entry,

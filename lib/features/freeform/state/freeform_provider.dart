@@ -130,8 +130,29 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
 
   void _recordHistory(String input, String output) {
     if (state is! EvaluationIdle && state is! EvaluationError) {
-      ref.read(freeformHistoryProvider.notifier).record(input, output);
+      ref
+          .read(freeformHistoryProvider.notifier)
+          .record(input, output, _extractResult(state));
     }
+  }
+
+  String _extractResult(EvaluationResult result) {
+    return switch (result) {
+      EvaluationSuccess(:final formattedResult) => formattedResult,
+      ConversionSuccess(:final formattedResult) => formattedResult.replaceFirst(
+        '= ',
+        '',
+      ),
+      UnitDefinitionResult(:final formattedResult) =>
+        formattedResult.replaceFirst('= ', ''),
+      ReciprocalConversionSuccess(:final formattedResult) =>
+        formattedResult.replaceFirst('= ', ''),
+      FunctionConversionResult(:final functionName, :final formattedValue) =>
+        '$functionName($formattedValue)',
+      FunctionDefinitionResult() => '',
+      EvaluationIdle() => '',
+      EvaluationError() => '',
+    };
   }
 
   EvaluationResult _handleFunctionNameInput(

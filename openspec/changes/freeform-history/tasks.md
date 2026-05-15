@@ -18,8 +18,8 @@
 ## 4. UI
 
 - [x] 4.1 Add `_restoreHistoryEntry(FreeformHistoryEntry entry)` to `_FreeformScreenState`: set both controllers, cancel any pending debounce, call `_evaluate()` immediately
-- [x] 4.2 Build a `_HistorySection` widget (or inline in `build()`): section label ("History"), `ListView` of `ListTile`s with primary text = `entry.from` and secondary text = `entry.to` (or `—` if empty); each tile calls `_restoreHistoryEntry` on tap
-- [x] 4.3 Add history section to `FreeformScreen.build()` body below the result display, watching `freeformHistoryProvider`; render only when the history list is non-empty
+- [x] 4.2 Build a `_HistorySection` widget (or inline in `build()`): section label ("History"), `ListView` of `ListTile`s with primary text = `entry.from` and secondary text = `entry.to` (or `—` if empty); each tile calls `_restoreHistoryEntry` on tap *(superseded: replaced by `_HistoryModal` + AppBar `Icons.history` button)*
+- [x] 4.3 Add history section to `FreeformScreen.build()` body below the result display, watching `freeformHistoryProvider`; render only when the history list is non-empty *(superseded: history is now accessed via AppBar button opening a `DraggableScrollableSheet` modal)*
 - [x] 4.4 Write widget tests: history section absent when list is empty, present when non-empty, tapping entry populates both fields and triggers evaluation
 
 ## 5. Wiring

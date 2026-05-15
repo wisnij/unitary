@@ -37,6 +37,37 @@ SHALL be stored as an empty string.
 - **WHEN** a successful evaluation occurs with both fields non-empty
 - **THEN** the history entry records both the from and to text
 
+### Requirement: History entry captures the formatted result
+Each history entry SHALL additionally store the formatted output of the
+evaluation at the moment it was recorded (the `result` field).  This value is
+derived from the `EvaluationResult` state using an exhaustive switch:
+
+- `EvaluationSuccess` → `formattedResult` as-is (e.g. `"1.524 m"`)
+- `ConversionSuccess` → `formattedResult` with leading `"= "` stripped (e.g. `"8.04672 km"`)
+- `UnitDefinitionResult` → `formattedResult` with leading `"= "` stripped (e.g. `"1 m"`)
+- `ReciprocalConversionSuccess` → `formattedResult` with leading `"= "` stripped
+- `FunctionConversionResult` → `"functionName(formattedValue)"` (e.g. `"tempC(20)"`)
+- `FunctionDefinitionResult` → `""` (no numeric result)
+
+When `result` is non-empty, the history modal SHALL display the entry as
+`"from = result"`.  When `result` is empty, only `from` SHALL be shown.
+Deduplication equality is based solely on the `(from, to)` pair; `result` is
+not considered, so a re-evaluated entry always refreshes the stored result.
+Entries stored before this field was introduced SHALL deserialize with
+`result = ""`.
+
+#### Scenario: Entry with result shows "from = result" label
+- **WHEN** a history entry has a non-empty result field
+- **THEN** the modal displays it as "from = result" (e.g. "5 miles = 8.04672 km")
+
+#### Scenario: Entry without result shows only from
+- **WHEN** a history entry has an empty result field (e.g. a function definition lookup)
+- **THEN** the modal displays only the from value
+
+#### Scenario: Re-evaluating an existing pair updates the result
+- **WHEN** the user evaluates a (from, to) pair already in history
+- **THEN** the entry is moved to the top and its result reflects the new evaluation
+
 ### Requirement: History deduplicates entries by moving them to top
 If the (from, to) pair of a new entry is identical (exact string match, after
 trimming) to an existing entry, the system SHALL remove the existing entry and
@@ -79,18 +110,23 @@ launch so that entries from previous sessions remain available.
 - **WHEN** the SharedPreferences value for the history key is invalid JSON
 - **THEN** the history list is empty and no error is shown to the user
 
-### Requirement: History list is displayed in the freeform screen
-The freeform screen SHALL show the history list below the result display area
-when the history is non-empty.  When the history is empty, the section SHALL
-NOT be shown.
+### Requirement: History is accessible via an AppBar button
+The freeform screen SHALL include a history button (`Icons.history`) in the
+AppBar to the left of the conformable-units button.  The button SHALL be
+enabled when the history list is non-empty and disabled when it is empty.
+Tapping the button SHALL open a modal bottom sheet listing all history entries.
 
-#### Scenario: History section visible when entries exist
-- **WHEN** the history list contains one or more entries
-- **THEN** a history section is shown below the result display
-
-#### Scenario: History section hidden when empty
+#### Scenario: History button disabled when history is empty
 - **WHEN** the history list is empty
-- **THEN** no history section is shown
+- **THEN** the history button is disabled (onPressed is null)
+
+#### Scenario: History button enabled when entries exist
+- **WHEN** the history list contains one or more entries
+- **THEN** the history button is enabled
+
+#### Scenario: Tapping history button opens modal
+- **WHEN** the user taps the enabled history button
+- **THEN** a modal bottom sheet appears listing the history entries
 
 ### Requirement: Tapping a history entry restores both fields and evaluates
 Tapping a history entry SHALL populate the "Convert from" field with the

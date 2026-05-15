@@ -16,11 +16,11 @@ is currently persisted.
 
 **Goals:**
 
-- Record a (from, to) pair after every successful evaluation, in both
-  real-time and on-submit modes.
+- Record a (from, to, result) triple after every successful evaluation, in
+  both real-time and on-submit modes.
 - Persist the history list across sessions via SharedPreferences.
-- Expose the list in the freeform screen so the user can tap an entry to
-  restore both fields and immediately re-evaluate.
+- Expose the list via an AppBar button that opens a modal bottom sheet;
+  tapping an entry restores both fields and immediately re-evaluates.
 - Deduplicate entries: identical (from, to) pairs move to the top instead of
   creating duplicates.
 - Cap the list at a fixed maximum (100 entries) to bound storage size.
@@ -28,7 +28,7 @@ is currently persisted.
 **Non-Goals:**
 
 - History for worksheet mode (separate feature, separate screen).
-- Per-entry timestamps or metadata beyond the (from, to) pair.
+- Per-entry timestamps or metadata beyond the (from, to, result) triple.
 - Editing or deleting individual history entries (out of scope for MVP).
 - Syncing history across devices.
 
@@ -62,20 +62,22 @@ success vs. failure states.
 ### 3. Storage format
 
 A single SharedPreferences key `'freeformHistory'` stores a JSON-encoded list
-of `{from, to}` objects, ordered most-recent-first.  On load, any entry with
-an invalid structure is silently dropped.  Malformed JSON falls back to an
-empty list.
+of `{from, to, result}` objects, ordered most-recent-first.  On load, any entry
+with an invalid structure is silently dropped.  Malformed JSON falls back to an
+empty list.  The `result` field defaults to `''` when loading entries that
+predate its introduction (backward-compatible).
 
 ```json
 [
-  {"from": "5 km", "to": "mi"},
-  {"from": "tempC(100)", "to": "tempF"},
-  {"from": "212 degF", "to": ""}
+  {"from": "5 km", "to": "mi", "result": "3.10686 mi"},
+  {"from": "tempC(100)", "to": "tempF", "result": "tempF(212)"},
+  {"from": "212 degF", "to": "", "result": "373.15 K"}
 ]
 ```
 
-An empty `to` string is stored when the output field is blank (single-field
-evaluation).
+An empty `to` string is stored when the output field is blank.  An empty
+`result` string is stored when no numeric result is meaningful (e.g.
+`FunctionDefinitionResult`).
 
 ### 4. Repository shape
 
@@ -85,6 +87,7 @@ evaluation).
 class FreeformHistoryEntry {
   final String from;
   final String to;
+  final String result; // formatted output; '' when not applicable
 }
 
 class FreeformHistoryRepository {
@@ -112,20 +115,21 @@ This keeps the list ordered by most-recently-used and prevents duplicates.
 
 ### 6. UI placement and interaction
 
-A scrollable history list is shown **below the result display**, inside the
-existing `SingleChildScrollView` body.  It is only rendered when the history
-list is non-empty.
+History is accessed via an **`Icons.history` button in the AppBar**, placed
+to the left of the existing conformable-units (`Icons.balance`) button.  The
+button is disabled when history is empty and enabled otherwise.
 
-Each entry is a `ListTile`:
-- Primary text: the `from` value.
-- Secondary text: the `to` value, or an em dash (`—`) if empty.
-- Tapping fills both controllers and calls `_evaluate()` immediately (no
-  debounce delay).
+Tapping the button opens a **`DraggableScrollableSheet`** modal bottom sheet
+(same pattern and sizing as the conformable-units modal).  Each entry is a
+`ListTile`:
+- Title text: `"${entry.from} = ${entry.result}"` when `result` is non-empty;
+  just `entry.from` otherwise.
+- Tapping an entry dismisses the modal, fills both controllers with `from` and
+  `to`, and calls `_evaluate()` immediately (no debounce delay).
 
-A "History" section header precedes the list.  No collapse/expand for the MVP.
-
-Rationale: keeping it always-visible (when non-empty) is simpler than adding
-collapsible state, and the list is bounded to 50 entries.
+Rationale: a modal keeps the main screen uncluttered regardless of history
+length, and the AppBar button placement mirrors the existing browse button so
+the two related actions sit together.
 
 ### 7. History loaded on startup
 
@@ -142,8 +146,11 @@ both the evaluation result and the history list.
 **Chosen: separate `freeformHistoryProvider`** backed by
 `FreeformHistoryNotifier` to keep concerns separated and avoid bloating the
 existing `FreeformNotifier`.  `FreeformNotifier.evaluate()` calls
-`ref.read(freeformHistoryProvider.notifier).record(from, to)` after a
-successful evaluation.
+`ref.read(freeformHistoryProvider.notifier).record(from, to, result)` after a
+successful evaluation, where `result` is extracted from the current state by
+`_extractResult()` — an exhaustive switch over the sealed `EvaluationResult`
+class that strips the `"= "` prefix where present and formats
+`FunctionConversionResult` as `"functionName(value)"`.
 
 ## Risks / Trade-offs
 

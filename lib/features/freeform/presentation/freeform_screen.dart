@@ -143,6 +143,21 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     _evaluate();
   }
 
+  void _showHistoryModal(BuildContext context) {
+    final history = ref.read(freeformHistoryProvider);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _HistoryModal(
+        entries: history,
+        onSelect: (entry) {
+          Navigator.of(context).pop();
+          _restoreHistoryEntry(entry);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final result = ref.watch(freeformProvider);
@@ -157,6 +172,13 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
       appBar: AppBar(
         title: const Text('Unitary'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Conversion history',
+            onPressed: history.isNotEmpty
+                ? () => _showHistoryModal(context)
+                : null,
+          ),
           IconButton(
             icon: const Icon(Icons.balance),
             tooltip: 'Browse conformable units',
@@ -227,13 +249,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                 child: const Text('Evaluate'),
               ),
             ],
-            if (history.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              _HistorySection(
-                entries: history,
-                onTap: _restoreHistoryEntry,
-              ),
-            ],
           ],
         ),
       ),
@@ -241,42 +256,52 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   }
 }
 
-/// History section listing past successful freeform conversions.
-class _HistorySection extends StatelessWidget {
+/// Modal bottom sheet listing past successful freeform conversions.
+class _HistoryModal extends StatelessWidget {
   final List<FreeformHistoryEntry> entries;
-  final void Function(FreeformHistoryEntry) onTap;
+  final void Function(FreeformHistoryEntry) onSelect;
 
-  const _HistorySection({required this.entries, required this.onTap});
+  const _HistoryModal({required this.entries, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Text(
-          'History',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-        ),
-        const SizedBox(height: 4),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: entries.length,
-          itemBuilder: (_, index) {
-            final entry = entries[index];
-            final label = entry.result.isNotEmpty
-                ? '${entry.from} = ${entry.result}'
-                : entry.from;
-            return ListTile(
-              dense: true,
-              title: Text(label),
-              onTap: () => onTap(entry),
-            );
-          },
-        ),
-      ],
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.3,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, scrollController) {
+        return Column(
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: entries.length,
+                itemBuilder: (_, index) {
+                  final entry = entries[index];
+                  final label = entry.result.isNotEmpty
+                      ? '${entry.from} = ${entry.result}'
+                      : entry.from;
+                  return ListTile(
+                    title: Text(label),
+                    onTap: () => onSelect(entry),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

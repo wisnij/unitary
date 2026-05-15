@@ -653,74 +653,62 @@ void main() {
     });
   });
 
-  group('FreeformScreen — history', () {
-    testWidgets('history section is absent when history is empty', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-      expect(find.text('History'), findsNothing);
-    });
-
-    testWidgets('history section appears after a successful evaluation', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        '5 km',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      expect(find.text('History'), findsOneWidget);
-      expect(find.text('5 km'), findsWidgets);
-    });
-
-    testWidgets('history entry shows only from when to is empty', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        '5 km',
-      );
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pump();
-
-      expect(find.text('5 km'), findsWidgets);
-      expect(find.text('—'), findsNothing);
-    });
-
-    testWidgets(
-      'history entry shows "from = formattedResult" when both fields are set',
-      (tester) async {
-        await tester.pumpWidget(buildApp());
-
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Convert from'),
-          '5 miles',
-        );
-        await tester.enterText(
-          find.widgetWithText(TextField, 'Convert to (optional)'),
-          'km',
-        );
-        await tester.testTextInput.receiveAction(TextInputAction.done);
-        await tester.pump();
-
-        expect(find.text('History'), findsOneWidget);
-        // Entry should show "5 miles = <result> km", not just "5 miles = km".
-        expect(find.textContaining('5 miles = '), findsOneWidget);
-        expect(find.textContaining('km'), findsWidgets);
-        expect(find.text('5 miles = km'), findsNothing);
-      },
+  group('FreeformScreen — history button', () {
+    Finder findHistoryButton() => find.ancestor(
+      of: find.byIcon(Icons.history),
+      matching: find.byType(IconButton),
     );
 
-    testWidgets('tapping a history entry restores both fields', (tester) async {
+    testWidgets('history button is present in AppBar', (tester) async {
+      await tester.pumpWidget(buildApp());
+      expect(find.byIcon(Icons.history), findsOneWidget);
+    });
+
+    testWidgets('history button is disabled when history is empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      final btn = tester.widget<IconButton>(findHistoryButton());
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('history button is enabled after a successful evaluation', (
+      tester,
+    ) async {
       await tester.pumpWidget(buildApp());
 
-      // Create a history entry.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 km',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      final btn = tester.widget<IconButton>(findHistoryButton());
+      expect(btn.onPressed, isNotNull);
+    });
+
+    testWidgets('tapping history button opens modal', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 km',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+    });
+
+    testWidgets('modal shows entry as "from = result" when result is set', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
       await tester.enterText(
         find.widgetWithText(TextField, 'Convert from'),
         '5 miles',
@@ -732,29 +720,77 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      // Clear the fields.
-      await tester.tap(find.byIcon(Icons.clear));
-      await tester.pump();
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
 
-      // Tap the history entry (shown as "5 miles = <result> km").
-      await tester.tap(find.textContaining('5 miles = '));
-      await tester.pump();
-
-      final inputField = tester.widget<TextField>(
-        find.widgetWithText(TextField, '5 miles'),
-      );
-      expect(inputField.controller?.text, '5 miles');
-
-      final outputField = tester.widget<TextField>(
-        find.widgetWithText(TextField, 'km'),
-      );
-      expect(outputField.controller?.text, 'km');
+      // Entry should show "5 miles = <result> km", not just "5 miles = km".
+      expect(find.textContaining('5 miles = '), findsOneWidget);
+      expect(find.text('5 miles = km'), findsNothing);
     });
+
+    testWidgets('modal shows only from when result is empty', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      // tempF (bare function name) produces FunctionDefinitionResult with empty result.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'tempF',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+
+      expect(find.text('tempF'), findsWidgets);
+      expect(find.textContaining('tempF = '), findsNothing);
+    });
+
+    testWidgets(
+      'tapping a history entry restores both fields and closes modal',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // Create a history entry.
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 miles',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+          'km',
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        // Clear the fields.
+        await tester.tap(find.byIcon(Icons.clear));
+        await tester.pump();
+
+        // Open the modal and tap the entry.
+        await tester.tap(find.byIcon(Icons.history));
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('5 miles = '));
+        await tester.pumpAndSettle();
+
+        // Modal should be dismissed.
+        expect(find.byType(DraggableScrollableSheet), findsNothing);
+
+        final inputField = tester.widget<TextField>(
+          find.widgetWithText(TextField, '5 miles'),
+        );
+        expect(inputField.controller?.text, '5 miles');
+
+        final outputField = tester.widget<TextField>(
+          find.widgetWithText(TextField, 'km'),
+        );
+        expect(outputField.controller?.text, 'km');
+      },
+    );
 
     testWidgets('tapping a history entry triggers evaluation', (tester) async {
       await tester.pumpWidget(buildApp());
 
-      // Create a history entry via evaluation.
       await tester.enterText(
         find.widgetWithText(TextField, 'Convert from'),
         '5 km',
@@ -766,14 +802,13 @@ void main() {
       await tester.tap(find.byIcon(Icons.clear));
       await tester.pump();
 
-      // Idle state now.
       expect(find.text('Enter an expression above.'), findsOneWidget);
 
-      // Tap the history entry (shown as "5 km = <result>").
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
       await tester.tap(find.textContaining('5 km = '));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      // Should no longer show idle after tap.
       expect(find.text('Enter an expression above.'), findsNothing);
     });
   });

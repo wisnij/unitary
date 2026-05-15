@@ -17,15 +17,15 @@ purchases, tracking, data harvesting, or any other monetization scheme.
 Project Status
 --------------
 
-**Current Phase:** Phase 7 Complete (User Data Persistence)\
-**Last Updated:** May 12, 2026
+**Current Phase:** Freeform History\
+**Last Updated:** May 14, 2026
 
-Phases 0-7 are complete with 1583 passing tests.  The expression parser,
+Phases 0-7 are complete with 1619 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
-unit database, worksheet mode, unit browser, and cross-session data persistence
-are fully implemented.  Worksheet state (active template + per-template source
-values) is saved to SharedPreferences and restored on every app launch.
-Freeform input fields are not persisted — they always start blank.
+unit database, worksheet mode, unit browser, cross-session data persistence,
+and freeform conversion history are fully implemented.  Worksheet state and
+freeform history are saved to SharedPreferences and restored on every app
+launch.
 
 ---
 
@@ -212,6 +212,7 @@ Current Progress
 - ✅ **Phase 6: Worksheet Mode** — 10 predefined templates, real-time cross-row conversion engine (unit-ratio + function-inverse), AppBar dropdown navigation, in-session state retention (1309 tests)
 - ✅ **Phase 7: Browse Mode** — full-catalog browser with alphabetical and dimension-grouped views, collapsible groups, search bar, human-readable dimension labels, and detail pages (1436 tests)
 - ✅ **User Data Persistence** — worksheet state (active template + per-template source values) persisted via SharedPreferences and restored on launch; freeform fields always start blank (1583 tests)
+- ✅ **Freeform History** — persistent history of successful freeform conversions; deduplicated, capped at 100 entries; tapping an entry restores both fields and re-evaluates (1619 tests)
 
 ### Design (ready for implementation)
 

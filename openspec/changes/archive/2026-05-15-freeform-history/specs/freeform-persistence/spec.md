@@ -1,13 +1,4 @@
-# Freeform Persistence
-
-## Purpose
-
-Persist worksheet state across app sessions using SharedPreferences.  Freeform
-"Convert from" and "Convert to" fields are intentionally not persisted — restoring
-stale freeform expressions proved more disorienting than convenient, so the
-freeform screen always opens blank each session.
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Freeform persistence uses no new package dependencies
 The persistence mechanism SHALL use SharedPreferences (already a project dependency)

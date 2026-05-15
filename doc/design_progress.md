@@ -422,3 +422,11 @@ Questions that arose during design but haven't been resolved:
   - Orphaned SharedPreferences keys (`freeformInput`, `freeformOutput`) cleaned up on first launch after upgrade
   - Worksheet persistence (active template + per-template source values) is unchanged
   - Design artifacts: `openspec/changes/remove-freeform-persistence/`
+- *Freeform History (May 2026)*
+  - 1619 tests passing (36 new)
+  - Persistent history of successful freeform conversions — records (from, to) pairs after every non-idle, non-error evaluation result
+  - `FreeformHistoryEntry` + `FreeformHistoryRepository` (SharedPreferences key `'freeformHistory'`, cap 100 entries, deduplication)
+  - `FreeformHistoryNotifier` + `freeformHistoryProvider`; `FreeformNotifier.evaluate()` calls `record()` after any success state assignment
+  - `_HistorySection` widget in `FreeformScreen`: always-visible when non-empty, tapping entry restores both fields and evaluates immediately
+  - `freeformHistoryRepositoryProvider` must-override wired in `main.dart` and all tests
+  - Design artifacts: `openspec/changes/freeform-history/`

@@ -5,7 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
+import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
+import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
@@ -14,11 +16,13 @@ import 'package:unitary/features/settings/state/settings_provider.dart';
 
 void main() {
   late SettingsRepository settingsRepo;
+  late FreeformHistoryRepository historyRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     settingsRepo = SettingsRepository(prefs);
+    historyRepo = FreeformHistoryRepository(prefs);
   });
 
   Widget buildApp({
@@ -28,6 +32,7 @@ void main() {
     return ProviderScope(
       overrides: [
         settingsRepositoryProvider.overrideWithValue(settingsRepo),
+        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
         if (freeformState != null)
           freeformProvider.overrideWith(
             () => _StubFreeformNotifier(freeformState),
@@ -127,10 +132,14 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
       final repo = SettingsRepository(prefs);
+      final history = FreeformHistoryRepository(prefs);
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            freeformHistoryRepositoryProvider.overrideWithValue(history),
+          ],
           child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
@@ -144,10 +153,14 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
       final repo = SettingsRepository(prefs);
+      final history = FreeformHistoryRepository(prefs);
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            freeformHistoryRepositoryProvider.overrideWithValue(history),
+          ],
           child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
@@ -170,10 +183,14 @@ void main() {
       });
       final prefs = await SharedPreferences.getInstance();
       final repo = SettingsRepository(prefs);
+      final history = FreeformHistoryRepository(prefs);
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            freeformHistoryRepositoryProvider.overrideWithValue(history),
+          ],
           child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
         ),
       );
@@ -633,6 +650,210 @@ void main() {
         find.widgetWithText(TextField, 'bit'),
       );
       expect(outputField.controller?.text, 'bit');
+    });
+  });
+
+  group('FreeformScreen — history button', () {
+    Finder findHistoryButton() => find.ancestor(
+      of: find.byIcon(Icons.history),
+      matching: find.byType(IconButton),
+    );
+
+    testWidgets('history button is present in AppBar', (tester) async {
+      await tester.pumpWidget(buildApp());
+      expect(find.byIcon(Icons.history), findsOneWidget);
+    });
+
+    testWidgets('history button is disabled when history is empty', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      final btn = tester.widget<IconButton>(findHistoryButton());
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets('history button is enabled after a successful evaluation', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 km',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      final btn = tester.widget<IconButton>(findHistoryButton());
+      expect(btn.onPressed, isNotNull);
+    });
+
+    testWidgets(
+      'history button is enabled after evaluation in on-submit mode',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'evaluationMode': 'onSubmit',
+        });
+        final prefs = await SharedPreferences.getInstance();
+        final repo = SettingsRepository(prefs);
+        final history = FreeformHistoryRepository(prefs);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformHistoryRepositoryProvider.overrideWithValue(history),
+            ],
+            child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+          ),
+        );
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 km',
+        );
+        await tester.pump();
+
+        // Debounce should NOT fire in on-submit mode — button still disabled.
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(
+          tester.widget<IconButton>(findHistoryButton()).onPressed,
+          isNull,
+        );
+
+        // Tap Evaluate — should record entry.
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Evaluate'));
+        await tester.pump();
+
+        expect(
+          tester.widget<IconButton>(findHistoryButton()).onPressed,
+          isNotNull,
+        );
+      },
+    );
+
+    testWidgets('tapping history button opens modal', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 km',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(DraggableScrollableSheet), findsOneWidget);
+    });
+
+    testWidgets('modal shows entry as "from = result" when result is set', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 miles',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'km',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+
+      // Entry should show "5 miles = <result> km", not just "5 miles = km".
+      expect(find.textContaining('5 miles = '), findsOneWidget);
+      expect(find.text('5 miles = km'), findsNothing);
+    });
+
+    testWidgets('modal shows only from when result is empty', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      // tempF (bare function name) produces FunctionDefinitionResult with empty result.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'tempF',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+
+      expect(find.text('tempF'), findsWidgets);
+      expect(find.textContaining('tempF = '), findsNothing);
+    });
+
+    testWidgets(
+      'tapping a history entry restores both fields and closes modal',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // Create a history entry.
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 miles',
+        );
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+          'km',
+        );
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        // Clear the fields.
+        await tester.tap(find.byIcon(Icons.clear));
+        await tester.pump();
+
+        // Open the modal and tap the entry.
+        await tester.tap(find.byIcon(Icons.history));
+        await tester.pumpAndSettle();
+        await tester.tap(find.textContaining('5 miles = '));
+        await tester.pumpAndSettle();
+
+        // Modal should be dismissed.
+        expect(find.byType(DraggableScrollableSheet), findsNothing);
+
+        final inputField = tester.widget<TextField>(
+          find.widgetWithText(TextField, '5 miles'),
+        );
+        expect(inputField.controller?.text, '5 miles');
+
+        final outputField = tester.widget<TextField>(
+          find.widgetWithText(TextField, 'km'),
+        );
+        expect(outputField.controller?.text, 'km');
+      },
+    );
+
+    testWidgets('tapping a history entry triggers evaluation', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 km',
+      );
+      await tester.testTextInput.receiveAction(TextInputAction.done);
+      await tester.pump();
+
+      // Clear fields.
+      await tester.tap(find.byIcon(Icons.clear));
+      await tester.pump();
+
+      expect(find.text('Enter an expression above.'), findsOneWidget);
+
+      await tester.tap(find.byIcon(Icons.history));
+      await tester.pumpAndSettle();
+      await tester.tap(find.textContaining('5 km = '));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enter an expression above.'), findsNothing);
     });
   });
 }

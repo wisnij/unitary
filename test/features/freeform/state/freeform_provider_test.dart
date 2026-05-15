@@ -5,6 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/expression_parser.dart';
+import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
+import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/freeform/state/parser_provider.dart';
@@ -18,10 +20,12 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
-      final repository = SettingsRepository(prefs);
+      final settingsRepo = SettingsRepository(prefs);
+      final historyRepo = FreeformHistoryRepository(prefs);
       container = ProviderContainer(
         overrides: [
-          settingsRepositoryProvider.overrideWithValue(repository),
+          settingsRepositoryProvider.overrideWithValue(settingsRepo),
+          freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
         ],
       );
     });
@@ -426,9 +430,13 @@ void main() {
         SharedPreferences.setMockInitialValues({});
         final prefs = await SharedPreferences.getInstance();
         final testSettings = SettingsRepository(prefs);
+        final testHistoryRepo = FreeformHistoryRepository(prefs);
         final testContainer = ProviderContainer(
           overrides: [
             settingsRepositoryProvider.overrideWithValue(testSettings),
+            freeformHistoryRepositoryProvider.overrideWithValue(
+              testHistoryRepo,
+            ),
             parserProvider.overrideWithValue(ExpressionParser(repo: repo)),
           ],
         );
@@ -590,6 +598,106 @@ void main() {
           expect(state.reciprocalInputLabel, '1 / mph');
         },
       );
+    });
+
+    // -- History recording --
+
+    group('history recording', () {
+      List<FreeformHistoryEntry> readHistory() =>
+          container.read(freeformHistoryProvider);
+
+      test('records on EvaluationSuccess with formattedResult', () {
+        container.read(freeformProvider.notifier).evaluate('2 + 3', '');
+        expect(container.read(freeformProvider), isA<EvaluationSuccess>());
+        expect(readHistory(), isNotEmpty);
+        expect(readHistory().first.from, '2 + 3');
+        expect(readHistory().first.to, '');
+        expect(readHistory().first.result, '5');
+      });
+
+      test(
+        'records on ConversionSuccess with result stripped of "= " prefix',
+        () {
+          container.read(freeformProvider.notifier).evaluate('5 miles', 'km');
+          expect(container.read(freeformProvider), isA<ConversionSuccess>());
+          expect(readHistory().first.from, '5 miles');
+          expect(readHistory().first.to, 'km');
+          expect(readHistory().first.result, startsWith('8.04672'));
+          expect(readHistory().first.result, contains('km'));
+          expect(readHistory().first.result, isNot(startsWith('= ')));
+        },
+      );
+
+      test(
+        'records on UnitDefinitionResult with result stripped of "= " prefix',
+        () {
+          container.read(freeformProvider.notifier).evaluate('meter', '');
+          expect(container.read(freeformProvider), isA<UnitDefinitionResult>());
+          expect(readHistory(), isNotEmpty);
+          expect(readHistory().first.from, 'meter');
+          expect(readHistory().first.result, '1 m');
+        },
+      );
+
+      test('records on FunctionDefinitionResult with empty result', () {
+        container.read(freeformProvider.notifier).evaluate('tempF', '');
+        expect(
+          container.read(freeformProvider),
+          isA<FunctionDefinitionResult>(),
+        );
+        expect(readHistory(), isNotEmpty);
+        expect(readHistory().first.from, 'tempF');
+        expect(readHistory().first.result, '');
+      });
+
+      test('records on FunctionConversionResult as functionName(value)', () {
+        container
+            .read(freeformProvider.notifier)
+            .evaluate('tempF(68)', 'tempC');
+        expect(
+          container.read(freeformProvider),
+          isA<FunctionConversionResult>(),
+        );
+        expect(readHistory(), isNotEmpty);
+        expect(readHistory().first.from, 'tempF(68)');
+        expect(readHistory().first.to, 'tempC');
+        expect(readHistory().first.result, startsWith('tempC('));
+        expect(readHistory().first.result, contains('20'));
+      });
+
+      test(
+        'records on ReciprocalConversionSuccess with result stripped of "= " prefix',
+        () {
+          container.read(freeformProvider.notifier).evaluate('mph', 's/m');
+          expect(
+            container.read(freeformProvider),
+            isA<ReciprocalConversionSuccess>(),
+          );
+          expect(readHistory(), isNotEmpty);
+          expect(readHistory().first.from, 'mph');
+          expect(readHistory().first.to, 's/m');
+          expect(readHistory().first.result, isNot(startsWith('= ')));
+          expect(readHistory().first.result, contains('s/m'));
+        },
+      );
+
+      test('does not record on EvaluationError', () {
+        container.read(freeformProvider.notifier).evaluate('5 +', '');
+        expect(container.read(freeformProvider), isA<EvaluationError>());
+        expect(readHistory(), isEmpty);
+      });
+
+      test('does not record on EvaluationIdle (empty input)', () {
+        container.read(freeformProvider.notifier).evaluate('', '');
+        expect(container.read(freeformProvider), isA<EvaluationIdle>());
+        expect(readHistory(), isEmpty);
+      });
+
+      test('does not record on dimension-mismatch error', () {
+        container.read(freeformProvider.notifier).evaluate('5 ft', '3 kg');
+        expect(container.read(freeformProvider), isA<EvaluationError>());
+        expect(readHistory(), isEmpty);
+      });
     });
   });
 }

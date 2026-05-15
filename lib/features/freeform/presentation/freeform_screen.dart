@@ -11,6 +11,8 @@ import '../../../shared/top_level_page.dart';
 import '../../../shared/widgets/app_drawer.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
+import '../data/freeform_history_repository.dart';
+import '../state/freeform_history_provider.dart';
 import '../state/freeform_provider.dart';
 import '../state/freeform_state.dart';
 import '../state/parser_provider.dart';
@@ -134,9 +136,32 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     _evaluate();
   }
 
+  void _restoreHistoryEntry(FreeformHistoryEntry entry) {
+    _inputController.text = entry.from;
+    _outputController.text = entry.to;
+    _cancelDebounce();
+    _evaluate();
+  }
+
+  void _showHistoryModal(BuildContext context) {
+    final history = ref.read(freeformHistoryProvider);
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => _HistoryModal(
+        entries: history,
+        onSelect: (entry) {
+          Navigator.of(context).pop();
+          _restoreHistoryEntry(entry);
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final result = ref.watch(freeformProvider);
+    final history = ref.watch(freeformHistoryProvider);
     final settings = ref.watch(settingsProvider);
     final isOnSubmit = settings.evaluationMode == EvaluationMode.onSubmit;
     final canSwap =
@@ -147,6 +172,13 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
       appBar: AppBar(
         title: const Text('Unitary'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.history),
+            tooltip: 'Conversion history',
+            onPressed: history.isNotEmpty
+                ? () => _showHistoryModal(context)
+                : null,
+          ),
           IconButton(
             icon: const Icon(Icons.balance),
             tooltip: 'Browse conformable units',
@@ -220,6 +252,56 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Modal bottom sheet listing past successful freeform conversions.
+class _HistoryModal extends StatelessWidget {
+  final List<FreeformHistoryEntry> entries;
+  final void Function(FreeformHistoryEntry) onSelect;
+
+  const _HistoryModal({required this.entries, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.3,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (_, scrollController) {
+        return Column(
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                itemCount: entries.length,
+                itemBuilder: (_, index) {
+                  final entry = entries[index];
+                  final label = entry.result.isNotEmpty
+                      ? '${entry.from} = ${entry.result}'
+                      : entry.from;
+                  return ListTile(
+                    title: Text(label),
+                    onTap: () => onSelect(entry),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

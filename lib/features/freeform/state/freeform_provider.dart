@@ -10,6 +10,7 @@ import '../../../core/domain/parser/expression_parser.dart';
 import '../../../shared/utils/quantity_formatter.dart';
 import '../../settings/state/settings_provider.dart';
 import '../data/idle_examples.dart';
+import 'freeform_history_provider.dart';
 import 'freeform_state.dart';
 import 'parser_provider.dart';
 
@@ -76,12 +77,14 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
       // Function name in input field with empty output.
       if (inputNode is FunctionNameNode && outputNode == null) {
         state = _handleFunctionNameInput(parser, inputNode);
+        _recordHistory(input, output);
         return;
       }
 
       // Unit/prefix definition request in input field with empty output.
       if (inputNode is DefinitionRequestNode && outputNode == null) {
         state = _handleUnitNameInput(parser, inputNode);
+        _recordHistory(input, output);
         return;
       }
 
@@ -92,6 +95,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
           inputNode as ExpressionNode,
           outputNode,
         );
+        _recordHistory(input, output);
         return;
       }
 
@@ -102,6 +106,7 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
       // Both sides are expressions.
       if (resolvedOutput == null) {
         _evaluateSingle(parser, inputNode as ExpressionNode);
+        _recordHistory(input, output);
       } else {
         if (resolvedOutput is! ExpressionNode) {
           state = const EvaluationError(
@@ -116,10 +121,38 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
           input,
           output,
         );
+        _recordHistory(input, output);
       }
     } on UnitaryException catch (e) {
       state = EvaluationError(message: e.message);
     }
+  }
+
+  void _recordHistory(String input, String output) {
+    if (state is! EvaluationIdle && state is! EvaluationError) {
+      ref
+          .read(freeformHistoryProvider.notifier)
+          .record(input, output, _extractResult(state));
+    }
+  }
+
+  String _extractResult(EvaluationResult result) {
+    return switch (result) {
+      EvaluationSuccess(:final formattedResult) => formattedResult,
+      ConversionSuccess(:final formattedResult) => formattedResult.replaceFirst(
+        '= ',
+        '',
+      ),
+      UnitDefinitionResult(:final formattedResult) =>
+        formattedResult.replaceFirst('= ', ''),
+      ReciprocalConversionSuccess(:final formattedResult) =>
+        formattedResult.replaceFirst('= ', ''),
+      FunctionConversionResult(:final functionName, :final formattedValue) =>
+        '$functionName($formattedValue)',
+      FunctionDefinitionResult() => '',
+      EvaluationIdle() => '',
+      EvaluationError() => '',
+    };
   }
 
   EvaluationResult _handleFunctionNameInput(

@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/app.dart';
+import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
+import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
@@ -12,12 +14,14 @@ import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 void main() {
   late SettingsRepository repo;
   late WorksheetRepository worksheetRepo;
+  late FreeformHistoryRepository historyRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     repo = SettingsRepository(prefs);
     worksheetRepo = WorksheetRepository(prefs);
+    historyRepo = FreeformHistoryRepository(prefs);
   });
 
   Widget buildApp() {
@@ -25,6 +29,7 @@ void main() {
       overrides: [
         settingsRepositoryProvider.overrideWithValue(repo),
         worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
       ],
       child: const UnitaryApp(),
     );
@@ -41,8 +46,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      // 5 ft = 1.524 m
-      expect(find.textContaining('1.524'), findsOneWidget);
+      // 5 ft = 1.524 m (appears in result display and history entry)
+      expect(find.textContaining('1.524'), findsWidgets);
       expect(find.textContaining('m'), findsWidgets);
     });
 
@@ -62,8 +67,8 @@ void main() {
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pump();
 
-        // 5 miles ≈ 8.04672 km
-        expect(find.textContaining('8.04672'), findsOneWidget);
+        // 5 miles ≈ 8.04672 km (appears in result display and history entry)
+        expect(find.textContaining('8.04672'), findsWidgets);
         expect(find.textContaining('km'), findsWidgets);
       },
     );
@@ -106,8 +111,8 @@ void main() {
       );
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
-      // Default precision 8: 1609.344 m
-      expect(find.textContaining('1609.344'), findsOneWidget);
+      // Default precision 8: 1609.344 m (appears in result display and history entry)
+      expect(find.textContaining('1609.344'), findsWidgets);
 
       // Navigate to settings.
       await tester.tap(find.byIcon(Icons.menu));
@@ -133,8 +138,8 @@ void main() {
       await tester.testTextInput.receiveAction(TextInputAction.done);
       await tester.pump();
 
-      // Precision 2 (sig figs): 1.6e+3 m
-      expect(find.textContaining('1.6e+3'), findsOneWidget);
+      // Precision 2 (sig figs): 1.6e+3 m (appears in result display and history entry)
+      expect(find.textContaining('1.6e+3'), findsWidgets);
     });
 
     testWidgets('toggle dark mode → theme changes', (tester) async {

@@ -688,6 +688,50 @@ void main() {
       expect(btn.onPressed, isNotNull);
     });
 
+    testWidgets(
+      'history button is enabled after evaluation in on-submit mode',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'evaluationMode': 'onSubmit',
+        });
+        final prefs = await SharedPreferences.getInstance();
+        final repo = SettingsRepository(prefs);
+        final history = FreeformHistoryRepository(prefs);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformHistoryRepositoryProvider.overrideWithValue(history),
+            ],
+            child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+          ),
+        );
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 km',
+        );
+        await tester.pump();
+
+        // Debounce should NOT fire in on-submit mode — button still disabled.
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(
+          tester.widget<IconButton>(findHistoryButton()).onPressed,
+          isNull,
+        );
+
+        // Tap Evaluate — should record entry.
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Evaluate'));
+        await tester.pump();
+
+        expect(
+          tester.widget<IconButton>(findHistoryButton()).onPressed,
+          isNotNull,
+        );
+      },
+    );
+
     testWidgets('tapping history button opens modal', (tester) async {
       await tester.pumpWidget(buildApp());
 

@@ -337,7 +337,13 @@ class _KeyPanel extends StatelessWidget {
                 Expanded(
                   child: TextButton(
                     onPressed: () => onSymbol(sym),
-                    child: Text(sym, style: const TextStyle(fontSize: 18)),
+                    child: Text(
+                      sym,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontFamily: 'monospace',
+                      ),
+                    ),
                   ),
                 ),
             ],

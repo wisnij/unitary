@@ -36,11 +36,17 @@ class FreeformScreen extends ConsumerStatefulWidget {
 class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   final _inputController = TextEditingController();
   final _outputController = TextEditingController();
+  final _inputFocus = FocusNode();
+  final _outputFocus = FocusNode();
+  bool _anyFieldFocused = false;
+  TextEditingController? _lastFocused;
   Timer? _debounceTimer;
 
   @override
   void initState() {
     super.initState();
+    _inputFocus.addListener(_onFocusChange);
+    _outputFocus.addListener(_onFocusChange);
   }
 
   @override
@@ -48,7 +54,28 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     _debounceTimer?.cancel();
     _inputController.dispose();
     _outputController.dispose();
+    _inputFocus.dispose();
+    _outputFocus.dispose();
     super.dispose();
+  }
+
+  void _onFocusChange() {
+    if (_inputFocus.hasFocus) {
+      _lastFocused = _inputController;
+    } else if (_outputFocus.hasFocus) {
+      _lastFocused = _outputController;
+    }
+    Future.microtask(() {
+      if (!mounted) {
+        return;
+      }
+      final focused = _inputFocus.hasFocus || _outputFocus.hasFocus;
+      if (focused != _anyFieldFocused) {
+        setState(() {
+          _anyFieldFocused = focused;
+        });
+      }
+    });
   }
 
   void _onInputChanged(String _) {
@@ -61,6 +88,29 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   void _onOutputChanged(String _) {
     setState(() {}); // Rebuild to update swap button enabled state.
+    final settings = ref.read(settingsProvider);
+    if (settings.evaluationMode == EvaluationMode.realtime) {
+      _debounceEvaluate();
+    }
+  }
+
+  void _insertSymbol(String symbol) {
+    final ctrl = _lastFocused ?? _inputController;
+    final sel = ctrl.selection;
+    if (sel.isValid) {
+      final text = ctrl.text;
+      ctrl.value = TextEditingValue(
+        text: text.replaceRange(sel.start, sel.end, symbol),
+        selection: TextSelection.collapsed(offset: sel.start + symbol.length),
+      );
+    } else {
+      final text = ctrl.text;
+      ctrl.value = TextEditingValue(
+        text: text + symbol,
+        selection: TextSelection.collapsed(offset: text.length + symbol.length),
+      );
+    }
+    setState(() {});
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();
@@ -192,65 +242,107 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
         currentPage: TopLevelPage.freeform,
         onNavigate: widget.onNavigate,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            TextField(
-              controller: _inputController,
-              decoration: InputDecoration(
-                labelText: 'Convert from',
-                border: const OutlineInputBorder(),
-                suffixIcon: _inputController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: _clear,
-                      )
-                    : null,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextField(
+                    controller: _inputController,
+                    focusNode: _inputFocus,
+                    decoration: InputDecoration(
+                      labelText: 'Convert from',
+                      border: const OutlineInputBorder(),
+                      suffixIcon: _inputController.text.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: _clear,
+                            )
+                          : null,
+                    ),
+                    onChanged: _onInputChanged,
+                    onSubmitted: (_) => _evaluate(),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.swap_vert),
+                        onPressed: canSwap ? _swap : null,
+                      ),
+                    ],
+                  ),
+                  TextField(
+                    controller: _outputController,
+                    focusNode: _outputFocus,
+                    decoration: const InputDecoration(
+                      labelText: 'Convert to (optional)',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: _onOutputChanged,
+                    onSubmitted: (_) => _evaluate(),
+                  ),
+                  const SizedBox(height: 24),
+                  ResultDisplay(
+                    result: result,
+                    onTap: result is EvaluationIdle && result.example != null
+                        ? () {
+                            _inputController.text = result.example!;
+                            setState(() {});
+                            _cancelDebounce();
+                            _evaluate();
+                          }
+                        : null,
+                  ),
+                  if (isOnSubmit) ...[
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _evaluate,
+                      child: const Text('Evaluate'),
+                    ),
+                  ],
+                ],
               ),
-              onChanged: _onInputChanged,
-              onSubmitted: (_) => _evaluate(),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.swap_vert),
-                  onPressed: canSwap ? _swap : null,
+          ),
+          if (_anyFieldFocused) _KeyPanel(onSymbol: _insertSymbol),
+        ],
+      ),
+    );
+  }
+}
+
+/// Supplementary symbol key panel displayed above the system keyboard.
+class _KeyPanel extends StatelessWidget {
+  const _KeyPanel({required this.onSymbol});
+
+  final void Function(String) onSymbol;
+
+  static const _symbols = ['+', '-', '*', '/', '|', '^', '(', ')'];
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Divider(height: 1, thickness: 1),
+          Row(
+            children: [
+              for (final sym in _symbols)
+                Expanded(
+                  child: TextButton(
+                    onPressed: () => onSymbol(sym),
+                    child: Text(sym, style: const TextStyle(fontSize: 18)),
+                  ),
                 ),
-              ],
-            ),
-            TextField(
-              controller: _outputController,
-              decoration: const InputDecoration(
-                labelText: 'Convert to (optional)',
-                border: OutlineInputBorder(),
-              ),
-              onChanged: _onOutputChanged,
-              onSubmitted: (_) => _evaluate(),
-            ),
-            const SizedBox(height: 24),
-            ResultDisplay(
-              result: result,
-              onTap: result is EvaluationIdle && result.example != null
-                  ? () {
-                      _inputController.text = result.example!;
-                      setState(() {});
-                      _cancelDebounce();
-                      _evaluate();
-                    }
-                  : null,
-            ),
-            if (isOnSubmit) ...[
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _evaluate,
-                child: const Text('Evaluate'),
-              ),
             ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

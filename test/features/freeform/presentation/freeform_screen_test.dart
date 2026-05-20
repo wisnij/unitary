@@ -858,9 +858,9 @@ void main() {
   });
 
   group('FreeformScreen — key panel', () {
-    const symbols = ['+', '-', '*', '/', '|', '^', '(', ')'];
+    const symbols = ['^', '*', '/', '|', '+', '-', '~', '(', ')'];
 
-    testWidgets('key panel contains all 8 symbols when a field is focused', (
+    testWidgets('key panel contains all 9 symbols when a field is focused', (
       tester,
     ) async {
       await tester.pumpWidget(buildApp());

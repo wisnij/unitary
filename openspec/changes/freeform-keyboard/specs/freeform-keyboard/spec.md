@@ -29,16 +29,16 @@ focus.  The panel SHALL disappear when neither field is focused.
 - **WHEN** the user taps from one freeform field directly to the other
 - **THEN** the symbol panel remains continuously visible throughout the transition
 
-### Requirement: Symbol panel contains exactly the eight expression syntax buttons
+### Requirement: Symbol panel contains exactly the nine expression syntax buttons
 
 The symbol panel SHALL contain exactly the following buttons in order:
-`+`, `-`, `*`, `/`, `|`, `^`, `(`, `)`.
+`^`, `*`, `/`, `|`, `+`, `-`, `~`, `(`, `)`.
 
 #### Scenario: Panel contents
 
 - **WHEN** the symbol panel is visible
-- **THEN** it displays exactly eight buttons labelled `+`, `-`, `*`, `/`, `|`, `^`,
-  `(`, `)` in that order
+- **THEN** it displays exactly nine buttons labelled `^`, `*`, `/`, `|`, `+`, `-`,
+  `~`, `(`, `)` in that order
 
 ### Requirement: Tapping a symbol button inserts the symbol at the cursor
 

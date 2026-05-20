@@ -321,7 +321,7 @@ class _KeyPanel extends StatelessWidget {
 
   final void Function(String) onSymbol;
 
-  static const _symbols = ['+', '-', '*', '/', '|', '^', '(', ')'];
+  static const _symbols = ['^', '*', '/', '|', '+', '-', '~', '(', ')'];
 
   @override
   Widget build(BuildContext context) {

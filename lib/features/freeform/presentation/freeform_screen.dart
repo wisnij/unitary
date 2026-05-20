@@ -325,28 +325,42 @@ class _KeyPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
-      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+      color: colorScheme.surfaceContainerHigh,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           const Divider(height: 1, thickness: 1),
-          Row(
-            children: [
-              for (final sym in _symbols)
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => onSymbol(sym),
-                    child: Text(
-                      sym,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontFamily: 'monospace',
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
+            child: Row(
+              children: [
+                for (final sym in _symbols)
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      child: TextButton(
+                        style: TextButton.styleFrom(
+                          backgroundColor: colorScheme.surfaceContainerHighest,
+                          foregroundColor: colorScheme.onSurface,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        onPressed: () => onSymbol(sym),
+                        child: Text(
+                          sym,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontFamily: 'monospace',
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

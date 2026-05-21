@@ -54,6 +54,8 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     _debounceTimer?.cancel();
     _inputController.dispose();
     _outputController.dispose();
+    _inputFocus.removeListener(_onFocusChange);
+    _outputFocus.removeListener(_onFocusChange);
     _inputFocus.dispose();
     _outputFocus.dispose();
     super.dispose();

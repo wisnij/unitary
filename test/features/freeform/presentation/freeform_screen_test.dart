@@ -858,7 +858,7 @@ void main() {
   });
 
   group('FreeformScreen — key panel', () {
-    const symbols = ['^', '*', '/', '|', '+', '-', '~', '(', ')'];
+    const symbols = freeformKeyPanelSymbols;
 
     testWidgets(
       'key panel contains all 9 symbols when Convert-from is focused',

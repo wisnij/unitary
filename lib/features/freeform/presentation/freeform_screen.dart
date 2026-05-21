@@ -333,13 +333,14 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   }
 }
 
+/// Ordered list of symbols shown in the freeform key panel.
+const freeformKeyPanelSymbols = ['^', '*', '/', '|', '+', '-', '~', '(', ')'];
+
 /// Supplementary symbol key panel displayed above the system keyboard.
 class _KeyPanel extends StatelessWidget {
   const _KeyPanel({required this.onSymbol});
 
   final void Function(String) onSymbol;
-
-  static const _symbols = ['^', '*', '/', '|', '+', '-', '~', '(', ')'];
 
   @override
   Widget build(BuildContext context) {
@@ -354,7 +355,7 @@ class _KeyPanel extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
             child: Row(
               children: [
-                for (final sym in _symbols)
+                for (final sym in freeformKeyPanelSymbols)
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),

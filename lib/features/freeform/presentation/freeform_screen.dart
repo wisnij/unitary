@@ -378,6 +378,11 @@ class _KeyPanel extends StatelessWidget {
                           sym,
                           style: const TextStyle(
                             fontSize: 18,
+                            // 'monospace' is a CSS generic family recognised by
+                            // Android (resolves to Roboto Mono / Droid Sans
+                            // Mono) but is not guaranteed on iOS.  If iOS
+                            // support is added, replace with a bundled font or
+                            // a fontFamilyFallback list.
                             fontFamily: 'monospace',
                           ),
                         ),

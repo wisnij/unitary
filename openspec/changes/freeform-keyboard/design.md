@@ -48,38 +48,53 @@ behaviour already handles for free.
 above the keyboard, but repurposes a navigation-semantics slot for an input accessory,
 which is misleading and affects the body layout even when the panel is hidden.
 
-### D2: Focus tracking via two FocusNodes with microtask debounce
+### D2: Focus tracking via two FocusNodes with post-frame-callback debounce
 
 **Decision:** Attach a `FocusNode` to each `TextField`.  Both nodes share a single
-listener that sets `_anyFieldFocused` and updates `_lastFocusedController`.  The hide
-decision (setting `_anyFieldFocused = false`) is deferred via `Future.microtask` to
-prevent the panel from flickering when focus moves directly from one field to the
-other.
+listener that sets `_anyFieldFocused` and updates `_lastFocused` (a
+`({TextEditingController ctrl, FocusNode focus})?` record).  The hide decision
+(setting `_anyFieldFocused = false`) is deferred via
+`WidgetsBinding.instance.addPostFrameCallback` to prevent the panel from flickering
+when focus moves directly from one field to the other.
 
 **Rationale:** When the user taps from one field to the other, the first field fires
-"lost focus" before the second fires "gained focus".  Without the microtask, the panel
-would briefly disappear and reappear.  Deferring by one microtask lets both events
-settle before evaluating the combined focus state.
+"lost focus" before the second fires "gained focus".  Without the deferral, the panel
+would briefly disappear and reappear.  `addPostFrameCallback` fires after the frame is
+fully committed, which is the safest point to read the settled focus state.  It is also
+consistent with the post-frame callback already used in `_insertSymbol` for cursor
+restoration.
 
 ### D3: Cursor insertion via TextEditingController.value
 
-**Decision:** On symbol tap, replace the current selection in `_lastFocusedController`
+**Decision:** On symbol tap, replace the current selection in `_lastFocused.ctrl`
 (falling back to `_inputController` if none is tracked) using:
 
 ```dart
 ctrl.value = TextEditingValue(
-  text: text.replaceRange(sel.start, sel.end, symbol),
-  selection: TextSelection.collapsed(offset: sel.start + symbol.length),
+  text: ctrl.text.replaceRange(start, end, symbol),
+  selection: TextSelection.collapsed(offset: start + symbol.length),
 );
 ```
 
-Then call `setState` (to update the clear/swap button state) and, in real-time mode,
-`_debounceEvaluate`.
+Then call `_debounceEvaluate` in real-time mode.  (No explicit `setState` needed —
+mutating `controller.value` already notifies listeners and triggers a rebuild.)
 
 **Rationale:** Replacing `controller.value` atomically updates text and cursor in one
 frame with no visual glitch.  The button tap does not steal focus on Android (the
 system keyboard and cursor remain in place), so insertion lands exactly where the user
 expects.
+
+### D4: Panel always visible on desktop/web
+
+**Decision:** On desktop (macOS/Windows/Linux) and web, `_showPanel` returns `true`
+unconditionally.  On mobile (Android/iOS) it returns `_anyFieldFocused`.
+
+**Rationale:** On desktop there is no system keyboard, so the "appears above keyboard
+on focus" pattern does not apply.  Showing the panel permanently avoids the event-loop
+timing problem where a button click fires `blur` on the text field before `onPressed`,
+which on web causes the panel to disappear before the tap completes.  A permanently
+visible panel is also the more natural UX for desktop — the panel takes no more space
+than a toolbar and is always ready.
 
 ## Risks / Trade-offs
 

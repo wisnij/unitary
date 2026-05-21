@@ -136,7 +136,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
         ctrl.selection = TextSelection.collapsed(offset: cursorOffset);
       }
     });
-    setState(() {});
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();

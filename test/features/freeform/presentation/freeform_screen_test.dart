@@ -856,6 +856,190 @@ void main() {
       expect(find.text('Enter an expression above.'), findsNothing);
     });
   });
+
+  group('FreeformScreen — key panel', () {
+    const symbols = freeformKeyPanelSymbols;
+
+    testWidgets(
+      'key panel contains all 9 symbols when Convert-from is focused',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester
+            .pump(); // postFrameCallback fires, setState marks tree dirty
+        await tester.pump(); // rebuild renders panel
+        for (final sym in symbols) {
+          expect(
+            find.widgetWithText(TextButton, sym),
+            findsOneWidget,
+            reason: 'Expected symbol button "$sym" in key panel',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      'key panel contains all 9 symbols when Convert-to is focused',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+        await tester.tap(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+        );
+        await tester.pump();
+        await tester.pump();
+        for (final sym in symbols) {
+          expect(
+            find.widgetWithText(TextButton, sym),
+            findsOneWidget,
+            reason: 'Expected symbol button "$sym" in key panel',
+          );
+        }
+      },
+    );
+
+    testWidgets('key panel is not visible when neither field is focused', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      for (final sym in symbols) {
+        expect(find.widgetWithText(TextButton, sym), findsNothing);
+      }
+    });
+
+    testWidgets(
+      'key panel disappears when focus leaves both fields (mobile)',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // Focus a field so the panel appears.
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
+        await tester.pump();
+        expect(find.widgetWithText(TextButton, '^'), findsOneWidget);
+
+        // Dismiss focus programmatically (equivalent to tapping outside).
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pump();
+        await tester.pump();
+        expect(find.widgetWithText(TextButton, '^'), findsNothing);
+      },
+      // Focus-based visibility only applies on mobile; the variant ensures
+      // _showPanel uses _anyFieldFocused rather than always returning true.
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+
+    testWidgets('tapping a symbol inserts it at cursor in Convert-from', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 ft',
+      );
+      await tester.pump();
+
+      await tester.tap(find.widgetWithText(TextButton, '^'));
+      await tester.pump();
+
+      final inputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, '5 ft^'),
+      );
+      expect(inputField.controller?.text, '5 ft^');
+    });
+
+    testWidgets('tapping a symbol inserts it at cursor in Convert-to', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'km',
+      );
+      await tester.pump();
+
+      await tester.tap(find.widgetWithText(TextButton, '('));
+      await tester.pump();
+
+      final outputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, 'km('),
+      );
+      expect(outputField.controller?.text, 'km(');
+    });
+
+    testWidgets('tapping a symbol replaces selected text', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        '5 km',
+      );
+      tester.testTextInput.updateEditingValue(
+        const TextEditingValue(
+          text: '5 km',
+          selection: TextSelection(baseOffset: 2, extentOffset: 4),
+        ),
+      );
+      await tester.pump();
+
+      await tester.tap(find.widgetWithText(TextButton, '*'));
+      await tester.pump();
+
+      final inputField = tester.widget<TextField>(
+        find.widgetWithText(TextField, '5 *'),
+      );
+      expect(inputField.controller?.text, '5 *');
+    });
+
+    testWidgets(
+      'insertion triggers debounced evaluation in real-time mode',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
+        await tester.pump();
+
+        await tester.tap(find.widgetWithText(TextButton, '+'));
+        await tester.pump();
+
+        // Before debounce fires: '+' has not been evaluated yet.
+        expect(find.text('Enter an expression above.'), findsOneWidget);
+
+        // After debounce (500 ms): evaluation runs; '+' alone is a parse
+        // error so state becomes EvaluationError, not idle.
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(find.text('Enter an expression above.'), findsNothing);
+      },
+    );
+
+    testWidgets(
+      'insertion does not trigger evaluation in on-submit mode',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({'evaluationMode': 'onSubmit'});
+        final prefs = await SharedPreferences.getInstance();
+        final repo = SettingsRepository(prefs);
+        final history = FreeformHistoryRepository(prefs);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformHistoryRepositoryProvider.overrideWithValue(history),
+            ],
+            child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+          ),
+        );
+
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
+        await tester.pump();
+
+        await tester.tap(find.widgetWithText(TextButton, '+'));
+        await tester.pump(const Duration(milliseconds: 600));
+
+        // Still idle — no debounced evaluation in on-submit mode.
+        expect(find.text('Enter an expression above.'), findsOneWidget);
+      },
+    );
+  });
 }
 
 // ---------------------------------------------------------------------------

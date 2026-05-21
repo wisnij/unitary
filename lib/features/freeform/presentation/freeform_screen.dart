@@ -39,7 +39,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   final _inputFocus = FocusNode();
   final _outputFocus = FocusNode();
   bool _anyFieldFocused = false;
-  TextEditingController? _lastFocused;
+  ({TextEditingController ctrl, FocusNode focus})? _lastFocused;
   Timer? _debounceTimer;
 
   @override
@@ -74,9 +74,9 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   void _onFocusChange() {
     if (_inputFocus.hasFocus) {
-      _lastFocused = _inputController;
+      _lastFocused = (ctrl: _inputController, focus: _inputFocus);
     } else if (_outputFocus.hasFocus) {
-      _lastFocused = _outputController;
+      _lastFocused = (ctrl: _outputController, focus: _outputFocus);
     }
     Future.microtask(() {
       if (!mounted) {
@@ -108,7 +108,8 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   }
 
   void _insertSymbol(String symbol) {
-    final ctrl = _lastFocused ?? _inputController;
+    final (:ctrl, :focus) =
+        _lastFocused ?? (ctrl: _inputController, focus: _inputFocus);
     final sel = ctrl.selection;
     final int cursorOffset;
     if (sel.isValid) {
@@ -126,10 +127,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
         selection: TextSelection.collapsed(offset: cursorOffset),
       );
     }
-    final focusNode = _lastFocused == _outputController
-        ? _outputFocus
-        : _inputFocus;
-    focusNode.requestFocus();
+    focus.requestFocus();
     // On web, regaining focus can cause the browser to select all text.
     // Override that in the next frame so the cursor lands after the inserted
     // symbol.

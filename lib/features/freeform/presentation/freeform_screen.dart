@@ -363,6 +363,8 @@ class _KeyPanel extends StatelessWidget {
                         style: TextButton.styleFrom(
                           backgroundColor: colorScheme.surfaceContainerHighest,
                           foregroundColor: colorScheme.onSurface,
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),

@@ -906,6 +906,28 @@ void main() {
       }
     });
 
+    testWidgets(
+      'key panel disappears when focus leaves both fields (mobile)',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // Focus a field so the panel appears.
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
+        await tester.pump();
+        expect(find.widgetWithText(TextButton, '^'), findsOneWidget);
+
+        // Dismiss focus programmatically (equivalent to tapping outside).
+        FocusManager.instance.primaryFocus?.unfocus();
+        await tester.pump();
+        await tester.pump();
+        expect(find.widgetWithText(TextButton, '^'), findsNothing);
+      },
+      // Focus-based visibility only applies on mobile; the variant ensures
+      // _showPanel uses _anyFieldFocused rather than always returning true.
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+
     testWidgets('tapping a symbol inserts it at cursor in Convert-from', (
       tester,
     ) async {

@@ -111,22 +111,15 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     final (:ctrl, :focus) =
         _lastFocused ?? (ctrl: _inputController, focus: _inputFocus);
     final sel = ctrl.selection;
-    final int cursorOffset;
-    if (sel.isValid) {
-      final text = ctrl.text;
-      cursorOffset = sel.start + symbol.length;
-      ctrl.value = TextEditingValue(
-        text: text.replaceRange(sel.start, sel.end, symbol),
-        selection: TextSelection.collapsed(offset: cursorOffset),
-      );
-    } else {
-      final text = ctrl.text;
-      cursorOffset = text.length + symbol.length;
-      ctrl.value = TextEditingValue(
-        text: text + symbol,
-        selection: TextSelection.collapsed(offset: cursorOffset),
-      );
-    }
+    final start = (sel.isValid && sel.start >= 0)
+        ? sel.start
+        : ctrl.text.length;
+    final end = (sel.isValid && sel.end >= 0) ? sel.end : ctrl.text.length;
+    final cursorOffset = start + symbol.length;
+    ctrl.value = TextEditingValue(
+      text: ctrl.text.replaceRange(start, end, symbol),
+      selection: TextSelection.collapsed(offset: cursorOffset),
+    );
     focus.requestFocus();
     // On web, regaining focus can cause the browser to select all text.
     // Override that in the next frame so the cursor lands after the inserted

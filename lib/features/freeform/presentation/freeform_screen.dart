@@ -59,6 +59,17 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     super.dispose();
   }
 
+  // On mobile (Android/iOS), the panel appears above the system keyboard and
+  // should only show when a field is focused.  On desktop/web there is no
+  // system keyboard, so the panel is always visible.
+  bool get _showPanel {
+    final isMobile =
+        !kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS);
+    return !isMobile || _anyFieldFocused;
+  }
+
   void _onFocusChange() {
     if (_inputFocus.hasFocus) {
       _lastFocused = _inputController;
@@ -97,19 +108,34 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   void _insertSymbol(String symbol) {
     final ctrl = _lastFocused ?? _inputController;
     final sel = ctrl.selection;
+    final int cursorOffset;
     if (sel.isValid) {
       final text = ctrl.text;
+      cursorOffset = sel.start + symbol.length;
       ctrl.value = TextEditingValue(
         text: text.replaceRange(sel.start, sel.end, symbol),
-        selection: TextSelection.collapsed(offset: sel.start + symbol.length),
+        selection: TextSelection.collapsed(offset: cursorOffset),
       );
     } else {
       final text = ctrl.text;
+      cursorOffset = text.length + symbol.length;
       ctrl.value = TextEditingValue(
         text: text + symbol,
-        selection: TextSelection.collapsed(offset: text.length + symbol.length),
+        selection: TextSelection.collapsed(offset: cursorOffset),
       );
     }
+    final focusNode = _lastFocused == _outputController
+        ? _outputFocus
+        : _inputFocus;
+    focusNode.requestFocus();
+    // On web, regaining focus can cause the browser to select all text.
+    // Override that in the next frame so the cursor lands after the inserted
+    // symbol.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ctrl.selection = TextSelection.collapsed(offset: cursorOffset);
+      }
+    });
     setState(() {});
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
@@ -308,7 +334,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
               ),
             ),
           ),
-          if (_anyFieldFocused) _KeyPanel(onSymbol: _insertSymbol),
+          if (_showPanel) _KeyPanel(onSymbol: _insertSymbol),
         ],
       ),
     );

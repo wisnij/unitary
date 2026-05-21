@@ -860,21 +860,42 @@ void main() {
   group('FreeformScreen — key panel', () {
     const symbols = ['^', '*', '/', '|', '+', '-', '~', '(', ')'];
 
-    testWidgets('key panel contains all 9 symbols when a field is focused', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
-      await tester.pump(); // postFrameCallback fires, setState marks tree dirty
-      await tester.pump(); // rebuild renders panel
-      for (final sym in symbols) {
-        expect(
-          find.widgetWithText(TextButton, sym),
-          findsOneWidget,
-          reason: 'Expected symbol button "$sym" in key panel',
+    testWidgets(
+      'key panel contains all 9 symbols when Convert-from is focused',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester
+            .pump(); // postFrameCallback fires, setState marks tree dirty
+        await tester.pump(); // rebuild renders panel
+        for (final sym in symbols) {
+          expect(
+            find.widgetWithText(TextButton, sym),
+            findsOneWidget,
+            reason: 'Expected symbol button "$sym" in key panel',
+          );
+        }
+      },
+    );
+
+    testWidgets(
+      'key panel contains all 9 symbols when Convert-to is focused',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+        await tester.tap(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
         );
-      }
-    });
+        await tester.pump();
+        await tester.pump();
+        for (final sym in symbols) {
+          expect(
+            find.widgetWithText(TextButton, sym),
+            findsOneWidget,
+            reason: 'Expected symbol button "$sym" in key panel',
+          );
+        }
+      },
+    );
 
     testWidgets('key panel is not visible when neither field is focused', (
       tester,
@@ -883,28 +904,6 @@ void main() {
       for (final sym in symbols) {
         expect(find.widgetWithText(TextButton, sym), findsNothing);
       }
-    });
-
-    testWidgets('key panel appears when Convert-from field is focused', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
-      await tester.pump();
-      await tester.pump();
-      expect(find.widgetWithText(TextButton, '^'), findsOneWidget);
-    });
-
-    testWidgets('key panel appears when Convert-to field is focused', (
-      tester,
-    ) async {
-      await tester.pumpWidget(buildApp());
-      await tester.tap(
-        find.widgetWithText(TextField, 'Convert to (optional)'),
-      );
-      await tester.pump();
-      await tester.pump();
-      expect(find.widgetWithText(TextButton, '^'), findsOneWidget);
     });
 
     testWidgets('tapping a symbol inserts it at cursor in Convert-from', (

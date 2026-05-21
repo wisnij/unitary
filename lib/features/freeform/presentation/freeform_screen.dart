@@ -78,7 +78,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     } else if (_outputFocus.hasFocus) {
       _lastFocused = (ctrl: _outputController, focus: _outputFocus);
     }
-    Future.microtask(() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) {
         return;
       }

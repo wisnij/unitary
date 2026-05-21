@@ -865,7 +865,8 @@ void main() {
     ) async {
       await tester.pumpWidget(buildApp());
       await tester.tap(find.widgetWithText(TextField, 'Convert from'));
-      await tester.pump();
+      await tester.pump(); // postFrameCallback fires, setState marks tree dirty
+      await tester.pump(); // rebuild renders panel
       for (final sym in symbols) {
         expect(
           find.widgetWithText(TextButton, sym),
@@ -890,6 +891,7 @@ void main() {
       await tester.pumpWidget(buildApp());
       await tester.tap(find.widgetWithText(TextField, 'Convert from'));
       await tester.pump();
+      await tester.pump();
       expect(find.widgetWithText(TextButton, '^'), findsOneWidget);
     });
 
@@ -900,6 +902,7 @@ void main() {
       await tester.tap(
         find.widgetWithText(TextField, 'Convert to (optional)'),
       );
+      await tester.pump();
       await tester.pump();
       expect(find.widgetWithText(TextButton, '^'), findsOneWidget);
     });
@@ -971,6 +974,7 @@ void main() {
         await tester.pumpWidget(buildApp());
         await tester.tap(find.widgetWithText(TextField, 'Convert from'));
         await tester.pump();
+        await tester.pump();
 
         await tester.tap(find.widgetWithText(TextButton, '+'));
         await tester.pump();
@@ -1004,6 +1008,7 @@ void main() {
         );
 
         await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
         await tester.pump();
 
         await tester.tap(find.widgetWithText(TextButton, '+'));

@@ -7,7 +7,7 @@ repos:
         entry: bash -c 'dart run tool/import_gnu_units.dart && dart run tool/generate_predefined_units.dart'
         files: |
           (?x)^(
-            tool/gnu_units/ |
+            assets/units/ |
             tool/import_gnu_units
           )
       - id: generate-predefined-units
@@ -16,7 +16,7 @@ repos:
         entry: dart run tool/generate_predefined_units.dart
         files: |
           (?x)^(
-            lib/core/domain/data/units-supplementary\.json |
+            assets/units/units-supplementary\.json |
             tool/generate_predefined_units
           )
   - repo: https://github.com/DavidAnson/markdownlint-cli2

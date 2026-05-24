@@ -1060,7 +1060,7 @@ void main() {
             id: 'foot',
             type: 'derived',
             gnuUnitsSource: 'foot 12 inch',
-            filename: '/repo/root/tool/gnu_units/defs.units',
+            filename: '/repo/root/assets/units/defs.units',
             lineNumber: 1,
             definition: '12 inch',
             isDimensionless: false,
@@ -1074,7 +1074,7 @@ void main() {
             (result['units'] as Map<String, dynamic>)['foot']
                 as Map<String, dynamic>;
         final source = data['source'] as Map<String, dynamic>;
-        expect(source['file'], equals('tool/gnu_units/defs.units'));
+        expect(source['file'], equals('assets/units/defs.units'));
       },
     );
 

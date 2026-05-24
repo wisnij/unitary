@@ -1,5 +1,5 @@
-Unit Database Data Files
-========================
+Unit database source files
+==========================
 
 This directory contains the Dart source files generated from the unit database
 pipeline.  The pipeline inputs and intermediate data files live in
@@ -23,22 +23,3 @@ Contains the `BuiltinFunction` instances for the 12 mathematical functions
 (sin, cos, tan, etc.) and `registerBuiltinFunctions()`.
 
 **Edit by hand** to add or modify built-in mathematical functions.
-
-
-Workflow
---------
-
-To update the unit database after changing `assets/units/definitions.units`:
-
-~~~~ bash
-dart run tool/import_gnu_units.dart            # → updates assets/units/units-parsed.json
-dart run tool/generate_predefined_units.dart   # → updates assets/units/units.json + predefined_units.dart
-flutter test --reporter failures-only          # verify tests pass
-~~~~
-
-To add metadata (descriptions, aliases, categories) for existing units:
-
-1. Edit `assets/units/units-supplementary.json` directly.
-2. Run `dart run tool/generate_predefined_units.dart` to regenerate
-   `assets/units/units.json` and `predefined_units.dart`.
-3. Run `flutter test --reporter failures-only` to verify.

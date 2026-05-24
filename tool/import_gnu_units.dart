@@ -1,7 +1,7 @@
 #!/usr/bin/env dart
 
-/// Reads tool/gnu_units/definitions.units and writes
-/// lib/core/domain/data/units-parsed.json with importer-owned fields only.
+/// Reads assets/units/definitions.units and writes
+/// assets/units/units-parsed.json with importer-owned fields only.
 library;
 
 import 'dart:convert';
@@ -14,12 +14,12 @@ void main() {
   final repoRoot = scriptDir.parent;
 
   final definitionsFile = File(
-    '${scriptDir.path}/gnu_units/definitions.units',
+    '${repoRoot.path}/assets/units/definitions.units',
   );
   if (!definitionsFile.existsSync()) {
     stderr.writeln('Error: ${definitionsFile.path} not found.');
     stderr.writeln(
-      'Place the GNU Units definitions.units file in tool/gnu_units/',
+      'Place the GNU Units definitions.units file in assets/units/',
     );
     exit(1);
   }
@@ -46,7 +46,7 @@ void main() {
   const encoder = JsonEncoder.withIndent('  ');
 
   final parsedFile = File(
-    '${repoRoot.path}/lib/core/domain/data/units-parsed.json',
+    '${repoRoot.path}/assets/units/units-parsed.json',
   );
   parsedFile.writeAsStringSync('${encoder.convert(parsed)}\n');
   final unitCount = (parsed['units'] as Map).length;

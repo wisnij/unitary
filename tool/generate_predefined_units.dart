@@ -1,8 +1,8 @@
 #!/usr/bin/env dart
 
-/// Reads lib/core/domain/data/units-parsed.json and
-/// lib/core/domain/data/units-supplementary.json, merges them into
-/// lib/core/domain/data/units.json, then generates
+/// Reads assets/units/units-parsed.json and
+/// assets/units/units-supplementary.json, merges them into
+/// assets/units/units.json, then generates
 /// lib/core/domain/data/predefined_units.dart.
 library;
 
@@ -14,7 +14,7 @@ import 'generate_predefined_units_lib.dart';
 void main() {
   final scriptDir = File(Platform.script.toFilePath()).parent;
   final repoRoot = scriptDir.parent;
-  final dataDir = '${repoRoot.path}/lib/core/domain/data';
+  final dataDir = '${repoRoot.path}/assets/units';
 
   // Read units-parsed.json (required).
   final parsedFile = File('$dataDir/units-parsed.json');
@@ -52,7 +52,9 @@ void main() {
   // Generate predefined_units.dart from merged map.
   final dartCode = generateDartCode(merged);
 
-  final outputFile = File('$dataDir/predefined_units.dart');
+  final outputFile = File(
+    '${repoRoot.path}/lib/core/domain/data/predefined_units.dart',
+  );
   outputFile.writeAsStringSync(dartCode);
   stdout.writeln('Wrote ${outputFile.path}');
 

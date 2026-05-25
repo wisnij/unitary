@@ -185,6 +185,11 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
         alignment: Alignment.topLeft,
         child: Material(
           elevation: 4,
+          shape: RoundedRectangleBorder(
+            side: BorderSide(
+              color: Theme.of(context).colorScheme.outlineVariant,
+            ),
+          ),
           child: SizedBox(
             height: listHeight,
             child: ListView.builder(

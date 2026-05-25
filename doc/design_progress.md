@@ -440,3 +440,14 @@ Questions that arose during design but haven't been resolved:
   - `CompletionField` (`ConsumerStatefulWidget`) in `lib/features/freeform/presentation/widgets/completion_field.dart` — wraps `TextField` with `OverlayPortal` + `CompositedTransformFollower`; above/below positioning based on viewport center; `applyCompletion()` pure function for tap-to-insert
   - Both `TextField` widgets in `FreeformScreen` replaced with `CompletionField`; each has its own `OverlayPortalController` — overlays are fully independent
   - Design artifacts: `openspec/changes/predictive-completion/`
+- *Completion overlay refinements (May 2026)*
+  - 1688 tests passing (5 new)
+  - **Border**: overlay `Material` uses `shape: RoundedRectangleBorder(side: BorderSide(color: outlineVariant))` for a thin themed border
+  - **Width**: `ConstrainedBox(maxWidth: fieldWidth) + IntrinsicWidth` shrinks the overlay to the widest row; field width read from render object at build time (no stored state); `ListView` replaced with `SingleChildScrollView + Column` so `IntrinsicWidth` can measure row widths
+  - **Scrolling**: `SizedBox` height capped at `_kMaxVisibleRows` (8) × row height; `SingleChildScrollView` renders all suggestions (up to the `suggestCompletions` limit of 50) and scrolls within the fixed height box
+  - **Kind-specific display and insertion** (`_displayName` / `_insertText`):
+    - Unit — displayed and inserted as plain name, with a trailing space appended on insertion so the cursor clears the token
+    - Prefix — displayed with a trailing `-` (e.g. `kilo-`) to signal that a unit name follows; dash is NOT inserted
+    - Function — displayed and inserted with a trailing `(` (e.g. `tempC(`) matching call-site convention
+  - **Web tap fix**: on web the browser fires `focusout` on the text field at pointer-down, which hides the overlay before `onTap` fires; fixed with `onTapDown` on web and `onTap` on mobile (where `onTapDown` would interfere with scroll gestures); `kIsWeb` branch in `_buildSuggestions`
+  - **Focus restoration**: `_insertCompletion` calls `focusNode.requestFocus()` after insertion (matching the operator key panel's `_insertSymbol`); a post-frame callback re-applies the cursor position because web's `requestFocus` can trigger a browser select-all

@@ -1164,6 +1164,45 @@ void main() {
       // "kilo" is a valid prefix — result should not be the idle placeholder.
       expect(find.text('Enter an expression above.'), findsNothing);
     });
+
+    testWidgets('only the focused field shows its completion overlay', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      // Focus Convert-from and type a matching prefix → overlay appears.
+      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+      await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'kg',
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+      // "kg" appears at least twice: text field + overlay suggestion row.
+      expect(find.text('kg'), findsWidgets);
+
+      // Now focus Convert-to and type a different prefix.
+      await tester.tap(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+      );
+      await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'met',
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+
+      // Convert-from overlay is gone: "kg" appears only once (in the field).
+      expect(find.text('kg'), findsOneWidget);
+
+      // Convert-to overlay is visible: 'met'-prefix suggestions are shown.
+      // "meter" is a registered unit alias — it should appear in the overlay.
+      expect(find.text('meter'), findsWidgets);
+    });
   });
 }
 

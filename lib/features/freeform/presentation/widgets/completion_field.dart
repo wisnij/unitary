@@ -177,37 +177,55 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
         ? Alignment.bottomLeft
         : Alignment.topLeft;
 
+    // Cap the overlay width at the width of the input field so it never
+    // overflows.  Read from the render object rather than storing state, so
+    // the value is always current at build time.
+    final box = this.context.findRenderObject() as RenderBox?;
+    final maxWidth = (box != null && box.hasSize)
+        ? box.size.width
+        : double.infinity;
+
     return CompositedTransformFollower(
       link: _layerLink,
       targetAnchor: targetAnchor,
       followerAnchor: followerAnchor,
       child: Align(
         alignment: Alignment.topLeft,
-        child: Material(
-          elevation: 4,
-          shape: RoundedRectangleBorder(
-            side: BorderSide(
-              color: Theme.of(context).colorScheme.outlineVariant,
-            ),
-          ),
-          child: SizedBox(
-            height: listHeight,
-            child: ListView.builder(
-              itemCount: visibleCount,
-              itemExtent: _kRowHeight,
-              itemBuilder: (context, index) {
-                final entry = suggestions[index];
-                return InkWell(
-                  onTap: () => _insertCompletion(entry.name),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(entry.name),
-                    ),
-                  ),
-                );
-              },
+        // ConstrainedBox + IntrinsicWidth together make the overlay exactly
+        // as wide as its widest row, up to the field width.
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxWidth),
+          child: IntrinsicWidth(
+            child: Material(
+              elevation: 4,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(
+                  color: Theme.of(context).colorScheme.outlineVariant,
+                ),
+              ),
+              // Column (not ListView) is required so that IntrinsicWidth can
+              // query each row's natural width.
+              child: SizedBox(
+                height: listHeight,
+                child: Column(
+                  children: [
+                    for (var i = 0; i < visibleCount; i++)
+                      SizedBox(
+                        height: _kRowHeight,
+                        child: InkWell(
+                          onTap: () => _insertCompletion(suggestions[i].name),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(suggestions[i].name),
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             ),
           ),
         ),

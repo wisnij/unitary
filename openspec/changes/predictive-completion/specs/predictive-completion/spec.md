@@ -52,7 +52,8 @@ sorted alphabetically (case-insensitive) by matched name.
 
 #### Scenario: Prefix matches primary IDs and aliases
 - **WHEN** `suggestCompletions("kil")` is called
-- **THEN** the result includes `"kilo"` (a prefix primary ID) and `"kilometer"` (a unit primary ID) in the primary-ID group, before any alias-only matches
+- **THEN** the result includes `"kilo"` (a prefix primary ID) in the primary-ID group, and `"kilogram"` (a unit alias for `kg`) in the alias group after it
+- **NOTE** `"kilometer"` is not a registered unit primary ID — it is synthesised at lookup time from the prefix `kilo` and unit `m` and does not appear in `_unitLookup`
 
 #### Scenario: Case-insensitive matching
 - **WHEN** `suggestCompletions("KM")` is called
@@ -74,11 +75,20 @@ sorted alphabetically (case-insensitive) by matched name.
 The system SHALL display a completion suggestion overlay below (or above, if
 near the bottom of the viewport) the focused freeform expression field whenever
 a non-empty token is detected under the cursor and at least one suggestion
-exists.  The overlay SHALL show up to 8 suggestions at a time in a scrollable
-list.  Each row in the list SHALL show the matched identifier name.  The overlay
-SHALL be dismissed immediately when: (a) the field loses focus, (b) the token
-becomes empty, (c) no suggestions match, or (d) the cursor moves outside any
-identifier.
+exists.  The overlay SHALL show up to 8 suggestions at a time and SHALL be
+scrollable to reveal all suggestions (up to the repository limit of 50).  Each
+row in the list SHALL show a kind-annotated label for the suggestion:
+
+- **Unit** entries: the plain identifier name (e.g. `kg`)
+- **Prefix** entries: the name followed by a `-` (e.g. `kilo-`) to signal that a
+  unit name follows; the dash is for display only and is NOT inserted into the
+  field on selection
+- **Function** entries: the name followed by `(` (e.g. `tempC(`) matching
+  call-site convention; the `(` IS inserted into the field on selection
+
+The overlay SHALL be dismissed immediately when: (a) the field loses focus,
+(b) the token becomes empty, (c) no suggestions match, or (d) the cursor moves
+outside any identifier.
 
 #### Scenario: Overlay appears while typing
 - **WHEN** the user types `"km"` in a focused freeform field
@@ -106,19 +116,30 @@ identifier.
 
 ### Requirement: Tap-to-insert
 The system SHALL replace the currently detected token in the expression field
-with the tapped suggestion name when the user taps a suggestion row.  After
-insertion the text cursor SHALL be placed immediately after the inserted name.
-The suggestion overlay SHALL be dismissed after insertion.  Evaluation SHALL be
-re-triggered according to the current evaluation mode settings (real-time or
-on-submit) as if the user had typed the completed text.
+with a kind-specific insertion string when the user taps a suggestion row.
+The insertion string differs by entry kind:
 
-#### Scenario: Token replaced with suggestion
-- **WHEN** the expression is `"5 kilo"`, the cursor is after `"kilo"`, and the user taps the suggestion `"kilometer"`
-- **THEN** the expression becomes `"5 kilometer"` and the cursor is placed at offset 11
+- **Unit**: `name` followed by a single space (e.g. `"km "`) so the cursor
+  clears the token and the user can immediately type the next part of the
+  expression.
+- **Prefix**: the plain `name` with no trailing character (e.g. `"kilo"`); the
+  display dash is not inserted.
+- **Function**: `name` followed by `(` (e.g. `"tempC("`); the cursor lands
+  inside the call so the user can type the argument.
+
+After insertion the text cursor SHALL be placed immediately after the last
+inserted character.  The suggestion overlay SHALL be dismissed after insertion.
+Evaluation SHALL be re-triggered according to the current evaluation mode
+settings (real-time or on-submit) as if the user had typed the completed text.
+Focus SHALL be restored to the text field after a suggestion is selected.
+
+#### Scenario: Unit token replaced — trailing space appended
+- **WHEN** the expression is `"5 kilo"`, the cursor is after `"kilo"`, and the user taps the unit suggestion `"kilogram"`
+- **THEN** the expression becomes `"5 kilogram "` (with a trailing space) and the cursor is placed at offset 12
 
 #### Scenario: Partial token mid-expression replaced
-- **WHEN** the expression is `"3 kg + 2 gra"` and the cursor is after `"gra"`, and the user taps `"gram"`
-- **THEN** the expression becomes `"3 kg + 2 gram"` and the cursor is at offset 13
+- **WHEN** the expression is `"3 kg + 2 gra"` and the cursor is after `"gra"`, and the user taps the unit suggestion `"gram"`
+- **THEN** the expression becomes `"3 kg + 2 gram "` (trailing space) and the cursor is at offset 14
 
 #### Scenario: Overlay dismissed after insertion
 - **WHEN** the user taps a suggestion

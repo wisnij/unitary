@@ -109,6 +109,60 @@ On suggestion tap: call `tokenAtCursor` again on the controller's current value
 `controller.selection` to a collapsed selection at `start + name.length`.  Then
 dismiss the overlay and re-trigger evaluation.
 
+### 6. Platform-specific tap handling and focus restoration
+
+On web, the browser fires a native `focusout` event on the `<input>` element at
+**pointer-down** time (not pointer-up).  Flutter's `FocusNode` listener fires
+synchronously, `setState` marks the widget dirty, and the post-frame callback
+calls `_syncOverlay(false)` — hiding the overlay **before** `onTap` is
+delivered.  On mobile this race does not occur because the focus change does not
+happen until the touch is lifted.
+
+**Decision**: branch on `kIsWeb` (`package:flutter/foundation.dart`):
+
+- **Web** — `InkWell.onTapDown` fires at pointer-down, before the `focusout`,
+  so the insertion runs while the overlay is still present.  `onTap` is kept
+  non-null but is a no-op (`() {}`) so the `InkWell` still renders its press
+  ripple.
+- **Mobile** — `InkWell.onTap` (pointer-up) fires the insertion.
+  `onTapDown` is left `null` because setting it on mobile would cause the
+  insertion to fire at the start of every scroll drag, not just on a completed
+  tap.
+
+After insertion, `focusNode.requestFocus()` restores focus to the text field,
+matching the pattern used by the operator key panel (`_insertSymbol` in
+`FreeformScreen`).  On web, `requestFocus()` can cause the browser to select
+all text in the field, so a `WidgetsBinding.addPostFrameCallback` re-applies the
+correct cursor position (the collapsed offset returned by `applyCompletion`).
+
+### 7. Overlay appearance and insertion conventions
+
+**Border**: the overlay `Material` uses `shape: RoundedRectangleBorder(side:
+BorderSide(color: colorScheme.outlineVariant))` — a 1 dp themed border that
+makes the overlay visually distinct from the page surface without requiring a
+hard-coded colour.
+
+**Width**: the overlay shrinks to the width of its widest row using
+`ConstrainedBox(maxWidth: fieldWidth) + IntrinsicWidth`.  The field width is
+read from `this.context.findRenderObject()` at build time (no stored state
+needed).  `IntrinsicWidth` requires that children implement intrinsic-width
+layout; `ListView` does not, so the bounded list uses `SingleChildScrollView +
+Column` instead.
+
+**Scrollability**: `SizedBox(height: visibleCount * rowHeight)` caps the visible
+area at `_kMaxVisibleRows` (8) rows.  `SingleChildScrollView` renders all
+suggestions inside that fixed box and scrolls when the list is longer.
+`suggestCompletions` returns up to 50 entries so that the UI can scroll the
+full result without re-querying the repository.
+
+**Kind-specific insertion** (`_displayName` / `_insertText`):
+
+| Kind | Displayed as | Inserted as | Rationale |
+|---|---|---|---|
+| Unit | `name` | `name ` (+ space) | Cursor clears the token; user types next term immediately |
+| Prefix | `name-` | `name` | Dash signals "unit follows" visually; not valid syntax alone |
+| Function | `name(` | `name(` | Cursor lands inside call; matches call-site convention |
+
 ## Risks / Trade-offs
 
 - **Performance on large repos**: iterating 7 000 + entries on every keystroke

@@ -7,8 +7,8 @@
 ## 2. Domain Layer: Suggestion Computation
 
 - [x] 2.1 Add `CompletionEntry` value class to `lib/core/domain/models/completion_entry.dart` with fields: `name` (String), `isPrimaryId` (bool), `entryKind` (enum: unit, function, prefix)
-- [x] 2.2 Add `suggestCompletions(String prefix, {int limit = 50}) → List<CompletionEntry>` method to `UnitRepository` — iterates `_unitLookup`, `_prefixLookup`, `_functionLookup` with case-insensitive prefix filter; ranks primary-ID matches before alias-only matches; sorts alphabetically within each group
-- [x] 2.3 Write tests in `test/core/domain/models/unit_repository_suggest_test.dart` covering: prefix match, case-insensitive match, empty prefix, no matches, functions returned, prefixes returned, aliases ranked after primary IDs, limit enforced
+- [x] 2.2 Add `suggestCompletions(String prefix, {int limit = 50}) → List<CompletionEntry>` method to `UnitRepository` — iterates `_unitLookup`, `_prefixLookup`, `_functionLookup` with case-insensitive substring filter; sorts results into two tiers (prefix matches first, then infix matches), each sorted alphabetically; primary IDs and aliases interleaved within each tier
+- [x] 2.3 Write tests in `test/core/domain/models/unit_repository_suggest_test.dart` covering: prefix match, infix match, prefix-before-infix ordering, case-insensitive match, empty prefix, no matches, functions returned, prefixes returned, alphabetical sort within each tier, limit enforced
 
 ## 3. State Layer: Completion Provider
 

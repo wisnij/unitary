@@ -19,10 +19,11 @@ No new external packages are required.
   the cursor is inside a partial identifier.
 - Source suggestions from the unit repository: unit IDs and aliases, function
   IDs and aliases, and named prefix IDs and aliases.
-- Filter suggestions case-insensitively to those whose name starts with the
-  current token.
-- Rank results: primary-ID matches before alias-only matches; within each group,
-  alphabetical by the matched name.
+- Filter suggestions case-insensitively to those whose name starts with or
+  contains the current token (prefix matches ranked before infix matches;
+  alphabetical within each tier).
+- Rank results: prefix matches (name starts with token) before infix matches
+  (name contains but does not start with token); alphabetical within each tier.
 - Tap a suggestion to replace the partial token with the full identifier and
   advance the cursor past it.
 - Cap the visible list at 8 items; allow scrolling for longer matches.
@@ -31,7 +32,8 @@ No new external packages are required.
 
 **Non-Goals:**
 
-- Fuzzy / substring matching (prefix matching only for now).
+- Fuzzy matching or ranking by edit distance.
+- Ranking by usage frequency or recency (already listed below).
 - Suggestions in the worksheet numeric value fields (numbers-only fields).
 - Ranking by usage frequency or recency.
 - Showing unit descriptions or dimensions inline in the suggestion row.

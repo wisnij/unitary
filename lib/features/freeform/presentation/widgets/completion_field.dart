@@ -9,7 +9,8 @@ import '../../state/completion_provider.dart';
 /// Height of each suggestion row in the completion list.
 const double _kRowHeight = 48.0;
 
-/// Maximum number of suggestion rows visible at once.
+/// Maximum number of suggestion rows visible at once without scrolling.
+/// More entries may be present and are accessible by scrolling.
 const int _kMaxVisibleRows = 8;
 
 /// A [TextField] wrapper that displays an inline predictive-completion overlay
@@ -240,40 +241,47 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
                   color: Theme.of(context).colorScheme.outlineVariant,
                 ),
               ),
-              // Column (not ListView) is required so that IntrinsicWidth can
-              // query each row's natural width.
+              // SingleChildScrollView + Column (not ListView) so that
+              // IntrinsicWidth can query each row's natural width while still
+              // allowing the list to scroll when there are more than
+              // _kMaxVisibleRows entries.  The SizedBox caps the visible height
+              // to _kMaxVisibleRows rows; the Column renders all suggestions.
               child: SizedBox(
                 height: listHeight,
-                child: Column(
-                  children: [
-                    for (var i = 0; i < visibleCount; i++)
-                      SizedBox(
-                        height: _kRowHeight,
-                        child: InkWell(
-                          // On web, onTap fires after the browser focusout
-                          // event removes focus from the text field, which
-                          // hides the overlay before the tap is delivered.
-                          // onTapDown fires at pointer-down, before focusout,
-                          // so it works on both platforms.
-                          // On mobile, onTapDown interferes with scrolling
-                          // (a scroll drag starts with pointer-down), so we
-                          // use onTap instead and keep onTapDown null.
-                          onTapDown: kIsWeb
-                              ? (_) => _insertCompletion(suggestions[i])
-                              : null,
-                          onTap: kIsWeb
-                              ? () {} // non-null keeps InkWell press effects
-                              : () => _insertCompletion(suggestions[i]),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(_displayName(suggestions[i])),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < suggestions.length; i++)
+                        SizedBox(
+                          height: _kRowHeight,
+                          child: InkWell(
+                            // On web, onTap fires after the browser focusout
+                            // event removes focus from the text field, which
+                            // hides the overlay before the tap is delivered.
+                            // onTapDown fires at pointer-down, before focusout,
+                            // so it works on both platforms.
+                            // On mobile, onTapDown interferes with scrolling
+                            // (a scroll drag starts with pointer-down), so we
+                            // use onTap instead and keep onTapDown null.
+                            onTapDown: kIsWeb
+                                ? (_) => _insertCompletion(suggestions[i])
+                                : null,
+                            onTap: kIsWeb
+                                ? () {} // non-null keeps InkWell press effects
+                                : () => _insertCompletion(suggestions[i]),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(_displayName(suggestions[i])),
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),

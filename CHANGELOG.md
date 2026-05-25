@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]
 ------------
 
+### Added
+
+- Add a smart completion dropdown of unit and function names
+
 ### Changed
 
 - Move raw unit files to `assets/units/`

@@ -3,6 +3,7 @@ import '../data/predefined_units.dart';
 import '../errors.dart';
 import '../parser/expression_parser.dart';
 import 'browse_entry.dart';
+import 'completion_entry.dart';
 import 'dimension.dart';
 import 'function.dart';
 import 'quantity.dart';
@@ -557,5 +558,78 @@ class UnitRepository {
       (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
     );
     return results;
+  }
+
+  /// Returns a ranked list of identifier completions that contain [prefix]
+  /// (case-insensitive), drawn from all registered units, prefixes, and
+  /// functions.
+  ///
+  /// Results are ordered in four tiers:
+  /// 1. Prefix matches (name starts with [prefix]) — primary IDs first,
+  ///    then aliases, each group sorted alphabetically.
+  /// 2. Infix matches (name contains [prefix] but does not start with it) —
+  ///    same primary-before-alias, alphabetical-within-group ordering.
+  ///
+  /// Returns an empty list when [prefix] is empty.  At most [limit] entries
+  /// are returned.
+  List<CompletionEntry> suggestCompletions(
+    String prefix, {
+    int limit = 50,
+  }) {
+    if (prefix.isEmpty) {
+      return const [];
+    }
+    final lower = prefix.toLowerCase();
+
+    final prefixMatches = <CompletionEntry>[];
+    final infixMatches = <CompletionEntry>[];
+
+    void addEntry(String name, bool isPrimary, CompletionEntryKind kind) {
+      final nameLower = name.toLowerCase();
+      if (!nameLower.contains(lower)) {
+        return;
+      }
+      final entry = CompletionEntry(
+        name: name,
+        isPrimaryId: isPrimary,
+        entryKind: kind,
+      );
+      if (nameLower.startsWith(lower)) {
+        prefixMatches.add(entry);
+      } else {
+        infixMatches.add(entry);
+      }
+    }
+
+    for (final entry in _unitLookup.entries) {
+      addEntry(
+        entry.key,
+        entry.value.id == entry.key,
+        CompletionEntryKind.unit,
+      );
+    }
+    for (final entry in _prefixLookup.entries) {
+      addEntry(
+        entry.key,
+        entry.value.id == entry.key,
+        CompletionEntryKind.prefix,
+      );
+    }
+    for (final entry in _functionLookup.entries) {
+      addEntry(
+        entry.key,
+        entry.value.id == entry.key,
+        CompletionEntryKind.function,
+      );
+    }
+
+    int cmp(CompletionEntry a, CompletionEntry b) =>
+        a.name.toLowerCase().compareTo(b.name.toLowerCase());
+
+    prefixMatches.sort(cmp);
+    infixMatches.sort(cmp);
+
+    final result = [...prefixMatches, ...infixMatches];
+    return result.length <= limit ? result : result.sublist(0, limit);
   }
 }

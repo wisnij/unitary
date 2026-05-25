@@ -137,7 +137,90 @@ void main() {
       expect(find.text('kg'), findsOneWidget);
     });
 
-    testWidgets('tapping suggestion updates controller text', (tester) async {
+    // -------------------------------------------------------------------------
+    // Display labels
+    // -------------------------------------------------------------------------
+
+    testWidgets('unit suggestions are displayed without a suffix', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(_buildField(controller: controller, focusNode: focusNode)),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      // 'kg' is a unit primary ID.
+      controller.value = const TextEditingValue(
+        text: 'kg',
+        selection: TextSelection.collapsed(offset: 2),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Overlay row shows the plain name — no trailing character.
+      expect(find.text('kg'), findsWidgets);
+      expect(find.text('kg '), findsNothing);
+    });
+
+    testWidgets('prefix suggestions are displayed with a trailing dash', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(_buildField(controller: controller, focusNode: focusNode)),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      // 'kilo' is a registered SI prefix primary ID.
+      controller.value = const TextEditingValue(
+        text: 'kilo',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // The overlay row shows 'kilo-', not bare 'kilo'.
+      expect(find.text('kilo-'), findsOneWidget);
+    });
+
+    testWidgets(
+      'function suggestions are displayed with a trailing parenthesis',
+      (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          _wrap(_buildField(controller: controller, focusNode: focusNode)),
+        );
+
+        await tester.tap(find.byType(TextField));
+        await tester.pump();
+
+        // 'tempC' is a registered function — 'temp' should surface it.
+        controller.value = const TextEditingValue(
+          text: 'temp',
+          selection: TextSelection.collapsed(offset: 4),
+        );
+        await tester.pump();
+        await tester.pump();
+        await tester.pump();
+
+        // The overlay row should show the name followed by '('.
+        expect(find.text('tempC('), findsOneWidget);
+      },
+    );
+
+    // -------------------------------------------------------------------------
+    // Insertion behaviour
+    // -------------------------------------------------------------------------
+
+    testWidgets('tapping a unit suggestion inserts name with trailing space', (
+      tester,
+    ) async {
       String? changedText;
       await tester.pumpWidget(
         _wrap(
@@ -152,7 +235,42 @@ void main() {
       await tester.tap(find.byType(TextField));
       await tester.pump();
 
-      // Type a prefix for 'kilogram' (registered alias).
+      // 'kg' is a unit primary ID.
+      controller.value = const TextEditingValue(
+        text: 'kg',
+        selection: TextSelection.collapsed(offset: 2),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Tap the 'kg' unit suggestion row.
+      await tester.tap(find.text('kg').last);
+      await tester.pump();
+
+      // A trailing space is appended so the user can continue typing.
+      expect(controller.text, equals('kg '));
+      expect(changedText, equals('kg '));
+    });
+
+    testWidgets('tapping a prefix suggestion inserts name without dash', (
+      tester,
+    ) async {
+      String? changedText;
+      await tester.pumpWidget(
+        _wrap(
+          _buildField(
+            controller: controller,
+            focusNode: focusNode,
+            onChanged: (v) => changedText = v,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      // 'kilo' is a SI prefix — its overlay entry is labelled 'kilo-'.
       controller.value = const TextEditingValue(
         text: 'kilo',
         selection: TextSelection.collapsed(offset: 4),
@@ -161,15 +279,47 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      // Find and tap the "kilo" suggestion (the prefix entry).
-      final kiloFinder = find.text('kilo').last;
-      expect(kiloFinder, findsOneWidget);
-      await tester.tap(kiloFinder);
+      // Tap the 'kilo-' overlay row.
+      await tester.tap(find.text('kilo-'));
       await tester.pump();
 
-      // Controller text updated to the selected entry.
+      // Prefix: dash is not inserted into the field.
       expect(controller.text, equals('kilo'));
       expect(changedText, equals('kilo'));
+    });
+
+    testWidgets('tapping a function suggestion inserts name with parenthesis', (
+      tester,
+    ) async {
+      String? changedText;
+      await tester.pumpWidget(
+        _wrap(
+          _buildField(
+            controller: controller,
+            focusNode: focusNode,
+            onChanged: (v) => changedText = v,
+          ),
+        ),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      controller.value = const TextEditingValue(
+        text: 'tempC',
+        selection: TextSelection.collapsed(offset: 5),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Tap the 'tempC(' suggestion row.
+      await tester.tap(find.text('tempC(').first);
+      await tester.pump();
+
+      // The inserted text includes the open parenthesis.
+      expect(controller.text, equals('tempC('));
+      expect(changedText, equals('tempC('));
     });
 
     testWidgets('overlay dismissed after suggestion tap', (tester) async {
@@ -188,15 +338,15 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      // Tap the "kilo" suggestion.
-      await tester.tap(find.text('kilo').last);
+      // Tap the 'kilo-' overlay row (the prefix entry).
+      await tester.tap(find.text('kilo-'));
       await tester.pump();
       await tester.pump();
       await tester.pump();
 
-      // After tap the overlay should be hidden; "kilo" appears only once
-      // (in the text field itself).
+      // After tap the overlay is hidden; 'kilo' appears only in the text field.
       expect(find.text('kilo'), findsOneWidget);
+      expect(find.text('kilo-'), findsNothing);
     });
   });
 }

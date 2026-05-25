@@ -159,9 +159,35 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
     }
   }
 
-  void _insertCompletion(String name) {
+  /// The label shown in the overlay row for [entry].
+  ///
+  /// - Units: plain name (`kg`)
+  /// - Prefixes: name with a trailing `-` (`kilo-`) to signal that a unit name
+  ///   follows, but the dash is **not** inserted into the field.
+  /// - Functions: name with a trailing `(` (`tempF(`) matching call-site style.
+  String _displayName(CompletionEntry entry) => switch (entry.entryKind) {
+    CompletionEntryKind.unit => entry.name,
+    CompletionEntryKind.prefix => '${entry.name}-',
+    CompletionEntryKind.function => '${entry.name}(',
+  };
+
+  /// The text written into the field when [entry] is selected.
+  ///
+  /// - Units: name followed by a space so the user can continue typing.
+  /// - Prefixes: plain name (the trailing `-` from [_displayName] is omitted).
+  /// - Functions: name with a trailing `(` matching [_displayName].
+  String _insertText(CompletionEntry entry) => switch (entry.entryKind) {
+    CompletionEntryKind.unit => '${entry.name} ',
+    CompletionEntryKind.prefix => entry.name,
+    CompletionEntryKind.function => '${entry.name}(',
+  };
+
+  void _insertCompletion(CompletionEntry entry) {
     _overlayController.hide();
-    widget.controller.value = applyCompletion(widget.controller.value, name);
+    widget.controller.value = applyCompletion(
+      widget.controller.value,
+      _insertText(entry),
+    );
     widget.onChanged?.call(widget.controller.text);
   }
 
@@ -213,12 +239,12 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
                       SizedBox(
                         height: _kRowHeight,
                         child: InkWell(
-                          onTap: () => _insertCompletion(suggestions[i].name),
+                          onTap: () => _insertCompletion(suggestions[i]),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Align(
                               alignment: Alignment.centerLeft,
-                              child: Text(suggestions[i].name),
+                              child: Text(_displayName(suggestions[i])),
                             ),
                           ),
                         ),

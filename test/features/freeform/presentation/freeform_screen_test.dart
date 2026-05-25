@@ -1125,8 +1125,8 @@ void main() {
         await tester.pump();
       }
 
-      // Tap a completion suggestion (the "kilo" prefix entry).
-      final sugg = find.text('kilo').last;
+      // Tap a completion suggestion (the "kilo-" prefix entry).
+      final sugg = find.text('kilo-');
       expect(sugg, findsOneWidget);
       await tester.tap(sugg);
       for (var i = 0; i < 4; i++) {
@@ -1156,8 +1156,8 @@ void main() {
         await tester.pump();
       }
 
-      // Tap the "kilo" suggestion.
-      await tester.tap(find.text('kilo').last);
+      // Tap the "kilo-" prefix suggestion.
+      await tester.tap(find.text('kilo-'));
       // Allow debounce to fire.
       await tester.pump(const Duration(milliseconds: 600));
 

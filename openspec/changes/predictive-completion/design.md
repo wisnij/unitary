@@ -84,9 +84,18 @@ written scanner would duplicate it and risk divergence.
 A new `suggestCompletions(String prefix, {int limit = 50})` method on
 `UnitRepository` returns a ranked `List<CompletionEntry>` (value object: `name`,
 `isPrimaryId`, `entryKind` enum).  It iterates `_unitLookup`,
-`_prefixLookup`, and `_functionLookup`, filtering for keys that
-`startsWith(prefix.toLowerCase())` after lowercasing the key.  This avoids
-exposing the raw maps and keeps the ranking logic in one place.
+`_prefixLookup`, and `_functionLookup`, collecting entries whose lowercased name
+**contains** the lowercased query.  Results are placed into four ordered tiers:
+
+| Tier | Name starts with query? | Is primary ID? |
+|------|-------------------------|----------------|
+| 1    | Yes                     | Yes            |
+| 2    | Yes                     | No (alias)     |
+| 3    | No (infix match)        | Yes            |
+| 4    | No (infix match)        | No (alias)     |
+
+Each tier is sorted alphabetically (case-insensitive).  This avoids exposing
+the raw maps and keeps the ranking logic in one place.
 
 Returning up to 50 candidates at the domain layer (not the display cap of 8) so
 that the UI can scroll without repeatedly hitting the repo.

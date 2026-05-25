@@ -45,38 +45,145 @@ void main() {
       expect(lower, isNotEmpty);
     });
 
-    test('primary-ID matches appear before alias-only matches', () {
-      final results = repo.suggestCompletions('me');
-      final primaryIndices = results
-          .asMap()
-          .entries
-          .where((e) => e.value.isPrimaryId)
-          .map((e) => e.key)
-          .toList();
-      final aliasIndices = results
-          .asMap()
-          .entries
-          .where((e) => !e.value.isPrimaryId)
-          .map((e) => e.key)
-          .toList();
-      if (primaryIndices.isNotEmpty && aliasIndices.isNotEmpty) {
-        expect(primaryIndices.last, lessThan(aliasIndices.first));
+    // -------------------------------------------------------------------------
+    // Infix matching
+    // -------------------------------------------------------------------------
+
+    test(
+      'returns infix matches when name contains prefix but does not start with it',
+      () {
+        // 'ring' is contained in 'ringsize' (prefix match) and in unit names
+        // like 'euringsize' and 'jpringsize' (infix matches).
+        final names = repo
+            .suggestCompletions('ring')
+            .map((e) => e.name)
+            .toSet();
+        expect(names, contains('ringsize'));
+        expect(
+          names,
+          anyElement(
+            predicate<String>(
+              (n) => n.contains('ring') && !n.startsWith('ring'),
+            ),
+          ),
+        );
+      },
+    );
+
+    test('prefix matches appear before infix matches', () {
+      const q = 'ring';
+      final results = repo.suggestCompletions(q);
+
+      final lastPrefixIdx = results.lastIndexWhere(
+        (e) => e.name.toLowerCase().startsWith(q),
+      );
+      final firstInfixIdx = results.indexWhere(
+        (e) => !e.name.toLowerCase().startsWith(q),
+      );
+
+      if (lastPrefixIdx != -1 && firstInfixIdx != -1) {
+        expect(
+          lastPrefixIdx,
+          lessThan(firstInfixIdx),
+          reason: 'all prefix matches must appear before any infix match',
+        );
       }
     });
 
-    test('results within each group are sorted alphabetically', () {
-      final results = repo.suggestCompletions('kil');
-      final primaryNames = results
-          .where((e) => e.isPrimaryId)
-          .map((e) => e.name.toLowerCase())
-          .toList();
-      final aliasNames = results
-          .where((e) => !e.isPrimaryId)
-          .map((e) => e.name.toLowerCase())
-          .toList();
-      expect(primaryNames, equals([...primaryNames]..sort()));
-      expect(aliasNames, equals([...aliasNames]..sort()));
-    });
+    // -------------------------------------------------------------------------
+    // Ranking within tiers
+    // -------------------------------------------------------------------------
+
+    test(
+      'within prefix matches, primary-ID entries appear before alias-only entries',
+      () {
+        const q = 'me';
+        final results = repo.suggestCompletions(q);
+        final prefixResults = results
+            .where((e) => e.name.toLowerCase().startsWith(q))
+            .toList();
+
+        final primaryIndices = prefixResults
+            .asMap()
+            .entries
+            .where((e) => e.value.isPrimaryId)
+            .map((e) => e.key)
+            .toList();
+        final aliasIndices = prefixResults
+            .asMap()
+            .entries
+            .where((e) => !e.value.isPrimaryId)
+            .map((e) => e.key)
+            .toList();
+
+        if (primaryIndices.isNotEmpty && aliasIndices.isNotEmpty) {
+          expect(primaryIndices.last, lessThan(aliasIndices.first));
+        }
+      },
+    );
+
+    test(
+      'within infix matches, primary-ID entries appear before alias-only entries',
+      () {
+        // Use a query that is guaranteed to produce infix results.
+        const q = 'ring';
+        final results = repo.suggestCompletions(q);
+        final infixResults = results
+            .where((e) => !e.name.toLowerCase().startsWith(q))
+            .toList();
+
+        final primaryIndices = infixResults
+            .asMap()
+            .entries
+            .where((e) => e.value.isPrimaryId)
+            .map((e) => e.key)
+            .toList();
+        final aliasIndices = infixResults
+            .asMap()
+            .entries
+            .where((e) => !e.value.isPrimaryId)
+            .map((e) => e.key)
+            .toList();
+
+        if (primaryIndices.isNotEmpty && aliasIndices.isNotEmpty) {
+          expect(primaryIndices.last, lessThan(aliasIndices.first));
+        }
+      },
+    );
+
+    test(
+      'results within each of the four groups are sorted alphabetically',
+      () {
+        const q = 'ring';
+        final results = repo.suggestCompletions(q);
+
+        List<String> names(bool isPrefix, bool isPrimary) => results
+            .where(
+              (e) =>
+                  e.name.toLowerCase().startsWith(q) == isPrefix &&
+                  e.isPrimaryId == isPrimary,
+            )
+            .map((e) => e.name.toLowerCase())
+            .toList();
+
+        for (final group in [
+          names(true, true), // prefix primary
+          names(true, false), // prefix alias
+          names(false, true), // infix primary
+          names(false, false), // infix alias
+        ]) {
+          expect(
+            group,
+            equals([...group]..sort()),
+            reason: 'group should be alphabetically sorted',
+          );
+        }
+      },
+    );
+
+    // -------------------------------------------------------------------------
+    // Entry kinds
+    // -------------------------------------------------------------------------
 
     test('unit primary ID entry has kind == unit', () {
       // "kg" is the primary ID for the SI kilogram base unit.

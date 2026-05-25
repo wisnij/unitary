@@ -560,14 +560,18 @@ class UnitRepository {
     return results;
   }
 
-  /// Returns a ranked list of identifier completions whose name starts with
-  /// [prefix] (case-insensitive), drawn from all registered units, prefixes,
-  /// and functions.
+  /// Returns a ranked list of identifier completions that contain [prefix]
+  /// (case-insensitive), drawn from all registered units, prefixes, and
+  /// functions.
   ///
-  /// Results are ordered with primary-ID matches before alias-only matches;
-  /// within each group entries are sorted alphabetically (case-insensitive) by
-  /// matched name.  Returns an empty list when [prefix] is empty.  At most
-  /// [limit] entries are returned.
+  /// Results are ordered in four tiers:
+  /// 1. Prefix matches (name starts with [prefix]) — primary IDs first,
+  ///    then aliases, each group sorted alphabetically.
+  /// 2. Infix matches (name contains [prefix] but does not start with it) —
+  ///    same primary-before-alias, alphabetical-within-group ordering.
+  ///
+  /// Returns an empty list when [prefix] is empty.  At most [limit] entries
+  /// are returned.
   List<CompletionEntry> suggestCompletions(
     String prefix, {
     int limit = 50,
@@ -577,46 +581,44 @@ class UnitRepository {
     }
     final lower = prefix.toLowerCase();
 
-    final primary = <CompletionEntry>[];
-    final alias = <CompletionEntry>[];
+    final prefixPrimary = <CompletionEntry>[];
+    final prefixAlias = <CompletionEntry>[];
+    final infixPrimary = <CompletionEntry>[];
+    final infixAlias = <CompletionEntry>[];
 
-    void addIfMatches(
-      String name,
-      bool isPrimary,
-      CompletionEntryKind kind,
-    ) {
-      if (name.toLowerCase().startsWith(lower)) {
-        final entry = CompletionEntry(
-          name: name,
-          isPrimaryId: isPrimary,
-          entryKind: kind,
-        );
-        if (isPrimary) {
-          primary.add(entry);
-        } else {
-          alias.add(entry);
-        }
+    void addEntry(String name, bool isPrimary, CompletionEntryKind kind) {
+      final nameLower = name.toLowerCase();
+      if (!nameLower.contains(lower)) {
+        return;
+      }
+      final entry = CompletionEntry(
+        name: name,
+        isPrimaryId: isPrimary,
+        entryKind: kind,
+      );
+      if (nameLower.startsWith(lower)) {
+        (isPrimary ? prefixPrimary : prefixAlias).add(entry);
+      } else {
+        (isPrimary ? infixPrimary : infixAlias).add(entry);
       }
     }
 
     for (final entry in _unitLookup.entries) {
-      addIfMatches(
+      addEntry(
         entry.key,
         entry.value.id == entry.key,
         CompletionEntryKind.unit,
       );
     }
-
     for (final entry in _prefixLookup.entries) {
-      addIfMatches(
+      addEntry(
         entry.key,
         entry.value.id == entry.key,
         CompletionEntryKind.prefix,
       );
     }
-
     for (final entry in _functionLookup.entries) {
-      addIfMatches(
+      addEntry(
         entry.key,
         entry.value.id == entry.key,
         CompletionEntryKind.function,
@@ -626,10 +628,17 @@ class UnitRepository {
     int cmp(CompletionEntry a, CompletionEntry b) =>
         a.name.toLowerCase().compareTo(b.name.toLowerCase());
 
-    primary.sort(cmp);
-    alias.sort(cmp);
+    prefixPrimary.sort(cmp);
+    prefixAlias.sort(cmp);
+    infixPrimary.sort(cmp);
+    infixAlias.sort(cmp);
 
-    final result = [...primary, ...alias];
+    final result = [
+      ...prefixPrimary,
+      ...prefixAlias,
+      ...infixPrimary,
+      ...infixAlias,
+    ];
     return result.length <= limit ? result : result.sublist(0, limit);
   }
 }

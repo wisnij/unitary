@@ -451,3 +451,9 @@ Questions that arose during design but haven't been resolved:
     - Function — displayed and inserted with a trailing `(` (e.g. `tempC(`) matching call-site convention
   - **Web tap fix**: on web the browser fires `focusout` on the text field at pointer-down, which hides the overlay before `onTap` fires; fixed with `onTapDown` on web and `onTap` on mobile (where `onTapDown` would interfere with scroll gestures); `kIsWeb` branch in `_buildSuggestions`
   - **Focus restoration**: `_insertCompletion` calls `focusNode.requestFocus()` after insertion (matching the operator key panel's `_insertSymbol`); a post-frame callback re-applies the cursor position because web's `requestFocus` can trigger a browser select-all
+- *Infix completion matching (May 2026)*
+  - 1692 tests passing (4 new)
+  - `suggestCompletions` now uses `contains` rather than `startsWith` for matching, returning entries where the query appears anywhere in the name
+  - Results are placed into four ordered tiers: prefix-primary (starts with, primary ID), prefix-alias (starts with, alias), infix-primary (contains but not starts with, primary ID), infix-alias (contains but not starts with, alias); each tier is sorted alphabetically
+  - Updated spec.md Suggestion computation requirement and design.md §3 to document the four-tier ranking and infix matching
+  - Updated `test/core/domain/models/unit_repository_suggest_test.dart` with new infix-specific tests (`ring` → `ringsize` before `euringsize`/`jpringsize`, prefix before infix ordering, four-group alpha sort, within-infix primary-before-alias)

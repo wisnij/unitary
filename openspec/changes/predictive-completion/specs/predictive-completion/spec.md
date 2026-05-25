@@ -45,15 +45,25 @@ noise.  If the expression cannot be lexed at all, no token is detected.
 The system SHALL compute a ranked list of identifier completions for a given
 prefix string by searching the unit repository.  Candidates are drawn from unit
 primary IDs and aliases, function primary IDs and aliases, and named prefix
-primary IDs and aliases.  Matching is case-insensitive prefix matching (the
-candidate name starts with the query prefix).  Results SHALL be ranked with
-primary-ID matches before alias-only matches; within each group, candidates are
-sorted alphabetically (case-insensitive) by matched name.
+primary IDs and aliases.  Matching is case-insensitive: a candidate matches when
+its name **contains** the query as a substring (case-insensitive).  Results SHALL
+be returned in four ordered tiers:
+
+1. **Prefix-primary**: candidates whose name starts with the query AND is a primary ID
+2. **Prefix-alias**: candidates whose name starts with the query AND is an alias only
+3. **Infix-primary**: candidates whose name contains (but does not start with) the query AND is a primary ID
+4. **Infix-alias**: candidates whose name contains (but does not start with) the query AND is an alias only
+
+Within each tier, candidates are sorted alphabetically (case-insensitive) by matched name.
 
 #### Scenario: Prefix matches primary IDs and aliases
 - **WHEN** `suggestCompletions("kil")` is called
-- **THEN** the result includes `"kilo"` (a prefix primary ID) in the primary-ID group, and `"kilogram"` (a unit alias for `kg`) in the alias group after it
+- **THEN** the result includes `"kilo"` (a prefix primary ID) in tier 1, and `"kilogram"` (a unit alias for `kg`) in tier 2 after it
 - **NOTE** `"kilometer"` is not a registered unit primary ID — it is synthesised at lookup time from the prefix `kilo` and unit `m` and does not appear in `_unitLookup`
+
+#### Scenario: Infix matches appear after prefix matches
+- **WHEN** `suggestCompletions("ring")` is called
+- **THEN** the result includes `"ringsize"` (tier 1, starts with `"ring"`) before `"euringsize"` and `"jpringsize"` (tier 3 or 4, contains `"ring"` but does not start with it)
 
 #### Scenario: Case-insensitive matching
 - **WHEN** `suggestCompletions("KM")` is called

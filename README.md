@@ -20,17 +20,18 @@ Project Status
 **Current Phase:** Predictive Completion\
 **Last Updated:** May 24, 2026
 
-Phases 0-7 are complete with 1688 passing tests.  The expression parser,
+Phases 0-7 are complete with 1692 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
 unit database, worksheet mode, unit browser, cross-session data persistence,
 freeform conversion history, and predictive completion are fully implemented.
 Worksheet state and freeform history are saved to SharedPreferences and restored
 on every app launch.  Both freeform expression fields now show inline unit/
 function/prefix suggestions as the user types.  The suggestion overlay is
-scrollable (8 rows visible, up to 50 entries), shrinks to fit its content, and
-uses kind-specific formatting: units insert with a trailing space, prefixes
-display with a trailing dash (not inserted), and functions display and insert
-with a trailing open parenthesis.
+scrollable (8 rows visible, up to 50 entries), shrinks to fit its content,
+uses kind-specific formatting (units insert with a trailing space, prefixes
+display with a trailing dash (not inserted), functions display and insert with a
+trailing open parenthesis), and returns both prefix and infix matches (with
+prefix matches ranked first).
 
 ---
 
@@ -218,7 +219,7 @@ Current Progress
 - ✅ **Phase 7: Browse Mode** — full-catalog browser with alphabetical and dimension-grouped views, collapsible groups, search bar, human-readable dimension labels, and detail pages (1436 tests)
 - ✅ **User Data Persistence** — worksheet state (active template + per-template source values) persisted via SharedPreferences and restored on launch; freeform fields always start blank (1583 tests)
 - ✅ **Freeform History** — persistent history of successful freeform conversions; deduplicated, capped at 100 entries; tapping an entry restores both fields and re-evaluates (1619 tests)
-- ✅ **Predictive Completion** — inline unit/function/prefix suggestions in both freeform expression fields; lexer-based token detection; ranked by primary ID then alias; tap-to-insert replaces the partial token; kind-specific display and insertion (unit +space, prefix +dash display only, function +open-paren); overlay scrollable up to 50 entries with 8 rows visible; shrinks to content width; web-safe tap handling (1688 tests)
+- ✅ **Predictive Completion** — inline unit/function/prefix suggestions in both freeform expression fields; lexer-based token detection; four-tier ranking (prefix-primary, prefix-alias, infix-primary, infix-alias); tap-to-insert replaces the partial token; kind-specific display and insertion (unit +space, prefix +dash display only, function +open-paren); overlay scrollable up to 50 entries with 8 rows visible; shrinks to content width; web-safe tap handling (1692 tests)
 
 ### Design (ready for implementation)
 

@@ -140,6 +140,14 @@ void main() {
     // -------------------------------------------------------------------------
     // Display labels
     // -------------------------------------------------------------------------
+    //
+    // Note: the "overlay appears above the field when near the bottom of the
+    // viewport" behaviour (_showAbove) reads RenderBox.localToGlobal at
+    // post-frame time and compares it against MediaQuery screen height.
+    // Standard widget tests run in a fixed 800×600 viewport where the field
+    // is always in the upper half, so this code path is exercised only by
+    // manual device testing or a golden/integration test with a constrained
+    // viewport.  The positioning logic lives in _CompletionFieldState._updateAbove.
 
     testWidgets('unit suggestions are displayed without a suffix', (
       tester,
@@ -320,6 +328,66 @@ void main() {
       // The inserted text includes the open parenthesis.
       expect(controller.text, equals('tempC('));
       expect(changedText, equals('tempC('));
+    });
+
+    testWidgets('overlay dismissed when token is deleted', (tester) async {
+      await tester.pumpWidget(
+        _wrap(_buildField(controller: controller, focusNode: focusNode)),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      // Set a matching token so the overlay appears.
+      controller.value = const TextEditingValue(
+        text: 'kg',
+        selection: TextSelection.collapsed(offset: 2),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      // Overlay visible — 'kg' appears at least twice (field + suggestion row).
+      expect(find.text('kg'), findsWidgets);
+
+      // Clear the field (delete all characters).
+      controller.value = const TextEditingValue(
+        text: '',
+        selection: TextSelection.collapsed(offset: 0),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+      // Overlay dismissed — no suggestion text visible.
+      expect(find.text('kg'), findsNothing);
+    });
+
+    testWidgets('at most 8 suggestion rows are visible without scrolling', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(_buildField(controller: controller, focusNode: focusNode)),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      // 'me' matches a large number of entries (meter, mega, mebibyte, …).
+      controller.value = const TextEditingValue(
+        text: 'me',
+        selection: TextSelection.collapsed(offset: 2),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // The overlay must be scrollable (more than 8 matches exist).
+      expect(find.byType(SingleChildScrollView), findsOneWidget);
+
+      // The visible height must be exactly 8 rows tall.
+      final scrollBox = tester.renderObject<RenderBox>(
+        find.byType(SingleChildScrollView),
+      );
+      expect(scrollBox.size.height, equals(8 * 48.0)); // 8 × _kRowHeight
     });
 
     testWidgets('overlay dismissed after suggestion tap', (tester) async {

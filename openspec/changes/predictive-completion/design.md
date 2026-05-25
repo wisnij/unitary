@@ -85,17 +85,16 @@ A new `suggestCompletions(String prefix, {int limit = 50})` method on
 `UnitRepository` returns a ranked `List<CompletionEntry>` (value object: `name`,
 `isPrimaryId`, `entryKind` enum).  It iterates `_unitLookup`,
 `_prefixLookup`, and `_functionLookup`, collecting entries whose lowercased name
-**contains** the lowercased query.  Results are placed into four ordered tiers:
+**contains** the lowercased query.  Results are placed into two ordered tiers,
+each sorted alphabetically (case-insensitive); primary IDs and aliases are
+interleaved within each tier:
 
-| Tier | Name starts with query? | Is primary ID? |
-|------|-------------------------|----------------|
-| 1    | Yes                     | Yes            |
-| 2    | Yes                     | No (alias)     |
-| 3    | No (infix match)        | Yes            |
-| 4    | No (infix match)        | No (alias)     |
+| Tier | Condition |
+|------|-----------|
+| 1 — Prefix matches | Name starts with the query |
+| 2 — Infix matches  | Name contains (but does not start with) the query |
 
-Each tier is sorted alphabetically (case-insensitive).  This avoids exposing
-the raw maps and keeps the ranking logic in one place.
+This avoids exposing the raw maps and keeps the ranking logic in one place.
 
 Returning up to 50 candidates at the domain layer (not the display cap of 8) so
 that the UI can scroll without repeatedly hitting the repo.

@@ -581,10 +581,8 @@ class UnitRepository {
     }
     final lower = prefix.toLowerCase();
 
-    final prefixPrimary = <CompletionEntry>[];
-    final prefixAlias = <CompletionEntry>[];
-    final infixPrimary = <CompletionEntry>[];
-    final infixAlias = <CompletionEntry>[];
+    final prefixMatches = <CompletionEntry>[];
+    final infixMatches = <CompletionEntry>[];
 
     void addEntry(String name, bool isPrimary, CompletionEntryKind kind) {
       final nameLower = name.toLowerCase();
@@ -597,9 +595,9 @@ class UnitRepository {
         entryKind: kind,
       );
       if (nameLower.startsWith(lower)) {
-        (isPrimary ? prefixPrimary : prefixAlias).add(entry);
+        prefixMatches.add(entry);
       } else {
-        (isPrimary ? infixPrimary : infixAlias).add(entry);
+        infixMatches.add(entry);
       }
     }
 
@@ -628,17 +626,10 @@ class UnitRepository {
     int cmp(CompletionEntry a, CompletionEntry b) =>
         a.name.toLowerCase().compareTo(b.name.toLowerCase());
 
-    prefixPrimary.sort(cmp);
-    prefixAlias.sort(cmp);
-    infixPrimary.sort(cmp);
-    infixAlias.sort(cmp);
+    prefixMatches.sort(cmp);
+    infixMatches.sort(cmp);
 
-    final result = [
-      ...prefixPrimary,
-      ...prefixAlias,
-      ...infixPrimary,
-      ...infixAlias,
-    ];
+    final result = [...prefixMatches, ...infixMatches];
     return result.length <= limit ? result : result.sublist(0, limit);
   }
 }

@@ -94,92 +94,33 @@ void main() {
     // Ranking within tiers
     // -------------------------------------------------------------------------
 
-    test(
-      'within prefix matches, primary-ID entries appear before alias-only entries',
-      () {
-        const q = 'me';
-        final results = repo.suggestCompletions(q);
-        final prefixResults = results
-            .where((e) => e.name.toLowerCase().startsWith(q))
-            .toList();
+    test('prefix matches are sorted alphabetically', () {
+      const q = 'ring';
+      final results = repo.suggestCompletions(q);
+      final names = results
+          .where((e) => e.name.toLowerCase().startsWith(q))
+          .map((e) => e.name.toLowerCase())
+          .toList();
+      expect(
+        names,
+        equals([...names]..sort()),
+        reason: 'prefix matches should be alphabetically sorted',
+      );
+    });
 
-        final primaryIndices = prefixResults
-            .asMap()
-            .entries
-            .where((e) => e.value.isPrimaryId)
-            .map((e) => e.key)
-            .toList();
-        final aliasIndices = prefixResults
-            .asMap()
-            .entries
-            .where((e) => !e.value.isPrimaryId)
-            .map((e) => e.key)
-            .toList();
-
-        if (primaryIndices.isNotEmpty && aliasIndices.isNotEmpty) {
-          expect(primaryIndices.last, lessThan(aliasIndices.first));
-        }
-      },
-    );
-
-    test(
-      'within infix matches, primary-ID entries appear before alias-only entries',
-      () {
-        // Use a query that is guaranteed to produce infix results.
-        const q = 'ring';
-        final results = repo.suggestCompletions(q);
-        final infixResults = results
-            .where((e) => !e.name.toLowerCase().startsWith(q))
-            .toList();
-
-        final primaryIndices = infixResults
-            .asMap()
-            .entries
-            .where((e) => e.value.isPrimaryId)
-            .map((e) => e.key)
-            .toList();
-        final aliasIndices = infixResults
-            .asMap()
-            .entries
-            .where((e) => !e.value.isPrimaryId)
-            .map((e) => e.key)
-            .toList();
-
-        if (primaryIndices.isNotEmpty && aliasIndices.isNotEmpty) {
-          expect(primaryIndices.last, lessThan(aliasIndices.first));
-        }
-      },
-    );
-
-    test(
-      'results within each of the four groups are sorted alphabetically',
-      () {
-        const q = 'ring';
-        final results = repo.suggestCompletions(q);
-
-        List<String> names(bool isPrefix, bool isPrimary) => results
-            .where(
-              (e) =>
-                  e.name.toLowerCase().startsWith(q) == isPrefix &&
-                  e.isPrimaryId == isPrimary,
-            )
-            .map((e) => e.name.toLowerCase())
-            .toList();
-
-        for (final group in [
-          names(true, true), // prefix primary
-          names(true, false), // prefix alias
-          names(false, true), // infix primary
-          names(false, false), // infix alias
-        ]) {
-          expect(
-            group,
-            equals([...group]..sort()),
-            reason: 'group should be alphabetically sorted',
-          );
-        }
-      },
-    );
+    test('infix matches are sorted alphabetically', () {
+      const q = 'ring';
+      final results = repo.suggestCompletions(q);
+      final names = results
+          .where((e) => !e.name.toLowerCase().startsWith(q))
+          .map((e) => e.name.toLowerCase())
+          .toList();
+      expect(
+        names,
+        equals([...names]..sort()),
+        reason: 'infix matches should be alphabetically sorted',
+      );
+    });
 
     // -------------------------------------------------------------------------
     // Entry kinds

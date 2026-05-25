@@ -323,6 +323,9 @@ void main() {
     });
 
     testWidgets('overlay dismissed after suggestion tap', (tester) async {
+      // Use a function token: 'tempC(' inserts to 'tempC(', leaving the cursor
+      // after the '(' which is not an identifier character, so no suggestions
+      // are produced after insertion and the overlay stays closed.
       await tester.pumpWidget(
         _wrap(_buildField(controller: controller, focusNode: focusNode)),
       );
@@ -331,22 +334,24 @@ void main() {
       await tester.pump();
 
       controller.value = const TextEditingValue(
-        text: 'kilo',
-        selection: TextSelection.collapsed(offset: 4),
+        text: 'tempC',
+        selection: TextSelection.collapsed(offset: 5),
       );
       await tester.pump();
       await tester.pump();
       await tester.pump();
 
-      // Tap the 'kilo-' overlay row (the prefix entry).
-      await tester.tap(find.text('kilo-'));
+      // Overlay visible with 'tempC(' entry.
+      expect(find.text('tempC('), findsWidgets);
+
+      // Tap the 'tempC(' suggestion.
+      await tester.tap(find.text('tempC(').first);
       await tester.pump();
       await tester.pump();
       await tester.pump();
 
-      // After tap the overlay is hidden; 'kilo' appears only in the text field.
-      expect(find.text('kilo'), findsOneWidget);
-      expect(find.text('kilo-'), findsNothing);
+      // After tap the overlay is gone; 'tempC(' appears exactly once (text field).
+      expect(find.text('tempC('), findsOneWidget);
     });
   });
 }

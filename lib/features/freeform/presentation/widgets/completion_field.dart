@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -184,10 +185,20 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
 
   void _insertCompletion(CompletionEntry entry) {
     _overlayController.hide();
-    widget.controller.value = applyCompletion(
+    final newValue = applyCompletion(
       widget.controller.value,
       _insertText(entry),
     );
+    widget.controller.value = newValue;
+    // Restore focus to the text field, matching the behaviour of the operator
+    // key panel.  On web, requestFocus() can cause the browser to select all
+    // text, so re-apply the correct cursor position in the next frame.
+    widget.focusNode.requestFocus();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        widget.controller.selection = newValue.selection;
+      }
+    });
     widget.onChanged?.call(widget.controller.text);
   }
 
@@ -239,7 +250,20 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
                       SizedBox(
                         height: _kRowHeight,
                         child: InkWell(
-                          onTap: () => _insertCompletion(suggestions[i]),
+                          // On web, onTap fires after the browser focusout
+                          // event removes focus from the text field, which
+                          // hides the overlay before the tap is delivered.
+                          // onTapDown fires at pointer-down, before focusout,
+                          // so it works on both platforms.
+                          // On mobile, onTapDown interferes with scrolling
+                          // (a scroll drag starts with pointer-down), so we
+                          // use onTap instead and keep onTapDown null.
+                          onTapDown: kIsWeb
+                              ? (_) => _insertCompletion(suggestions[i])
+                              : null,
+                          onTap: kIsWeb
+                              ? () {} // non-null keeps InkWell press effects
+                              : () => _insertCompletion(suggestions[i]),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             child: Align(

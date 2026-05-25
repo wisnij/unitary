@@ -16,6 +16,7 @@ import '../state/freeform_history_provider.dart';
 import '../state/freeform_provider.dart';
 import '../state/freeform_state.dart';
 import '../state/parser_provider.dart';
+import 'widgets/completion_field.dart';
 import 'widgets/result_display.dart';
 
 /// Freeform expression evaluation screen.
@@ -268,7 +269,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  TextField(
+                  CompletionField(
                     controller: _inputController,
                     focusNode: _inputFocus,
                     decoration: InputDecoration(
@@ -293,7 +294,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                       ),
                     ],
                   ),
-                  TextField(
+                  CompletionField(
                     controller: _outputController,
                     focusNode: _outputFocus,
                     decoration: const InputDecoration(

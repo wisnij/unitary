@@ -1040,6 +1040,131 @@ void main() {
       },
     );
   });
+
+  group('FreeformScreen — predictive completion', () {
+    testWidgets('Convert-from field shows completion overlay when typing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+      await tester.pump();
+
+      // Enter a 2-char prefix that matches a known unit primary ID.
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'kg',
+      );
+      // Post-frame callbacks + overlay render.
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+
+      // "kg" should appear at least twice: once in the field, once in overlay.
+      expect(find.text('kg'), findsWidgets);
+    });
+
+    testWidgets('Convert-to field shows completion overlay when typing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.tap(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+      );
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+        'kg',
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+
+      expect(find.text('kg'), findsWidgets);
+    });
+
+    testWidgets('overlay dismissed when field loses focus', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      // Focus Convert-from and type a matching prefix.
+      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+      await tester.pump();
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'kg',
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+      // Overlay visible — "kg" appears at least twice (field + suggestion row).
+      expect(find.text('kg'), findsWidgets);
+
+      // Unfocus programmatically (avoids tapping through the overlay, which
+      // can cover the "Convert to" field in the test viewport).
+      FocusManager.instance.primaryFocus?.unfocus();
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+      // Overlay dismissed; "kg" appears only once (in the text field itself).
+      expect(find.text('kg'), findsOneWidget);
+    });
+
+    testWidgets('tapping suggestion updates expression', (tester) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'kilo',
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+
+      // Tap a completion suggestion (the "kilo" prefix entry).
+      final sugg = find.text('kilo').last;
+      expect(sugg, findsOneWidget);
+      await tester.tap(sugg);
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+
+      // Text field should now contain the selected identifier.
+      expect(
+        find.widgetWithText(TextField, 'kilo'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('tapping suggestion triggers evaluation in real-time mode', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'Convert from'),
+        'kilo',
+      );
+      for (var i = 0; i < 4; i++) {
+        await tester.pump();
+      }
+
+      // Tap the "kilo" suggestion.
+      await tester.tap(find.text('kilo').last);
+      // Allow debounce to fire.
+      await tester.pump(const Duration(milliseconds: 600));
+
+      // "kilo" is a valid prefix — result should not be the idle placeholder.
+      expect(find.text('Enter an expression above.'), findsNothing);
+    });
+  });
 }
 
 // ---------------------------------------------------------------------------

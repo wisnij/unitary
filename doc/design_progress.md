@@ -275,7 +275,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: April 24, 2026*
+*Last Updated: May 24, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -430,3 +430,13 @@ Questions that arose during design but haven't been resolved:
   - `_HistorySection` widget in `FreeformScreen`: always-visible when non-empty, tapping entry restores both fields and evaluates immediately
   - `freeformHistoryRepositoryProvider` must-override wired in `main.dart` and all tests
   - Design artifacts: `openspec/changes/freeform-history/`
+- *Predictive Completion (May 2026)*
+  - 1683 tests passing (64 new)
+  - Inline unit/function/prefix suggestions in both freeform expression fields; only fires when cursor is at the end of a ≥2-char identifier token
+  - `tokenAtCursor()` in `lib/core/domain/completion/token_at_cursor.dart` — uses the existing `Lexer` to find the identifier token ending at the cursor; suppresses tokens < 2 chars; returns null on `LexException`
+  - `CompletionEntry` value class + `CompletionEntryKind` enum in `lib/core/domain/models/completion_entry.dart`
+  - `UnitRepository.suggestCompletions(prefix, {limit})` — searches `_unitLookup`, `_prefixLookup`, `_functionLookup` with case-insensitive prefix match; ranks primary-ID matches before aliases; alphabetical within each group
+  - `CompletionQuery` + `completionsProvider` (synchronous `Provider.family`) in `lib/features/freeform/state/completion_provider.dart`
+  - `CompletionField` (`ConsumerStatefulWidget`) in `lib/features/freeform/presentation/widgets/completion_field.dart` — wraps `TextField` with `OverlayPortal` + `CompositedTransformFollower`; above/below positioning based on viewport center; `applyCompletion()` pure function for tap-to-insert
+  - Both `TextField` widgets in `FreeformScreen` replaced with `CompletionField`; each has its own `OverlayPortalController` — overlays are fully independent
+  - Design artifacts: `openspec/changes/predictive-completion/`

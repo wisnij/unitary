@@ -313,6 +313,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                             setState(() {});
                             _cancelDebounce();
                             _evaluate();
+                            FocusScope.of(context).unfocus();
                           }
                         : null,
                   ),

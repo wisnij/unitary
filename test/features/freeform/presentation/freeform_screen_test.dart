@@ -1041,6 +1041,86 @@ void main() {
     );
   });
 
+  group('FreeformScreen — idle example focus dismissal', () {
+    // Helper: finds the "Try: <example>" text in the idle result area.
+    Finder findIdleExample() => find.textContaining('Try:');
+
+    // After unfocus(), Flutter returns focus to the nearest ancestor
+    // FocusScopeNode (e.g., the Navigator scope) rather than null.
+    // "No text field focused" means primaryFocus is null or a FocusScopeNode.
+    bool noTextFieldFocused() {
+      final focus = FocusManager.instance.primaryFocus;
+      return focus == null || focus is FocusScopeNode;
+    }
+
+    testWidgets(
+      'tapping idle example leaves no text field focused when no prior focus',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // Verify idle display is visible with no prior focus.
+        expect(findIdleExample(), findsOneWidget);
+
+        await tester.tap(findIdleExample());
+        await tester.pump();
+
+        expect(noTextFieldFocused(), isTrue);
+      },
+    );
+
+    testWidgets(
+      'tapping idle example dismisses focus when Convert-from was focused',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // Focus the Convert-from field without typing (state stays idle).
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
+        await tester.pump();
+        expect(findIdleExample(), findsOneWidget);
+        // A text field is now focused.
+        expect(FocusManager.instance.primaryFocus, isNotNull);
+        expect(
+          FocusManager.instance.primaryFocus,
+          isNot(isA<FocusScopeNode>()),
+        );
+
+        await tester.tap(findIdleExample());
+        await tester.pump();
+
+        expect(noTextFieldFocused(), isTrue);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+
+    testWidgets(
+      'tapping idle example dismisses focus when Convert-to was focused',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // Focus the Convert-to field without typing (state stays idle).
+        await tester.tap(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+        );
+        await tester.pump();
+        await tester.pump();
+        expect(findIdleExample(), findsOneWidget);
+        // A text field is now focused.
+        expect(FocusManager.instance.primaryFocus, isNotNull);
+        expect(
+          FocusManager.instance.primaryFocus,
+          isNot(isA<FocusScopeNode>()),
+        );
+
+        await tester.tap(findIdleExample());
+        await tester.pump();
+
+        expect(noTextFieldFocused(), isTrue);
+      },
+      variant: TargetPlatformVariant.only(TargetPlatform.android),
+    );
+  });
+
   group('FreeformScreen — predictive completion', () {
     testWidgets('Convert-from field shows completion overlay when typing', (
       tester,

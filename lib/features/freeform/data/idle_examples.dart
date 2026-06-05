@@ -42,6 +42,7 @@ const List<FreeformExample> idleExamples = [
   FreeformExample(
     // area of a football field
     inputExpression: '100 yd * 160 ft',
+    outputExpression: 'acre',
   ),
   FreeformExample(
     // standard atmospheric pressure at sea level
@@ -62,6 +63,7 @@ const List<FreeformExample> idleExamples = [
   FreeformExample(
     // Sir Isaac Newton is the deadliest son of a bitch in space
     inputExpression: '1|2 20kg (1.3% c)^2',
+    outputExpression: 'kiloton tnt',
   ),
   FreeformExample(
     // a carton of milk, in metric
@@ -76,6 +78,7 @@ const List<FreeformExample> idleExamples = [
   FreeformExample(
     // average household daily energy usage
     inputExpression: '30 kWh',
+    outputExpression: 'btu',
   ),
   FreeformExample(
     // maximum size of a 32-bit address space
@@ -89,14 +92,17 @@ const List<FreeformExample> idleExamples = [
   FreeformExample(
     // 5K run distance
     inputExpression: '5 km',
+    outputExpression: 'miles',
   ),
   FreeformExample(
     // a common speed limit
     inputExpression: '60 mph',
+    outputExpression: 'kph',
   ),
   FreeformExample(
     // force of gravity on an average human
     inputExpression: '9.8 m/s^2 * 62 kg',
+    outputExpression: 'N',
   ),
   FreeformExample(
     // size of a cube containing all the gold in the world
@@ -121,10 +127,12 @@ const List<FreeformExample> idleExamples = [
   FreeformExample(
     // time to travel one AU at 1g constant acceleration
     inputExpression: 'sqrt(2 au / gravity)',
+    outputExpression: 'days',
   ),
   FreeformExample(
     // orbital speed of the Moon
     inputExpression: 'sqrt(G earthmass/moondist)',
+    outputExpression: 'km/s',
   ),
   FreeformExample(
     // average human body temperature

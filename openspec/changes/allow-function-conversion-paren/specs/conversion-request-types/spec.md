@@ -52,7 +52,7 @@ all inputs are delegated to `parseExpression()`.
 
 - **WHEN** `parseQuery("km(")` is called with a repository where `km` is a
   unit but not a function
-- **THEN** the result is an `ExpressionNode` (parse error from `parseExpression`)
+- **THEN** a `ParseException` is thrown
 
 #### Scenario: parseQuery returns DefinitionRequestNode for a bare unit name
 

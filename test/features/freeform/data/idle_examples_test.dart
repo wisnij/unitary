@@ -20,9 +20,9 @@ void main() {
       final failures = <String>[];
       for (final example in idleExamples) {
         try {
-          parser.evaluate(example);
+          parser.evaluate(example.inputExpression);
         } catch (e) {
-          failures.add('$example: $e');
+          failures.add('${example.inputExpression}: $e');
         }
       }
       expect(failures, isEmpty, reason: 'Failing examples: $failures');

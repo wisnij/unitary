@@ -41,7 +41,7 @@ void main() {
     test('initial state has a non-null, non-empty example', () {
       final state = container.read(freeformProvider) as EvaluationIdle;
       expect(state.example, isNotNull);
-      expect(state.example, isNotEmpty);
+      expect(state.example!.inputExpression, isNotEmpty);
     });
 
     test('example changes when returning to idle after evaluation', () {

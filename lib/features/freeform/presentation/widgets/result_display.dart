@@ -34,7 +34,9 @@ class ResultDisplay extends StatelessWidget {
             if (example != null) ...[
               const SizedBox(height: 4),
               Text(
-                'Try: $example',
+                example.outputExpression != null
+                    ? 'Try: ${example.inputExpression} → ${example.outputExpression}'
+                    : 'Try: ${example.inputExpression}',
                 style: TextStyle(
                   color: colorScheme.onSurfaceVariant,
                   fontSize: 16,

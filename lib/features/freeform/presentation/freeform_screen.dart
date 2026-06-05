@@ -309,7 +309,11 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                     result: result,
                     onTap: result is EvaluationIdle && result.example != null
                         ? () {
-                            _inputController.text = result.example!;
+                            final ex = result.example!;
+                            _inputController.text = ex.inputExpression;
+                            if (ex.outputExpression != null) {
+                              _outputController.text = ex.outputExpression!;
+                            }
                             setState(() {});
                             _cancelDebounce();
                             _evaluate();

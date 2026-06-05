@@ -50,14 +50,14 @@ class Parser {
   }
 
   /// Parses the token list, returning a [FunctionNameNode] when the tokens
-  /// represent a bare known-function name (optionally preceded by `~`);
-  /// otherwise delegates to [parseExpression].
+  /// represent a bare known-function name (optionally preceded by `~` and/or
+  /// followed by `(`); otherwise delegates to [parseExpression].
   ///
   /// If no repository is present, all inputs are delegated to
   /// [parseExpression].
   ///
   /// ```
-  /// query = INVERSE? FUNCTION_NAME / expression
+  /// query = INVERSE? FUNCTION_NAME LPAR? / expression
   /// ```
   ASTNode parseQuery() {
     if (_repo != null) {

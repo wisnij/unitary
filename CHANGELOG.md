@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Allow an open paren after function names when doing function lookups or conversions
 - Add output expressions to freeform conversion examples
 
 ### Fixed

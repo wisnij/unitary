@@ -117,7 +117,8 @@ SHALL detect bare identifiers in the following priority order, then fall back
 to `parseExpression()`:
 
 1. **Function name**: a bare identifier (optionally preceded by `~`) that
-   resolves to a registered function → returns `FunctionNameNode`.
+   resolves to a registered function, with or without a trailing `(` →
+   returns `FunctionNameNode`.
 2. **Unit or prefix+unit**: a bare identifier where `findUnitWithPrefix(name)`
    returns a `UnitMatch` with a non-null `unit` field → returns
    `DefinitionRequestNode(name)`.
@@ -128,8 +129,10 @@ to `parseExpression()`:
 
 A "bare identifier" means the token stream consists of exactly one
 `TokenType.identifier` token (plus EOF), with no preceding `~` for cases 2
-and 3.  If no repository is present, all inputs are delegated to
-`parseExpression()`.
+and 3.  A trailing `LPAR` MAY optionally follow the identifier in case 1 only
+(i.e. `IDENTIFIER LPAR EOF` or `INVERSE IDENTIFIER LPAR EOF`); the `LPAR` is
+consumed and does not affect the returned node.  If no repository is present,
+all inputs are delegated to `parseExpression()`.
 
 #### Scenario: parseQuery returns FunctionNameNode for a bare forward function name
 
@@ -142,6 +145,24 @@ and 3.  If no repository is present, all inputs are delegated to
 - **WHEN** `parseQuery("~tempC")` is called with a repository that has `tempC`
   registered as a function
 - **THEN** the result is `FunctionNameNode("tempC", true)`
+
+#### Scenario: parseQuery returns FunctionNameNode for a function name with trailing paren
+
+- **WHEN** `parseQuery("tempC(")` is called with a repository that has `tempC`
+  registered as a function
+- **THEN** the result is `FunctionNameNode("tempC", false)`
+
+#### Scenario: parseQuery returns FunctionNameNode for an inverse function name with trailing paren
+
+- **WHEN** `parseQuery("~tempC(")` is called with a repository that has `tempC`
+  registered as a function
+- **THEN** the result is `FunctionNameNode("tempC", true)`
+
+#### Scenario: parseQuery does not recognize a unit name with trailing paren as a function
+
+- **WHEN** `parseQuery("km(")` is called with a repository where `km` is a
+  unit but not a function
+- **THEN** a `ParseException` is thrown
 
 #### Scenario: parseQuery returns DefinitionRequestNode for a bare unit name
 

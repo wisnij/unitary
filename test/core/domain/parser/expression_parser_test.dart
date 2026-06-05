@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:unitary/core/domain/errors.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/ast.dart';
@@ -96,6 +97,29 @@ void main() {
       final fn = node as FunctionNameNode;
       expect(fn.name, 'tempF');
       expect(fn.inverse, isTrue);
+    });
+
+    test('funcName( returns FunctionNameNode(inverse: false)', () {
+      final node = repoParser.parseQuery('tempC(');
+      expect(node, isA<FunctionNameNode>());
+      final fn = node as FunctionNameNode;
+      expect(fn.name, 'tempC');
+      expect(fn.inverse, isFalse);
+    });
+
+    test('~funcName( returns FunctionNameNode(inverse: true)', () {
+      final node = repoParser.parseQuery('~tempC(');
+      expect(node, isA<FunctionNameNode>());
+      final fn = node as FunctionNameNode;
+      expect(fn.name, 'tempC');
+      expect(fn.inverse, isTrue);
+    });
+
+    test('unit( with no function match throws ParseException', () {
+      expect(
+        () => repoParser.parseQuery('km('),
+        throwsA(isA<ParseException>()),
+      );
     });
 
     test('bare unit alias returns DefinitionRequestNode', () {

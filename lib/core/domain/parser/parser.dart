@@ -65,8 +65,11 @@ class Parser {
           .where((t) => t.type != TokenType.eof)
           .toList();
 
-      // Bare function name: exactly one identifier that is a known function.
-      if (significant.length == 1 &&
+      // Bare function name: exactly one identifier that is a known function,
+      // optionally followed by a single LPAR (e.g. auto-completed "tempC(").
+      if ((significant.length == 1 ||
+              (significant.length == 2 &&
+                  significant[1].type == TokenType.leftParen)) &&
           significant[0].type == TokenType.identifier) {
         final name = significant[0].literal as String;
         if (_repo.findFunction(name) != null) {
@@ -74,8 +77,11 @@ class Parser {
         }
       }
 
-      // ~funcName: inverse token followed by one known-function identifier.
-      if (significant.length == 2 &&
+      // ~funcName or ~funcName(: inverse token followed by one known-function
+      // identifier, optionally followed by a single LPAR.
+      if ((significant.length == 2 ||
+              (significant.length == 3 &&
+                  significant[2].type == TokenType.leftParen)) &&
           significant[0].type == TokenType.inverse &&
           significant[1].type == TokenType.identifier) {
         final name = significant[1].literal as String;

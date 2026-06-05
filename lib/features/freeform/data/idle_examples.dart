@@ -35,73 +35,108 @@ class FreeformExample {
 /// physical constants, defined functions, compound expressions, rational-number
 /// syntax, and two-field conversions.
 const List<FreeformExample> idleExamples = [
-  FreeformExample(inputExpression: '1 / alpha'), // fine structure constant
   FreeformExample(
+    // fine structure constant
+    inputExpression: '1 / alpha',
+  ),
+  FreeformExample(
+    // area of a football field
     inputExpression: '100 yd * 160 ft',
-  ), // area of a football field
+  ),
   FreeformExample(
+    // standard atmospheric pressure at sea level
     inputExpression: '1013.25 mbar',
-  ), // standard atmospheric pressure at sea level
+  ),
   FreeformExample(
+    // number of semitones between A and middle C
     inputExpression: '12 log2(440 Hz/261.626 Hz)',
-  ), // number of semitones between A and middle C
+  ),
   FreeformExample(
+    // old definition of the mole
     inputExpression: '12g / N_A atomicmassunit carbon_12',
-  ), // old definition of the mole
+  ),
   FreeformExample(
+    // density of tungsten
     inputExpression: '19.3 g/cm^3',
-  ), // density of tungsten
+  ),
   FreeformExample(
+    // Sir Isaac Newton is the deadliest son of a bitch in space
     inputExpression: '1|2 20kg (1.3% c)^2',
-  ), // Sir Isaac Newton is the deadliest son of a bitch in space
+  ),
   FreeformExample(
+    // a carton of milk, in metric
     inputExpression: '1|2 gallon',
     outputExpression: 'ml',
-  ), // a carton of milk, in metric
+  ),
   FreeformExample(
+    // marathon run distance
     inputExpression: '26.2 miles',
     outputExpression: 'km',
-  ), // marathon run distance
+  ),
   FreeformExample(
+    // average household daily energy usage
     inputExpression: '30 kWh',
-  ), // average household daily energy usage
+  ),
   FreeformExample(
+    // maximum size of a 32-bit address space
     inputExpression: '4 GiB',
-  ), // maximum size of a 32-bit address space
+  ),
   FreeformExample(
+    // average human height
     inputExpression: '5 ft + 6 in',
     outputExpression: 'cm',
-  ), // average human height
-  FreeformExample(inputExpression: '5 km'), // 5K run distance
-  FreeformExample(inputExpression: '60 mph'), // a common speed limit
+  ),
   FreeformExample(
+    // 5K run distance
+    inputExpression: '5 km',
+  ),
+  FreeformExample(
+    // a common speed limit
+    inputExpression: '60 mph',
+  ),
+  FreeformExample(
+    // force of gravity on an average human
     inputExpression: '9.8 m/s^2 * 62 kg',
-  ), // force of gravity on an average human
+  ),
   FreeformExample(
+    // size of a cube containing all the gold in the world
     inputExpression: 'cbrt(219890 t/golddensity)',
-  ), // size of a cube containing all the gold in the world
+  ),
   FreeformExample(
+    // hypotenuse of a 3-4-5 right triangle
     inputExpression: 'hypot(3 m, 4 m)',
-  ), // hypotenuse of a 3-4-5 right triangle
+  ),
   FreeformExample(
+    // natural log of 2, used in half-life and compounding formulas
     inputExpression: 'ln(2)',
-  ), // natural log of 2, used in half-life and compounding formulas
-  FreeformExample(inputExpression: 'pi^2 / 6'), // solution to the Basel problem
-  FreeformExample(inputExpression: 'sin(30 degrees)'), // a common angle
+  ),
   FreeformExample(
+    // solution to the Basel problem
+    inputExpression: 'pi^2 / 6',
+  ),
+  FreeformExample(
+    // a common angle
+    inputExpression: 'sin(30 degrees)',
+  ),
+  FreeformExample(
+    // time to travel one AU at 1g constant acceleration
     inputExpression: 'sqrt(2 au / gravity)',
-  ), // time to travel one AU at 1g constant acceleration
+  ),
   FreeformExample(
+    // orbital speed of the Moon
     inputExpression: 'sqrt(G earthmass/moondist)',
-  ), // orbital speed of the Moon
+  ),
   FreeformExample(
+    // average human body temperature
     inputExpression: 'tempC(37)',
     outputExpression: 'tempF',
-  ), // average human body temperature
+  ),
   FreeformExample(
+    // difference between freezing and boiling points of water
     inputExpression: 'tempF(212) - tempF(32)',
-  ), // difference between freezing and boiling points of water
+  ),
   FreeformExample(
+    // average human body temperature
     inputExpression: 'tempF(98.6)',
-  ), // average human body temperature
+  ),
 ];

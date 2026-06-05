@@ -4,8 +4,7 @@ import 'package:flutter/material.dart';
 enum Notation {
   automatic('Automatic'),
   scientific('Scientific'),
-  engineering('Engineering')
-  ;
+  engineering('Engineering');
 
   final String label;
   const Notation(this.label);
@@ -14,8 +13,7 @@ enum Notation {
 /// When expression evaluation is triggered.
 enum EvaluationMode {
   realtime('Real-time'),
-  onSubmit('On submit')
-  ;
+  onSubmit('On submit');
 
   final String label;
   const EvaluationMode(this.label);

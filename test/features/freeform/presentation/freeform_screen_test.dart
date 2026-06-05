@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
+import 'package:unitary/features/freeform/data/idle_examples.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
 import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
@@ -1283,6 +1284,67 @@ void main() {
       // "meter" is a registered unit alias — it should appear in the overlay.
       expect(find.text('meter'), findsWidgets);
     });
+  });
+
+  group('FreeformScreen — idle example tap-to-fill', () {
+    testWidgets(
+      'tapping example without output fills only Convert-from field',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const EvaluationIdle(
+              example: FreeformExample(inputExpression: '60 mph'),
+            ),
+          ),
+        );
+
+        await tester.tap(find.textContaining('Try:'));
+        await tester.pump();
+
+        // Convert-from is filled with the example expression.
+        final inputField = tester.widget<TextField>(
+          find.widgetWithText(TextField, '60 mph'),
+        );
+        expect(inputField.controller?.text, '60 mph');
+
+        // Convert-to is not modified — the label placeholder is still visible.
+        expect(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'tapping example with output fills both Convert-from and Convert-to',
+      (tester) async {
+        await tester.pumpWidget(
+          buildApp(
+            freeformState: const EvaluationIdle(
+              example: FreeformExample(
+                inputExpression: '1|2 gallon',
+                outputExpression: 'ml',
+              ),
+            ),
+          ),
+        );
+
+        await tester.tap(find.textContaining('Try:'));
+        await tester.pump();
+
+        // Convert-from is filled.
+        final inputField = tester.widget<TextField>(
+          find.widgetWithText(TextField, '1|2 gallon'),
+        );
+        expect(inputField.controller?.text, '1|2 gallon');
+
+        // Convert-to is filled with the output expression.
+        final outputField = tester.widget<TextField>(
+          find.widgetWithText(TextField, 'ml'),
+        );
+        expect(outputField.controller?.text, 'ml');
+      },
+    );
   });
 }
 

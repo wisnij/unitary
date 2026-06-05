@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
+import 'package:unitary/features/freeform/data/idle_examples.dart';
 import 'package:unitary/features/freeform/presentation/widgets/result_display.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
 
@@ -26,18 +27,63 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        wrap(const ResultDisplay(result: EvaluationIdle(example: '60 mph'))),
+        wrap(
+          const ResultDisplay(
+            result: EvaluationIdle(
+              example: FreeformExample(inputExpression: '60 mph'),
+            ),
+          ),
+        ),
       );
       expect(find.text('Enter an expression above.'), findsOneWidget);
       expect(find.text('Try: 60 mph'), findsOneWidget);
     });
+
+    testWidgets(
+      'renders Try line with arrow when example has output expression',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            const ResultDisplay(
+              result: EvaluationIdle(
+                example: FreeformExample(
+                  inputExpression: '1|2 gallon',
+                  outputExpression: 'ml',
+                ),
+              ),
+            ),
+          ),
+        );
+        expect(find.text('Enter an expression above.'), findsOneWidget);
+        expect(find.text('Try: 1|2 gallon → ml'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'renders Try line without arrow when example has no output expression',
+      (tester) async {
+        await tester.pumpWidget(
+          wrap(
+            const ResultDisplay(
+              result: EvaluationIdle(
+                example: FreeformExample(inputExpression: '5 km'),
+              ),
+            ),
+          ),
+        );
+        expect(find.text('Try: 5 km'), findsOneWidget);
+        expect(find.textContaining('→'), findsNothing);
+      },
+    );
 
     testWidgets('invokes onTap when idle display is tapped', (tester) async {
       var tapped = false;
       await tester.pumpWidget(
         wrap(
           ResultDisplay(
-            result: const EvaluationIdle(example: '60 mph'),
+            result: const EvaluationIdle(
+              example: FreeformExample(inputExpression: '60 mph'),
+            ),
             onTap: () => tapped = true,
           ),
         ),
@@ -51,7 +97,9 @@ void main() {
       await tester.pumpWidget(
         wrap(
           const ResultDisplay(
-            result: EvaluationIdle(example: '60 mph'),
+            result: EvaluationIdle(
+              example: FreeformExample(inputExpression: '60 mph'),
+            ),
           ),
         ),
       );

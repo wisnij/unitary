@@ -1,4 +1,5 @@
 import '../../../core/domain/models/quantity.dart';
+import '../data/idle_examples.dart';
 
 /// Represents the current state of freeform expression evaluation.
 sealed class EvaluationResult {
@@ -7,11 +8,11 @@ sealed class EvaluationResult {
 
 /// No input yet — show placeholder text and an optional example expression.
 ///
-/// [example] is a randomly selected expression string from the curated
+/// [example] is a randomly selected [FreeformExample] from the curated
 /// example list, chosen once at app launch.  It is `null` only in tests
 /// that construct the idle state directly without a selected example.
 class EvaluationIdle extends EvaluationResult {
-  final String? example;
+  final FreeformExample? example;
 
   const EvaluationIdle({this.example});
 }

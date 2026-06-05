@@ -23,7 +23,7 @@ final freeformProvider = NotifierProvider<FreeformNotifier, EvaluationResult>(
 class FreeformNotifier extends Notifier<EvaluationResult> {
   /// The example shown in the most recent idle state, used to avoid
   /// repeating the same example on consecutive idle transitions.
-  String? _lastExample;
+  FreeformExample? _lastExample;
 
   @override
   EvaluationResult build() => _idle();
@@ -37,11 +37,11 @@ class FreeformNotifier extends Notifier<EvaluationResult> {
   }
 
   /// Picks a random entry from [idleExamples] that differs from [_lastExample].
-  String _pickExample() {
+  FreeformExample _pickExample() {
     if (idleExamples.length <= 1) {
       return idleExamples.first;
     }
-    String pick;
+    FreeformExample pick;
     do {
       pick = idleExamples[Random().nextInt(idleExamples.length)];
     } while (pick == _lastExample);

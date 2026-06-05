@@ -1,11 +1,4 @@
-# Spec: idle-example-hint
-
-## Purpose
-
-When the freeform screen is idle (no expression has been entered), display a curated example expression as a hint to help users discover app features.  The hint is visually distinct from real output and is tappable to auto-fill the input field.
-
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Example list exists
 The system SHALL maintain a curated, non-empty list of `FreeformExample` objects covering a variety of app features (unit conversions, SI prefixes, physical constants, defined functions, compound expressions).  Each `FreeformExample` has a required `inputExpression` field (the "Convert from" expression) and an optional `outputExpression` field (the "Convert to" expression).
@@ -54,35 +47,3 @@ When the idle display is tapped, the system SHALL copy the example's `inputExpre
 - **THEN** the "Convert from" text field is populated with `inputExpression`
 - **AND** the "Convert to" text field is populated with `outputExpression`
 - **AND** evaluation runs as if the user had typed both values
-
-### Requirement: Tapping the idle display unfocuses both input fields
-After the example expression is inserted into the "Convert from" field and evaluation is triggered, the system SHALL remove input focus from both freeform text fields, dismissing the on-screen keyboard.  This applies regardless of which field (if any) held focus before the tap.
-
-#### Scenario: Keyboard dismisses after tapping example with no prior focus
-- **WHEN** neither freeform field is focused
-- **AND** the user taps the idle result display
-- **THEN** the "Convert from" field is populated with the example expression and evaluation runs
-- **AND** neither freeform field has focus afterwards
-
-#### Scenario: Keyboard dismisses after tapping example when Convert-from was focused
-- **WHEN** the "Convert from" field has input focus
-- **AND** the user taps the idle result display
-- **THEN** the "Convert from" field is populated with the example expression and evaluation runs
-- **AND** neither freeform field has focus afterwards
-
-#### Scenario: Keyboard dismisses after tapping example when Convert-to was focused
-- **WHEN** the "Convert to" field has input focus
-- **AND** the user taps the idle result display
-- **THEN** the "Convert from" field is populated with the example expression and evaluation runs
-- **AND** neither freeform field has focus afterwards
-
-### Requirement: Example changes on each idle transition
-Each time the screen returns to idle, the system SHALL display a different example from the previous one.
-
-#### Scenario: User clears input and returns to idle
-- **WHEN** a user enters an expression and then deletes all input, returning the screen to idle
-- **THEN** a different example expression is shown from the one that was displayed before the user started typing
-
-#### Scenario: User taps example to load it, then clears
-- **WHEN** a user taps the idle display to load the example into the input field, then clears the field
-- **THEN** the idle display shows a different example from the one that was tapped

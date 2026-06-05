@@ -15,14 +15,18 @@ void main() {
       expect(idleExamples.length, greaterThanOrEqualTo(10));
     });
 
+    test('at least one example has an output expression', () {
+      expect(idleExamples.any((e) => e.outputExpression != null), isTrue);
+    });
+
     test('all examples evaluate without error', () {
       final parser = ExpressionParser(repo: repo);
       final failures = <String>[];
       for (final example in idleExamples) {
         try {
-          parser.evaluate(example);
+          parser.evaluate(example.inputExpression);
         } catch (e) {
-          failures.add('$example: $e');
+          failures.add('${example.inputExpression}: $e');
         }
       }
       expect(failures, isEmpty, reason: 'Failing examples: $failures');

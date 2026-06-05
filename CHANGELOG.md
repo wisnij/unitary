@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]
 ------------
 
+### Added
+
+- Add output expressions to freeform conversion examples
+
 ### Fixed
 
 - Deselect input fields after selecting an example expression

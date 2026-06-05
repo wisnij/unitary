@@ -15,6 +15,10 @@ void main() {
       expect(idleExamples.length, greaterThanOrEqualTo(10));
     });
 
+    test('at least one example has an output expression', () {
+      expect(idleExamples.any((e) => e.outputExpression != null), isTrue);
+    });
+
     test('all examples evaluate without error', () {
       final parser = ExpressionParser(repo: repo);
       final failures = <String>[];

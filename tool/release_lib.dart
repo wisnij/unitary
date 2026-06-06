@@ -170,7 +170,7 @@ String formatChangelogSection(
     buffer.writeln();
     buffer.writeln('### $section');
     buffer.writeln();
-    for (final entry in entries) {
+    for (final entry in entries.reversed) {
       buffer.writeln('- $entry');
     }
   }
@@ -366,7 +366,7 @@ String? formatUnreleasedSection(List<ParsedCommit> commits) {
     buffer.writeln();
     buffer.writeln('### $section');
     buffer.writeln();
-    for (final entry in entries) {
+    for (final entry in entries.reversed) {
       buffer.writeln('- $entry');
     }
   }

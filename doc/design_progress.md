@@ -122,33 +122,15 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
   - GNU Units features we won't support
   - Workarounds for differences in architecture
 
-### 3. Currency Rate Management
+### 3. Currency Rate Management — **COMPLETE (Phase 8)**
 
-**Current State**: Requirements defined (auto-update, offline support, manual refresh)
-
-**Needs Detail On**:
-
-- API selection and integration
-  - Which currency rate API to use (e.g., exchangerate-api.io, ECB, etc.)
-  - API request/response format
-  - Rate limiting considerations
-  - API key management (if required)
-- Rate storage schema
-  - Database structure for rates
-  - How to store timestamps
-  - Which currencies to include
-- Update scheduling
-  - Exact logic for 24-hour check
-  - Background vs. foreground updates
-  - Retry logic on failure
-  - Exponential backoff strategy
-- Offline behavior
-  - Fallback to last known rates
-  - UI indication of stale rates
-  - Warning thresholds (e.g., rates older than 7 days)
-- Initial rates
-  - How to bundle default rates with app releases
-  - Update frequency for bundled rates
+- **API**: Frankfurter v2 (`https://api.frankfurter.dev/v2/rates?base=USD`); no API key; NDJSON list of `{date, base, quote, rate}` objects; rates inverted (`1.0 / frankfurterRate`); includes precious metals (XAU, XAG, XPT)
+- **Dynamic unit layer**: `UnitRepository` has `_dynamicUnits`/`_dynamicLookup` maps that shadow the compiled static layer; `registerDynamic()` / `unregisterDynamic()` + cache invalidation
+- **Currency detection**: `buildCurrencyDescriptors()` evaluates all `[A-Z]{3}` names, keeps those resolving to `{US$: 1}`; precious metals use hardcoded overrides that update intermediate price units (e.g. `goldprice` for `XAU`)
+- **Storage**: `CurrencyRates` in SharedPreferences (`currencyRates` key); per-currency `{rate, date}` entries + top-level `updatedAt`; will migrate to sqflite in Phase 12
+- **Startup**: stored rates loaded synchronously before first frame; `maybeRefresh()` fired fire-and-forget in `UnitaryApp.initState()` post-frame callback; 24-hour staleness threshold
+- **Settings UI**: "Currency rates" section with last-updated timestamp or "Using built-in rates"; manual refresh button with 60-second cooldown; spinner while fetching
+- **Design artifacts**: `openspec/changes/currency-support/`
 
 ### 4. User Preferences & State Management
 
@@ -252,7 +234,7 @@ When resuming design work, recommended order of priority:
 6. ✅ ~~**Worksheet System**~~ - **COMPLETE** — Phase 6, see openspec/changes/worksheet-mode/
 7. ✅ ~~**Browse Mode**~~ - **COMPLETE** — Phase 7, see openspec/changes/browse-units/
 8. ✅ ~~**User Data Persistence**~~ - **COMPLETE** — Phase 7 (persistence), see openspec/changes/user-data-persistence/
-9. **Currency Rate Management** - Can be added after core features work
+9. ✅ ~~**Currency Rate Management**~~ - **COMPLETE** — Phase 8, see openspec/changes/currency-support/
 10. **Testing Strategy** - Define before/during implementation
 11. **Error Handling Details** - Refine during implementation
 
@@ -275,7 +257,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: May 24, 2026*
+*Last Updated: June 6, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*

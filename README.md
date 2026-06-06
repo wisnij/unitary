@@ -17,21 +17,19 @@ purchases, tracking, data harvesting, or any other monetization scheme.
 Project Status
 --------------
 
-**Current Phase:** Predictive Completion\
-**Last Updated:** May 24, 2026
+**Current Phase:** Currency Support\
+**Last Updated:** June 6, 2026
 
-Phases 0-7 are complete with 1692 passing tests.  The expression parser,
+Phases 0-8 are complete with 1760 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
 unit database, worksheet mode, unit browser, cross-session data persistence,
-freeform conversion history, and predictive completion are fully implemented.
-Worksheet state and freeform history are saved to SharedPreferences and restored
-on every app launch.  Both freeform expression fields now show inline unit/
-function/prefix suggestions as the user types.  The suggestion overlay is
-scrollable (8 rows visible, up to 50 entries), shrinks to fit its content,
-uses kind-specific formatting (units insert with a trailing space, prefixes
-display with a trailing dash (not inserted), functions display and insert with a
-trailing open parenthesis), and returns both prefix and infix matches (with
-prefix matches ranked first).
+freeform conversion history, predictive completion, and currency support are
+fully implemented.  Currency exchange rates are fetched automatically on launch
+(24-hour staleness check) from the Frankfurter v2 API, including precious metals
+(XAU, XAG, XPT).  Stored rates are applied to the unit repository at startup so
+currency conversions are live from the first frame.  A "Currency rates" section
+in Settings shows the last-updated timestamp and provides a manual refresh
+button with a 60-second cooldown.
 
 ---
 
@@ -220,6 +218,7 @@ Current Progress
 - ✅ **User Data Persistence** — worksheet state (active template + per-template source values) persisted via SharedPreferences and restored on launch; freeform fields always start blank (1583 tests)
 - ✅ **Freeform History** — persistent history of successful freeform conversions; deduplicated, capped at 100 entries; tapping an entry restores both fields and re-evaluates (1619 tests)
 - ✅ **Predictive Completion** — inline unit/function/prefix suggestions in both freeform expression fields; lexer-based token detection; four-tier ranking (prefix-primary, prefix-alias, infix-primary, infix-alias); tap-to-insert replaces the partial token; kind-specific display and insertion (unit +space, prefix +dash display only, function +open-paren); overlay scrollable up to 50 entries with 8 rows visible; shrinks to content width; web-safe tap handling (1692 tests)
+- ✅ **Phase 8: Currency Support** — live exchange rates from Frankfurter v2 API; dynamic unit layer in UnitRepository shadows compiled rates at runtime; 24-hour background staleness check; precious metals (XAU/XAG/XPT) via intermediate price units; per-currency date stored alongside rate; Settings UI with last-updated timestamp and 60-second-cooldown manual refresh (1760 tests)
 
 ### Design (ready for implementation)
 
@@ -233,7 +232,6 @@ Current Progress
 
 - ⏳ Worksheet system details
 - ⏳ GNU Units database import strategy
-- ⏳ Currency rate management
 
 See [Design Progress](design_progress.md) for full details.
 
@@ -274,7 +272,7 @@ Roadmap
 - Basic unit system with major categories
 - Freeform and worksheet modes
 - Settings and persistence
-- Currency support
+- ✅ Currency support
 - Polish and release
 
 ### Phase 2: Enhancements

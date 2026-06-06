@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:unitary/features/currency/data/currency_rate_repository.dart';
+import 'package:unitary/features/currency/state/currency_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
@@ -10,16 +12,21 @@ import 'package:unitary/features/settings/state/settings_provider.dart';
 
 void main() {
   late SettingsRepository repo;
+  late CurrencyRateRepository currencyRateRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     repo = SettingsRepository(prefs);
+    currencyRateRepo = CurrencyRateRepository(prefs);
   });
 
   Widget buildApp() {
     return ProviderScope(
-      overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+      overrides: [
+        settingsRepositoryProvider.overrideWithValue(repo),
+        currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
+      ],
       child: const MaterialApp(home: SettingsScreen()),
     );
   }

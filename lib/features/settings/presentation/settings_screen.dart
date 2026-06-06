@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../currency/presentation/currency_settings_section.dart';
 import '../models/user_settings.dart';
 import '../state/settings_provider.dart';
 
@@ -96,6 +97,8 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          const _SectionHeader(title: 'Currency rates'),
+          const CurrencySettingsSection(),
         ],
       ),
     );

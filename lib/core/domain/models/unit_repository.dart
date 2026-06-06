@@ -4,6 +4,7 @@ import '../errors.dart';
 import '../parser/expression_parser.dart';
 import 'browse_entry.dart';
 import 'completion_entry.dart';
+import 'currency_descriptor.dart';
 import 'dimension.dart';
 import 'function.dart';
 import 'quantity.dart';
@@ -62,6 +63,15 @@ class UnitRepository {
   /// Maps every recognized name (id + aliases) to its Unit.
   final Map<String, Unit> _unitLookup = {};
 
+  /// Dynamically registered units by primary ID.  Takes precedence over
+  /// [_units] / [_unitLookup] in all lookups.  Used for runtime rate updates
+  /// and (in future) user-defined units.
+  final Map<String, Unit> _dynamicUnits = {};
+
+  /// Maps every name (id + aliases) of dynamically registered units to the
+  /// corresponding unit.
+  final Map<String, Unit> _dynamicLookup = {};
+
   /// Prefix units by their primary ID.
   final Map<String, PrefixUnit> _prefixes = {};
 
@@ -84,6 +94,9 @@ class UnitRepository {
   /// null-on-failure semantics (e.g. [buildBrowseCatalog]) catch exceptions
   /// from [resolveUnit] themselves.
   final Map<String, Quantity> _resolvedQuantityCache = {};
+
+  /// Cached result of [buildCurrencyDescriptors].  Null until first call.
+  List<CurrencyDescriptor>? _currencyDescriptors;
 
   /// Maps canonical dimension representation strings to human-readable group
   /// labels, used by the unit browser for the dimension-grouped view.
@@ -185,8 +198,41 @@ class UnitRepository {
   /// is performed.
   UnitaryFunction? findFunction(String name) => _functionLookup[name];
 
-  /// Exact lookup in regular units only.
-  Unit? _findExact(String name) => _unitLookup[name];
+  /// Adds or replaces a unit in the dynamic layer.  The dynamic layer takes
+  /// precedence over all compiled units in lookups.  Clears the entire
+  /// resolved-quantity cache so stale entries are not served.
+  void registerDynamic(Unit unit) {
+    final existing = _dynamicUnits[unit.id];
+    if (existing != null) {
+      for (final name in existing.allNames) {
+        _dynamicLookup.remove(name);
+      }
+    }
+    _dynamicUnits[unit.id] = unit;
+    for (final name in unit.allNames) {
+      _dynamicLookup[name] = unit;
+    }
+    _resolvedQuantityCache.clear();
+  }
+
+  /// Removes a unit from the dynamic layer by its primary ID.  If a compiled
+  /// unit with the same ID exists, lookups fall back to it.  Does nothing if
+  /// no dynamic unit with that ID is registered.
+  void unregisterDynamic(String id) {
+    final unit = _dynamicUnits.remove(id);
+    if (unit != null) {
+      for (final name in unit.allNames) {
+        _dynamicLookup.remove(name);
+      }
+      _resolvedQuantityCache.clear();
+    }
+  }
+
+  /// All units currently registered in the dynamic layer.
+  Iterable<Unit> get allDynamicUnits => _dynamicUnits.values;
+
+  /// Exact lookup: checks the dynamic layer before the static layer.
+  Unit? _findExact(String name) => _dynamicLookup[name] ?? _unitLookup[name];
 
   /// Tries plural-stripped variants of [name] against [lookup].
   ///
@@ -632,4 +678,97 @@ class UnitRepository {
     final result = [...prefixMatches, ...infixMatches];
     return result.length <= limit ? result : result.sublist(0, limit);
   }
+
+  // ---------------------------------------------------------------------------
+  // Currency support
+  // ---------------------------------------------------------------------------
+
+  /// ISO codes for precious metals whose update target is an intermediate price
+  /// unit rather than the ounce unit itself.
+  static const Map<String, _MetalOverride> _metalOverrides = {
+    'XAU': _MetalOverride('goldprice'),
+    'XAG': _MetalOverride('silverprice'),
+    'XPT': _MetalOverride('platinumprice'),
+  };
+
+  /// Identifies all updatable currency units by evaluating every registered
+  /// name that matches the ISO 4217 pattern `[A-Z]{3}` and retaining those
+  /// whose resolved dimension equals `{US$: 1}`.  The primitive `US$` itself
+  /// is excluded.
+  ///
+  /// Precious metals (XAU, XAG, XPT) resolve to `{US$: 1}` via their ounce
+  /// unit but are updated through an intermediate price unit; these are handled
+  /// via [_metalOverrides].
+  ///
+  /// The result is computed once and cached; subsequent calls return the same
+  /// list.
+  List<CurrencyDescriptor> buildCurrencyDescriptors() {
+    return _currencyDescriptors ??= _buildCurrencyDescriptors();
+  }
+
+  static final _threeUpperCase = RegExp(r'^[A-Z]{3}$');
+  static final _currencyDimension = Dimension({'US\$': 1});
+
+  List<CurrencyDescriptor> _buildCurrencyDescriptors() {
+    final results = <CurrencyDescriptor>[];
+    final seen = <String>{};
+
+    for (final name in {..._unitLookup.keys, ..._dynamicLookup.keys}) {
+      if (!_threeUpperCase.hasMatch(name)) {
+        continue;
+      }
+      final unit = _findExact(name);
+      if (unit == null || unit.id == 'US\$') {
+        continue;
+      }
+      if (seen.contains(name)) {
+        continue;
+      }
+
+      Quantity resolved;
+      try {
+        resolved = resolveUnit(unit);
+      } on Exception {
+        continue;
+      }
+
+      if (resolved.dimension != _currencyDimension) {
+        continue;
+      }
+
+      seen.add(name);
+
+      final metal = _metalOverrides[name];
+      if (metal != null) {
+        final priceUnit = findUnit(metal.unitId);
+        if (priceUnit == null) {
+          continue;
+        }
+        results.add(
+          CurrencyDescriptor(
+            isoCode: name,
+            unitId: metal.unitId,
+            expressionTemplate: '{rate} US\$/troyounce',
+            originalUnit: priceUnit,
+          ),
+        );
+      } else {
+        results.add(
+          CurrencyDescriptor(
+            isoCode: name,
+            unitId: unit.id,
+            expressionTemplate: '{rate} US\$',
+            originalUnit: unit,
+          ),
+        );
+      }
+    }
+
+    return List.unmodifiable(results);
+  }
+}
+
+class _MetalOverride {
+  final String unitId;
+  const _MetalOverride(this.unitId);
 }

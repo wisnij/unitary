@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/app.dart';
+import 'package:unitary/features/currency/data/currency_rate_repository.dart';
+import 'package:unitary/features/currency/state/currency_provider.dart';
 import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
@@ -15,6 +17,7 @@ void main() {
   late SettingsRepository repo;
   late WorksheetRepository worksheetRepo;
   late FreeformHistoryRepository historyRepo;
+  late CurrencyRateRepository currencyRateRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -22,6 +25,7 @@ void main() {
     repo = SettingsRepository(prefs);
     worksheetRepo = WorksheetRepository(prefs);
     historyRepo = FreeformHistoryRepository(prefs);
+    currencyRateRepo = CurrencyRateRepository(prefs);
   });
 
   Widget buildApp() {
@@ -30,6 +34,7 @@ void main() {
         settingsRepositoryProvider.overrideWithValue(repo),
         worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
         freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
+        currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
       ],
       child: const UnitaryApp(),
     );

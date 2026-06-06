@@ -4,6 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/about/presentation/about_screen.dart';
+import 'package:unitary/features/currency/data/currency_rate_repository.dart';
+import 'package:unitary/features/currency/state/currency_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
@@ -11,6 +13,7 @@ import 'package:unitary/shared/top_level_page.dart';
 import 'package:unitary/shared/widgets/app_drawer.dart';
 
 late SettingsRepository _settingsRepo;
+late CurrencyRateRepository _currencyRateRepo;
 
 Widget _buildDrawer({
   required TopLevelPage currentPage,
@@ -19,6 +22,7 @@ Widget _buildDrawer({
   return ProviderScope(
     overrides: [
       settingsRepositoryProvider.overrideWithValue(_settingsRepo),
+      currencyRateRepositoryProvider.overrideWithValue(_currencyRateRepo),
     ],
     child: MaterialApp(
       home: Scaffold(
@@ -43,6 +47,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     final prefs = await SharedPreferences.getInstance();
     _settingsRepo = SettingsRepository(prefs);
+    _currencyRateRepo = CurrencyRateRepository(prefs);
   });
 
   group('AppDrawer — renders all tiles', () {

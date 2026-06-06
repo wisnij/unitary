@@ -2,6 +2,8 @@ name: Release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
@@ -35,7 +37,7 @@ jobs:
           build_timestamp=$(date -u +'%Y%m%d-%H%M%S')
           description=$(git describe --long)
           echo "build_metadata=${build_timestamp}-${description}" >> $GITHUB_OUTPUT
-          echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT
+          echo "version=$(git describe | sed 's/^v//')" >> $GITHUB_OUTPUT
 
   build-android-apk:
     needs: prepare
@@ -104,6 +106,7 @@ jobs:
         run: >-
           git tag -l --format="%(contents:body)" ${{ github.ref_name }} | tee RELEASE_NOTES.md
       - name: Create GitHub release
+        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-

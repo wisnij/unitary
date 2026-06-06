@@ -321,6 +321,26 @@ void main() {
       expect(fixedIndex, lessThan(docsIndex));
       expect(docsIndex, lessThan(otherIndex));
     });
+
+    test('items within a section appear oldest-first', () {
+      // Simulates git log order: newer commits first.
+      final commits = [
+        ParsedCommit.parse('ccc feat: newest feature')!,
+        ParsedCommit.parse('bbb feat: middle feature')!,
+        ParsedCommit.parse('aaa feat: oldest feature')!,
+      ];
+      final result = formatChangelogSection(
+        '1.0.0',
+        '0.9.0',
+        '2026-01-01',
+        commits,
+      );
+      final oldestIndex = result.indexOf('- oldest feature');
+      final middleIndex = result.indexOf('- middle feature');
+      final newestIndex = result.indexOf('- newest feature');
+      expect(oldestIndex, lessThan(middleIndex));
+      expect(middleIndex, lessThan(newestIndex));
+    });
   });
 
   group('formatTagMessage', () {
@@ -593,6 +613,21 @@ void main() {
         result.indexOf('### Fixed'),
         lessThan(result.indexOf('### Documentation')),
       );
+    });
+
+    test('items within a section appear oldest-first', () {
+      // Simulates git log order: newer commits first.
+      final commits = [
+        ParsedCommit.parse('ccc feat: newest feature')!,
+        ParsedCommit.parse('bbb feat: middle feature')!,
+        ParsedCommit.parse('aaa feat: oldest feature')!,
+      ];
+      final result = formatUnreleasedSection(commits)!;
+      final oldestIndex = result.indexOf('- oldest feature');
+      final middleIndex = result.indexOf('- middle feature');
+      final newestIndex = result.indexOf('- newest feature');
+      expect(oldestIndex, lessThan(middleIndex));
+      expect(middleIndex, lessThan(newestIndex));
     });
 
     test(

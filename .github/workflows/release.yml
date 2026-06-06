@@ -32,7 +32,7 @@ jobs:
           fetch-tags: true
       - id: vars
         run: |
-          build_timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')
+          build_timestamp=$(date -u +'%Y%m%d-%H%M%S')
           description=$(git describe --long)
           echo "build_metadata=${build_timestamp}-${description}" >> $GITHUB_OUTPUT
           echo "version=${GITHUB_REF_NAME#v}" >> $GITHUB_OUTPUT

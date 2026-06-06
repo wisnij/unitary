@@ -42,9 +42,9 @@ jobs:
       - run: flutter pub get
       - name: Set BUILD_METADATA
         run: |
-          build_timestamp=$(date -u +'%Y-%m-%d %H:%M:%S')
+          build_timestamp=$(date -u +'%Y%m%d-%H%M%S')
           description=$(git describe --long)
-          echo "BUILD_METADATA=${build_timestamp} ${description}" >> $GITHUB_ENV
+          echo "BUILD_METADATA=${build_timestamp}-${description}" >> $GITHUB_ENV
       - run: >-
           flutter build web
           --base-href /unitary/

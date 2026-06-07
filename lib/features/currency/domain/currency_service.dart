@@ -8,7 +8,6 @@ import '../../../core/domain/models/unit_repository.dart';
 import '../data/currency_rate_repository.dart';
 
 const _frankfurterUrl = 'https://api.frankfurter.dev/v2/rates?base=USD';
-const _staleDuration = Duration(hours: 24);
 
 /// Fetches live exchange rates from Frankfurter v2 and applies them to the
 /// [UnitRepository] dynamic layer.
@@ -24,18 +23,6 @@ class CurrencyService {
   }) : _repo = repo,
        _rateRepo = rateRepo,
        _client = client ?? http.Client();
-
-  /// Checks whether stored rates are stale and, if so, triggers a background
-  /// fetch.  Returns immediately without awaiting the fetch result.
-  void maybeRefresh() {
-    final stored = _rateRepo.load();
-    final isStale =
-        stored == null ||
-        DateTime.now().toUtc().difference(stored.updatedAt) >= _staleDuration;
-    if (isStale) {
-      unawaited(fetchRates());
-    }
-  }
 
   /// Fetches rates from Frankfurter v2, applies them to the repo via
   /// [UnitRepository.registerDynamic], and persists the result.
@@ -113,6 +100,3 @@ class CurrencyService {
     );
   }
 }
-
-// Suppresses the unawaited-futures lint for the fire-and-forget call.
-void unawaited(Future<void> future) {}

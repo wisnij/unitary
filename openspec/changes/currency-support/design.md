@@ -97,14 +97,16 @@ is `N US$/troyounce`.
 
 These three mappings are hardcoded:
 
-| ISO code | Update target | Expression template        |
-|----------|---------------|----------------------------|
-| `XAU`    | `goldprice`   | `{price} US$/troyounce`    |
-| `XAG`    | `silverprice` | `{price} US$/troyounce`    |
-| `XPT`    | `platinumprice` | `{price} US$/troyounce`  |
+| ISO code | Update target | Expression template          |
+|----------|---------------|------------------------------|
+| `XAU`    | `goldprice`   | `1|{rate} US$/troyounce`     |
+| `XAG`    | `silverprice` | `1|{rate} US$/troyounce`     |
+| `XPT`    | `platinumprice` | `1|{rate} US$/troyounce`   |
 
-All other detected currencies use the template `{rate} US$`, where `rate` is
-the value in USD of 1 unit (i.e., `1 / api_units_per_usd`).
+All other detected currencies use the template `1|{rate} US$`, where `rate` is
+the raw API rate returned by Frankfurter (quote units per 1 USD).  The `1|rate`
+form is the GNU Units rational division operator, producing `(1/rate) US$` —
+a cleaner expression than the floating-point reciprocal.
 
 ### D5 — `CurrencyDescriptor` and the detected set
 
@@ -142,17 +144,19 @@ Value: JSON object
 {
   "updatedAt": "2026-06-06T14:30:00.000Z",
   "rates": {
-    "euro":      {"rate": 1.1623, "date": "2026-06-06"},
-    "japanyen":  {"rate": 0.006251, "date": "2026-06-06"},
-    "goldprice": {"rate": 4545.45, "date": "2026-06-06"},
-    "silverprice": {"rate": 73.69, "date": "2026-06-06"}
+    "euro":        {"rate": 0.8605,    "date": "2026-06-06"},
+    "japanyen":    {"rate": 144.82,    "date": "2026-06-06"},
+    "goldprice":   {"rate": 0.000302,  "date": "2026-06-06"},
+    "silverprice": {"rate": 0.02940,   "date": "2026-06-06"}
   }
 }
 ```
 
 - Keys are **unit IDs** (not ISO codes), matching the `unitId` field of
   `CurrencyDescriptor`.
-- `rate`: USD value of 1 unit for currencies; USD per troy ounce for precious metals.
+- `rate`: the raw API rate as returned by Frankfurter — quote units per 1 USD
+  for regular currencies (e.g., 0.8605 EUR per USD); troy ounces per 1 USD
+  for precious metals (e.g., 0.000302 XAU per USD).  **Not inverted.**
 - `date`: the source date string returned by Frankfurter for that specific
   currency (e.g. `"2026-06-06"`).  Different currencies may carry different dates
   since some central banks report less frequently.  This is used for per-unit
@@ -167,19 +171,20 @@ JSON, inserts rows into sqflite, and deletes the old key.  No other code changes
 
 ### D7 — Background fetch flow
 
-On every app launch, `CurrencyService.maybeRefresh()` is called immediately
-after the repository is ready.  It does nothing if stored rates are < 24 hours
-old; otherwise it fetches in the background.  The method returns `void` — the
-caller does not await it.
+On every app launch, `CurrencyStatusNotifier.maybeRefresh()` is called
+immediately after the repository is ready.  It does nothing if stored rates
+are < 24 hours old; otherwise it fetches in the background.  The method
+returns `void` — the caller does not await it.
 
 ```
 App launch
   └─ unitRepositoryProvider created (synchronous, compiled fallback rates)
   └─ CurrencyRateRepository.load() → applies stored rates via registerDynamic
-  └─ CurrencyService.maybeRefresh() [fire-and-forget]
+  └─ CurrencyStatusNotifier.maybeRefresh() [fire-and-forget]
         └─ if stale: fetch from API
               └─ success: CurrencyRateRepository.save(), registerDynamic for each rate
-              └─ failure: log, keep current rates, try again next launch
+                          unitRepositoryVersionProvider.increment() [see D10]
+              └─ failure: keep current rates, try again next launch
 ```
 
 Manual refresh from Settings calls the same fetch logic, bypassing the 24h
@@ -194,11 +199,15 @@ startup sequence before the first frame.  The `unitRepositoryProvider` returns
 the repo synchronously (with compiled fallbacks); a separate initialisation step
 applies stored rates before the UI becomes interactive.
 
-No reactive rebuild is needed when background rates arrive: freeform and
-worksheet results are recalculated on every user input change, so the updated
-rates are automatically picked up on the next evaluation.  The Settings screen
-uses a dedicated `CurrencyStatusNotifier` (a `StateNotifier`) for the
-last-updated timestamp and refresh progress indicator.
+No reactive rebuild is needed for freeform or worksheet results: they are
+recalculated on every user input change, so updated rates are picked up
+automatically on the next evaluation.  The Settings screen uses a dedicated
+`CurrencyStatusNotifier` (a `Notifier`) for the last-updated timestamp and
+refresh progress indicator.
+
+The browser catalog is an exception — it holds a cached snapshot of all unit
+entries that must be explicitly invalidated when dynamic units change.  See D10
+for the mechanism.
 
 ### D9 — API selection
 
@@ -209,13 +218,62 @@ Endpoint: `GET /v2/rates?base=USD` — returns a JSON array of
 164 currencies including XAU, XAG, XPT, and XPD.  ECB-backed with 84
 contributing central banks.  Historical data back to 1948.
 
-Rates are expressed as "quote units per 1 USD"; the app stores the inverse
-("USD per 1 unit") so each raw rate is stored as `1.0 / frankfurterRate`.
+Rates are expressed as "quote units per 1 USD" and stored as-is (no
+inversion).  The expression template uses the GNU Units rational form
+`1|{rate} US$` so the conversion factor is computed exactly at evaluation
+time rather than as a float reciprocal.
 
 The per-row `date` field maps directly to the per-entry `date` in the storage
 schema (D6), which is why Frankfurter's format is a better fit than
 `open.er-api.com` (which returns a flat rate map with a single shared
 timestamp).
+
+### D10 — Browser catalog invalidation via version counter
+
+`BrowserNotifier` builds its `_catalog` (and derived alphabetical / dimension
+indexes) once in `build()` and caches them for performance.  When a background
+currency fetch succeeds and `registerDynamic` updates the repo, those cached
+indexes become stale — they still show the compiled expression strings instead
+of the live ones.
+
+**Solution:** introduce `unitRepositoryVersionProvider`, a Riverpod
+`NotifierProvider<UnitRepositoryVersion, int>` whose state is a monotonically
+increasing integer:
+
+```dart
+final unitRepositoryVersionProvider =
+    NotifierProvider<UnitRepositoryVersion, int>(UnitRepositoryVersion.new);
+
+class UnitRepositoryVersion extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+}
+```
+
+`CurrencyStatusNotifier` calls `unitRepositoryVersionProvider.notifier.increment()`
+after any fetch that produces a new `updatedAt` timestamp (detected by comparing
+`CurrencyRateRepository.load()?.updatedAt` before and after `fetchRates()`).
+
+`BrowserNotifier.build()` subscribes with `ref.listen`:
+
+```dart
+ref.listen<int>(unitRepositoryVersionProvider, (_, _) {
+  _rebuildCatalog();
+});
+```
+
+`_rebuildCatalog()` reconstructs `_catalog` and both indexes from the current
+repo state, then emits `state = state.copyWith()` (a new object with identical
+field values) to trigger Riverpod's identity check and notify listening widgets.
+All user UI state (view mode, search query, collapsed groups) is preserved.
+
+**Why not watch `unitRepositoryVersionProvider` directly?** Watching it would
+re-run `build()`, which is expensive (it involves reading the full unit catalog,
+building two indexes, and setting up all listeners again).  `ref.listen` lets
+the notifier handle the rebuild incrementally without tearing down its full
+Riverpod state.
 
 ## Risks / Trade-offs
 

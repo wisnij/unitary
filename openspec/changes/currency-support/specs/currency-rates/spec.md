@@ -15,17 +15,17 @@ Each returned `CurrencyDescriptor` SHALL contain:
 
 For precious metals, the `unitId` SHALL be the intermediate price unit
 (`goldprice`, `silverprice`, `platinumprice`) rather than the ounce unit, and
-the `expressionTemplate` SHALL be `{rate} US$/troyounce`.  For all other
+the `expressionTemplate` SHALL be `1|{rate} US$/troyounce`.  For all other
 currencies, `unitId` SHALL be the primary ID of the unit the ISO code aliases,
-and `expressionTemplate` SHALL be `{rate} US$`.
+and `expressionTemplate` SHALL be `1|{rate} US$`.
 
 #### Scenario: Standard currency detected
 - **WHEN** `buildCurrencyDescriptors()` is called on a repository with predefined units
-- **THEN** the result includes a descriptor for EUR with `unitId` of `euro` and template `{rate} US$`
+- **THEN** the result includes a descriptor for EUR with `unitId` of `euro` and template `1|{rate} US$`
 
 #### Scenario: Precious metal detected with correct update target
 - **WHEN** `buildCurrencyDescriptors()` is called
-- **THEN** the result includes a descriptor for XAU with `unitId` of `goldprice` and template `{rate} US$/troyounce`
+- **THEN** the result includes a descriptor for XAU with `unitId` of `goldprice` and template `1|{rate} US$/troyounce`
 
 #### Scenario: Base currency excluded
 - **WHEN** `buildCurrencyDescriptors()` is called
@@ -40,7 +40,8 @@ and `expressionTemplate` SHALL be `{rate} US$`.
 the key `currencyRates` as a JSON object with the following structure:
 - `updatedAt`: ISO 8601 UTC timestamp of the last successful fetch
 - `rates`: a map from unit ID to `{rate: double, date: string}`, where `rate` is
-  the USD value of one unit and `date` is the source date string from the API
+  the raw API rate (quote units per 1 USD; troy ounces per 1 USD for precious
+  metals) and `date` is the source date string from the API
 
 Rates SHALL be keyed by unit ID (not ISO code), matching the `unitId` field of
 `CurrencyDescriptor`.
@@ -92,7 +93,7 @@ are applied.
 - **THEN** currency conversions use the compiled fallback rates from `predefined_units.dart`
 
 ### Requirement: Background staleness check
-On every app launch, `CurrencyService.maybeRefresh()` SHALL be called
+On every app launch, `CurrencyStatusNotifier.maybeRefresh()` SHALL be called
 immediately after the repository is ready.  If stored rates are absent or
 `updatedAt` is more than 24 hours old, a fetch SHALL be triggered
 automatically.  The method SHALL return without awaiting the fetch; it SHALL
@@ -117,13 +118,14 @@ NOT block app startup or UI rendering.
 ### Requirement: Live rate fetch from Frankfurter v2
 `CurrencyService` SHALL fetch rates from `https://api.frankfurter.dev/v2/rates?base=USD`.
 The response is a JSON array of `{date, base, quote, rate}` objects.  Each rate
-SHALL be inverted (`1.0 / rate`) before storage, converting from "quote units
-per USD" to "USD per 1 unit".  Only currencies present in the `CurrencyDescriptor`
-list SHALL be stored; unrecognised codes SHALL be ignored.
+SHALL be stored as-is (no inversion); the expression template uses the GNU Units
+rational form `1|{rate} US$` to encode the reciprocal precisely.  Only
+currencies present in the `CurrencyDescriptor` list SHALL be stored;
+unrecognised codes SHALL be ignored.
 
-#### Scenario: Rate inversion applied correctly
+#### Scenario: Raw API rate stored without inversion
 - **WHEN** Frankfurter returns `{"quote": "EUR", "rate": 0.86, "date": "2026-06-06", ...}`
-- **THEN** the stored rate for `euro` is approximately `1.163` (= 1 / 0.86)
+- **THEN** the stored rate for `euro` is `0.86` and the dynamic unit expression is `1|0.86 US$`
 
 #### Scenario: Unrecognised API code ignored
 - **WHEN** the API response contains a code not present in the descriptor list

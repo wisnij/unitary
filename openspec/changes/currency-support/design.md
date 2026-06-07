@@ -192,6 +192,14 @@ check, but enforces a 60-second cooldown to avoid hammering the API.  The
 refresh button is disabled and shows the remaining cooldown while the lockout
 is active.  It does update the status notifier so the UI can show a spinner.
 
+`CurrencyService.fetchRates()` returns `String?` (null on success, an error
+description on failure) rather than throwing.  `CurrencyStatusNotifier.refresh()`
+propagates this as its own `Future<String?>` return type.  The Settings UI
+awaits the result and, when non-null, calls `showDialog` to present a
+`_RefreshErrorDialog` — an `AlertDialog` with the error in a collapsed
+`ExpansionTile`.  Background auto-refresh (via `_doAutoRefresh`) ignores the
+return value so failures remain silent.
+
 ### D8 — `unitRepositoryProvider` stays synchronous
 
 Loading stored rates from SharedPreferences is fast and can run as part of the

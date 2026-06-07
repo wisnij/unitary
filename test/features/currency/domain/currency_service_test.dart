@@ -112,6 +112,33 @@ void main() {
       expect(loaded.rates['japanyen']?.rate, closeTo(0.00637, 1e-9));
     });
 
+    test('returns null on success', () async {
+      final (_, _, service) = await _setup(
+        client: _mockClient([_row('EUR', 0.86, '2026-06-06')]),
+      );
+      expect(await service.fetchRates(), isNull);
+    });
+
+    test('returns error string on network failure', () async {
+      final client = MockClient((_) async => throw Exception('no network'));
+      final (_, _, service) = await _setup(client: client);
+      final error = await service.fetchRates();
+      expect(error, isNotNull);
+      expect(error, isNotEmpty);
+    });
+
+    test(
+      'returns error string containing status code on non-200 response',
+      () async {
+        final (_, _, service) = await _setup(
+          client: _mockClient([], status: 503),
+        );
+        final error = await service.fetchRates();
+        expect(error, isNotNull);
+        expect(error, contains('503'));
+      },
+    );
+
     test('network error leaves existing rates intact', () async {
       final client = MockClient((_) async => throw Exception('no network'));
       final (_, rateRepo, service) = await _setup(client: client);

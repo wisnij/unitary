@@ -36,7 +36,15 @@ class CurrencySettingsSection extends ConsumerWidget {
       trailing = IconButton(
         icon: const Icon(Icons.refresh),
         tooltip: 'Refresh exchange rates',
-        onPressed: () => notifier.refresh(),
+        onPressed: () async {
+          final error = await notifier.refresh();
+          if (error != null && context.mounted) {
+            await showDialog<void>(
+              context: context,
+              builder: (ctx) => _RefreshErrorDialog(error: error),
+            );
+          }
+        },
       );
     }
 
@@ -44,6 +52,44 @@ class CurrencySettingsSection extends ConsumerWidget {
       title: const Text('Exchange rates'),
       subtitle: Text(subtitle),
       trailing: trailing,
+    );
+  }
+}
+
+class _RefreshErrorDialog extends StatelessWidget {
+  const _RefreshErrorDialog({required this.error});
+
+  final String error;
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(
+        'Error during rate update',
+        style: TextStyle(color: Theme.of(context).colorScheme.error),
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('The exchange rates could not be refreshed.'),
+          ExpansionTile(
+            title: const Text('Details'),
+            children: [
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(error),
+              ),
+            ],
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('OK'),
+        ),
+      ],
     );
   }
 }

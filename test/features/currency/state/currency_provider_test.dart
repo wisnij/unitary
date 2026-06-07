@@ -179,5 +179,37 @@ void main() {
 
       expect(container.read(unitRepositoryVersionProvider), versionBefore);
     });
+
+    test('returns null when fetch succeeds', () async {
+      final container = await _makeContainer(_eurClient());
+      final result = await container
+          .read(currencyStatusProvider.notifier)
+          .refresh();
+      expect(result, isNull);
+    });
+
+    test('returns error string when network fails', () async {
+      final failClient = MockClient(
+        (_) async => throw Exception('connection refused'),
+      );
+      final container = await _makeContainer(failClient);
+      final result = await container
+          .read(currencyStatusProvider.notifier)
+          .refresh();
+      expect(result, isNotNull);
+      expect(result, isNotEmpty);
+    });
+
+    test('returns error string when server returns error status', () async {
+      final errorClient = MockClient(
+        (_) async => http.Response('', 503),
+      );
+      final container = await _makeContainer(errorClient);
+      final result = await container
+          .read(currencyStatusProvider.notifier)
+          .refresh();
+      expect(result, isNotNull);
+      expect(result, contains('503'));
+    });
   });
 }

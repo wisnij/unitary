@@ -109,46 +109,41 @@ class CurrencyStatusNotifier extends Notifier<CurrencyStatus> {
   }
 
   Future<void> _doAutoRefresh() async {
-    try {
-      final before = ref.read(currencyRateRepositoryProvider).load()?.updatedAt;
-      await ref.read(currencyServiceProvider).fetchRates();
-      final stored = ref.read(currencyRateRepositoryProvider).load();
-      if (stored != null && stored.updatedAt != before) {
-        state = state.copyWith(lastUpdatedAt: stored.updatedAt);
-        ref.read(unitRepositoryVersionProvider.notifier).increment();
-      }
-    } on Exception {
-      // Silent failure for background auto-refresh.
+    final before = ref.read(currencyRateRepositoryProvider).load()?.updatedAt;
+    await ref.read(currencyServiceProvider).fetchRates(); // ignore error
+    final stored = ref.read(currencyRateRepositoryProvider).load();
+    if (stored != null && stored.updatedAt != before) {
+      state = state.copyWith(lastUpdatedAt: stored.updatedAt);
+      ref.read(unitRepositoryVersionProvider.notifier).increment();
     }
   }
 
   /// Triggers an immediate fetch, bypassing the 24-hour staleness check.
   /// Enforces a 60-second cooldown between manual refresh attempts.
-  Future<void> refresh() async {
+  ///
+  /// Returns null on success, or an error string when the fetch fails.
+  Future<String?> refresh() async {
     if (!state.canRefresh) {
-      return;
+      return null;
     }
     final expiry = DateTime.now().toUtc().add(_cooldown);
     state = state.copyWith(isFetching: true, cooldownExpiry: expiry);
-    try {
-      final before = ref.read(currencyRateRepositoryProvider).load()?.updatedAt;
-      await ref.read(currencyServiceProvider).fetchRates();
-      final stored = ref.read(currencyRateRepositoryProvider).load();
-      state = state.copyWith(
-        isFetching: false,
-        lastUpdatedAt: stored?.updatedAt,
-      );
-      if (stored != null && stored.updatedAt != before) {
-        ref.read(unitRepositoryVersionProvider.notifier).increment();
-      }
-    } on Exception {
-      state = state.copyWith(isFetching: false);
+
+    final before = ref.read(currencyRateRepositoryProvider).load()?.updatedAt;
+    final error = await ref.read(currencyServiceProvider).fetchRates();
+    final stored = ref.read(currencyRateRepositoryProvider).load();
+    state = state.copyWith(isFetching: false, lastUpdatedAt: stored?.updatedAt);
+    if (error == null && stored != null && stored.updatedAt != before) {
+      ref.read(unitRepositoryVersionProvider.notifier).increment();
     }
+
     // Schedule state update when cooldown expires so the button re-enables.
     Timer(_cooldown, () {
       if (!ref.read(currencyStatusProvider).isFetching) {
         state = state.copyWith(clearCooldown: true);
       }
     });
+
+    return error;
   }
 }

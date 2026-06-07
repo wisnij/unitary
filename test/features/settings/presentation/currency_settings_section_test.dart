@@ -14,11 +14,36 @@ class _FixedStatusNotifier extends CurrencyStatusNotifier {
   CurrencyStatus build() => _initial;
 }
 
+class _RefreshResultNotifier extends CurrencyStatusNotifier {
+  _RefreshResultNotifier({required this.refreshResult});
+
+  final String? refreshResult;
+
+  @override
+  CurrencyStatus build() => const CurrencyStatus();
+
+  @override
+  Future<String?> refresh() async => refreshResult;
+}
+
 void main() {
   Widget buildApp(CurrencyStatus status) {
     return ProviderScope(
       overrides: [
         currencyStatusProvider.overrideWith(() => _FixedStatusNotifier(status)),
+      ],
+      child: const MaterialApp(
+        home: Scaffold(body: CurrencySettingsSection()),
+      ),
+    );
+  }
+
+  Widget buildAppWithRefreshResult(String? refreshResult) {
+    return ProviderScope(
+      overrides: [
+        currencyStatusProvider.overrideWith(
+          () => _RefreshResultNotifier(refreshResult: refreshResult),
+        ),
       ],
       child: const MaterialApp(
         home: Scaffold(body: CurrencySettingsSection()),
@@ -70,6 +95,71 @@ void main() {
       final past = DateTime.now().toUtc().subtract(const Duration(seconds: 5));
       await tester.pumpWidget(buildApp(CurrencyStatus(cooldownExpiry: past)));
       expect(find.byIcon(Icons.refresh), findsOneWidget);
+    });
+  });
+
+  group('CurrencySettingsSection — refresh error dialog', () {
+    testWidgets('no dialog when refresh succeeds (returns null)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildAppWithRefreshResult(null));
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
+    });
+
+    testWidgets('shows AlertDialog when refresh returns an error', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        buildAppWithRefreshResult('Exception: connection refused'),
+      );
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+    });
+
+    testWidgets('dialog title says rates could not be updated', (tester) async {
+      await tester.pumpWidget(
+        buildAppWithRefreshResult('Exception: connection refused'),
+      );
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+      expect(find.text('Error during rate update'), findsOneWidget);
+    });
+
+    testWidgets('error detail is hidden inside collapsed ExpansionTile', (
+      tester,
+    ) async {
+      const errorMsg = 'Exception: connection refused';
+      await tester.pumpWidget(buildAppWithRefreshResult(errorMsg));
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+      // The error text should not be visible until the details section is expanded.
+      expect(find.text(errorMsg), findsNothing);
+    });
+
+    testWidgets('error detail becomes visible after expanding Details', (
+      tester,
+    ) async {
+      const errorMsg = 'Exception: connection refused';
+      await tester.pumpWidget(buildAppWithRefreshResult(errorMsg));
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Details'));
+      await tester.pumpAndSettle();
+      expect(find.text(errorMsg), findsOneWidget);
+    });
+
+    testWidgets('dialog is dismissed by OK button', (tester) async {
+      await tester.pumpWidget(
+        buildAppWithRefreshResult('Exception: connection refused'),
+      );
+      await tester.tap(find.byIcon(Icons.refresh));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsNothing);
     });
   });
 }

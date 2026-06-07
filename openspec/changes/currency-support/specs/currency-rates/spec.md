@@ -154,6 +154,38 @@ A spinner SHALL be displayed while a fetch is in progress.
 - **WHEN** 60 seconds have elapsed since the last fetch attempt
 - **THEN** the refresh button becomes active again
 
+### Requirement: Manual refresh error feedback
+When a manually-triggered refresh fails (network error, non-200 response, or
+unparseable payload), the Settings screen SHALL display an error dialog.
+The dialog SHALL contain:
+- A title indicating the rates could not be updated
+- A brief message confirming that the refresh failed
+- A collapsible "Details" section containing the full error message, collapsed by default
+
+Background auto-refresh failures (via `CurrencyStatusNotifier.maybeRefresh`)
+SHALL NOT produce any user-visible error message.
+
+`CurrencyService.fetchRates` SHALL return a `String?` — null on success, an
+error description on failure — rather than swallowing errors silently.
+`CurrencyStatusNotifier.refresh` SHALL propagate this value to callers as its
+`Future<String?>` return type.
+
+#### Scenario: Error dialog on manual refresh failure
+- **WHEN** the user taps the manual refresh button and the fetch fails
+- **THEN** an error dialog is displayed with a title indicating failure and an OK button
+
+#### Scenario: Error details hidden by default
+- **WHEN** the error dialog is shown
+- **THEN** the "Details" section is collapsed and the raw error message is not visible
+
+#### Scenario: Error details visible after expand
+- **WHEN** the user taps the "Details" label in the error dialog
+- **THEN** the section expands and the full error message becomes visible
+
+#### Scenario: Auto-refresh failure is silent
+- **WHEN** the app-launch background refresh fails
+- **THEN** no error dialog or message is shown to the user
+
 ### Requirement: Currency status display in Settings
 The Settings screen SHALL display a currency section showing the timestamp of
 the last successful rate fetch.  If no successful fetch has occurred, the

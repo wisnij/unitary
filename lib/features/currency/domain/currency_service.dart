@@ -30,27 +30,28 @@ class CurrencyService {
   /// For each rate received whose ISO code matches a [CurrencyDescriptor],
   /// a new [DerivedUnit] is created using the descriptor's expression template
   /// and registered dynamically.  Rates not in the descriptor list are ignored.
-  /// On any network or parse error the method returns without modifying state.
-  Future<void> fetchRates() async {
+  ///
+  /// Returns null on success, or an error string describing the failure.
+  Future<String?> fetchRates() async {
     final descriptors = _repo.buildCurrencyDescriptors();
     final byIsoCode = {for (final d in descriptors) d.isoCode: d};
 
     http.Response response;
     try {
       response = await _client.get(Uri.parse(_frankfurterUrl));
-    } on Exception {
-      return;
+    } on Exception catch (e) {
+      return e.toString();
     }
 
     if (response.statusCode != 200) {
-      return;
+      return 'HTTP ${response.statusCode}';
     }
 
     List<dynamic> rows;
     try {
       rows = jsonDecode(response.body) as List<dynamic>;
-    } on Exception {
-      return;
+    } on Exception catch (e) {
+      return e.toString();
     }
 
     // Load existing rates so we can merge (preserve rates absent from response).
@@ -97,5 +98,6 @@ class CurrencyService {
         rates: newRates,
       ),
     );
+    return null;
   }
 }

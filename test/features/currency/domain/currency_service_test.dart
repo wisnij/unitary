@@ -40,36 +40,37 @@ Future<(UnitRepository, CurrencyRateRepository, CurrencyService)> _setup({
 
 void main() {
   group('CurrencyService.fetchRates', () {
-    test('rate inversion applied: EUR 0.86 → stored as ~1.163', () async {
-      final (repo, rateRepo, service) = await _setup(
-        client: _mockClient([_row('EUR', 0.86, '2026-06-06')]),
-      );
-      await service.fetchRates();
-      final stored = rateRepo.load()!.rates['euro']!;
-      expect(stored.rate, closeTo(1.0 / 0.86, 1e-9));
-      expect(stored.date, '2026-06-06');
-    });
+    test(
+      'raw API rate stored without inversion: EUR 0.86 → stored as 0.86',
+      () async {
+        final (_, rateRepo, service) = await _setup(
+          client: _mockClient([_row('EUR', 0.86, '2026-06-06')]),
+        );
+        await service.fetchRates();
+        final stored = rateRepo.load()!.rates['euro']!;
+        expect(stored.rate, closeTo(0.86, 1e-9));
+        expect(stored.date, '2026-06-06');
+      },
+    );
 
-    test('dynamic unit expression updated with inverted rate', () async {
+    test('dynamic unit expression uses 1|rate rational form', () async {
       final (repo, _, service) = await _setup(
         client: _mockClient([_row('EUR', 0.86, '2026-06-06')]),
       );
       await service.fetchRates();
-      final unit = repo.findUnit('euro');
-      expect(unit?.id, 'euro');
-      // Expression should contain the inverted rate
-      expect((unit as dynamic).expression, contains('US\$'));
+      final unit = repo.findUnit('euro') as dynamic;
+      expect(unit.expression, '1|0.86 US\$');
     });
 
     test('precious metal rate (XAU) uses troyounce template', () async {
-      // XAU: 0.00030 oz per USD → 1/0.00030 ≈ 3333 USD/oz
+      // XAU: 0.00030 oz per USD → stored as raw rate 0.00030, expression '1|0.00030 US$/troyounce'
       final (_, rateRepo, service) = await _setup(
         client: _mockClient([_row('XAU', 0.00030, '2026-06-06')]),
       );
       await service.fetchRates();
       final stored = rateRepo.load()!.rates['goldprice'];
       expect(stored, isNotNull);
-      expect(stored!.rate, closeTo(1.0 / 0.00030, 1e-6));
+      expect(stored!.rate, closeTo(0.00030, 1e-9));
     });
 
     test('unrecognised API code is ignored', () async {

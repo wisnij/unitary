@@ -8,7 +8,7 @@ const _kPrefsKey = 'currencyRates';
 
 /// A single stored rate entry: the USD value of one unit and the source date.
 class CurrencyRateEntry {
-  /// USD value of 1 unit (or USD per troy ounce for precious metals).
+  /// The raw API rate as returned by Frankfurter (units per USD, or troy ounces per USD for precious metals).
   final double rate;
 
   /// Source date string from the Frankfurter API (e.g. '2026-06-06').

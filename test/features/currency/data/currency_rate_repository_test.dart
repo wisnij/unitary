@@ -15,14 +15,14 @@ const _goldounce = DerivedUnit(
 const _eurDescriptor = CurrencyDescriptor(
   isoCode: 'EUR',
   unitId: 'euro',
-  expressionTemplate: '{rate} US\$',
+  expressionTemplate: '1|{rate} US\$',
   originalUnit: _euro,
 );
 
 const _xauDescriptor = CurrencyDescriptor(
   isoCode: 'XAU',
   unitId: 'goldprice',
-  expressionTemplate: '{rate} US\$/troyounce',
+  expressionTemplate: '1|{rate} US\$/troyounce',
   originalUnit: _goldounce,
 );
 

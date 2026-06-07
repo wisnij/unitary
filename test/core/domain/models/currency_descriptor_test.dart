@@ -23,37 +23,37 @@ void main() {
     test('EUR maps to euro with standard template', () {
       final d = descriptors.firstWhere((d) => d.isoCode == 'EUR');
       expect(d.unitId, 'euro');
-      expect(d.expressionTemplate, '{rate} US\$');
+      expect(d.expressionTemplate, '1|{rate} US\$');
     });
 
     test('GBP maps to ukpound with standard template', () {
       final d = descriptors.firstWhere((d) => d.isoCode == 'GBP');
       expect(d.unitId, 'ukpound');
-      expect(d.expressionTemplate, '{rate} US\$');
+      expect(d.expressionTemplate, '1|{rate} US\$');
     });
 
     test('JPY maps to japanyen with standard template', () {
       final d = descriptors.firstWhere((d) => d.isoCode == 'JPY');
       expect(d.unitId, 'japanyen');
-      expect(d.expressionTemplate, '{rate} US\$');
+      expect(d.expressionTemplate, '1|{rate} US\$');
     });
 
     test('XAU maps to goldprice with troyounce template', () {
       final d = descriptors.firstWhere((d) => d.isoCode == 'XAU');
       expect(d.unitId, 'goldprice');
-      expect(d.expressionTemplate, '{rate} US\$/troyounce');
+      expect(d.expressionTemplate, '1|{rate} US\$/troyounce');
     });
 
     test('XAG maps to silverprice with troyounce template', () {
       final d = descriptors.firstWhere((d) => d.isoCode == 'XAG');
       expect(d.unitId, 'silverprice');
-      expect(d.expressionTemplate, '{rate} US\$/troyounce');
+      expect(d.expressionTemplate, '1|{rate} US\$/troyounce');
     });
 
     test('XPT maps to platinumprice with troyounce template', () {
       final d = descriptors.firstWhere((d) => d.isoCode == 'XPT');
       expect(d.unitId, 'platinumprice');
-      expect(d.expressionTemplate, '{rate} US\$/troyounce');
+      expect(d.expressionTemplate, '1|{rate} US\$/troyounce');
     });
 
     test('USD is excluded (it is the base currency)', () {

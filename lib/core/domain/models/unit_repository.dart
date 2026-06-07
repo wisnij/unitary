@@ -752,7 +752,7 @@ class UnitRepository {
           CurrencyDescriptor(
             isoCode: name,
             unitId: metal.unitId,
-            expressionTemplate: '{rate} US\$/troyounce',
+            expressionTemplate: '1|{rate} US\$/troyounce',
             originalUnit: priceUnit,
           ),
         );
@@ -761,7 +761,7 @@ class UnitRepository {
           CurrencyDescriptor(
             isoCode: name,
             unitId: unit.id,
-            expressionTemplate: '{rate} US\$',
+            expressionTemplate: '1|{rate} US\$',
             originalUnit: unit,
           ),
         );

@@ -74,8 +74,7 @@ class CurrencyService {
         continue;
       }
 
-      final usdPerUnit = 1.0 / rawRate;
-      final expression = descriptor.expressionFor(usdPerUnit);
+      final expression = descriptor.expressionFor(rawRate);
 
       _repo.registerDynamic(
         DerivedUnit(
@@ -87,7 +86,7 @@ class CurrencyService {
       );
 
       newRates[descriptor.unitId] = CurrencyRateEntry(
-        rate: usdPerUnit,
+        rate: rawRate,
         date: date,
       );
     }

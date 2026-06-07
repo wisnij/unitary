@@ -10,6 +10,7 @@ import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
@@ -639,6 +640,71 @@ void main() {
       await tester.longPress(find.text('tempC').first);
       await tester.pump();
       expect(lastClipboardText(), 'tempC');
+    });
+  });
+
+  group('UnitEntryDetailScreen — live unitRepositoryProvider path', () {
+    setUpAll(_setUpSettings);
+
+    testWidgets('uses unitRepositoryProvider when repo is null', (
+      tester,
+    ) async {
+      final liveRepo = UnitRepository();
+      liveRepo.register(const PrimitiveUnit(id: 'm'));
+      liveRepo.register(
+        const DerivedUnit(id: 'ft', expression: '0.3048 m'),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(_settingsRepo),
+            unitRepositoryProvider.overrideWithValue(liveRepo),
+          ],
+          child: const MaterialApp(
+            home: UnitEntryDetailScreen(
+              primaryId: 'ft',
+              kind: BrowseEntryKind.unit,
+            ),
+          ),
+        ),
+      );
+
+      // Expression appears in both the Definition and Value sections.
+      expect(find.text('0.3048 m'), findsAtLeastNWidgets(1));
+    });
+
+    testWidgets('reflects dynamic unit expression from live repo', (
+      tester,
+    ) async {
+      final liveRepo = UnitRepository();
+      liveRepo.register(const PrimitiveUnit(id: 'm'));
+      liveRepo.register(
+        const DerivedUnit(id: 'ft', expression: '0.3048 m'),
+      );
+      // Shadow with dynamic rate (simulates currency update).
+      liveRepo.registerDynamic(
+        const DerivedUnit(id: 'ft', expression: '0.9999 m'),
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(_settingsRepo),
+            unitRepositoryProvider.overrideWithValue(liveRepo),
+          ],
+          child: const MaterialApp(
+            home: UnitEntryDetailScreen(
+              primaryId: 'ft',
+              kind: BrowseEntryKind.unit,
+            ),
+          ),
+        ),
+      );
+
+      // Dynamic expression shadows compiled one.
+      expect(find.text('0.9999 m'), findsAtLeastNWidgets(1));
+      expect(find.text('0.3048 m'), findsNothing);
     });
   });
 }

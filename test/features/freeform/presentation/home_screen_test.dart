@@ -8,6 +8,8 @@ import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
+import 'package:unitary/features/currency/data/currency_rate_repository.dart';
+import 'package:unitary/features/currency/state/currency_provider.dart';
 import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
 import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
@@ -24,6 +26,7 @@ void main() {
   late SettingsRepository repo;
   late WorksheetRepository worksheetRepo;
   late FreeformHistoryRepository historyRepo;
+  late CurrencyRateRepository currencyRateRepo;
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
@@ -31,6 +34,7 @@ void main() {
     repo = SettingsRepository(prefs);
     worksheetRepo = WorksheetRepository(prefs);
     historyRepo = FreeformHistoryRepository(prefs);
+    currencyRateRepo = CurrencyRateRepository(prefs);
   });
 
   UnitRepository buildTestBrowserRepo() {
@@ -46,6 +50,7 @@ void main() {
         settingsRepositoryProvider.overrideWithValue(repo),
         worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
         freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
+        currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
         if (browserRepo != null)
           unitRepositoryProvider.overrideWithValue(browserRepo),
       ],

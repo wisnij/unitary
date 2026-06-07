@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/app.dart';
+import 'package:unitary/features/currency/data/currency_rate_repository.dart';
+import 'package:unitary/features/currency/state/currency_provider.dart';
 import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
@@ -17,6 +19,7 @@ void main() {
     final settingsRepo = SettingsRepository(prefs);
     final worksheetRepo = WorksheetRepository(prefs);
     final historyRepo = FreeformHistoryRepository(prefs);
+    final currencyRateRepo = CurrencyRateRepository(prefs);
 
     await tester.pumpWidget(
       ProviderScope(
@@ -24,6 +27,7 @@ void main() {
           settingsRepositoryProvider.overrideWithValue(settingsRepo),
           worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
           freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
+          currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
         ],
         child: const UnitaryApp(),
       ),

@@ -946,6 +946,45 @@ void main() {
         expect(e.kind, BrowseEntryKind.prefix);
       }
     });
+
+    test('dynamic unit shadows compiled unit in catalog summaryLine', () {
+      repo.registerDynamic(
+        const DerivedUnit(
+          id: 'km',
+          aliases: ['kilometre'],
+          expression: '999 m',
+        ),
+      );
+      final catalog = repo.buildBrowseCatalog();
+      final km = catalog.firstWhere((e) => e.name == 'km');
+      // Dynamic expression overrides compiled '1000 m'.
+      expect(km.summaryLine, '999 m');
+    });
+
+    test('dynamic-only unit appears in catalog', () {
+      repo.registerDynamic(
+        const DerivedUnit(id: 'league', expression: '3 km'),
+      );
+      final catalog = repo.buildBrowseCatalog();
+      final names = catalog.map((e) => e.name).toSet();
+      expect(names, contains('league'));
+    });
+
+    test(
+      'catalog does not duplicate entries when dynamic shadows compiled',
+      () {
+        repo.registerDynamic(
+          const DerivedUnit(
+            id: 'km',
+            aliases: ['kilometre'],
+            expression: '999 m',
+          ),
+        );
+        final catalog = repo.buildBrowseCatalog();
+        final kmEntries = catalog.where((e) => e.name == 'km').toList();
+        expect(kmEntries, hasLength(1));
+      },
+    );
   });
 
   group('UnitRepository.resolveUnit caching', () {

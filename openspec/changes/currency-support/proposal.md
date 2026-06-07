@@ -54,5 +54,9 @@ mechanism needed to support user-defined units in Phase 11.
 - **`lib/features/currency/`** — new feature directory: service, repository,
   providers, UI widget
 - **New dependency**: an HTTP client package (e.g. `http`) for rate fetching
-- **`unitRepositoryProvider`** — changes from synchronous to async
-  (`FutureProvider`), requiring dependent providers to handle loading state
+- **`unitRepositoryProvider`** — remains synchronous (`Provider<UnitRepository>`);
+  stored rates are applied to the dynamic layer before the first frame so no
+  async loading state is needed in dependent providers
+- **`lib/features/browser/`** — `BrowserNotifier` gains catalog-rebuild logic
+  triggered by `unitRepositoryVersionProvider` so the unit list reflects live
+  currency rates after a background fetch

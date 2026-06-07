@@ -13,6 +13,7 @@
 - [x] 2.7 Implement `unregisterDynamic(String id)`: remove from dynamic maps by looking up the unit's aliases
 - [x] 2.8 Implement `allDynamicUnits` getter
 - [x] 2.9 Update `_findExact` and `findUnitWithPrefix` to check `_dynamicLookup` before `_unitLookup`
+- [x] 2.10 Implement `unitRepositoryVersionProvider` (`NotifierProvider<UnitRepositoryVersion, int>`) and wire `BrowserNotifier` to rebuild its catalog via `ref.listen` when the counter increments
 
 ## 3. Currency Detection
 
@@ -35,17 +36,17 @@
 ## 5. Currency Service
 
 - [x] 5.1 Create `lib/features/currency/domain/currency_service.dart`
-- [x] 5.2 Write tests for `fetchRates()` using a mock HTTP client: rate inversion applied correctly, unknown API codes ignored, partial response leaves unaffected stored rates unchanged, network failure leaves existing rates intact
-- [x] 5.3 Implement `CurrencyService.fetchRates()`: GET `https://api.frankfurter.dev/v2/rates?base=USD`, parse response array, invert rates (`1.0 / frankfurterRate`), apply to `UnitRepository` via `registerDynamic`, persist via `CurrencyRateRepository.save()`
-- [x] 5.4 Implement `CurrencyService.maybeRefresh()`: check `updatedAt` against 24-hour threshold; if stale or absent, call `fetchRates()` as a fire-and-forget unawaited future
+- [x] 5.2 Write tests for `fetchRates()` using a mock HTTP client: raw rate stored without inversion, unknown API codes ignored, partial response leaves unaffected stored rates unchanged, network failure leaves existing rates intact, returns null on success, returns error string on failure
+- [x] 5.3 Implement `CurrencyService.fetchRates()`: GET `https://api.frankfurter.dev/v2/rates?base=USD`, parse response array, store raw API rate with `1|{rate} US$` expression template, apply to `UnitRepository` via `registerDynamic`, persist via `CurrencyRateRepository.save()`; return `String?` (null on success, error description on failure)
+- [x] 5.4 Implement `CurrencyStatusNotifier.maybeRefresh()`: check `updatedAt` against 24-hour threshold; if stale or absent, call `fetchRates()` as a fire-and-forget unawaited future with silent error handling
 
 ## 6. Riverpod Providers and Startup Wiring
 
 - [x] 6.1 Create `currencyRateRepositoryProvider` (must-override, wired in `main.dart` and tests)
 - [x] 6.2 Create `currencyServiceProvider`
-- [x] 6.3 Create `currencyStatusProvider` (`StateNotifierProvider` for last-updated timestamp, fetch-in-progress flag, and cooldown expiry)
+- [x] 6.3 Create `currencyStatusProvider` (`NotifierProvider<CurrencyStatusNotifier, CurrencyStatus>` for last-updated timestamp, fetch-in-progress flag, and cooldown expiry)
 - [x] 6.4 Apply stored rates to `UnitRepository` at startup: load from `CurrencyRateRepository`, call `registerDynamic` for each entry before first frame
-- [x] 6.5 Call `CurrencyService.maybeRefresh()` fire-and-forget in app init after repository is ready
+- [x] 6.5 Call `CurrencyStatusNotifier.maybeRefresh()` fire-and-forget in app init after repository is ready
 
 ## 7. Settings UI — Currency Section
 
@@ -54,8 +55,18 @@
 - [x] 7.3 Add currency section to `SettingsScreen`: display `updatedAt` timestamp or "Using built-in rates" if no fetch has occurred
 - [x] 7.4 Add manual refresh button to currency section: calls `currencyStatusNotifier.refresh()`, disabled with countdown label during cooldown, shows spinner while `isFetching` is true
 
-## 8. Completion
+## 8. Manual Refresh Error Feedback
 
-- [x] 8.1 Run `flutter test --reporter failures-only` and fix any failures
-- [x] 8.2 Run `flutter analyze` and fix any linting errors
-- [x] 8.3 Update `doc/design_progress.md` and `README.md` to reflect Phase 8 completion
+- [x] 8.1 Change `CurrencyService.fetchRates()` return type from `Future<void>` to `Future<String?>`: return null on success, error description string on network failure or non-200 response
+- [x] 8.2 Change `CurrencyStatusNotifier.refresh()` return type to `Future<String?>`: propagate the `fetchRates()` result to callers; `_doAutoRefresh` ignores the result (silent failure unchanged)
+- [x] 8.3 Write unit tests for `fetchRates()` return value: null on success, non-null on network error, non-null containing status code on HTTP error
+- [x] 8.4 Write unit tests for `refresh()` return value: null on success, non-null on network error, non-null on HTTP error
+- [x] 8.5 In `CurrencySettingsSection`, await `refresh()` and call `showDialog` with `_RefreshErrorDialog` when the result is non-null (guarded by `context.mounted`)
+- [x] 8.6 Implement `_RefreshErrorDialog`: `AlertDialog` with error-colored title, brief body text, `ExpansionTile` "Details" section (collapsed by default) containing the full error string, and an OK dismiss button
+- [x] 8.7 Write widget tests for the error dialog: no dialog on success, dialog shown on error, title correct, details hidden by default, details visible after expand, OK dismisses
+
+## 9. Completion
+
+- [x] 9.1 Run `flutter test --reporter failures-only` and fix any failures
+- [x] 9.2 Run `flutter analyze` and fix any linting errors
+- [x] 9.3 Update `doc/design_progress.md` and `README.md` to reflect Phase 8 completion

@@ -7,6 +7,7 @@ import '../../../core/domain/models/function.dart';
 import '../../../core/domain/models/quantity.dart';
 import '../../../core/domain/models/unit.dart';
 import '../../../core/domain/models/unit_repository.dart';
+import '../../../core/domain/models/unit_repository_provider.dart';
 import '../../../shared/utils/quantity_formatter.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
@@ -27,17 +28,16 @@ class UnitEntryDetailScreen extends ConsumerWidget {
   final String primaryId;
   final BrowseEntryKind kind;
 
-  /// Optional override for the unit repository; when null, the shared
-  /// predefined-units instance is used.  Pass a custom repo in tests to avoid
-  /// loading the full database.
+  /// Optional override for the unit repository; when null, the live
+  /// [unitRepositoryProvider] instance is used.  Pass a custom repo in tests
+  /// to avoid loading the full database.
   final UnitRepository? repo;
-
-  static final _defaultRepo = UnitRepository.withPredefinedUnits();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
-    final effectiveRepo = repo ?? _defaultRepo;
+    final UnitRepository effectiveRepo =
+        repo ?? ref.watch(unitRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(primaryId)),

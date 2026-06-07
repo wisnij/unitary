@@ -19,7 +19,7 @@ class _UnitaryAppState extends ConsumerState<UnitaryApp> {
     // Fire-and-forget background staleness check after the first frame so the
     // repository and providers are fully initialised before we touch them.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(currencyServiceProvider).maybeRefresh();
+      ref.read(currencyStatusProvider.notifier).maybeRefresh();
     });
   }
 

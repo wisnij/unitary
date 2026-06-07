@@ -6,6 +6,8 @@ import '../../../core/domain/models/unit_repository_provider.dart';
 import '../data/currency_rate_repository.dart';
 import '../domain/currency_service.dart';
 
+const _staleDuration = Duration(hours: 24);
+
 /// Provides the [CurrencyRateRepository] instance.
 ///
 /// Must be overridden in [ProviderScope] with an initialized repository.
@@ -92,6 +94,34 @@ class CurrencyStatusNotifier extends Notifier<CurrencyStatus> {
     return CurrencyStatus(lastUpdatedAt: stored?.updatedAt);
   }
 
+  /// Checks whether stored rates are stale and, if so, triggers a background
+  /// fetch.  Unlike [refresh], this does not set [CurrencyStatus.isFetching]
+  /// and does not enforce a cooldown — it is meant for silent auto-refresh on
+  /// app launch.
+  void maybeRefresh() {
+    final stored = ref.read(currencyRateRepositoryProvider).load();
+    final isStale =
+        stored == null ||
+        DateTime.now().toUtc().difference(stored.updatedAt) >= _staleDuration;
+    if (isStale) {
+      _doAutoRefresh();
+    }
+  }
+
+  Future<void> _doAutoRefresh() async {
+    try {
+      final before = ref.read(currencyRateRepositoryProvider).load()?.updatedAt;
+      await ref.read(currencyServiceProvider).fetchRates();
+      final stored = ref.read(currencyRateRepositoryProvider).load();
+      if (stored != null && stored.updatedAt != before) {
+        state = state.copyWith(lastUpdatedAt: stored.updatedAt);
+        ref.read(unitRepositoryVersionProvider.notifier).increment();
+      }
+    } on Exception {
+      // Silent failure for background auto-refresh.
+    }
+  }
+
   /// Triggers an immediate fetch, bypassing the 24-hour staleness check.
   /// Enforces a 60-second cooldown between manual refresh attempts.
   Future<void> refresh() async {
@@ -101,12 +131,16 @@ class CurrencyStatusNotifier extends Notifier<CurrencyStatus> {
     final expiry = DateTime.now().toUtc().add(_cooldown);
     state = state.copyWith(isFetching: true, cooldownExpiry: expiry);
     try {
+      final before = ref.read(currencyRateRepositoryProvider).load()?.updatedAt;
       await ref.read(currencyServiceProvider).fetchRates();
       final stored = ref.read(currencyRateRepositoryProvider).load();
       state = state.copyWith(
         isFetching: false,
         lastUpdatedAt: stored?.updatedAt,
       );
+      if (stored != null && stored.updatedAt != before) {
+        ref.read(unitRepositoryVersionProvider.notifier).increment();
+      }
     } on Exception {
       state = state.copyWith(isFetching: false);
     }

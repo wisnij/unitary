@@ -87,12 +87,33 @@ class BrowserNotifier extends Notifier<BrowserState> {
     _dimensionIndex = _buildDimensionIndex(_catalog, _repo.dimensionLabels);
     final allDimensionLabels = _dimensionIndex!.map((g) => g.$1).toSet();
 
+    // Rebuild the catalog when dynamic units change (e.g. after a currency
+    // rate refresh) without resetting the user's current UI state.
+    ref.listen<int>(unitRepositoryVersionProvider, (_, _) {
+      _rebuildCatalog();
+    });
+
     return BrowserState(
       viewMode: BrowseViewMode.dimension,
       searchQuery: '',
       searchVisible: false,
       collapsedGroups: allDimensionLabels,
     );
+  }
+
+  /// Rebuilds the catalog and indexes from the current repository state,
+  /// then re-emits the existing UI state to trigger widget rebuilds.
+  void _rebuildCatalog() {
+    _catalog = _repo.buildBrowseCatalog();
+    _alphabeticalIndex = buildAlphabeticalIndex(_catalog);
+    if (state.viewMode == BrowseViewMode.dimension) {
+      _dimensionIndex = _buildDimensionIndex(_catalog, _repo.dimensionLabels);
+    } else {
+      _dimensionIndex = null;
+    }
+    // Create a new BrowserState instance (same values) so Riverpod's identity
+    // check detects a change and notifies all watching widgets.
+    state = state.copyWith();
   }
 
   // ---------------------------------------------------------------------------

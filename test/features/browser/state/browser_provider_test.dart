@@ -407,4 +407,89 @@ void main() {
       }
     });
   });
+
+  group('BrowserNotifier catalog rebuild on unitRepositoryVersionProvider', () {
+    test('incrementing version causes updated summaryLine to appear', () {
+      final container = _makeContainer(repo);
+      final notifier = container.read(browserProvider.notifier);
+
+      // Expand all so we can see entries.
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      notifier.expandAll();
+
+      // Confirm 'ft' entry shows original expression.
+      final beforeGroups = notifier.visibleGroups();
+      final ftBefore = beforeGroups
+          .expand((g) => g.$2)
+          .firstWhere((e) => e.name == 'ft');
+      expect(ftBefore.summaryLine, '0.3048 m');
+
+      // Apply a dynamic update and notify via the version counter.
+      repo.registerDynamic(
+        const DerivedUnit(id: 'ft', expression: '0.9999 m'),
+      );
+      container.read(unitRepositoryVersionProvider.notifier).increment();
+
+      // Catalog should reflect the new expression.
+      final afterGroups = notifier.visibleGroups();
+      final ftAfter = afterGroups
+          .expand((g) => g.$2)
+          .firstWhere((e) => e.name == 'ft');
+      expect(ftAfter.summaryLine, '0.9999 m');
+    });
+
+    test('view mode is preserved after catalog rebuild', () {
+      final container = _makeContainer(repo);
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+
+      expect(
+        container.read(browserProvider).viewMode,
+        BrowseViewMode.alphabetical,
+      );
+
+      repo.registerDynamic(
+        const DerivedUnit(id: 'ft', expression: '0.9999 m'),
+      );
+      container.read(unitRepositoryVersionProvider.notifier).increment();
+
+      expect(
+        container.read(browserProvider).viewMode,
+        BrowseViewMode.alphabetical,
+      );
+    });
+
+    test('collapsed groups are preserved after catalog rebuild', () {
+      final container = _makeContainer(repo);
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      notifier.expandAll();
+      notifier.toggleGroup('K');
+
+      expect(container.read(browserProvider).collapsedGroups, contains('K'));
+
+      repo.registerDynamic(
+        const DerivedUnit(id: 'ft', expression: '0.9999 m'),
+      );
+      container.read(unitRepositoryVersionProvider.notifier).increment();
+
+      expect(container.read(browserProvider).collapsedGroups, contains('K'));
+    });
+
+    test('search query is preserved after catalog rebuild', () {
+      final container = _makeContainer(repo);
+      final notifier = container.read(browserProvider.notifier);
+      notifier.setViewMode(BrowseViewMode.alphabetical);
+      notifier.setSearchQuery('ft');
+
+      expect(container.read(browserProvider).searchQuery, 'ft');
+
+      repo.registerDynamic(
+        const DerivedUnit(id: 'ft', expression: '0.9999 m'),
+      );
+      container.read(unitRepositoryVersionProvider.notifier).increment();
+
+      expect(container.read(browserProvider).searchQuery, 'ft');
+    });
+  });
 }

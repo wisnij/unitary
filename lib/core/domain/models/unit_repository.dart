@@ -415,8 +415,12 @@ class UnitRepository {
   List<BrowseEntry> buildBrowseCatalog() {
     final results = <BrowseEntry>[];
 
+    // Merge compiled and dynamic unit sets: dynamic entries shadow compiled
+    // ones when both exist for the same id.
+    final allUnits = {..._units, ..._dynamicUnits};
+
     // Units (excluding PrefixUnit, which are handled separately below).
-    for (final unit in _units.values) {
+    for (final unit in allUnits.values) {
       if (unit is PrefixUnit) {
         continue;
       }

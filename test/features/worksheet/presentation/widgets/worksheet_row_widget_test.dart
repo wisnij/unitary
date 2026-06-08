@@ -18,6 +18,7 @@ void main() {
           controller: controller,
           isActive: false,
           isError: isError,
+          labelColumnWidth: 130,
           onChanged: (_) {},
           onFocused: () {},
         ),

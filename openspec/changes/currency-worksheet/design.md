@@ -50,8 +50,8 @@ Three values cover all current and anticipated cases:
   throws `EvalException('Unknown unit: …')` because `UnitNode.evaluate` never
   checks `findFunction`—making the misconfiguration visible at test time with no
   extra guard needed.
-- `alphabetical` — rows are ordered by their `expression` string; used for
-  currency where exchange-rate magnitude changes daily.
+- `alphabetical` — rows are ordered by their `label` (spelled-out name); used
+  for currency where exchange-rate magnitude changes daily.
 - `none` — no ordering contract; used for `temperature` which has a mix of
   absolute-scale `UnitRow`s and affine `FunctionRow`s that have no meaningful
   shared magnitude ordering.

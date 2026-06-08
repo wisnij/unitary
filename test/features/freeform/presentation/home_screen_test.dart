@@ -253,8 +253,8 @@ void main() {
 
       for (final template in predefinedWorksheets) {
         expect(
-          find.text(template.name),
-          findsWidgets, // may appear in button + list
+          find.text(template.name, skipOffstage: false),
+          findsWidgets, // may appear in button + list; some may be scrolled off
           reason: '${template.name} not in dropdown',
         );
       }

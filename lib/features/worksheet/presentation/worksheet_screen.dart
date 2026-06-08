@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/top_level_page.dart';
@@ -7,7 +8,6 @@ import '../data/predefined_worksheets.dart';
 import '../models/worksheet.dart';
 import '../services/worksheet_engine.dart';
 import '../state/worksheet_provider.dart';
-import 'widgets/worksheet_row_widget.dart';
 
 /// Worksheet mode screen.
 ///
@@ -106,22 +106,76 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
         currentPage: TopLevelPage.worksheet,
         onNavigate: widget.onNavigate,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: template.rows.length,
-        itemBuilder: (context, i) {
-          final row = template.rows[i];
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Cap the label column so the input never shrinks below 12 em.
+          // IntrinsicColumnWidth then sizes the column to the widest rendered
+          // label up to this cap — no TextPainter pre-measurement needed.
+          const minInputEm = 12.0;
+          const labelAbsoluteMax = 200.0;
+          const listPadding = 16.0;
+          const columnSpacing = 8.0;
+          final inputFontSize =
+              Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16.0;
+          final maxLabelWidth =
+              (constraints.maxWidth -
+                      listPadding * 2 -
+                      columnSpacing -
+                      minInputEm * inputFontSize)
+                  .clamp(0.0, labelAbsoluteMax);
+
           final controllers = _controllersFor(template);
-          return WorksheetRowWidget(
-            key: ValueKey('${template.id}_row_$i'),
-            label: row.label,
-            expression: row.expression,
-            controller: controllers[i],
-            isActive: activeIndex == i,
-            isError: values[i].isError,
-            onChanged: (text) => _onRowChanged(activeId, i, text),
-            onFocused: () => _onRowFocused(activeId, i),
-            onLabelLongPress: (activeIndex != null && activeIndex != i)
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(listPadding),
+            child: Table(
+              columnWidths: const {
+                0: IntrinsicColumnWidth(),
+                1: FixedColumnWidth(columnSpacing),
+                2: FlexColumnWidth(),
+              },
+              defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+              children: [
+                for (var i = 0; i < template.rows.length; i++)
+                  _buildTableRow(
+                    context,
+                    template,
+                    values,
+                    controllers,
+                    activeIndex,
+                    activeId,
+                    i,
+                    maxLabelWidth,
+                  ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  TableRow _buildTableRow(
+    BuildContext context,
+    WorksheetTemplate template,
+    List<WorksheetCellResult> values,
+    List<TextEditingController> controllers,
+    int? activeIndex,
+    String activeId,
+    int i,
+    double maxLabelWidth,
+  ) {
+    final row = template.rows[i];
+    final isActive = activeIndex == i;
+
+    return TableRow(
+      key: ValueKey('${template.id}_row_$i'),
+      children: [
+        // Label cell — intrinsic width, capped at maxLabelWidth.
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: GestureDetector(
+            onLongPress: (activeIndex != null && activeIndex != i)
                 ? () {
                     final sourceText = values[activeIndex].text;
                     if (sourceText.isEmpty) {
@@ -131,9 +185,96 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
                     _onRowChanged(activeId, i, sourceText);
                   }
                 : null,
-          );
-        },
-      ),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: 130,
+                maxWidth: maxLabelWidth,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    row.label,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    row.expression,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        // Spacer cell (FixedColumnWidth(8) provides the gap).
+        const SizedBox.shrink(),
+        // Input cell — fills remaining space via FlexColumnWidth.
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: GestureDetector(
+            onLongPress: () {
+              final text = controllers[i].text;
+              if (text.isEmpty) {
+                return;
+              }
+              Clipboard.setData(ClipboardData(text: text));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Copied $text'),
+                  duration: const Duration(seconds: 1),
+                ),
+              );
+            },
+            child: Focus(
+              onFocusChange: (focused) {
+                if (focused) {
+                  _onRowFocused(activeId, i);
+                }
+              },
+              child: TextField(
+                controller: controllers[i],
+                style: values[i].isError
+                    ? TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      )
+                    : null,
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                  signed: true,
+                ),
+                inputFormatters: [
+                  FilteringTextInputFormatter.allow(
+                    RegExp(r'^-?[0-9]*\.?[0-9]*(?:[eE][+-]?[0-9]*)?$'),
+                  ),
+                ],
+                decoration: InputDecoration(
+                  border: const OutlineInputBorder(),
+                  isDense: true,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 10,
+                  ),
+                  fillColor: isActive
+                      ? Theme.of(
+                          context,
+                        ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                      : null,
+                  filled: isActive,
+                ),
+                onChanged: (text) => _onRowChanged(activeId, i, text),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

@@ -70,6 +70,45 @@ text SHALL be rendered in `colorScheme.error` color.  All other field styling
 - **WHEN** a row displays a valid numeric value
 - **THEN** the input field text is rendered in the default (unoverridden) color
 
+### Requirement: Label and input column widths
+
+All rows in a worksheet template SHALL share the same label column width, so
+that every input field starts at the same horizontal position.
+
+The shared label column width SHALL be determined by the widest rendered label
+in the active template, subject to the following constraints:
+
+- **Minimum**: 130 dp — prevents the column from appearing too narrow when all
+  labels are short.
+- **Maximum**: the largest width at which the input field remains at least
+  12 em wide (where 1 em equals the `bodyLarge` font size) — ensures the
+  numeric field always has sufficient room.
+
+Label text that exceeds the column width SHALL be truncated with an ellipsis.
+
+#### Scenario: All input fields are equally wide
+
+- **WHEN** a worksheet template is displayed
+- **THEN** every row's input field has the same width
+
+#### Scenario: Short-label template uses 130 dp minimum
+
+- **WHEN** the widest rendered label in the active template is narrower than 130 dp
+- **THEN** the label column is exactly 130 dp wide
+
+#### Scenario: Long-label template expands the label column
+
+- **WHEN** the widest rendered label in the active template is wider than 130 dp
+  and the 12 em input minimum still allows it
+- **THEN** the label column is wide enough to display the widest label without truncation
+
+#### Scenario: Label truncated when template has very long labels
+
+- **WHEN** the widest label in the active template would make the input field
+  narrower than 12 em
+- **THEN** the label is truncated with an ellipsis and the input field is at
+  least 12 em wide
+
 ### Requirement: Real-time cross-row update
 The worksheet engine SHALL be invoked synchronously on every keystroke in any
 row.  When the engine completes, all non-active rows SHALL update their
@@ -109,11 +148,11 @@ use `bodyLarge` font size.
 
 #### Scenario: Dropdown lists all templates
 - **WHEN** the user opens the worksheet selector dropdown
-- **THEN** all 10 predefined template names are listed
+- **THEN** all 12 predefined template names are listed
 
 #### Scenario: Dropdown items are in alphabetical order
 - **WHEN** the user opens the worksheet selector dropdown
-- **THEN** the templates are listed in case-insensitive alphabetical order by name (Area, Digital Storage, Energy, Length, Mass, Pressure, Speed, Temperature, Time, Volume)
+- **THEN** the templates are listed in case-insensitive alphabetical order by name (Angle, Area, Currency, Digital Storage, Energy, Length, Mass, Pressure, Speed, Temperature, Time, Volume)
 
 #### Scenario: Selecting a template switches the worksheet
 - **WHEN** the user selects "Speed" from the dropdown

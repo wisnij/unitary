@@ -3,8 +3,9 @@
 ## Purpose
 
 Defines the data models and predefined template registry for worksheet mode.
-Covers `WorksheetRow`, `WorksheetRowKind`, and `WorksheetTemplate`, along with
-the full set of 11 predefined conversion templates.
+Covers `WorksheetRow`, `WorksheetRowKind`, `WorksheetTemplate`, and
+`WorksheetOrdering`, along with the full set of 12 predefined conversion
+templates.
 
 ## Requirements
 
@@ -27,6 +28,16 @@ parseable by `ExpressionParser`), and a `WorksheetRowKind`.
 - **WHEN** a `WorksheetRow` is constructed with kind `FunctionRow` and expression `"tempC"`
 - **THEN** its `kind` is a `FunctionRow`
 
+### Requirement: WorksheetOrdering enum
+
+A `WorksheetOrdering` enum SHALL exist with exactly three variants:
+`magnitude`, `alphabetical`, and `none`.
+
+#### Scenario: WorksheetOrdering variants exist
+
+- **WHEN** the `WorksheetOrdering` enum is inspected
+- **THEN** it has exactly the values `magnitude`, `alphabetical`, and `none`
+
 ### Requirement: WorksheetTemplate model
 A `WorksheetTemplate` SHALL have a unique `id` (String), a display `name`
 (String), and a non-empty ordered list of `WorksheetRow` objects.
@@ -35,30 +46,40 @@ A `WorksheetTemplate` SHALL have a unique `id` (String), a display `name`
 - **WHEN** a `WorksheetTemplate` is constructed with id `"length"`, name `"Length"`, and a list of rows
 - **THEN** its `id`, `name`, and `rows` are accessible
 
+### Requirement: WorksheetTemplate has an ordering field
+
+`WorksheetTemplate` SHALL have an `ordering` field of type `WorksheetOrdering`.
+
+#### Scenario: WorksheetTemplate ordering is accessible
+
+- **WHEN** a `WorksheetTemplate` is constructed with an `ordering` value
+- **THEN** its `ordering` field returns that value
+
 ### Requirement: Predefined worksheet templates
-The application SHALL provide exactly 11 predefined `WorksheetTemplate`
+The application SHALL provide exactly 12 predefined `WorksheetTemplate`
 instances accessible via a static registry.  Within each template, rows are
-ordered from smallest to largest unit (where that ordering is well-defined).
+ordered according to the template's `ordering` field.
 
-The 11 templates and their rows:
+The 12 templates and their rows:
 
-| Template | id | Rows (label: expression, kind) |
-|----------|-----|-------------------------------|
-| Angle | `angle` | milli-arcsecond: mas, arcsecond: arcsec, second of longitude: seclongitude, arcminute: arcmin, gradian: gon, degree: degree, radian: radian, sextant: sextant, right angle: rightangle, turn: circle — all `UnitRow` |
-| Length | `length` | microns: µm, millimeters: mm, centimeters: cm, inches: in, feet: ft, yards: yd, meters: m, kilometers: km, miles: mi, nautical miles: nmi — all `UnitRow` |
-| Mass | `mass` | micrograms: µg, milligrams: mg, grams: g, ounces: oz, pounds: lb, kilograms: kg, stone: stone, short tons: uston, metric tons: t, long tons: brton — all `UnitRow` |
-| Time | `time` | nanoseconds: ns, microseconds: µs, milliseconds: ms, seconds: s, minutes: min, hours: hr, days: d, weeks: wk, years: yr, centuries: century — all `UnitRow` |
-| Temperature | `temperature` | kelvin: K (`UnitRow`), celsius: tempC (`FunctionRow`), fahrenheit: tempF (`FunctionRow`), rankine: degR (`UnitRow`), réaumur: tempreaumur (`FunctionRow`), gas mark: gasmark (`FunctionRow`) |
-| Volume | `volume` | milliliters: mL, teaspoons: tsp, tablespoons: tbsp, fluid ounces: floz, cups: cup, pints: pt, quarts: qt, liters: L, gallons: gal, barrels: bbl — all `UnitRow` |
-| Area | `area` | sq millimeters: mm^2, sq centimeters: cm^2, sq inches: in^2, sq feet: ft^2, sq yards: yd^2, sq meters: m^2, acres: acre, hectares: ha, sq kilometers: km^2, sq miles: mi^2 — all `UnitRow` |
-| Speed | `speed` | meters/minute: m/min, inches/sec: in/s, km/hour: km/hr, feet/sec: ft/s, miles/hour: mph, knots: knot, meters/sec: m/s, Mach (STP): mach, km/sec: km/s, light speed: c — all `UnitRow` |
-| Pressure | `pressure` | pascals: Pa, millibars: mbar, mm mercury: mmHg, torr: Torr, kilopascals: kPa, inches mercury: inHg, pounds/sq inch: psi, bar: bar, atmospheres: atm, megapascals: MPa — all `UnitRow` |
-| Energy | `energy` | electron volts: eV, ergs: erg, joules: J, small calories: cal_th, kilojoules: kJ, BTU: BTU, watt-hours: Wh, food Calories: kcal, kilowatt-hours: kWh, tons of TNT: ton tnt — all `UnitRow` |
-| Digital Storage | `digital-storage` | bits: bit, bytes: B, kilobytes: kB, kibibytes: KiB, megabytes: MB, mebibytes: MiB, gigabytes: GB, gibibytes: GiB, terabytes: TB, tebibytes: TiB — all `UnitRow` |
+| Template | id | ordering | Rows (label: expression, kind) |
+|----------|-----|----------|-------------------------------|
+| Angle | `angle` | `magnitude` | milli-arcsecond: mas, arcsecond: arcsec, second of longitude: seclongitude, arcminute: arcmin, gradian: gon, degree: degree, radian: radian, sextant: sextant, right angle: rightangle, turn: circle — all `UnitRow` |
+| Currency | `currency` | `alphabetical` | Australian dollar: AUD, British pound: GBP, Canadian dollar: CAD, Chinese yuan: CNY, Euro: EUR, Hong Kong dollar: HKD, Japanese yen: JPY, Mexican peso: MXN, Singapore dollar: SGD, South Korean won: KRW, Swiss franc: CHF, United States dollar: USD — all `UnitRow`, ordered alphabetically by label |
+| Length | `length` | `magnitude` | microns: µm, millimeters: mm, centimeters: cm, inches: in, feet: ft, yards: yd, meters: m, kilometers: km, miles: mi, nautical miles: nmi — all `UnitRow` |
+| Mass | `mass` | `magnitude` | micrograms: µg, milligrams: mg, grams: g, ounces: oz, pounds: lb, kilograms: kg, stone: stone, short tons: uston, metric tons: t, long tons: brton — all `UnitRow` |
+| Time | `time` | `magnitude` | nanoseconds: ns, microseconds: µs, milliseconds: ms, seconds: s, minutes: min, hours: hr, days: d, weeks: wk, years: yr, centuries: century — all `UnitRow` |
+| Temperature | `temperature` | `none` | kelvin: K (`UnitRow`), celsius: tempC (`FunctionRow`), fahrenheit: tempF (`FunctionRow`), rankine: degR (`UnitRow`), réaumur: tempreaumur (`FunctionRow`), gas mark: gasmark (`FunctionRow`) |
+| Volume | `volume` | `magnitude` | milliliters: mL, teaspoons: tsp, tablespoons: tbsp, fluid ounces: floz, cups: cup, pints: pt, quarts: qt, liters: L, gallons: gal, barrels: bbl — all `UnitRow` |
+| Area | `area` | `magnitude` | sq millimeters: mm^2, sq centimeters: cm^2, sq inches: in^2, sq feet: ft^2, sq yards: yd^2, sq meters: m^2, acres: acre, hectares: ha, sq kilometers: km^2, sq miles: mi^2 — all `UnitRow` |
+| Speed | `speed` | `magnitude` | meters/minute: m/min, inches/sec: in/s, km/hour: km/hr, feet/sec: ft/s, miles/hour: mph, knots: knot, meters/sec: m/s, Mach (STP): mach, km/sec: km/s, light speed: c — all `UnitRow` |
+| Pressure | `pressure` | `magnitude` | pascals: Pa, millibars: mbar, mm mercury: mmHg, torr: Torr, kilopascals: kPa, inches mercury: inHg, pounds/sq inch: psi, bar: bar, atmospheres: atm, megapascals: MPa — all `UnitRow` |
+| Energy | `energy` | `magnitude` | electron volts: eV, ergs: erg, joules: J, small calories: cal_th, kilojoules: kJ, BTU: BTU, watt-hours: Wh, food Calories: kcal, kilowatt-hours: kWh, tons of TNT: ton tnt — all `UnitRow` |
+| Digital Storage | `digital-storage` | `magnitude` | bits: bit, bytes: B, kilobytes: kB, kibibytes: KiB, megabytes: MB, mebibytes: MiB, gigabytes: GB, gibibytes: GiB, terabytes: TB, tebibytes: TiB — all `UnitRow` |
 
-#### Scenario: Registry returns all 11 templates
+#### Scenario: Registry returns all 12 templates
 - **WHEN** the predefined template registry is accessed
-- **THEN** it returns exactly 11 templates with distinct ids
+- **THEN** it returns exactly 12 templates with distinct ids
 
 #### Scenario: Length template rows
 - **WHEN** the `length` template is retrieved from the registry
@@ -103,27 +124,39 @@ against the live `UnitRepository`:
 - **WHEN** `parseQuery` is called with the `expression` of a `FunctionRow` from any predefined template
 - **THEN** the result IS a `FunctionNameNode`
 
-### Requirement: All-UnitRow templates are ordered smallest to largest
+### Requirement: Templates with ordering `alphabetical` are in label order
 
-For any predefined template whose rows are all `UnitRow`, evaluating each row's
-expression with `ExpressionParser.evaluate` SHALL yield `Quantity` values in
-non-decreasing order.  When two adjacent rows produce the same `Quantity.value`,
-their expression strings SHALL be in non-decreasing lexicographic order.
+For any predefined template with `ordering == WorksheetOrdering.alphabetical`,
+rows SHALL be in non-decreasing order by their `label` field (case-sensitive
+lexicographic order).
 
-#### Scenario: All-UnitRow template rows are in ascending magnitude order
+#### Scenario: Alphabetical-ordered template rows are in label order
 
-- **WHEN** each row expression in an all-`UnitRow` template is evaluated to a `Quantity`
+- **WHEN** the rows of a template with `ordering: alphabetical` are inspected
+- **THEN** the `label` values are in non-decreasing lexicographic order from first to last row
+
+### Requirement: Templates with ordering `magnitude` are in ascending quantity order
+
+For any predefined template with `ordering == WorksheetOrdering.magnitude`,
+evaluating each row's expression with `ExpressionParser.evaluate` SHALL yield
+`Quantity` values in non-decreasing order.  When two adjacent rows produce the
+same `Quantity.value`, their expression strings SHALL be in non-decreasing
+lexicographic order.
+
+#### Scenario: Magnitude-ordered template rows are in ascending quantity order
+
+- **WHEN** each row expression in a template with `ordering: magnitude` is evaluated to a `Quantity`
 - **THEN** the resulting `.value` sequence is non-decreasing from first to last row
 
 #### Scenario: Equal-magnitude rows are ordered by expression string
 
-- **WHEN** two adjacent rows in an all-`UnitRow` template evaluate to the same `Quantity.value`
+- **WHEN** two adjacent rows in a `magnitude`-ordered template evaluate to the same `Quantity.value`
 - **THEN** the earlier row's expression string is lexicographically ≤ the later row's expression string
 
 ### Requirement: Angle template rows
 
 The `angle` template SHALL contain exactly the following 10 rows (all `UnitRow`,
-in smallest-to-largest order): `mas`, `arcsec`, `seclongitude`, `arcmin`,
+`ordering: magnitude`): `mas`, `arcsec`, `seclongitude`, `arcmin`,
 `gon`, `degree`, `radian`, `sextant`, `rightangle`, `circle`.
 
 #### Scenario: Angle template expressions
@@ -138,8 +171,8 @@ in smallest-to-largest order): `mas`, `arcsec`, `seclongitude`, `arcmin`,
 
 ### Requirement: Volume template rows
 
-The `volume` template SHALL contain exactly the following expressions (in
-smallest-to-largest order): `mL`, `tsp`, `tbsp`, `floz`, `cup`, `pt`, `qt`,
+The `volume` template SHALL contain exactly the following expressions
+(`ordering: magnitude`): `mL`, `tsp`, `tbsp`, `floz`, `cup`, `pt`, `qt`,
 `L`, `gal`, `bbl` — all `UnitRow`.
 
 #### Scenario: Volume template expressions
@@ -149,8 +182,8 @@ smallest-to-largest order): `mL`, `tsp`, `tbsp`, `floz`, `cup`, `pt`, `qt`,
 
 ### Requirement: Pressure template rows
 
-The `pressure` template SHALL contain exactly the following expressions (in
-smallest-to-largest order): `Pa`, `mbar`, `Torr`, `mmHg`, `kPa`, `inHg`,
+The `pressure` template SHALL contain exactly the following expressions
+(`ordering: magnitude`): `Pa`, `mbar`, `Torr`, `mmHg`, `kPa`, `inHg`,
 `psi`, `bar`, `atm`, `MPa` — all `UnitRow`.
 
 #### Scenario: Pressure template expressions

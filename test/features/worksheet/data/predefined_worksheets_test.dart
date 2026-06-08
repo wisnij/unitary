@@ -88,6 +88,31 @@ void main() {
       }
     });
 
+    test(
+      'all UnitRow expressions in each template resolve to the same dimension',
+      () {
+        for (final template in predefinedWorksheets) {
+          final unitRows = template.rows
+              .where((r) => r.kind is UnitRow)
+              .toList();
+          if (unitRows.length < 2) {
+            continue;
+          }
+          final refDim = parser.evaluate(unitRows.first.expression).dimension;
+          for (final row in unitRows.skip(1)) {
+            final dim = parser.evaluate(row.expression).dimension;
+            expect(
+              dim,
+              refDim,
+              reason:
+                  '${template.id}/${row.expression}: dimension $dim does not match '
+                  '${unitRows.first.expression} ($refDim)',
+            );
+          }
+        }
+      },
+    );
+
     test('alphabetical-ordered templates are ordered by label', () {
       for (final template in predefinedWorksheets) {
         if (template.ordering != WorksheetOrdering.alphabetical) {

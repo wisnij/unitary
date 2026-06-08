@@ -3,11 +3,12 @@ import '../models/worksheet.dart';
 const UnitRow _unit = UnitRow();
 const FunctionRow _func = FunctionRow();
 
-/// The 11 predefined worksheet templates.
+/// The 12 predefined worksheet templates.
 const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'angle',
     name: 'Angle',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'milli-arcsecond', expression: 'mas', kind: _unit),
       WorksheetRow(label: 'arcsecond', expression: 'arcsec', kind: _unit),
@@ -28,6 +29,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'area',
     name: 'Area',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'sq millimeter', expression: 'mm^2', kind: _unit),
       WorksheetRow(label: 'sq centimeter', expression: 'cm^2', kind: _unit),
@@ -42,8 +44,36 @@ const List<WorksheetTemplate> predefinedWorksheets = [
     ],
   ),
   WorksheetTemplate(
+    id: 'currency',
+    name: 'Currency',
+    ordering: WorksheetOrdering.alphabetical,
+    rows: [
+      WorksheetRow(
+        label: 'Australian dollar',
+        expression: 'AUD',
+        kind: _unit,
+      ),
+      WorksheetRow(label: 'British pound', expression: 'GBP', kind: _unit),
+      WorksheetRow(label: 'Canadian dollar', expression: 'CAD', kind: _unit),
+      WorksheetRow(label: 'Chinese yuan', expression: 'CNY', kind: _unit),
+      WorksheetRow(label: 'Euro', expression: 'EUR', kind: _unit),
+      WorksheetRow(label: 'Hong Kong dollar', expression: 'HKD', kind: _unit),
+      WorksheetRow(label: 'Japanese yen', expression: 'JPY', kind: _unit),
+      WorksheetRow(label: 'Mexican peso', expression: 'MXN', kind: _unit),
+      WorksheetRow(label: 'Singapore dollar', expression: 'SGD', kind: _unit),
+      WorksheetRow(label: 'South Korean won', expression: 'KRW', kind: _unit),
+      WorksheetRow(label: 'Swiss franc', expression: 'CHF', kind: _unit),
+      WorksheetRow(
+        label: 'United States dollar',
+        expression: 'USD',
+        kind: _unit,
+      ),
+    ],
+  ),
+  WorksheetTemplate(
     id: 'digital-storage',
     name: 'Digital Storage',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'bit', expression: 'bit', kind: _unit),
       WorksheetRow(label: 'byte', expression: 'B', kind: _unit),
@@ -60,6 +90,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'energy',
     name: 'Energy',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'electron volt', expression: 'eV', kind: _unit),
       WorksheetRow(label: 'erg', expression: 'erg', kind: _unit),
@@ -76,6 +107,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'length',
     name: 'Length',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'micron', expression: 'µm', kind: _unit),
       WorksheetRow(label: 'millimeter', expression: 'mm', kind: _unit),
@@ -92,6 +124,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'mass',
     name: 'Mass',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'microgram', expression: 'µg', kind: _unit),
       WorksheetRow(label: 'milligram', expression: 'mg', kind: _unit),
@@ -108,6 +141,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'pressure',
     name: 'Pressure',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'pascal', expression: 'Pa', kind: _unit),
       WorksheetRow(label: 'millibar', expression: 'mbar', kind: _unit),
@@ -124,6 +158,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'speed',
     name: 'Speed',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'meter/minute', expression: 'm/min', kind: _unit),
       WorksheetRow(label: 'inch/sec', expression: 'in/s', kind: _unit),
@@ -140,6 +175,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'temperature',
     name: 'Temperature',
+    ordering: WorksheetOrdering.none,
     rows: [
       WorksheetRow(label: 'Kelvin', expression: 'K', kind: _unit),
       WorksheetRow(label: 'Celsius', expression: 'tempC', kind: _func),
@@ -152,6 +188,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'time',
     name: 'Time',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'nanosecond', expression: 'ns', kind: _unit),
       WorksheetRow(label: 'microsecond', expression: 'µs', kind: _unit),
@@ -168,6 +205,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
   WorksheetTemplate(
     id: 'volume',
     name: 'Volume',
+    ordering: WorksheetOrdering.magnitude,
     rows: [
       WorksheetRow(label: 'milliliter', expression: 'mL', kind: _unit),
       WorksheetRow(label: 'teaspoon', expression: 'tsp', kind: _unit),

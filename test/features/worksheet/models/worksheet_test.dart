@@ -71,6 +71,7 @@ void main() {
       const template = WorksheetTemplate(
         id: 'length',
         name: 'Length',
+        ordering: WorksheetOrdering.magnitude,
         rows: [
           WorksheetRow(label: 'meters', expression: 'm', kind: UnitRow()),
           WorksheetRow(label: 'feet', expression: 'ft', kind: UnitRow()),
@@ -78,6 +79,7 @@ void main() {
       );
       expect(template.id, 'length');
       expect(template.name, 'Length');
+      expect(template.ordering, WorksheetOrdering.magnitude);
       expect(template.rows, hasLength(2));
     });
 
@@ -85,6 +87,7 @@ void main() {
       const template = WorksheetTemplate(
         id: 'temperature',
         name: 'Temperature',
+        ordering: WorksheetOrdering.none,
         rows: [
           WorksheetRow(label: 'kelvin', expression: 'K', kind: UnitRow()),
           WorksheetRow(

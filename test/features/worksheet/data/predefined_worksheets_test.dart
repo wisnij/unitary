@@ -14,8 +14,8 @@ void main() {
       parser = ExpressionParser(repo: UnitRepository.withPredefinedUnits());
     });
 
-    test('contains exactly 11 templates', () {
-      expect(predefinedWorksheets, hasLength(11));
+    test('contains exactly 12 templates', () {
+      expect(predefinedWorksheets, hasLength(12));
     });
 
     test('all template ids are distinct', () {
@@ -54,9 +54,9 @@ void main() {
       }
     });
 
-    test('all-UnitRow templates are ordered smallest to largest', () {
+    test('magnitude-ordered templates are ordered smallest to largest', () {
       for (final template in predefinedWorksheets) {
-        if (template.rows.any((r) => r.kind is! UnitRow)) {
+        if (template.ordering != WorksheetOrdering.magnitude) {
           continue;
         }
         double? prevValue;
@@ -84,6 +84,27 @@ void main() {
           }
           prevValue = qty.value;
           prevExpression = row.expression;
+        }
+      }
+    });
+
+    test('alphabetical-ordered templates are ordered by label', () {
+      for (final template in predefinedWorksheets) {
+        if (template.ordering != WorksheetOrdering.alphabetical) {
+          continue;
+        }
+        String? prevLabel;
+        for (final row in template.rows) {
+          if (prevLabel != null) {
+            expect(
+              row.label.compareTo(prevLabel) >= 0,
+              isTrue,
+              reason:
+                  '${template.id}: "${row.label}" comes before "$prevLabel" '
+                  'but should be alphabetically later',
+            );
+          }
+          prevLabel = row.label;
         }
       }
     });
@@ -251,6 +272,10 @@ void main() {
         template = predefinedWorksheets.firstWhere(
           (t) => t.id == 'temperature',
         );
+      });
+
+      test('has ordering none', () {
+        expect(template.ordering, equals(WorksheetOrdering.none));
       });
 
       test('has 6 rows', () {
@@ -426,6 +451,66 @@ void main() {
             'ton tnt',
           ]),
         );
+      });
+    });
+
+    group('currency template', () {
+      late WorksheetTemplate template;
+      setUp(() {
+        template = predefinedWorksheets.firstWhere((t) => t.id == 'currency');
+      });
+
+      test('has id "currency", name "Currency", and alphabetical ordering', () {
+        expect(template.id, equals('currency'));
+        expect(template.name, equals('Currency'));
+        expect(template.ordering, equals(WorksheetOrdering.alphabetical));
+      });
+
+      test('has exactly 12 rows, all UnitRow', () {
+        expect(template.rows, hasLength(12));
+        for (final row in template.rows) {
+          expect(
+            row.kind,
+            isA<UnitRow>(),
+            reason: '${row.expression} is not UnitRow',
+          );
+        }
+      });
+
+      test('contains expected ISO code expressions', () {
+        final expressions = template.rows.map((r) => r.expression).toSet();
+        expect(
+          expressions,
+          equals({
+            'AUD',
+            'CAD',
+            'CHF',
+            'CNY',
+            'EUR',
+            'GBP',
+            'HKD',
+            'JPY',
+            'KRW',
+            'MXN',
+            'SGD',
+            'USD',
+          }),
+        );
+      });
+
+      test('has spelled-out currency name labels', () {
+        final byExpression = {
+          for (final row in template.rows) row.expression: row.label,
+        };
+        expect(byExpression['USD'], equals('United States dollar'));
+        expect(byExpression['CHF'], equals('Swiss franc'));
+        expect(byExpression['EUR'], equals('Euro'));
+        expect(byExpression['GBP'], equals('British pound'));
+      });
+
+      test('rows are in alphabetical label order', () {
+        final labels = template.rows.map((r) => r.label).toList();
+        expect(labels, equals(labels.toList()..sort()));
       });
     });
 

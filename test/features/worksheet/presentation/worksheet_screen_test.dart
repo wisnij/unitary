@@ -85,9 +85,10 @@ void main() {
         ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
 
       // Verify items appear in alphabetical top-to-bottom order.
+      // Use skipOffstage: false so items scrolled off-screen are still found.
       double prevBottom = double.negativeInfinity;
       for (final name in expectedOrder) {
-        final itemFinder = find.text(name).last;
+        final itemFinder = find.text(name, skipOffstage: false).last;
         final itemTop = tester.getTopLeft(itemFinder).dy;
         expect(
           itemTop,

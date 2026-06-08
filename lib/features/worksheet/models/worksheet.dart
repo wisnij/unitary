@@ -1,3 +1,15 @@
+/// Specifies the ordering policy for rows in a [WorksheetTemplate].
+enum WorksheetOrdering {
+  /// Rows are ordered by ascending unit magnitude (smallest to largest).
+  magnitude,
+
+  /// Rows are ordered alphabetically by their [WorksheetRow.label].
+  alphabetical,
+
+  /// No ordering contract — rows may appear in any order.
+  none,
+}
+
 /// Determines how values are converted for a worksheet row.
 sealed class WorksheetRowKind {
   const WorksheetRowKind();
@@ -55,9 +67,13 @@ class WorksheetTemplate {
   /// Ordered list of rows.  Must be non-empty.
   final List<WorksheetRow> rows;
 
+  /// The ordering policy for [rows].
+  final WorksheetOrdering ordering;
+
   const WorksheetTemplate({
     required this.id,
     required this.name,
     required this.rows,
+    required this.ordering,
   });
 }

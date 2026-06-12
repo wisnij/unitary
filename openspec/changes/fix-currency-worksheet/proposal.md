@@ -15,8 +15,8 @@ shared, rate-aware repository the rest of the app uses.
   `unitRepositoryProvider`, which has stored currency rates applied at
   startup and dynamic units updated on refresh.
 - `WorksheetNotifier` listens for `unitRepositoryVersionProvider` changes
-  (incremented after a currency rate refresh) and recomputes the
-  currently active worksheet's display values from its stored source
+  (incremented after a currency rate refresh) and recomputes the display
+  values for every worksheet template that has a persisted source
   row/text, so on-screen values update without requiring navigation away
   and back.
 - No changes to `computeWorksheet()` itself or to the worksheet

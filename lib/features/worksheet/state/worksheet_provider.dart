@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/domain/models/unit_repository.dart';
+import '../../../core/domain/models/unit_repository_provider.dart';
 import '../../../core/domain/parser/expression_parser.dart';
 import '../../settings/state/settings_provider.dart';
 import '../data/predefined_worksheets.dart';
@@ -18,9 +18,11 @@ final worksheetRepositoryProvider = Provider<WorksheetRepository>(
   ),
 );
 
-/// Singleton parser shared by the worksheet feature.
+/// Singleton parser shared by the worksheet feature, backed by the shared
+/// [unitRepositoryProvider] so worksheet conversions reflect live currency
+/// rates.
 final _worksheetParserProvider = Provider<ExpressionParser>((ref) {
-  return ExpressionParser(repo: UnitRepository.withPredefinedUnits());
+  return ExpressionParser(repo: ref.read(unitRepositoryProvider));
 });
 
 /// Non-autoDispose provider: worksheet values persist across navigation.
@@ -33,10 +35,36 @@ class WorksheetNotifier extends Notifier<WorksheetState> {
   @override
   WorksheetState build() {
     final persist = ref.watch(worksheetRepositoryProvider).load();
+
+    // Recompute every persisted-source template's display values whenever
+    // dynamic units change (e.g. after a currency rate refresh), so values
+    // already on screen reflect the new rates.
+    ref.listen<int>(unitRepositoryVersionProvider, (_, _) {
+      final updatedPersist = ref.read(worksheetRepositoryProvider).load();
+      state = state.copyWith(
+        worksheetValues: _computeAllFromSources(updatedPersist),
+      );
+    });
+
+    return WorksheetState(
+      worksheetId: persist.activeWorksheetId,
+      activeRowIndex: null,
+      worksheetValues: _computeAllFromSources(persist),
+    );
+  }
+
+  /// Computes display values for every template with a persisted source
+  /// entry in [persist], by re-running the engine for each.
+  ///
+  /// Templates with no persisted source are omitted (left blank). A
+  /// template whose computation fails is also omitted rather than crashing
+  /// the whole recompute.
+  Map<String, List<WorksheetCellResult>> _computeAllFromSources(
+    WorksheetPersistState persist,
+  ) {
     final parser = ref.read(_worksheetParserProvider);
     final settings = ref.read(settingsProvider);
 
-    // Seed worksheet values from each persisted source entry.
     final seededValues = <String, List<WorksheetCellResult>>{};
     for (final entry in persist.sources.entries) {
       final templateId = entry.key;
@@ -74,11 +102,7 @@ class WorksheetNotifier extends Notifier<WorksheetState> {
       }
     }
 
-    return WorksheetState(
-      worksheetId: persist.activeWorksheetId,
-      activeRowIndex: null,
-      worksheetValues: seededValues,
-    );
+    return seededValues;
   }
 
   /// Switches to a different worksheet template.

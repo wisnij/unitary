@@ -257,7 +257,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: June 6, 2026*
+*Last Updated: June 11, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -439,3 +439,8 @@ Questions that arose during design but haven't been resolved:
   - Results are placed into four ordered tiers: prefix-primary (starts with, primary ID), prefix-alias (starts with, alias), infix-primary (contains but not starts with, primary ID), infix-alias (contains but not starts with, alias); each tier is sorted alphabetically
   - Updated spec.md Suggestion computation requirement and design.md §3 to document the four-tier ranking and infix matching
   - Updated `test/core/domain/models/unit_repository_suggest_test.dart` with new infix-specific tests (`ring` → `ringsize` before `euringsize`/`jpringsize`, prefix before infix ordering, four-group alpha sort, within-infix primary-before-alias)
+- *Fix currency worksheet stale rates (June 11, 2026)*
+  - 1797 tests passing (4 new)
+  - `_worksheetParserProvider` in `lib/features/worksheet/state/worksheet_provider.dart` now builds its `ExpressionParser` from the shared `unitRepositoryProvider` instead of constructing an independent `UnitRepository.withPredefinedUnits()`; worksheet conversions (notably the Currency worksheet) now reflect stored exchange rates from launch
+  - `WorksheetNotifier.build()`'s persisted-source seeding loop extracted into `_computeAllFromSources(WorksheetPersistState)`; a new `ref.listen<int>(unitRepositoryVersionProvider, ...)` recomputes display values for every persisted-source template after a currency rate refresh, matching the pattern already used by `BrowserNotifier`
+  - Design artifacts: `openspec/changes/fix-currency-worksheet/`

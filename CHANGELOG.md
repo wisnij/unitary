@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a currency worksheet
 
+### Fixed
+
+- Update stale rates on the currency worksheet
+
 
 [0.8.1] - 2026-06-07
 --------------------

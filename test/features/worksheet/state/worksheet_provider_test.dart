@@ -319,8 +319,16 @@ void main() {
         final worksheetRepo = WorksheetRepository(prefs);
 
         final repo = UnitRepository.withPredefinedUnits();
-        // Override the compiled foot definition (0.3048 m) so 1 m == 2 ft.
-        repo.registerDynamic(const DerivedUnit(id: 'ft', expression: '0.5 m'));
+        // Override the compiled euro rate with a synthetic test-only rate
+        // (1 euro = 0.5 USD, i.e. 1 USD = 2 EUR), as a currency rate
+        // refresh would via registerDynamic.
+        repo.registerDynamic(
+          const DerivedUnit(
+            id: 'euro',
+            aliases: ['EUR'],
+            expression: '1|2 USD',
+          ),
+        );
 
         final c = ProviderContainer(
           overrides: [
@@ -332,23 +340,23 @@ void main() {
         addTearDown(c.dispose);
 
         final template = predefinedWorksheets.firstWhere(
-          (t) => t.id == 'length',
+          (t) => t.id == 'currency',
         );
-        final meterIndex = template.rows.indexWhere(
-          (r) => r.expression == 'm',
+        final usdIndex = template.rows.indexWhere(
+          (r) => r.expression == 'USD',
         );
-        final footIndex = template.rows.indexWhere(
-          (r) => r.expression == 'ft',
+        final eurIndex = template.rows.indexWhere(
+          (r) => r.expression == 'EUR',
         );
 
         c
             .read(worksheetProvider.notifier)
-            .onRowChanged('length', meterIndex, '1');
+            .onRowChanged('currency', usdIndex, '1');
 
         final values = c
             .read(worksheetProvider)
-            .valuesFor('length', template.rows.length);
-        expect(double.parse(values[footIndex].text), closeTo(2.0, 1e-9));
+            .valuesFor('currency', template.rows.length);
+        expect(double.parse(values[eurIndex].text), closeTo(2.0, 1e-9));
       },
     );
 
@@ -362,20 +370,20 @@ void main() {
         final worksheetRepo = WorksheetRepository(prefs);
 
         final template = predefinedWorksheets.firstWhere(
-          (t) => t.id == 'length',
+          (t) => t.id == 'currency',
         );
-        final meterIndex = template.rows.indexWhere(
-          (r) => r.expression == 'm',
+        final usdIndex = template.rows.indexWhere(
+          (r) => r.expression == 'USD',
         );
-        final footIndex = template.rows.indexWhere(
-          (r) => r.expression == 'ft',
+        final eurIndex = template.rows.indexWhere(
+          (r) => r.expression == 'EUR',
         );
 
         await worksheetRepo.save(
           WorksheetPersistState(
-            activeWorksheetId: 'length',
+            activeWorksheetId: 'currency',
             sources: {
-              'length': WorksheetSourceEntry(rowIndex: meterIndex, text: '1'),
+              'currency': WorksheetSourceEntry(rowIndex: usdIndex, text: '1'),
             },
           ),
         );
@@ -388,22 +396,30 @@ void main() {
         );
         addTearDown(c.dispose);
 
-        // Initial value uses the compiled fallback (1 m ~= 3.28084 ft).
+        // Initial value uses the compiled fallback rate
+        // (1 euro = 1|0.861567 USD, so 1 USD ~= 0.861567 EUR).
         final before = c
             .read(worksheetProvider)
-            .valuesFor('length', template.rows.length);
-        expect(double.parse(before[footIndex].text), closeTo(3.28084, 1e-4));
+            .valuesFor('currency', template.rows.length);
+        expect(double.parse(before[eurIndex].text), closeTo(0.861567, 1e-4));
 
-        // Simulate a currency-style dynamic update and notify via the
-        // version counter.
+        // Simulate a currency rate refresh (synthetic test-only rate:
+        // 1 euro = 0.5 USD, i.e. 1 USD = 2 EUR) and notify via the version
+        // counter.
         final repo = c.read(unitRepositoryProvider);
-        repo.registerDynamic(const DerivedUnit(id: 'ft', expression: '0.5 m'));
+        repo.registerDynamic(
+          const DerivedUnit(
+            id: 'euro',
+            aliases: ['EUR'],
+            expression: '1|2 USD',
+          ),
+        );
         c.read(unitRepositoryVersionProvider.notifier).increment();
 
         final after = c
             .read(worksheetProvider)
-            .valuesFor('length', template.rows.length);
-        expect(double.parse(after[footIndex].text), closeTo(2.0, 1e-9));
+            .valuesFor('currency', template.rows.length);
+        expect(double.parse(after[eurIndex].text), closeTo(2.0, 1e-9));
       },
     );
 
@@ -447,21 +463,21 @@ void main() {
         final settingsRepo = SettingsRepository(prefs);
         final worksheetRepo = WorksheetRepository(prefs);
 
-        final lengthTemplate = predefinedWorksheets.firstWhere(
-          (t) => t.id == 'length',
+        final currencyTemplate = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'currency',
         );
-        final meterIndex = lengthTemplate.rows.indexWhere(
-          (r) => r.expression == 'm',
+        final usdIndex = currencyTemplate.rows.indexWhere(
+          (r) => r.expression == 'USD',
         );
-        final footIndex = lengthTemplate.rows.indexWhere(
-          (r) => r.expression == 'ft',
+        final eurIndex = currencyTemplate.rows.indexWhere(
+          (r) => r.expression == 'EUR',
         );
 
         await worksheetRepo.save(
           WorksheetPersistState(
-            activeWorksheetId: 'length',
+            activeWorksheetId: 'currency',
             sources: {
-              'length': WorksheetSourceEntry(rowIndex: meterIndex, text: '1'),
+              'currency': WorksheetSourceEntry(rowIndex: usdIndex, text: '1'),
               // Out-of-range row index simulates a template whose row count
               // shrank since this source was persisted.
               'mass': const WorksheetSourceEntry(rowIndex: 99, text: '1'),
@@ -478,17 +494,26 @@ void main() {
         addTearDown(c.dispose);
 
         final repo = c.read(unitRepositoryProvider);
-        repo.registerDynamic(const DerivedUnit(id: 'ft', expression: '0.5 m'));
+        repo.registerDynamic(
+          const DerivedUnit(
+            id: 'euro',
+            aliases: ['EUR'],
+            expression: '1|2 USD',
+          ),
+        );
 
         expect(
           () => c.read(unitRepositoryVersionProvider.notifier).increment(),
           returnsNormally,
         );
 
-        final lengthValues = c
+        final currencyValues = c
             .read(worksheetProvider)
-            .valuesFor('length', lengthTemplate.rows.length);
-        expect(double.parse(lengthValues[footIndex].text), closeTo(2.0, 1e-9));
+            .valuesFor('currency', currencyTemplate.rows.length);
+        expect(
+          double.parse(currencyValues[eurIndex].text),
+          closeTo(2.0, 1e-9),
+        );
 
         final massTemplate = predefinedWorksheets.firstWhere(
           (t) => t.id == 'mass',

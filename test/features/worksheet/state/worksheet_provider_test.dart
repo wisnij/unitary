@@ -2,6 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:unitary/core/domain/models/unit.dart';
+import 'package:unitary/core/domain/models/unit_repository.dart';
+import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
@@ -304,5 +307,197 @@ void main() {
       expect(massValues[1].text, isNotEmpty);
       expect(lengthValues[1].text, isNot(equals(massValues[1].text)));
     });
+  });
+
+  group('WorksheetNotifier shared unit repository', () {
+    test(
+      'worksheet computations use the shared unitRepositoryProvider repo',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final settingsRepo = SettingsRepository(prefs);
+        final worksheetRepo = WorksheetRepository(prefs);
+
+        final repo = UnitRepository.withPredefinedUnits();
+        // Override the compiled foot definition (0.3048 m) so 1 m == 2 ft.
+        repo.registerDynamic(const DerivedUnit(id: 'ft', expression: '0.5 m'));
+
+        final c = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(settingsRepo),
+            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+            unitRepositoryProvider.overrideWithValue(repo),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        final template = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'length',
+        );
+        final meterIndex = template.rows.indexWhere(
+          (r) => r.expression == 'm',
+        );
+        final footIndex = template.rows.indexWhere(
+          (r) => r.expression == 'ft',
+        );
+
+        c
+            .read(worksheetProvider.notifier)
+            .onRowChanged('length', meterIndex, '1');
+
+        final values = c
+            .read(worksheetProvider)
+            .valuesFor('length', template.rows.length);
+        expect(double.parse(values[footIndex].text), closeTo(2.0, 1e-9));
+      },
+    );
+
+    test(
+      'recomputes display values for persisted sources when '
+      'unitRepositoryVersionProvider increments',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final settingsRepo = SettingsRepository(prefs);
+        final worksheetRepo = WorksheetRepository(prefs);
+
+        final template = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'length',
+        );
+        final meterIndex = template.rows.indexWhere(
+          (r) => r.expression == 'm',
+        );
+        final footIndex = template.rows.indexWhere(
+          (r) => r.expression == 'ft',
+        );
+
+        await worksheetRepo.save(
+          WorksheetPersistState(
+            activeWorksheetId: 'length',
+            sources: {
+              'length': WorksheetSourceEntry(rowIndex: meterIndex, text: '1'),
+            },
+          ),
+        );
+
+        final c = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(settingsRepo),
+            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        // Initial value uses the compiled fallback (1 m ~= 3.28084 ft).
+        final before = c
+            .read(worksheetProvider)
+            .valuesFor('length', template.rows.length);
+        expect(double.parse(before[footIndex].text), closeTo(3.28084, 1e-4));
+
+        // Simulate a currency-style dynamic update and notify via the
+        // version counter.
+        final repo = c.read(unitRepositoryProvider);
+        repo.registerDynamic(const DerivedUnit(id: 'ft', expression: '0.5 m'));
+        c.read(unitRepositoryVersionProvider.notifier).increment();
+
+        final after = c
+            .read(worksheetProvider)
+            .valuesFor('length', template.rows.length);
+        expect(double.parse(after[footIndex].text), closeTo(2.0, 1e-9));
+      },
+    );
+
+    test(
+      'templates with no persisted source remain blank after '
+      'unitRepositoryVersionProvider increments',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final settingsRepo = SettingsRepository(prefs);
+        final worksheetRepo = WorksheetRepository(prefs);
+
+        final c = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(settingsRepo),
+            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        // No persisted sources at all.
+        c.read(worksheetProvider);
+        c.read(unitRepositoryVersionProvider.notifier).increment();
+
+        final massTemplate = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'mass',
+        );
+        final values = c
+            .read(worksheetProvider)
+            .valuesFor('mass', massTemplate.rows.length);
+        expect(values.every((v) => v.text == ''), isTrue);
+      },
+    );
+
+    test(
+      'recompute after unitRepositoryVersionProvider increment is isolated '
+      'to affected templates',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final settingsRepo = SettingsRepository(prefs);
+        final worksheetRepo = WorksheetRepository(prefs);
+
+        final lengthTemplate = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'length',
+        );
+        final meterIndex = lengthTemplate.rows.indexWhere(
+          (r) => r.expression == 'm',
+        );
+        final footIndex = lengthTemplate.rows.indexWhere(
+          (r) => r.expression == 'ft',
+        );
+
+        await worksheetRepo.save(
+          WorksheetPersistState(
+            activeWorksheetId: 'length',
+            sources: {
+              'length': WorksheetSourceEntry(rowIndex: meterIndex, text: '1'),
+              // Out-of-range row index simulates a template whose row count
+              // shrank since this source was persisted.
+              'mass': const WorksheetSourceEntry(rowIndex: 99, text: '1'),
+            },
+          ),
+        );
+
+        final c = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(settingsRepo),
+            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+          ],
+        );
+        addTearDown(c.dispose);
+
+        final repo = c.read(unitRepositoryProvider);
+        repo.registerDynamic(const DerivedUnit(id: 'ft', expression: '0.5 m'));
+
+        expect(
+          () => c.read(unitRepositoryVersionProvider.notifier).increment(),
+          returnsNormally,
+        );
+
+        final lengthValues = c
+            .read(worksheetProvider)
+            .valuesFor('length', lengthTemplate.rows.length);
+        expect(double.parse(lengthValues[footIndex].text), closeTo(2.0, 1e-9));
+
+        final massTemplate = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'mass',
+        );
+        final massValues = c
+            .read(worksheetProvider)
+            .valuesFor('mass', massTemplate.rows.length);
+        expect(massValues.every((v) => v.text == ''), isTrue);
+      },
+    );
   });
 }

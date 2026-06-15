@@ -67,16 +67,27 @@ void main() {
       expect(find.byIcon(Icons.refresh), findsNothing);
     });
 
-    testWidgets('shows "Wait Xs" and hides refresh icon during cooldown', (
-      tester,
-    ) async {
-      final expiry = DateTime.now().toUtc().add(const Duration(seconds: 45));
-      await tester.pumpWidget(
-        buildButton(CurrencyStatus(cooldownExpiry: expiry)),
-      );
-      expect(find.textContaining('Wait'), findsOneWidget);
-      expect(find.byIcon(Icons.refresh), findsNothing);
-    });
+    testWidgets(
+      'during cooldown shows a disabled, grayed refresh icon with a wait label',
+      (tester) async {
+        final expiry = DateTime.now().toUtc().add(const Duration(seconds: 45));
+        await tester.pumpWidget(
+          buildButton(CurrencyStatus(cooldownExpiry: expiry)),
+        );
+
+        // The refresh icon is still shown (purpose indicator) alongside the
+        // countdown label.
+        expect(find.byIcon(Icons.refresh), findsOneWidget);
+        expect(find.textContaining('Wait'), findsOneWidget);
+
+        // The control is disabled (grayed out).
+        final button = tester.widget<TextButton>(find.byType(TextButton));
+        expect(button.onPressed, isNull);
+
+        // Dispose the ticking widget so its periodic timer is cancelled.
+        await tester.pumpWidget(const SizedBox());
+      },
+    );
 
     testWidgets('shows refresh icon once cooldown has expired', (tester) async {
       final past = DateTime.now().toUtc().subtract(const Duration(seconds: 5));

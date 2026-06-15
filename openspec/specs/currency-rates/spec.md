@@ -198,26 +198,34 @@ unrecognised codes SHALL be ignored.
 - **THEN** each stored rate entry carries its own `date` from the API response
 
 ### Requirement: Manual refresh with cooldown
-The Settings screen SHALL provide a manual refresh button that triggers an
-immediate fetch regardless of the 24-hour staleness threshold.  The button
-SHALL be disabled for 60 seconds after any refresh attempt (manual or
-automatic) and SHALL show the remaining cooldown duration while locked out.
-A spinner SHALL be displayed while a fetch is in progress.
+The application SHALL provide a manual refresh control that triggers an
+immediate fetch regardless of the 24-hour staleness threshold.  This control
+SHALL be a single reusable widget, offered both in the Settings "Currency rates"
+section and in the currency worksheet AppBar.  The control SHALL be disabled for
+60 seconds after any refresh attempt (manual or automatic) and SHALL show the
+remaining cooldown duration while locked out.  A spinner SHALL be displayed
+while a fetch is in progress.  Because all instances share the same
+`currencyStatusProvider` state, the cooldown and in-progress state SHALL be
+consistent across every place the control appears.
 
 #### Scenario: Manual refresh triggers fetch
-- **WHEN** the user taps the refresh button
+- **WHEN** the user taps the refresh control
 - **THEN** a fetch is initiated immediately and a spinner is shown
 
 #### Scenario: Button disabled during cooldown
 - **WHEN** a fetch has been initiated within the last 60 seconds
-- **THEN** the refresh button is disabled and displays the remaining cooldown time
+- **THEN** the refresh control is disabled and displays the remaining cooldown time
 
 #### Scenario: Button re-enabled after cooldown
 - **WHEN** 60 seconds have elapsed since the last fetch attempt
-- **THEN** the refresh button becomes active again
+- **THEN** the refresh control becomes active again
+
+#### Scenario: Cooldown shared across locations
+- **WHEN** the user triggers a refresh from one location (e.g. Settings)
+- **THEN** the refresh control in the other location (e.g. the currency worksheet AppBar) is simultaneously disabled with the same remaining cooldown
 
 ### Requirement: Manual refresh error feedback
-When a manually-triggered refresh fails (network error, non-200 response, or unparseable payload), the Settings screen SHALL display an error dialog.
+When a manually-triggered refresh fails (network error, non-200 response, or unparseable payload), the application SHALL display an error dialog.  The same dialog SHALL be used regardless of where the refresh was triggered (Settings or the currency worksheet AppBar).
 
 The dialog SHALL contain:
 - A title indicating the rates could not be updated
@@ -233,7 +241,7 @@ error description on failure — rather than swallowing errors silently.
 `Future<String?>` return type.
 
 #### Scenario: Error dialog on manual refresh failure
-- **WHEN** the user taps the manual refresh button and the fetch fails
+- **WHEN** the user taps a manual refresh control and the fetch fails
 - **THEN** an error dialog is displayed with a title indicating failure and an OK button
 
 #### Scenario: Error details hidden by default

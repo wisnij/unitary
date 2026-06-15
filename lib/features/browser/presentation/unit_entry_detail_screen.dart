@@ -8,7 +8,10 @@ import '../../../core/domain/models/quantity.dart';
 import '../../../core/domain/models/unit.dart';
 import '../../../core/domain/models/unit_repository.dart';
 import '../../../core/domain/models/unit_repository_provider.dart';
+import '../../../shared/utils/date_formatter.dart';
 import '../../../shared/utils/quantity_formatter.dart';
+import '../../currency/data/currency_rate_repository.dart';
+import '../../currency/state/currency_provider.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
 
@@ -38,6 +41,7 @@ class UnitEntryDetailScreen extends ConsumerWidget {
     final settings = ref.watch(settingsProvider);
     final UnitRepository effectiveRepo =
         repo ?? ref.watch(unitRepositoryProvider);
+    final currencyRateRepo = ref.watch(currencyRateRepositoryProvider);
 
     return Scaffold(
       appBar: AppBar(title: Text(primaryId)),
@@ -48,6 +52,7 @@ class UnitEntryDetailScreen extends ConsumerWidget {
           kind: kind,
           repo: effectiveRepo,
           settings: settings,
+          currencyRateRepo: currencyRateRepo,
         ),
       ),
     );
@@ -64,12 +69,14 @@ class _DetailBody extends StatelessWidget {
     required this.kind,
     required this.repo,
     required this.settings,
+    required this.currencyRateRepo,
   });
 
   final String primaryId;
   final BrowseEntryKind kind;
   final UnitRepository repo;
   final UserSettings settings;
+  final CurrencyRateRepository currencyRateRepo;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +85,7 @@ class _DetailBody extends StatelessWidget {
         primaryId: primaryId,
         repo: repo,
         settings: settings,
+        currencyRateRepo: currencyRateRepo,
       ),
       BrowseEntryKind.function => _FunctionDetailBody(
         primaryId: primaryId,
@@ -158,11 +166,13 @@ class _UnitDetailBody extends StatelessWidget {
     required this.primaryId,
     required this.repo,
     required this.settings,
+    required this.currencyRateRepo,
   });
 
   final String primaryId;
   final UnitRepository repo;
   final UserSettings settings;
+  final CurrencyRateRepository currencyRateRepo;
 
   @override
   Widget build(BuildContext context) {
@@ -229,6 +239,21 @@ class _UnitDetailBody extends StatelessWidget {
         notation: settings.notation,
       );
       children.add(_DetailText(formatted, mono: true, copyable: true));
+    }
+
+    // Last updated (currency units only).
+    final descriptors = repo.buildCurrencyDescriptors();
+    final descriptor = CurrencyRateRepository.descriptorForUnit(
+      unit,
+      descriptors,
+    );
+    if (descriptor != null) {
+      children.add(const _SectionTitle('Last updated'));
+      final date = currencyRateRepo.lastUpdatedForUnit(unit, descriptors);
+      final text = date != null
+          ? formatShortDate(DateTime.parse(date))
+          : 'Using built-in rates';
+      children.add(_DetailText(text));
     }
 
     return Column(

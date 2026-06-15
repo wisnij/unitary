@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/domain/models/currency_descriptor.dart';
+import '../../../core/domain/models/unit.dart';
 
 const _kPrefsKey = 'currencyRates';
 
@@ -85,32 +86,38 @@ class CurrencyRateRepository {
     await _prefs.setString(_kPrefsKey, jsonEncode(rates.toJson()));
   }
 
-  /// Returns the source date string for [unitId], or null if no rate data is
-  /// available for it.
+  /// Returns the [CurrencyDescriptor] in [descriptors] that corresponds to
+  /// [unit], or null if [unit] does not represent a live currency rate.
   ///
-  /// First checks for a direct key match in the stored rates.  If not found,
-  /// walks [descriptors] to find any entry whose [CurrencyDescriptor.originalUnit]
-  /// primary ID matches [unitId] and returns the date for that descriptor's
-  /// [CurrencyDescriptor.unitId].
-  String? lastUpdatedForUnit(
-    String unitId,
+  /// A descriptor matches when either its [CurrencyDescriptor.originalUnit]
+  /// has the same primary ID as [unit], or [unit]'s aliases contain the
+  /// descriptor's [CurrencyDescriptor.isoCode].  The latter case covers
+  /// precious-metal "ounce" units (e.g. `goldounce`/`XAU`), whose stored rate
+  /// lives under an intermediate price unit (`goldprice`).
+  ///
+  /// Performs no I/O; does not require any rates to have been loaded.
+  static CurrencyDescriptor? descriptorForUnit(
+    Unit unit,
     List<CurrencyDescriptor> descriptors,
   ) {
-    final stored = load();
-    if (stored == null) {
-      return null;
-    }
-
-    final direct = stored.rates[unitId];
-    if (direct != null) {
-      return direct.date;
-    }
-
     for (final d in descriptors) {
-      if (d.originalUnit.id == unitId) {
-        return stored.rates[d.unitId]?.date;
+      if (d.originalUnit.id == unit.id || unit.aliases.contains(d.isoCode)) {
+        return d;
       }
     }
     return null;
+  }
+
+  /// Returns the source date string for [unit], or null if no rate data is
+  /// available for it.
+  ///
+  /// Uses [descriptorForUnit] to find the matching descriptor, then returns
+  /// the stored date for that descriptor's [CurrencyDescriptor.unitId].
+  String? lastUpdatedForUnit(Unit unit, List<CurrencyDescriptor> descriptors) {
+    final descriptor = descriptorForUnit(unit, descriptors);
+    if (descriptor == null) {
+      return null;
+    }
+    return load()?.rates[descriptor.unitId]?.date;
   }
 }

@@ -11,6 +11,11 @@ const _goldounce = DerivedUnit(
   aliases: ['XAU'],
   expression: 'goldprice troyounce',
 );
+const _goldprice = DerivedUnit(
+  id: 'goldprice',
+  expression: '4616.49 US\$/troyounce',
+);
+const _meter = PrimitiveUnit(id: 'meter');
 
 const _eurDescriptor = CurrencyDescriptor(
   isoCode: 'EUR',
@@ -19,11 +24,14 @@ const _eurDescriptor = CurrencyDescriptor(
   originalUnit: _euro,
 );
 
+// Matches the real shape produced by `_buildCurrencyDescriptors()`: the
+// metal descriptor's `originalUnit` is the intermediate `goldprice` unit,
+// not the `goldounce` unit itself.
 const _xauDescriptor = CurrencyDescriptor(
   isoCode: 'XAU',
   unitId: 'goldprice',
   expressionTemplate: '1|{rate} US\$/troyounce',
-  originalUnit: _goldounce,
+  originalUnit: _goldprice,
 );
 
 const _descriptors = [_eurDescriptor, _xauDescriptor];
@@ -103,29 +111,63 @@ void main() {
     });
   });
 
+  group('CurrencyRateRepository.descriptorForUnit', () {
+    test('matches a standard currency via originalUnit.id', () {
+      expect(
+        CurrencyRateRepository.descriptorForUnit(_euro, _descriptors),
+        _eurDescriptor,
+      );
+    });
+
+    test('matches a precious metal price unit via originalUnit.id', () {
+      expect(
+        CurrencyRateRepository.descriptorForUnit(_goldprice, _descriptors),
+        _xauDescriptor,
+      );
+    });
+
+    test('matches a precious metal ounce unit via ISO-code alias', () {
+      expect(
+        CurrencyRateRepository.descriptorForUnit(_goldounce, _descriptors),
+        _xauDescriptor,
+      );
+    });
+
+    test('returns null for a non-currency unit', () {
+      expect(
+        CurrencyRateRepository.descriptorForUnit(_meter, _descriptors),
+        isNull,
+      );
+    });
+  });
+
   group('CurrencyRateRepository.lastUpdatedForUnit', () {
     setUp(() async {
       await repo.save(_makeRates());
     });
 
-    test('direct key match returns date for that unit', () {
-      expect(repo.lastUpdatedForUnit('euro', _descriptors), '2026-06-06');
+    test('direct lookup for a standard currency', () {
+      expect(repo.lastUpdatedForUnit(_euro, _descriptors), '2026-06-06');
     });
 
-    test('indirect lookup via descriptor originalUnit', () {
-      // goldounce is not a direct key; should resolve via XAU descriptor
-      expect(repo.lastUpdatedForUnit('goldounce', _descriptors), '2026-06-05');
+    test('direct lookup for a precious metal price unit', () {
+      expect(repo.lastUpdatedForUnit(_goldprice, _descriptors), '2026-06-05');
+    });
+
+    test('indirect lookup for a precious metal ounce unit', () {
+      // goldounce is not a direct key; resolves via XAU descriptor's alias
+      expect(repo.lastUpdatedForUnit(_goldounce, _descriptors), '2026-06-05');
     });
 
     test('returns null for a non-currency unit', () {
-      expect(repo.lastUpdatedForUnit('meter', _descriptors), isNull);
+      expect(repo.lastUpdatedForUnit(_meter, _descriptors), isNull);
     });
 
     test('returns null when no rates have been saved', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
       final fresh = CurrencyRateRepository(prefs);
-      expect(fresh.lastUpdatedForUnit('euro', _descriptors), isNull);
+      expect(fresh.lastUpdatedForUnit(_euro, _descriptors), isNull);
     });
   });
 }

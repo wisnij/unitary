@@ -18,9 +18,9 @@ Project Status
 --------------
 
 **Current Phase:** Currency Support\
-**Last Updated:** June 6, 2026
+**Last Updated:** June 15, 2026
 
-Phases 0-8 are complete with 1760 passing tests.  The expression parser,
+Phases 0-8 are complete with 1838 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
 unit database, worksheet mode, unit browser, cross-session data persistence,
 freeform conversion history, predictive completion, and currency support are
@@ -29,7 +29,9 @@ fully implemented.  Currency exchange rates are fetched automatically on launch
 (XAU, XAG, XPT).  Stored rates are applied to the unit repository at startup so
 currency conversions are live from the first frame.  A "Currency rates" section
 in Settings shows the last-updated timestamp and provides a manual refresh
-button with a 60-second cooldown.
+button with a 60-second cooldown.  Worksheets can declare a small, unobtrusive
+contextual banner; the Currency worksheet uses this to show the last rate-sync
+time above its rows and offers the same manual refresh control in its AppBar.
 
 ---
 

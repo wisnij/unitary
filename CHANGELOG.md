@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Show last-updated date for currency units in unit browser
+- Display last updated time on the currency worksheet
 
 
 [0.8.2] - 2026-06-11

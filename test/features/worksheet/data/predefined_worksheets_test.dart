@@ -570,5 +570,27 @@ void main() {
         );
       });
     });
+
+    group('banners', () {
+      test('currency template declares the currency-rates banner', () {
+        final currency = predefinedWorksheets.firstWhere(
+          (t) => t.id == 'currency',
+        );
+        expect(currency.banner, isA<CurrencyRatesBanner>());
+      });
+
+      test('no other template declares a banner', () {
+        for (final template in predefinedWorksheets) {
+          if (template.id == 'currency') {
+            continue;
+          }
+          expect(
+            template.banner,
+            isNull,
+            reason: '${template.id} should not declare a banner',
+          );
+        }
+      });
+    });
   });
 }

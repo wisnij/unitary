@@ -212,8 +212,7 @@ The detail page SHALL display a "Last updated" section, after the Value section,
 ---
 
 ### Requirement: Domain and range (functions only)
-For function entries that carry domain or range constraints the detail page
-SHALL display those constraints in a domain/range section.
+For function entries that carry domain or range constraints, the detail page SHALL display those constraints in a domain/range section.
 
 The display SHALL use the quantity expression from each `QuantitySpec` where
 present, along with any bound values.

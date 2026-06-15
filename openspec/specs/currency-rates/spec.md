@@ -217,8 +217,8 @@ A spinner SHALL be displayed while a fetch is in progress.
 - **THEN** the refresh button becomes active again
 
 ### Requirement: Manual refresh error feedback
-When a manually-triggered refresh fails (network error, non-200 response, or
-unparseable payload), the Settings screen SHALL display an error dialog.
+When a manually-triggered refresh fails (network error, non-200 response, or unparseable payload), the Settings screen SHALL display an error dialog.
+
 The dialog SHALL contain:
 - A title indicating the rates could not be updated
 - A brief message confirming that the refresh failed

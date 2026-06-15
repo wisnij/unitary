@@ -257,7 +257,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: June 11, 2026*
+*Last Updated: June 14, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -444,3 +444,11 @@ Questions that arose during design but haven't been resolved:
   - `_worksheetParserProvider` in `lib/features/worksheet/state/worksheet_provider.dart` now builds its `ExpressionParser` from the shared `unitRepositoryProvider` instead of constructing an independent `UnitRepository.withPredefinedUnits()`; worksheet conversions (notably the Currency worksheet) now reflect stored exchange rates from launch
   - `WorksheetNotifier.build()`'s persisted-source seeding loop extracted into `_computeAllFromSources(WorksheetPersistState)`; a new `ref.listen<int>(unitRepositoryVersionProvider, ...)` recomputes display values for every persisted-source template after a currency rate refresh, matching the pattern already used by `BrowserNotifier`
   - Design artifacts: `openspec/changes/fix-currency-worksheet/`
+- *Show currency rate refresh times in unit browser (June 14, 2026)*
+  - 1811 tests passing (14 new)
+  - `CurrencyRateRepository.descriptorForUnit(Unit, descriptors)` (static): matches a unit to its `CurrencyDescriptor` via `originalUnit.id == unit.id` or `unit.aliases.contains(descriptor.isoCode)`; fixes a latent bug where precious-metal ounce units (e.g. `goldounce`, alias `XAU`) never matched their `goldprice`-keyed descriptor
+  - `lastUpdatedForUnit(Unit unit, List<CurrencyDescriptor> descriptors)` signature changed from a bare unit-ID string to a `Unit`, implemented via `descriptorForUnit`
+  - New `lib/shared/utils/date_formatter.dart`: `formatShortDate(DateTime)` → `"Mmm D, YYYY"` (e.g. `"Jun 6, 2026"`)
+  - `UnitEntryDetailScreen` now watches `currencyRateRepositoryProvider` and threads the repository through `_DetailBody` to `_UnitDetailBody`
+  - `_UnitDetailBody` adds a "Last updated" section after "Value" for any unit/prefix matching a `CurrencyDescriptor` (via `repo.buildCurrencyDescriptors()` + `descriptorForUnit`): shows the formatted stored rate date when available, or "Using built-in rates" when the unit is a currency unit but no live rate has been fetched yet; section is omitted entirely for non-currency units
+  - Design artifacts: `openspec/changes/show-refresh-times/`

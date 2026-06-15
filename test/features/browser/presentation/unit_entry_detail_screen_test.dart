@@ -12,6 +12,8 @@ import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';
+import 'package:unitary/features/currency/data/currency_rate_repository.dart';
+import 'package:unitary/features/currency/state/currency_provider.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 
@@ -20,21 +22,41 @@ import 'package:unitary/features/settings/state/settings_provider.dart';
 // ---------------------------------------------------------------------------
 
 late SettingsRepository _settingsRepo;
+late CurrencyRateRepository _currencyRateRepo;
 
 Future<void> _setUpSettings() async {
   SharedPreferences.setMockInitialValues({});
   final prefs = await SharedPreferences.getInstance();
   _settingsRepo = SettingsRepository(prefs);
+  _currencyRateRepo = CurrencyRateRepository(prefs);
+}
+
+/// Builds a [CurrencyRateRepository] pre-seeded with [rates] (keyed by unit
+/// ID, as stored by `CurrencyService`).
+Future<CurrencyRateRepository> _buildSeededCurrencyRateRepo(
+  Map<String, CurrencyRateEntry> rates,
+) async {
+  SharedPreferences.setMockInitialValues({});
+  final prefs = await SharedPreferences.getInstance();
+  final repo = CurrencyRateRepository(prefs);
+  await repo.save(
+    CurrencyRates(updatedAt: DateTime.utc(2026, 6, 6), rates: rates),
+  );
+  return repo;
 }
 
 Widget _buildScreen(
   String primaryId,
   BrowseEntryKind kind,
-  UnitRepository repo,
-) {
+  UnitRepository repo, {
+  CurrencyRateRepository? currencyRateRepo,
+}) {
   return ProviderScope(
     overrides: [
       settingsRepositoryProvider.overrideWithValue(_settingsRepo),
+      currencyRateRepositoryProvider.overrideWithValue(
+        currencyRateRepo ?? _currencyRateRepo,
+      ),
     ],
     child: MaterialApp(
       home: UnitEntryDetailScreen(
@@ -71,6 +93,30 @@ UnitRepository _buildRepo() {
   );
   repo.register(
     const DerivedUnit(id: 'noexpr', expression: 'unknownXYZ'),
+  );
+  return repo;
+}
+
+/// Repository with currency-shaped units: `euro` (alias `EUR`), the
+/// precious-metal pair `goldprice`/`goldounce` (alias `XAU`), and a
+/// non-currency `meter` for negative tests.
+UnitRepository _buildCurrencyRepo() {
+  final repo = UnitRepository();
+  repo.register(const PrimitiveUnit(id: 'US\$'));
+  repo.register(const PrimitiveUnit(id: 'troyounce'));
+  repo.register(const PrimitiveUnit(id: 'meter'));
+  repo.register(
+    const DerivedUnit(id: 'euro', aliases: ['EUR'], expression: '1.09 US\$'),
+  );
+  repo.register(
+    const DerivedUnit(id: 'goldprice', expression: '4616.49 US\$/troyounce'),
+  );
+  repo.register(
+    const DerivedUnit(
+      id: 'goldounce',
+      aliases: ['XAU'],
+      expression: 'goldprice troyounce',
+    ),
   );
   return repo;
 }
@@ -660,6 +706,9 @@ void main() {
           overrides: [
             settingsRepositoryProvider.overrideWithValue(_settingsRepo),
             unitRepositoryProvider.overrideWithValue(liveRepo),
+            currencyRateRepositoryProvider.overrideWithValue(
+              _currencyRateRepo,
+            ),
           ],
           child: const MaterialApp(
             home: UnitEntryDetailScreen(
@@ -692,6 +741,9 @@ void main() {
           overrides: [
             settingsRepositoryProvider.overrideWithValue(_settingsRepo),
             unitRepositoryProvider.overrideWithValue(liveRepo),
+            currencyRateRepositoryProvider.overrideWithValue(
+              _currencyRateRepo,
+            ),
           ],
           child: const MaterialApp(
             home: UnitEntryDetailScreen(
@@ -705,6 +757,100 @@ void main() {
       // Dynamic expression shadows compiled one.
       expect(find.text('0.9999 m'), findsAtLeastNWidgets(1));
       expect(find.text('0.3048 m'), findsNothing);
+    });
+  });
+
+  group('UnitEntryDetailScreen — currency last-updated section', () {
+    testWidgets('shown for a standard currency with a fetched rate', (
+      tester,
+    ) async {
+      final repo = _buildCurrencyRepo();
+      final currencyRateRepo = await _buildSeededCurrencyRateRepo({
+        'euro': const CurrencyRateEntry(rate: 1.09, date: '2026-06-06'),
+      });
+      await tester.pumpWidget(
+        _buildScreen(
+          'euro',
+          BrowseEntryKind.unit,
+          repo,
+          currencyRateRepo: currencyRateRepo,
+        ),
+      );
+      expect(find.text('Last updated'), findsOneWidget);
+      expect(find.text('Jun 6, 2026'), findsOneWidget);
+    });
+
+    testWidgets('shown for a precious metal ounce unit via its price unit', (
+      tester,
+    ) async {
+      final repo = _buildCurrencyRepo();
+      final currencyRateRepo = await _buildSeededCurrencyRateRepo({
+        'goldprice': const CurrencyRateEntry(rate: 3312.5, date: '2026-06-05'),
+      });
+      await tester.pumpWidget(
+        _buildScreen(
+          'goldounce',
+          BrowseEntryKind.unit,
+          repo,
+          currencyRateRepo: currencyRateRepo,
+        ),
+      );
+      expect(find.text('Last updated'), findsOneWidget);
+      expect(find.text('Jun 5, 2026'), findsOneWidget);
+    });
+
+    testWidgets('shown for a precious metal price unit directly', (
+      tester,
+    ) async {
+      final repo = _buildCurrencyRepo();
+      final currencyRateRepo = await _buildSeededCurrencyRateRepo({
+        'goldprice': const CurrencyRateEntry(rate: 3312.5, date: '2026-06-05'),
+      });
+      await tester.pumpWidget(
+        _buildScreen(
+          'goldprice',
+          BrowseEntryKind.unit,
+          repo,
+          currencyRateRepo: currencyRateRepo,
+        ),
+      );
+      expect(find.text('Last updated'), findsOneWidget);
+      expect(find.text('Jun 5, 2026'), findsOneWidget);
+    });
+
+    testWidgets('shows "Using built-in rates" when no rate has been fetched', (
+      tester,
+    ) async {
+      final repo = _buildCurrencyRepo();
+      await tester.pumpWidget(_buildScreen('euro', BrowseEntryKind.unit, repo));
+      expect(find.text('Last updated'), findsOneWidget);
+      expect(find.text('Using built-in rates'), findsOneWidget);
+    });
+
+    testWidgets('absent for a non-currency unit', (tester) async {
+      final repo = _buildCurrencyRepo();
+      await tester.pumpWidget(
+        _buildScreen('meter', BrowseEntryKind.unit, repo),
+      );
+      expect(find.text('Last updated'), findsNothing);
+    });
+
+    testWidgets('appears after the Value section', (tester) async {
+      final repo = _buildCurrencyRepo();
+      final currencyRateRepo = await _buildSeededCurrencyRateRepo({
+        'euro': const CurrencyRateEntry(rate: 1.09, date: '2026-06-06'),
+      });
+      await tester.pumpWidget(
+        _buildScreen(
+          'euro',
+          BrowseEntryKind.unit,
+          repo,
+          currencyRateRepo: currencyRateRepo,
+        ),
+      );
+      final valueY = tester.getTopLeft(find.text('Value')).dy;
+      final lastUpdatedY = tester.getTopLeft(find.text('Last updated')).dy;
+      expect(lastUpdatedY, greaterThan(valueY));
     });
   });
 }

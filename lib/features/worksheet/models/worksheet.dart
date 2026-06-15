@@ -56,6 +56,25 @@ class WorksheetRow {
   });
 }
 
+/// A piece of contextually-useful information a [WorksheetTemplate] may declare
+/// for display in a small, unobtrusive banner above its rows.
+///
+/// The content is resolved at render time by the worksheet UI, so dynamic values
+/// (such as a live timestamp) can be shown.  New banner kinds are added as new
+/// variants of this sealed class plus a corresponding render branch in the
+/// worksheet banner widget.
+sealed class WorksheetBanner {
+  const WorksheetBanner();
+}
+
+/// Banner showing the currency exchange-rate sync status (the timestamp of the
+/// most recent successful sync, or an indication that built-in rates are in
+/// use).  Its presence also marks a worksheet as currency-aware, which the
+/// worksheet AppBar uses to offer a rate-refresh action.
+class CurrencyRatesBanner extends WorksheetBanner {
+  const CurrencyRatesBanner();
+}
+
 /// A named collection of [WorksheetRow]s representing a single conversion topic.
 class WorksheetTemplate {
   /// Unique identifier used in state management (e.g., `"length"`).
@@ -70,10 +89,14 @@ class WorksheetTemplate {
   /// The ordering policy for [rows].
   final WorksheetOrdering ordering;
 
+  /// Optional contextual banner displayed above the rows, or `null` for none.
+  final WorksheetBanner? banner;
+
   const WorksheetTemplate({
     required this.id,
     required this.name,
     required this.rows,
     required this.ordering,
+    this.banner,
   });
 }

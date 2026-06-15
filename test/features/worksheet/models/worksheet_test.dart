@@ -100,5 +100,46 @@ void main() {
       expect(template.rows[0].kind, isA<UnitRow>());
       expect(template.rows[1].kind, isA<FunctionRow>());
     });
+
+    test('banner defaults to null when not specified', () {
+      const template = WorksheetTemplate(
+        id: 'length',
+        name: 'Length',
+        ordering: WorksheetOrdering.magnitude,
+        rows: [
+          WorksheetRow(label: 'meters', expression: 'm', kind: UnitRow()),
+        ],
+      );
+      expect(template.banner, isNull);
+    });
+
+    test('banner is exposed when provided', () {
+      const template = WorksheetTemplate(
+        id: 'currency',
+        name: 'Currency',
+        ordering: WorksheetOrdering.alphabetical,
+        banner: CurrencyRatesBanner(),
+        rows: [
+          WorksheetRow(label: 'US dollar', expression: 'USD', kind: UnitRow()),
+        ],
+      );
+      expect(template.banner, isA<CurrencyRatesBanner>());
+    });
+  });
+
+  group('WorksheetBanner', () {
+    test('CurrencyRatesBanner is a WorksheetBanner', () {
+      const banner = CurrencyRatesBanner();
+      expect(banner, isA<WorksheetBanner>());
+      expect(banner, isA<CurrencyRatesBanner>());
+    });
+
+    test('sealed class switch is exhaustive', () {
+      const WorksheetBanner banner = CurrencyRatesBanner();
+      final result = switch (banner) {
+        CurrencyRatesBanner() => 'currency',
+      };
+      expect(result, 'currency');
+    });
   });
 }

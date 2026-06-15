@@ -2,6 +2,7 @@ import '../models/worksheet.dart';
 
 const UnitRow _unit = UnitRow();
 const FunctionRow _func = FunctionRow();
+const CurrencyRatesBanner _currencyRatesBanner = CurrencyRatesBanner();
 
 /// The 12 predefined worksheet templates.
 const List<WorksheetTemplate> predefinedWorksheets = [
@@ -47,6 +48,7 @@ const List<WorksheetTemplate> predefinedWorksheets = [
     id: 'currency',
     name: 'Currency',
     ordering: WorksheetOrdering.alphabetical,
+    banner: _currencyRatesBanner,
     rows: [
       WorksheetRow(
         label: 'Australian dollar',

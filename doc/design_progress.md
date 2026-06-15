@@ -257,7 +257,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: June 14, 2026*
+*Last Updated: June 15, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -452,3 +452,12 @@ Questions that arose during design but haven't been resolved:
   - `UnitEntryDetailScreen` now watches `currencyRateRepositoryProvider` and threads the repository through `_DetailBody` to `_UnitDetailBody`
   - `_UnitDetailBody` adds a "Last updated" section after "Value" for any unit/prefix matching a `CurrencyDescriptor` (via `repo.buildCurrencyDescriptors()` + `descriptorForUnit`): shows the formatted stored rate date when available, or "Using built-in rates" when the unit is a currency unit but no live rate has been fetched yet; section is omitted entirely for non-currency units
   - Design artifacts: `openspec/changes/show-refresh-times/`
+- *Currency worksheet banner and AppBar refresh (June 15, 2026)*
+  - 1838 tests passing (27 new)
+  - General worksheet banner mechanism: `WorksheetBanner` sealed class (variant `CurrencyRatesBanner`) + optional `WorksheetTemplate.banner` field (default `null`); a template with no banner renders exactly as before
+  - `WorksheetBannerWidget` (`lib/features/worksheet/presentation/widgets/worksheet_banner.dart`) switches on the banner variant; the `CurrencyRatesBanner` branch is a `ConsumerWidget` watching `currencyStatusProvider`, rendering a thin muted `surfaceContainerHighest` bar (`bodySmall`/`onSurfaceVariant`, schedule icon) showing the last sync time via shared `formatDateTime`, or "Using built-in rates"
+  - `WorksheetScreen` renders the banner above the rows (body is now `Column` → banner + `Expanded` table) when `template.banner != null`, and adds a `CurrencyRefreshButton` to `AppBar.actions` when `template.banner is CurrencyRatesBanner`
+  - Reusable `CurrencyRefreshButton` (`lib/features/currency/presentation/currency_refresh_button.dart`) extracted from `CurrencySettingsSection` along with the `_RefreshErrorDialog`; both Settings and the worksheet AppBar share it, so cooldown/in-progress state stays consistent (same `currencyStatusProvider`)
+  - `formatDateTime(DateTime)` added to `lib/shared/utils/date_formatter.dart` (`"Mmm D, YYYY, h:mm AM/PM"`, local time), replacing the private `_formatDateTime` in `CurrencySettingsSection`; banner and Settings now show an identical timestamp
+  - Currency template (`predefined_worksheets.dart`) declares `banner: _currencyRatesBanner`
+  - Design artifacts: `openspec/changes/currency-worksheet-banner/`

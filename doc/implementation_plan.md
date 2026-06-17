@@ -417,8 +417,11 @@ Future Enhancement Phases
 
 - Equation solver
 - Graphing
-- Additional functions
-- More mathematical constants
+- ~~Additional functions~~ — substantially covered by the GNU Units import and
+  defined-functions work (101 defined functions + 46 aliases); more can be added
+  as needed
+- ~~More mathematical constants~~ — covered by the full GNU Units database import
+  (Phase 5)
 
 ### Phase 15: Rational Number Support
 
@@ -426,13 +429,18 @@ Future Enhancement Phases
 - Convert from decimal to rational where beneficial
 - UI for displaying rational results
 
-### Future: Unit Resolution Caching
+### Future: Unit Resolution Caching — PARTIALLY COMPLETE
 
-- Cache the resulting base-unit Quantity the first time a unit is fully reduced
-  during evaluation, so subsequent evaluations skip the resolution chain
-- Invalidate the cache whenever unit definitions are added or edited (expected
-  to be infrequent, so the cache should remain valid for long periods)
-- Explore pre-warming the cache for all registered units as a background task
+- [x] Cache the resulting base-unit Quantity the first time a unit is fully
+  reduced during evaluation, so subsequent evaluations skip the resolution chain
+  — `UnitRepository.resolveUnit()` caches into `_resolvedQuantityCache`; failed
+  resolutions are intentionally not cached (the exception re-propagates)
+- [x] Invalidate the cache whenever unit definitions are added or edited (expected
+  to be infrequent, so the cache should remain valid for long periods) —
+  `registerDynamic()` / `unregisterDynamic()` clear the cache (currently the
+  currency dynamic-layer path; a general definition-edit feature does not exist
+  yet but would hook in here)
+- [ ] Explore pre-warming the cache for all registered units as a background task
   at initial app startup and after definition edits, to minimize user-visible
   processing time
 

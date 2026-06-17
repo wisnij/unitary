@@ -299,22 +299,39 @@ Implementation Phases
 
 ---
 
-### Phase 8: Currency Support (Weeks 20-21)
+### Phase 8: Currency Support (Weeks 20-21) — COMPLETE
 
 **Goals:** Currency conversion with live rates
 
 **Tasks:**
 
-1. Choose and integrate currency rate API
-2. Implement CurrencyService
-3. Add currency rate storage
-4. Ship default rates in assets
-5. Auto-update logic (24hr check)
-6. Manual refresh UI
-7. Display last update timestamp
-8. Handle offline gracefully
+1. [x] Choose and integrate currency rate API — Frankfurter v2
+   (`https://api.frankfurter.dev/v2/rates?base=USD`), no API key
+2. [x] Implement CurrencyService — `CurrencyRateRepository` + dynamic-unit layer in
+   `UnitRepository` (`registerDynamic`/`unregisterDynamic`); `buildCurrencyDescriptors()`
+   detects currency units, including precious metals (XAU/XAG/XPT)
+3. [x] Add currency rate storage — `CurrencyRates` in SharedPreferences (`currencyRates`
+   key); per-currency `{rate, date}` + top-level `updatedAt`
+4. [x] Ship default rates in assets — built-in rates compiled into the unit database
+   (`units.json` → `predefined_units.dart`); dynamic layer shadows them at runtime; UI
+   shows "Using built-in rates" until a live rate is fetched
+5. [x] Auto-update logic (24hr check) — `maybeRefresh()` fired fire-and-forget from
+   `UnitaryApp.initState()` post-frame callback; 24-hour staleness threshold
+6. [x] Manual refresh UI — reusable `CurrencyRefreshButton` with 60-second cooldown,
+   shared by Settings and the Currency worksheet AppBar
+7. [x] Display last update timestamp — Settings "Currency rates" section, worksheet
+   banner, and unit browser detail page (`formatDateTime`/`formatShortDate`)
+8. [x] Handle offline gracefully — stored/built-in rates load synchronously before first
+   frame; refresh failures surface via `_RefreshErrorDialog`; conversions work offline
 
-**Deliverable:** Currency conversions work with auto-updating rates
+**Deliverable:** Currency conversions work with auto-updating rates ✓
+
+**Test Coverage:** 1838 tests passing
+
+**Completed:** June 15, 2026
+
+**Design Artifacts:** `openspec/changes/currency-support/` (plus follow-ups:
+`fix-currency-worksheet/`, `show-refresh-times/`, `currency-worksheet-banner/`)
 
 ---
 

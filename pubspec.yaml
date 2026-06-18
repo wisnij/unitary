@@ -19,6 +19,7 @@ dependencies:
 
 dev_dependencies:
   cobertura: ^1.0.5
+  flutter_launcher_icons: ^0.14.4
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
@@ -28,3 +29,18 @@ flutter:
   uses-material-design: true
   assets:
     - LICENSE.md
+
+# Launcher/favicon icon generation.  Regenerate with tool/generate_icons.sh
+# (which rasterizes assets/icon/unitary.svg, then runs flutter_launcher_icons).
+flutter_launcher_icons:
+  image_path: "assets/icon/unitary.png"
+  android: true
+  adaptive_icon_background: "#060d18"
+  adaptive_icon_foreground: "assets/icon/unitary.png"
+  ios: true
+  remove_alpha_ios: true
+  web:
+    generate: true
+    image_path: "assets/icon/unitary.png"
+    background_color: "#060d18"
+    theme_color: "#060d18"

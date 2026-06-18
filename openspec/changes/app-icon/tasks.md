@@ -45,3 +45,6 @@
       the script changes (`pass_filenames: false`)
 - [x] 5.2 Validate the config (`pre-commit validate-config`) and verify the hook
       runs against the SVG and is skipped for unrelated files
+- [x] 5.3 Skip `generate-icons` in CI (`SKIP: generate-icons` on the pre-commit
+      step in `.github/actions/lint/action.yml`), since the runner has no Inkscape
+      and `pre-commit run --all-files` would otherwise trigger it every run

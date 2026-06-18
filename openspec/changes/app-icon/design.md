@@ -120,6 +120,12 @@ Add a `generate-icons` local hook to the existing `.pre-commit-config.yaml`
   project's existing pre-commit framework.
 - **Constraint**: The hook requires `inkscape` locally and only fires when the
   icon source changes (rare), so its ~40 s cost is not paid on ordinary commits.
+- **CI**: The GitHub Actions lint job runs `pre-commit run --all-files`, which
+  would trigger this hook against the committed SVG on every run; the runner has
+  no Inkscape, so the hook is skipped in CI via `SKIP: generate-icons` on the
+  pre-commit step.  The committed assets plus the local hook are sufficient to
+  prevent drift; re-rasterizing in CI is avoided because Inkscape output is not
+  guaranteed byte-identical across versions.
 
 
 ## Risks / Trade-offs

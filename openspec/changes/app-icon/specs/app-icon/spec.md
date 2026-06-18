@@ -49,6 +49,13 @@ platform icon assets from it.
 - **THEN** the build SHALL succeed using the committed generated icon assets,
   because the rasterizer is required only when regenerating the icon
 
+#### Scenario: Committing a changed SVG regenerates the assets
+
+- **WHEN** a developer stages a change to `assets/icon/unitary.svg` (or its bundled
+  font, or the generation script) and commits with pre-commit enabled
+- **THEN** the pre-commit hook SHALL regenerate the platform icon assets from the
+  updated source so the committed assets cannot silently drift from the SVG
+
 ### Requirement: Icon tooling does not affect the runtime app
 
 The icon generation tooling SHALL be a development-time dependency only and SHALL

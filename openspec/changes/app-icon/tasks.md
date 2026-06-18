@@ -37,3 +37,11 @@
 - [x] 4.3 Run `flutter analyze` and `flutter test --reporter failures-only` to
       confirm no regressions from the pubspec/asset changes
 - [x] 4.4 Update README/progress docs to note the icon and its regeneration step
+
+## 5. Automatic regeneration via pre-commit
+
+- [x] 5.1 Add a `generate-icons` local hook to `.pre-commit-config.yaml` that runs
+      `tool/generate_icons.sh` when `assets/icon/unitary.svg`, its bundled font, or
+      the script changes (`pass_filenames: false`)
+- [x] 5.2 Validate the config (`pre-commit validate-config`) and verify the hook
+      runs against the SVG and is skipped for unrelated files

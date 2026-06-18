@@ -215,6 +215,10 @@ This rasterizes the SVG to `assets/icon/unitary.png` (via `inkscape`) and runs
 generated assets are committed, so a normal build does **not** require Inkscape —
 only regenerating the icon does.
 
+A `generate-icons` pre-commit hook runs this script automatically whenever the
+SVG (or its font, or the script) is committed, keeping the generated assets in
+sync with the source.
+
 ---
 
 

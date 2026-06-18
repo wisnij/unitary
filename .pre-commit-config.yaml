@@ -19,6 +19,17 @@ repos:
             assets/units/units-supplementary\.json |
             tool/generate_predefined_units
           )
+      - id: generate-icons
+        name: Regenerate application icons
+        language: system
+        entry: tool/generate_icons.sh
+        pass_filenames: false
+        files: |
+          (?x)^(
+            assets/icon/unitary\.svg |
+            assets/icon/DejaVuSansMono-Bold\.ttf |
+            tool/generate_icons\.sh
+          )$
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.20.0
     hooks:

@@ -19,6 +19,9 @@ applied across all platforms.
   - **Web** — favicon and PWA manifest icons (192/512, including maskable).
 - Document the icon regeneration workflow so the icon can be rebuilt when the SVG
   changes.
+- Add a pre-commit hook that regenerates the icon assets automatically whenever
+  the source SVG (or its font / the generation script) is committed, so the
+  generated assets never drift from the source.
 
 
 ## Capabilities
@@ -42,5 +45,6 @@ applied across all platforms.
   icon resources), iOS `AppIcon.appiconset`, and web `favicon.png` /
   `web/icons/*` / `manifest.json` icon entries.
 - **Tooling**: adds a script/step to rasterize the SVG (via `inkscape`/`magick`)
-  and run `dart run flutter_launcher_icons`.
+  and run `dart run flutter_launcher_icons`; adds a `generate-icons` hook to the
+  existing `.pre-commit-config.yaml`.
 - **Runtime code**: none — no Dart application logic changes.

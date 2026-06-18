@@ -98,6 +98,29 @@ Flutter already tracks the stock icons.
 - **Why**: Builds must not require Inkscape on every machine/CI; only developers
   regenerating the icon need it.  The generation step is documented for that case.
 
+### 5. Regenerate via a pre-commit hook
+
+Add a `generate-icons` local hook to the existing `.pre-commit-config.yaml`
+(the project already drives codegen this way, e.g. `import-gnu-units` and
+`generate-predefined-units`).  It runs `tool/generate_icons.sh` when
+`assets/icon/unitary.svg`, the bundled `DejaVuSansMono-Bold.ttf`, or
+`tool/generate_icons.sh` itself is staged.
+
+- **Why**: Keeps the committed icon assets in lockstep with the source SVG so they
+  can never silently drift.  Matches the established convention for the other
+  generated artifacts in this repo.
+- **`pass_filenames: false`**: the script operates on fixed paths, so the matched
+  filenames must not be appended as arguments.
+- **Failure semantics**: Following the standard pre-commit pattern (and the
+  existing local hooks), if regeneration changes the assets the commit aborts with
+  "files were modified by this hook"; the developer re-stages the regenerated
+  files and commits again.  The hook does not auto-stage.
+- **Alternative considered**: A standalone `.git/hooks/pre-commit` script —
+  rejected because it would not be version-controlled and would bypass the
+  project's existing pre-commit framework.
+- **Constraint**: The hook requires `inkscape` locally and only fires when the
+  icon source changes (rare), so its ~40 s cost is not paid on ordinary commits.
+
 
 ## Risks / Trade-offs
 

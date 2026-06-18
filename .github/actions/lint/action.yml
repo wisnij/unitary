@@ -17,3 +17,8 @@ runs:
       with:
         python-version: '3.x'
     - uses: pre-commit/action@v3.0.1
+      # generate-icons rasterizes the SVG via Inkscape, which is not installed
+      # on the runner; the icon assets are committed and the hook guards drift
+      # locally, so skip it in CI.
+      env:
+        SKIP: generate-icons

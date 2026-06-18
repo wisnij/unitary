@@ -461,3 +461,11 @@ Questions that arose during design but haven't been resolved:
   - `formatDateTime(DateTime)` added to `lib/shared/utils/date_formatter.dart` (`"Mmm D, YYYY, h:mm AM/PM"`, local time), replacing the private `_formatDateTime` in `CurrencySettingsSection`; banner and Settings now show an identical timestamp
   - Currency template (`predefined_worksheets.dart`) declares `banner: _currencyRatesBanner`
   - Design artifacts: `openspec/changes/currency-worksheet-banner/`
+- *Application icon (June 18, 2026)*
+  - 1839 tests passing (no test changes; build/asset-only)
+  - Custom launcher/favicon icon applied to Android, iOS, and web, replacing the default Flutter icons
+  - `assets/icon/unitary.svg` is the source of truth (embeds DejaVu Sans Mono Bold); `tool/generate_icons.sh` rasterizes it to `assets/icon/unitary.png` (1024×1024, via `inkscape`) and runs `flutter_launcher_icons`
+  - Added `flutter_launcher_icons: ^0.14.4` dev dependency and its config block in `pubspec.yaml`: Android adaptive icon over `#060d18`, iOS with `remove_alpha_ios`, web with `#060d18` background/theme
+  - Generated assets committed (Android mipmaps + adaptive `ic_launcher.xml`/`colors.xml`, iOS `AppIcon.appiconset`, web `favicon.png`/`icons/*`); web `manifest.json` colors updated to `#060d18`
+  - `generate-icons` local hook added to `.pre-commit-config.yaml` (`pass_filenames: false`): runs `tool/generate_icons.sh` when `assets/icon/unitary.svg`, its bundled font, or the script changes, keeping committed assets in sync with the source
+  - Design artifacts: `openspec/changes/app-icon/`

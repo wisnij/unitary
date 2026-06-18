@@ -200,6 +200,25 @@ flutter run
 4. Write tests for all new functionality
 5. Submit pull requests for review
 
+### Application Icon
+
+The launcher/favicon icon is generated from `assets/icon/unitary.svg` (the single
+source of truth, which embeds DejaVu Sans Mono Bold).  After editing the SVG,
+regenerate all platform assets with:
+
+~~~~ bash
+tool/generate_icons.sh
+~~~~
+
+This rasterizes the SVG to `assets/icon/unitary.png` (via `inkscape`) and runs
+`flutter_launcher_icons` to produce the Android, iOS, and web icons.  The
+generated assets are committed, so a normal build does **not** require Inkscape —
+only regenerating the icon does.
+
+A `generate-icons` pre-commit hook runs this script automatically whenever the
+SVG (or its font, or the script) is committed, keeping the generated assets in
+sync with the source.
+
 ---
 
 

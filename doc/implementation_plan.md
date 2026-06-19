@@ -335,34 +335,43 @@ Implementation Phases
 
 ---
 
-### Phase 9: Polish & Testing (Weeks 22-24)
+### Phase 9: Polish & Testing (Weeks 22-24) — IN PROGRESS
 
 **Goals:** Production-ready quality
 
 **Tasks:**
 
-1. UI/UX refinement
+1. Branding
+   - [x] Application icon — custom launcher/favicon icon applied to Android, iOS,
+     and web from `assets/icon/unitary.svg` (moved here from Phase 10)
+
+2. UI/UX refinement
    - Responsive layouts
    - Tablet support
    - Accessibility improvements
 
-2. Performance optimization
+3. Performance optimization
    - Parser performance tuning
    - UI rendering optimization
    - Memory usage analysis
 
-3. Comprehensive testing
+4. Comprehensive testing
    - Integration tests
    - Widget tests
    - Manual testing on real devices
 
-4. Bug fixes
-5. Documentation
+5. Bug fixes
+6. Documentation
    - Code documentation
-   - User guide (README)
+   - Audit the design documents under `doc/` and decide which to keep, update, or
+     archive (many predate the implementation and may be stale)
+   - Rewrite the README to reflect the shipped app rather than the pre-implementation
+     design phase
    - Contributing guidelines
 
 **Deliverable:** MVP ready for release
+
+**Started:** June 18, 2026 (application icon)
 
 ---
 
@@ -372,20 +381,19 @@ Implementation Phases
 
 **Tasks:**
 
-1. Create app icon and branding
-2. Prepare Play Store assets
+1. Prepare Play Store assets
    - Screenshots
    - Description
    - Privacy policy
 
-3. Build release APK/AAB
-4. Set up GitHub repository
+2. Build release APK/AAB
+3. Set up GitHub repository
    - Clean up code
    - Add license
    - Polish README
 
-5. Publish to GitHub
-6. Submit to Play Store (optional)
+4. Publish to GitHub
+5. Submit to Play Store (optional)
 
 **Deliverable:** Public MVP release
 

@@ -235,8 +235,9 @@ When resuming design work, recommended order of priority:
 7. ✅ ~~**Browse Mode**~~ - **COMPLETE** — Phase 7, see openspec/changes/browse-units/
 8. ✅ ~~**User Data Persistence**~~ - **COMPLETE** — Phase 7 (persistence), see openspec/changes/user-data-persistence/
 9. ✅ ~~**Currency Rate Management**~~ - **COMPLETE** — Phase 8, see openspec/changes/currency-support/
-10. **Testing Strategy** - Define before/during implementation
-11. **Error Handling Details** - Refine during implementation
+10. **Phase 9: Polish & Testing** - **IN PROGRESS** — application icon done (see openspec/changes/archive/2026-06-18-app-icon/); remaining: UI/UX refinement, performance, comprehensive testing, and documentation cleanup (audit/keep-vs-archive the `doc/` design documents, rewrite the README)
+11. **Testing Strategy** - Define before/during implementation
+12. **Error Handling Details** - Refine during implementation
 
 ---
 
@@ -257,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: June 15, 2026*
+*Last Updated: June 18, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -461,7 +462,7 @@ Questions that arose during design but haven't been resolved:
   - `formatDateTime(DateTime)` added to `lib/shared/utils/date_formatter.dart` (`"Mmm D, YYYY, h:mm AM/PM"`, local time), replacing the private `_formatDateTime` in `CurrencySettingsSection`; banner and Settings now show an identical timestamp
   - Currency template (`predefined_worksheets.dart`) declares `banner: _currencyRatesBanner`
   - Design artifacts: `openspec/changes/currency-worksheet-banner/`
-- *Application icon (June 18, 2026)*
+- *Application icon (June 18, 2026)* — first change of Phase 9 (Polish & Testing); app icon moved here from Phase 10
   - 1839 tests passing (no test changes; build/asset-only)
   - Custom launcher/favicon icon applied to Android, iOS, and web, replacing the default Flutter icons
   - `assets/icon/unitary.svg` is the source of truth (embeds DejaVu Sans Mono Bold); `tool/generate_icons.sh` rasterizes it to `assets/icon/unitary.png` (1024×1024, via `inkscape`) and runs `flutter_launcher_icons`

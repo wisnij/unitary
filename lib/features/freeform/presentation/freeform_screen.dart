@@ -282,8 +282,13 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                             )
                           : null,
                     ),
+                    textInputAction: TextInputAction.next,
                     onChanged: _onInputChanged,
-                    onSubmitted: (_) => _evaluate(),
+                    onSubmitted: (_) {
+                      _evaluate();
+                      // Advance to the output field as the natural next step.
+                      _outputFocus.requestFocus();
+                    },
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -301,6 +306,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                       labelText: 'Convert to (optional)',
                       border: OutlineInputBorder(),
                     ),
+                    textInputAction: TextInputAction.done,
                     onChanged: _onOutputChanged,
                     onSubmitted: (_) => _evaluate(),
                   ),

@@ -32,6 +32,7 @@ class CompletionField extends ConsumerStatefulWidget {
     required this.decoration,
     this.onChanged,
     this.onSubmitted,
+    this.textInputAction,
   });
 
   /// Controls the text content and cursor position.
@@ -48,6 +49,9 @@ class CompletionField extends ConsumerStatefulWidget {
 
   /// Called when the user submits the field.
   final ValueChanged<String>? onSubmitted;
+
+  /// The keyboard action button to display, forwarded to the inner [TextField].
+  final TextInputAction? textInputAction;
 
   @override
   ConsumerState<CompletionField> createState() => _CompletionFieldState();
@@ -314,6 +318,7 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
           controller: widget.controller,
           focusNode: widget.focusNode,
           decoration: widget.decoration,
+          textInputAction: widget.textInputAction,
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,
         ),

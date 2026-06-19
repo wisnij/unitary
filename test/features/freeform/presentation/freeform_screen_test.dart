@@ -227,6 +227,98 @@ void main() {
     });
   });
 
+  group('FreeformScreen — Enter navigation', () {
+    bool fieldHasFocus(WidgetTester tester, String label) {
+      final field = tester.widget<TextField>(
+        find.widgetWithText(TextField, label),
+      );
+      return field.focusNode?.hasFocus ?? false;
+    }
+
+    testWidgets(
+      'Enter in Convert-from moves focus to Convert-to',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 m',
+        );
+        await tester.pump();
+
+        await tester.testTextInput.receiveAction(TextInputAction.next);
+        await tester.pump();
+
+        expect(fieldHasFocus(tester, 'Convert from'), isFalse);
+        expect(fieldHasFocus(tester, 'Convert to (optional)'), isTrue);
+      },
+    );
+
+    testWidgets(
+      'Enter in Convert-from still evaluates in on-submit mode',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({
+          'evaluationMode': 'onSubmit',
+        });
+        final prefs = await SharedPreferences.getInstance();
+        final repo = SettingsRepository(prefs);
+        final history = FreeformHistoryRepository(prefs);
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              settingsRepositoryProvider.overrideWithValue(repo),
+              freeformHistoryRepositoryProvider.overrideWithValue(history),
+            ],
+            child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+          ),
+        );
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '2 + 3',
+        );
+        await tester.pump();
+
+        await tester.testTextInput.receiveAction(TextInputAction.next);
+        await tester.pump();
+
+        expect(find.text('5'), findsWidgets);
+      },
+    );
+
+    testWidgets(
+      'Enter in Convert-to dismisses focus from both fields and evaluates',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 miles',
+        );
+        await tester.tap(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+        );
+        await tester.pump();
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert to (optional)'),
+          'km',
+        );
+        await tester.pump();
+
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        expect(fieldHasFocus(tester, 'Convert from'), isFalse);
+        expect(fieldHasFocus(tester, 'Convert to (optional)'), isFalse);
+        // Evaluation occurred — no longer showing the idle placeholder.
+        expect(find.text('Enter an expression above.'), findsNothing);
+      },
+    );
+  });
+
   group('FreeformScreen — swap button', () {
     testWidgets('swap button is always visible between the two fields', (
       tester,

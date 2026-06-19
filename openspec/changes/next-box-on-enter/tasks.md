@@ -28,5 +28,5 @@
 
 - [x] 4.1 Run `flutter test --reporter failures-only`; all tests pass.
 - [x] 4.2 Run `flutter analyze`; no new lint errors.
-- [ ] 4.3 Manually verify on web/device that Enter advances/dismisses focus
+- [x] 4.3 Manually verify on web/device that Enter advances/dismisses focus
   correctly with no select-all or cursor glitches.

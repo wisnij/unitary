@@ -42,7 +42,7 @@
         d="M 340,380 L 340,580 A 172,172 0 0 0 684,580 L 684,380"
         fill="none"
         stroke="#00d4ff"
-        stroke-width="56"
+        stroke-width="84"
         stroke-linecap="round"
         stroke-linejoin="round"
         filter="url(#glow)"
@@ -54,22 +54,22 @@
         d="M 340,380 L 340,580 A 172,172 0 0 0 684,580 L 684,380"
         fill="none"
         stroke="#00d4ff"
-        stroke-width="38"
+        stroke-width="57"
         stroke-linecap="round"
         stroke-linejoin="round"
       />
 
       <!-- Arrowhead glow layer -->
       <g filter="url(#glow)" opacity="0.45">
-        <polygon points="340,280 280,400 400,400" fill="#00d4ff"/>
-        <polygon points="684,280 624,400 744,400" fill="#00d4ff"/>
+        <polygon points="340,280 250,400 430,400" fill="#00d4ff"/>
+        <polygon points="684,280 594,400 774,400" fill="#00d4ff"/>
       </g>
 
       <!-- Left arrowhead -->
-      <polygon points="340,280 280,400 400,400" fill="#00d4ff"/>
+      <polygon points="340,280 250,400 430,400" fill="#00d4ff"/>
 
       <!-- Right arrowhead -->
-      <polygon points="684,280 624,400 744,400" fill="#00d4ff"/>
+      <polygon points="684,280 594,400 774,400" fill="#00d4ff"/>
 
       <!-- Left label: m² -->
       <text

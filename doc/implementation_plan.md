@@ -346,28 +346,72 @@ Implementation Phases
      and web from `assets/icon/unitary.svg` (moved here from Phase 10)
 
 2. UI/UX refinement
-   - Responsive layouts
+   - Responsive layouts — every screen (Freeform, Worksheet, Browse) is currently
+     single-column. Define width breakpoints and behavior:
+     - Cap content width on wide screens (desktop/web) so fields don't stretch
+       full-bleed
+     - Two-pane Browse on wide screens (list + detail side by side instead of
+       push navigation)
+     - Worksheet rows that lay out sensibly when given extra width
    - Tablet support
+     - Landscape handling across all screens
+     - Consider a persistent navigation rail instead of the drawer on wide screens
+     - Verify touch targets and spacing at tablet sizes
    - Accessibility improvements
+     - Semantic labels on the operator key panel and completion overlay
+     - Screen-reader announcement of evaluation results and per-row worksheet errors
+     - Contrast audit (the muted currency banner / `onSurfaceVariant` text are
+       candidates)
+     - Minimum 48dp touch targets throughout
+   - Resolve outstanding UX open questions (see design_progress.md):
+     - Long-expression handling in the input fields (scroll/wrap) — #2
+     - Worksheet field reordering — #3
+     - Undo/redo — #4
+     - Searchable/filterable freeform history — #5
+     - Landscape orientation support — #7
+     - First-run onboarding / tutorial — #8
 
 3. Performance optimization
-   - Parser performance tuning
+   - Parser/evaluator tuning
+     - Pre-warm the resolution cache for all registered units as a background task
+       at startup (the one remaining unchecked item under "Unit Resolution
+       Caching" below)
+     - Benchmark cold-start evaluation vs. warmed-cache evaluation
    - UI rendering optimization
+     - Profile the completion overlay (rebuilds on every keystroke)
+     - Profile worksheet cross-row recompute on each edit
+     - Profile the eager Browse catalog build in `BrowserNotifier.build()`
    - Memory usage analysis
+     - Measure the footprint of the ~7400-unit catalog plus the browse-entry list
+       held in memory
+   - Startup time
+     - Measure cold-start cost, including synchronous stored-rate load before first
+       frame
 
 4. Comprehensive testing
-   - Integration tests
-   - Widget tests
-   - Manual testing on real devices
+   - Integration tests — none exist yet (no `integration_test/` directory). Add
+     end-to-end flows:
+     - Type an expression → see the converted result
+     - Switch worksheet template → per-template source values persist and restore
+     - Trigger a currency refresh → conversions reflect updated rates
+   - Widget tests — audit coverage gaps; the existing ~1838 tests are largely
+     unit-level
+   - Manual testing on real devices — documented checklist; at least one real
+     Android device pass
+   - Verify >80% coverage target for parser/core domain (MVP success criterion)
 
-5. Bug fixes
+5. Bug fixes — reactive bucket; populate from manual/device testing and profiling
+
 6. Documentation
-   - Code documentation
+   - Code documentation — dartdoc pass on public APIs of the core domain and
+     feature providers
    - Audit the design documents under `doc/` and decide which to keep, update, or
      archive (many predate the implementation and may be stale)
    - Rewrite the README to reflect the shipped app rather than the pre-implementation
-     design phase
-   - Contributing guidelines
+     design phase (the current "Project Structure" still says `lib/` is "not yet
+     created"; the structure, status, and feature list need to describe the
+     working app)
+   - Contributing guidelines — add a `CONTRIBUTING.md` (does not exist yet)
 
 **Deliverable:** MVP ready for release
 

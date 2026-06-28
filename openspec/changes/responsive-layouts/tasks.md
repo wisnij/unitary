@@ -6,12 +6,12 @@
 
 ## 2. App shell (navigation refactor, approach B)
 
-- [ ] 2.1 Write widget tests for the shell: drawer + hamburger at compact/medium, persistent rail (no hamburger/drawer) at expanded, active-destination highlight in both surfaces, selecting a rail destination switches pages, and page-state preservation across rail navigation and across the rail breakpoint
-- [ ] 2.2 Define a lightweight destination descriptor (`{icon, label, page}`) for the three top-level pages; add Settings/About entries for the rail trailing slot
-- [ ] 2.3 Convert `HomeScreen` into `AppShell`: keeps `currentPage`/`onNavigate`, hosts the pages in an `IndexedStack`, and at expanded width wraps that stack in `Row[NavigationRail, VerticalDivider, Expanded(body)]` (rail built once, outside the stack); below expanded renders the stack directly
-- [ ] 2.4 Make each page width-aware: `drawer: sizeClass.usesRail ? null : AppDrawer(...)` and `AppBar(automaticallyImplyLeading: !sizeClass.usesRail, …)`; pages keep their own `Scaffold`/`AppBar` and stay single-pane in this step
-- [ ] 2.5 Update existing navigation/drawer tests and `app_drawer.dart` usage for the new rail; confirm `page-state-preservation` scenarios still pass
-- [ ] 2.6 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
+- [x] 2.1 Write widget tests for the shell: drawer + hamburger at compact/medium, persistent rail (no hamburger/drawer) at expanded, active-destination highlight in both surfaces, selecting a rail destination switches pages, and page-state preservation across rail navigation and across the rail breakpoint
+- [x] 2.2 Define a lightweight destination descriptor (`{icon, label, page}`) for the three top-level pages; add Settings/About entries for the rail trailing slot
+- [x] 2.3 Convert `HomeScreen` into `AppShell`: keeps `currentPage`/`onNavigate`, hosts the pages in an `IndexedStack`, and at expanded width wraps that stack in `Row[NavigationRail, VerticalDivider, Expanded(body)]` (rail built once, outside the stack); below expanded renders the stack directly
+- [x] 2.4 Make each page width-aware: `drawer: sizeClass.usesRail ? null : AppDrawer(...)` and `AppBar(automaticallyImplyLeading: !sizeClass.usesRail, …)`; pages keep their own `Scaffold`/`AppBar` and stay single-pane in this step
+- [x] 2.5 Update existing navigation/drawer tests and `app_drawer.dart` usage for the new rail; confirm `page-state-preservation` scenarios still pass
+- [x] 2.6 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
 
 ## 3. TwoPaneLayout primitive
 

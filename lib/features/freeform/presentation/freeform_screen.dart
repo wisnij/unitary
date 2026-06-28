@@ -9,6 +9,7 @@ import '../../../core/domain/models/quantity.dart';
 import '../../../core/domain/models/unit_repository.dart';
 import '../../../shared/top_level_page.dart';
 import '../../../shared/widgets/app_drawer.dart';
+import '../../../shared/window_size_class.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
 import '../data/freeform_history_repository.dart';
@@ -236,9 +237,11 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     final canSwap =
         _inputController.text.isNotEmpty && _outputController.text.isNotEmpty;
     final browseEnabled = conformableBrowseEnabled(result);
+    final usesRail = WindowSizeClass.of(context).usesRail;
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !usesRail,
         title: const Text('Unitary'),
         actions: [
           IconButton(
@@ -257,10 +260,12 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
           ),
         ],
       ),
-      drawer: AppDrawer(
-        currentPage: TopLevelPage.freeform,
-        onNavigate: widget.onNavigate,
-      ),
+      drawer: usesRail
+          ? null
+          : AppDrawer(
+              currentPage: TopLevelPage.freeform,
+              onNavigate: widget.onNavigate,
+            ),
       body: Column(
         children: [
           Expanded(

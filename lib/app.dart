@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/currency/state/currency_provider.dart';
 import 'features/settings/state/settings_provider.dart';
-import 'shared/home_screen.dart';
+import 'shared/app_shell.dart';
 
 class UnitaryApp extends ConsumerStatefulWidget {
   const UnitaryApp({super.key});
@@ -41,7 +41,7 @@ class _UnitaryAppState extends ConsumerState<UnitaryApp> {
         useMaterial3: true,
       ),
       themeMode: settings.themeMode,
-      home: const HomeScreen(),
+      home: const AppShell(),
     );
   }
 }

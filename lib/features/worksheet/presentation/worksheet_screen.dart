@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/top_level_page.dart';
 import '../../../shared/widgets/app_drawer.dart';
+import '../../../shared/window_size_class.dart';
 import '../../currency/presentation/currency_refresh_button.dart';
 import '../data/predefined_worksheets.dart';
 import '../models/worksheet.dart';
@@ -93,9 +94,11 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     _syncControllers(template, values, activeIndex);
 
     final banner = template.banner;
+    final usesRail = WindowSizeClass.of(context).usesRail;
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !usesRail,
         title: WorksheetDropdown(
           templates: [...predefinedWorksheets]
             ..sort(
@@ -109,10 +112,12 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
           if (banner is CurrencyRatesBanner) const CurrencyRefreshButton(),
         ],
       ),
-      drawer: AppDrawer(
-        currentPage: TopLevelPage.worksheet,
-        onNavigate: widget.onNavigate,
-      ),
+      drawer: usesRail
+          ? null
+          : AppDrawer(
+              currentPage: TopLevelPage.worksheet,
+              onNavigate: widget.onNavigate,
+            ),
       body: Column(
         children: [
           if (banner != null) WorksheetBannerWidget(banner: banner),

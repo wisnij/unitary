@@ -5,6 +5,7 @@ import '../../../core/domain/models/browse_entry.dart';
 import '../../../shared/top_level_page.dart';
 import '../../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/fast_scroll_bar.dart';
+import '../../../shared/window_size_class.dart';
 import '../state/browser_provider.dart';
 import 'unit_entry_detail_screen.dart';
 
@@ -48,9 +49,11 @@ class _BrowserScreenState extends ConsumerState<BrowserScreen> {
     final notifier = ref.read(browserProvider.notifier);
     final groups = notifier.visibleGroups();
     final isAlpha = state.viewMode == BrowseViewMode.alphabetical;
+    final usesRail = WindowSizeClass.of(context).usesRail;
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !usesRail,
         title: const Text('Browse'),
         actions: [
           IconButton(
@@ -77,10 +80,12 @@ class _BrowserScreenState extends ConsumerState<BrowserScreen> {
           ),
         ],
       ),
-      drawer: AppDrawer(
-        currentPage: TopLevelPage.browser,
-        onNavigate: widget.onNavigate,
-      ),
+      drawer: usesRail
+          ? null
+          : AppDrawer(
+              currentPage: TopLevelPage.browser,
+              onNavigate: widget.onNavigate,
+            ),
       body: Column(
         children: [
           // Search bar (shown when active).

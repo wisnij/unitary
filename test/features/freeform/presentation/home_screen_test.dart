@@ -82,6 +82,15 @@ void main() {
     await tester.pumpAndSettle();
   }
 
+  /// Forces a compact width (still drawer-based) so the worksheet AppBar
+  /// dropdown selector is used.  At medium/expanded the worksheet uses a
+  /// left-pane template list instead (see worksheet_two_pane_test.dart).
+  void useCompact(WidgetTester tester) {
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(590, 800);
+    addTearDown(tester.view.reset);
+  }
+
   group('AppShell', () {
     testWidgets('renders app bar with title', (tester) async {
       await tester.pumpWidget(buildApp());
@@ -123,6 +132,7 @@ void main() {
     testWidgets('Worksheet entry is enabled and shows worksheet content', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
@@ -244,6 +254,7 @@ void main() {
     );
 
     testWidgets('dropdown lists all template names', (tester) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 
@@ -263,6 +274,7 @@ void main() {
     testWidgets('selecting a template from dropdown switches worksheet', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 
@@ -358,6 +370,7 @@ void main() {
     testWidgets('active worksheet template survives navigation', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 

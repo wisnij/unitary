@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/domain/models/browse_entry.dart';
 import '../../../shared/top_level_page.dart';
+import '../../../shared/two_pane_layout.dart';
 import '../../../shared/widgets/app_drawer.dart';
 import '../../../shared/widgets/fast_scroll_bar.dart';
 import '../../../shared/window_size_class.dart';
@@ -86,40 +87,54 @@ class _BrowserScreenState extends ConsumerState<BrowserScreen> {
               currentPage: TopLevelPage.browser,
               onNavigate: widget.onNavigate,
             ),
-      body: Column(
-        children: [
-          // Search bar (shown when active).
-          if (state.searchVisible)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              child: TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: InputDecoration(
-                  hintText: 'Search units…',
-                  isDense: true,
-                  border: const OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () {
-                      _searchController.clear();
-                      notifier.setSearchQuery('');
-                    },
-                  ),
+      body: TwoPaneLayout(
+        compactPrimary: PaneSide.left,
+        leftSize: const PaneSize.fixed(360),
+        rightSize: const PaneSize.fill(),
+        left: Column(
+          children: [
+            // Search bar (shown when active).
+            if (state.searchVisible)
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 4,
                 ),
-                onChanged: notifier.setSearchQuery,
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Search units…',
+                    isDense: true,
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () {
+                        _searchController.clear();
+                        notifier.setSearchQuery('');
+                      },
+                    ),
+                  ),
+                  onChanged: notifier.setSearchQuery,
+                ),
+              ),
+            // Main list.
+            Expanded(
+              child: _BrowseListView(
+                groups: groups,
+                collapsedGroups: state.collapsedGroups,
+                searchActive: state.searchQuery.isNotEmpty,
+                onToggleGroup: notifier.toggleGroup,
               ),
             ),
-          // Main list.
-          Expanded(
-            child: _BrowseListView(
-              groups: groups,
-              collapsedGroups: state.collapsedGroups,
-              searchActive: state.searchQuery.isNotEmpty,
-              onToggleGroup: notifier.toggleGroup,
-            ),
-          ),
-        ],
+          ],
+        ),
+        right: state.selectedPrimaryId != null
+            ? UnitEntryDetailBody(
+                primaryId: state.selectedPrimaryId!,
+                kind: state.selectedKind!,
+              )
+            : const _EmptyDetailPane(),
       ),
     );
   }
@@ -298,17 +313,44 @@ class _EntryTile extends ConsumerWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
+      selected: ref.watch(
+        browserProvider.select((s) => s.selectedPrimaryId == entry.primaryId),
+      ),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute<void>(
-            builder: (_) => UnitEntryDetailScreen(
-              primaryId: entry.primaryId,
-              kind: entry.kind,
+        ref.read(browserProvider.notifier).selectEntry(entry);
+        // At compact width the detail is a pushed route; at medium/expanded it
+        // renders in the embedded pane, so no navigation is needed.
+        if (!WindowSizeClass.of(context).showsTwoPanes) {
+          Navigator.push(
+            context,
+            MaterialPageRoute<void>(
+              builder: (_) => UnitEntryDetailScreen(
+                primaryId: entry.primaryId,
+                kind: entry.kind,
+              ),
             ),
-          ),
-        );
+          );
+        }
       },
+    );
+  }
+}
+
+/// Placeholder shown in the browser's detail pane when nothing is selected
+/// (medium and expanded widths only).
+class _EmptyDetailPane extends StatelessWidget {
+  const _EmptyDetailPane();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Text(
+        'Select a unit',
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
     );
   }
 }

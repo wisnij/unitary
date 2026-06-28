@@ -15,31 +15,31 @@
 
 ## 3. TwoPaneLayout primitive
 
-- [ ] 3.1 Write tests for `TwoPaneLayout`: both panes + divider at medium/expanded, single designated pane at compact, independent scrolling, and each `PaneSize` mode (fixed width; fit-content with min/max clamping; two fill panes splitting by ratio)
-- [ ] 3.2 Implement `PaneSize` (`fixed`/`fitContent`/`fill`) and `TwoPaneLayout({left, right, leftSize, rightSize, compactPrimary})` reading `WindowSizeClass`; map modes to `SizedBox`/`ConstrainedBox`/`Expanded` (no drag handle)
-- [ ] 3.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
+- [x] 3.1 Write tests for `TwoPaneLayout`: both panes + divider at medium/expanded, single designated pane at compact, independent scrolling, and each `PaneSize` mode (fixed width; fit-content with min/max clamping; two fill panes splitting by ratio)
+- [x] 3.2 Implement `PaneSize` (`fixed`/`fitContent`/`fill`) and `TwoPaneLayout({left, right, leftSize, rightSize, compactPrimary})` reading `WindowSizeClass`; map modes to `SizedBox`/`ConstrainedBox`/`Expanded` (no drag handle)
+- [x] 3.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
 
 ## 4. Freeform two-pane (history pane)
 
-- [ ] 4.1 Write tests: history shown in a right pane at medium/expanded, AppBar history button hidden at wide widths and shown/enabled-disabled at compact, tapping a pane entry restores both fields and evaluates, same entries/order as the modal
-- [ ] 4.2 Adopt `TwoPaneLayout` in the Freeform body: left = input/result column, right = history list; keep the AppBar history button + modal at compact only
-- [ ] 4.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
+- [x] 4.1 Write tests: history shown in a right pane at medium/expanded, AppBar history button hidden at wide widths and shown/enabled-disabled at compact, tapping a pane entry restores both fields and evaluates, same entries/order as the modal
+- [x] 4.2 Adopt `TwoPaneLayout` in the Freeform body: left = input/result column, right = history list; keep the AppBar history button + modal at compact only
+- [x] 4.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
 
 ## 5. Worksheet two-pane (template list)
 
-- [ ] 5.1 Write tests: AppBar dropdown at compact (alphabetical, switches worksheet); left-pane template list at medium/expanded with active highlight and static AppBar title; selecting in the list switches the right pane
-- [ ] 5.2 Adopt `TwoPaneLayout` in the Worksheet body: left = template list (drives the active template already in `WorksheetNotifier`), right = active worksheet rows; AppBar shows the dropdown at compact and a static title at wide widths
-- [ ] 5.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
+- [x] 5.1 Write tests: AppBar dropdown at compact (alphabetical, switches worksheet); left-pane template list at medium/expanded with active highlight and static AppBar title; selecting in the list switches the right pane
+- [x] 5.2 Adopt `TwoPaneLayout` in the Worksheet body: left = template list (drives the active template already in `WorksheetNotifier`), right = active worksheet rows; AppBar shows the dropdown at compact and a static title at wide widths
+- [x] 5.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
 
 ## 6. Browse two-pane (selection lift + embedded detail)
 
-- [ ] 6.1 Write tests: selection lifted to `BrowserState` (primary + alias resolve to same selection), compact push vs wide embedded detail, selecting another entry updates the pane in place, empty "select a unit" placeholder before/after first selection
-- [ ] 6.2 Add `selectedPrimaryId`/`selectedKind` (or `BrowseEntry?`) to `BrowserState`/`BrowserNotifier`; row taps set selection
-- [ ] 6.3 Extract a Scaffold-less `UnitEntryDetailBody` from `UnitEntryDetailScreen`; the pushed screen (compact) and the embedded pane (wide) both render it
-- [ ] 6.4 Adopt `TwoPaneLayout` in the Browse body: left = catalog list, right = detail body or empty placeholder; compact taps push the detail route reading the lifted selection
-- [ ] 6.5 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
+- [x] 6.1 Write tests: selection lifted to `BrowserState` (primary + alias resolve to same selection), compact push vs wide embedded detail, selecting another entry updates the pane in place, empty "select a unit" placeholder before/after first selection
+- [x] 6.2 Add `selectedPrimaryId`/`selectedKind` (or `BrowseEntry?`) to `BrowserState`/`BrowserNotifier`; row taps set selection
+- [x] 6.3 Extract a Scaffold-less `UnitEntryDetailBody` from `UnitEntryDetailScreen`; the pushed screen (compact) and the embedded pane (wide) both render it
+- [x] 6.4 Adopt `TwoPaneLayout` in the Browse body: left = catalog list, right = detail body or empty placeholder; compact taps push the detail route reading the lifted selection
+- [x] 6.5 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
 
 ## 7. Documentation & wrap-up
 
-- [ ] 7.1 Update `doc/implementation_plan.md` and `doc/design_progress.md` to mark the responsive-layouts work and record the shell/destination + two-pane architecture
-- [ ] 7.2 Final full run: `flutter test --reporter failures-only` and `flutter analyze` clean
+- [x] 7.1 Update `doc/implementation_plan.md` and `doc/design_progress.md` to mark the responsive-layouts work and record the shell/destination + two-pane architecture
+- [x] 7.2 Final full run: `flutter test --reporter failures-only` and `flutter analyze` clean

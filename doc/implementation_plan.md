@@ -346,16 +346,25 @@ Implementation Phases
      and web from `assets/icon/unitary.svg` (moved here from Phase 10)
 
 2. UI/UX refinement
-   - Responsive layouts — every screen (Freeform, Worksheet, Browse) is currently
-     single-column. Define width breakpoints and behavior:
-     - Cap content width on wide screens (desktop/web) so fields don't stretch
-       full-bleed
-     - Two-pane Browse on wide screens (list + detail side by side instead of
-       push navigation)
-     - Worksheet rows that lay out sensibly when given extra width
+   - [x] Responsive layouts — three responsive tiers driven by a single
+     `WindowSizeClass` (compact `<600` drawer + single pane; medium `600–1040`
+     drawer + two panes; expanded `>1040` persistent navigation rail + two
+     panes). `AppShell` (formerly `HomeScreen`) owns the drawer↔rail decision
+     and wraps the existing pages; a shared `TwoPaneLayout` with per-pane
+     `PaneSize` (fixed / fit-content / fill) provides the split. Per page:
+     Freeform shows input history in a right pane; Worksheet shows a left-pane
+     template list (dropdown at compact); Browse shows the unit detail in an
+     embedded right pane (selection lifted into `BrowserState`; pushed route at
+     compact). See `openspec/changes/responsive-layouts/`.
+     - Deferred follow-up: lift Freeform's field/eval state out of widget
+       `State` into a notifier so AppBar construction can also be centralized in
+       the shell (Freeform is the only page still coupled to widget state).
+     - Discovered: the Worksheet AppBar template dropdown can overflow at very
+       narrow widths (~≤410 dp) because of the long "Digital Storage" label in
+       `titleLarge` — pre-existing, not addressed here.
    - Tablet support
+     - [x] Persistent navigation rail at expanded width (replaces the drawer)
      - Landscape handling across all screens
-     - Consider a persistent navigation rail instead of the drawer on wide screens
      - Verify touch targets and spacing at tablet sizes
    - Accessibility improvements
      - Semantic labels on the operator key panel and completion overlay

@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: June 18, 2026*
+*Last Updated: June 27, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -470,3 +470,14 @@ Questions that arose during design but haven't been resolved:
   - Generated assets committed (Android mipmaps + adaptive `ic_launcher.xml`/`colors.xml`, iOS `AppIcon.appiconset`, web `favicon.png`/`icons/*`); web `manifest.json` colors updated to `#060d18`
   - `generate-icons` local hook added to `.pre-commit-config.yaml` (`pass_filenames: false`): runs `tool/generate_icons.sh` when `assets/icon/unitary.svg`, its bundled font, or the script changes, keeping committed assets in sync with the source
   - Design artifacts: `openspec/changes/app-icon/`
+- *Responsive layouts (June 27, 2026)* — Phase 9 UI/UX refinement
+  - 1886 tests passing (47 new)
+  - Three responsive tiers from a single `WindowSizeClass` (`lib/shared/window_size_class.dart`): compact `<600` (drawer + single pane), medium `600–1040` (drawer + two panes), expanded `>1040` (persistent `NavigationRail` + two panes); derived from `MediaQuery.sizeOf`
+  - `AppShell` (renamed from `HomeScreen`, `lib/shared/app_shell.dart`) owns the drawer↔rail decision and wraps the existing pages in an `IndexedStack` (with a `GlobalKey` so page state survives reparenting across the rail breakpoint); pages keep their own `Scaffold`/`AppBar` and become width-aware (`drawer: usesRail ? null : AppDrawer`, `automaticallyImplyLeading: !usesRail`) — "approach B", chosen over centralizing AppBar construction to avoid a risky Freeform state rewrite (deferred)
+  - `TwoPaneLayout` + `PaneSize` (`lib/shared/two_pane_layout.dart`): pure geometry; per-pane sizing `fixed` / `fitContent({min,max})` / `fill({flex})`, collapsing to the `compactPrimary` pane below medium
+  - Freeform: input history in a right pane at medium/expanded (AppBar history button + modal at compact only); shared `_HistoryList` between modal and pane
+  - Worksheet: left-pane template list with static AppBar title at medium/expanded; AppBar dropdown at compact
+  - Browse: selection lifted into `BrowserState` (`selectedPrimaryId`/`selectedKind` + `selectEntry`); embedded detail right pane via the extracted Scaffold-less `UnitEntryDetailBody`; pushed `UnitEntryDetailScreen` at compact; empty "Select a unit" placeholder
+  - No new dependencies
+  - Deferred: lift Freeform field/eval state into a notifier (only top-level page still coupled to widget `State`); pre-existing Worksheet dropdown overflow at very narrow widths
+  - Design artifacts: `openspec/changes/responsive-layouts/`

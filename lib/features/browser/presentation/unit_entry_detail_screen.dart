@@ -20,7 +20,7 @@ import '../../settings/state/settings_provider.dart';
 /// Always receives [primaryId] + [kind] — alias rows in the browse list
 /// navigate here using the alias's [BrowseEntry.primaryId], so both the
 /// primary and its aliases end up on the same page.
-class UnitEntryDetailScreen extends ConsumerWidget {
+class UnitEntryDetailScreen extends StatelessWidget {
   const UnitEntryDetailScreen({
     super.key,
     required this.primaryId,
@@ -37,23 +37,47 @@ class UnitEntryDetailScreen extends ConsumerWidget {
   final UnitRepository? repo;
 
   @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(primaryId)),
+      body: UnitEntryDetailBody(primaryId: primaryId, kind: kind, repo: repo),
+    );
+  }
+}
+
+/// Scaffold-less detail content for a unit, prefix, or function.
+///
+/// Used both as the body of the pushed [UnitEntryDetailScreen] (compact width)
+/// and as the embedded right pane of the browser at medium/expanded widths.
+class UnitEntryDetailBody extends ConsumerWidget {
+  const UnitEntryDetailBody({
+    super.key,
+    required this.primaryId,
+    required this.kind,
+    this.repo,
+  });
+
+  final String primaryId;
+  final BrowseEntryKind kind;
+
+  /// Optional unit-repository override; see [UnitEntryDetailScreen.repo].
+  final UnitRepository? repo;
+
+  @override
   Widget build(BuildContext context, WidgetRef ref) {
     final settings = ref.watch(settingsProvider);
     final UnitRepository effectiveRepo =
         repo ?? ref.watch(unitRepositoryProvider);
     final currencyRateRepo = ref.watch(currencyRateRepositoryProvider);
 
-    return Scaffold(
-      appBar: AppBar(title: Text(primaryId)),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: _DetailBody(
-          primaryId: primaryId,
-          kind: kind,
-          repo: effectiveRepo,
-          settings: settings,
-          currencyRateRepo: currencyRateRepo,
-        ),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: _DetailBody(
+        primaryId: primaryId,
+        kind: kind,
+        repo: effectiveRepo,
+        settings: settings,
+        currencyRateRepo: currencyRateRepo,
       ),
     );
   }

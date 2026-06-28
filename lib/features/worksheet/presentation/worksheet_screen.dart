@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/top_level_page.dart';
+import '../../../shared/two_pane_layout.dart';
 import '../../../shared/widgets/app_drawer.dart';
 import '../../../shared/window_size_class.dart';
 import '../../currency/presentation/currency_refresh_button.dart';
@@ -94,20 +95,85 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     _syncControllers(template, values, activeIndex);
 
     final banner = template.banner;
-    final usesRail = WindowSizeClass.of(context).usesRail;
+    final sizeClass = WindowSizeClass.of(context);
+    final usesRail = sizeClass.usesRail;
+    // At medium/expanded the templates are selected from a left-pane list and
+    // the AppBar shows the active template's name; at compact the AppBar hosts
+    // a dropdown selector.
+    final twoPane = sizeClass.showsTwoPanes;
+
+    final sortedTemplates = [...predefinedWorksheets]
+      ..sort(
+        (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
+      );
+
+    void selectTemplate(String id) =>
+        ref.read(worksheetProvider.notifier).selectWorksheet(id);
+
+    final worksheetContent = Column(
+      children: [
+        if (banner != null) WorksheetBannerWidget(banner: banner),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              // Cap the label column so the input never shrinks below 12 em.
+              // IntrinsicColumnWidth then sizes the column to the widest rendered
+              // label up to this cap — no TextPainter pre-measurement needed.
+              const minInputEm = 12.0;
+              const labelAbsoluteMax = 200.0;
+              const listPadding = 16.0;
+              const columnSpacing = 8.0;
+              final inputFontSize =
+                  Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16.0;
+              final maxLabelWidth =
+                  (constraints.maxWidth -
+                          listPadding * 2 -
+                          columnSpacing -
+                          minInputEm * inputFontSize)
+                      .clamp(0.0, labelAbsoluteMax);
+
+              final controllers = _controllersFor(template);
+
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(listPadding),
+                child: Table(
+                  columnWidths: const {
+                    0: IntrinsicColumnWidth(),
+                    1: FixedColumnWidth(columnSpacing),
+                    2: FlexColumnWidth(),
+                  },
+                  defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+                  children: [
+                    for (var i = 0; i < template.rows.length; i++)
+                      _buildTableRow(
+                        context,
+                        template,
+                        values,
+                        controllers,
+                        activeIndex,
+                        activeId,
+                        i,
+                        maxLabelWidth,
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
 
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: !usesRail,
-        title: WorksheetDropdown(
-          templates: [...predefinedWorksheets]
-            ..sort(
-              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()),
-            ),
-          selectedId: activeId,
-          onChanged: (id) =>
-              ref.read(worksheetProvider.notifier).selectWorksheet(id),
-        ),
+        title: twoPane
+            ? Text(template.name)
+            : WorksheetDropdown(
+                templates: sortedTemplates,
+                selectedId: activeId,
+                onChanged: selectTemplate,
+              ),
         actions: [
           if (banner is CurrencyRatesBanner) const CurrencyRefreshButton(),
         ],
@@ -118,58 +184,16 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
               currentPage: TopLevelPage.worksheet,
               onNavigate: widget.onNavigate,
             ),
-      body: Column(
-        children: [
-          if (banner != null) WorksheetBannerWidget(banner: banner),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Cap the label column so the input never shrinks below 12 em.
-                // IntrinsicColumnWidth then sizes the column to the widest rendered
-                // label up to this cap — no TextPainter pre-measurement needed.
-                const minInputEm = 12.0;
-                const labelAbsoluteMax = 200.0;
-                const listPadding = 16.0;
-                const columnSpacing = 8.0;
-                final inputFontSize =
-                    Theme.of(context).textTheme.bodyLarge?.fontSize ?? 16.0;
-                final maxLabelWidth =
-                    (constraints.maxWidth -
-                            listPadding * 2 -
-                            columnSpacing -
-                            minInputEm * inputFontSize)
-                        .clamp(0.0, labelAbsoluteMax);
-
-                final controllers = _controllersFor(template);
-
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(listPadding),
-                  child: Table(
-                    columnWidths: const {
-                      0: IntrinsicColumnWidth(),
-                      1: FixedColumnWidth(columnSpacing),
-                      2: FlexColumnWidth(),
-                    },
-                    defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-                    children: [
-                      for (var i = 0; i < template.rows.length; i++)
-                        _buildTableRow(
-                          context,
-                          template,
-                          values,
-                          controllers,
-                          activeIndex,
-                          activeId,
-                          i,
-                          maxLabelWidth,
-                        ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
+      body: TwoPaneLayout(
+        compactPrimary: PaneSide.right,
+        leftSize: const PaneSize.fixed(220),
+        rightSize: const PaneSize.fill(),
+        left: _TemplateList(
+          templates: sortedTemplates,
+          selectedId: activeId,
+          onSelect: selectTemplate,
+        ),
+        right: worksheetContent,
       ),
     );
   }
@@ -343,6 +367,36 @@ class WorksheetDropdown extends StatelessWidget {
           onChanged(id);
         }
       },
+    );
+  }
+}
+
+/// Left-pane list of worksheet templates shown at medium and expanded widths.
+///
+/// Lists [templates] (expected pre-sorted) with the active template
+/// highlighted; tapping one invokes [onSelect].
+class _TemplateList extends StatelessWidget {
+  const _TemplateList({
+    required this.templates,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  final List<WorksheetTemplate> templates;
+  final String selectedId;
+  final ValueChanged<String> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      children: [
+        for (final t in templates)
+          ListTile(
+            title: Text(t.name),
+            selected: t.id == selectedId,
+            onTap: () => onSelect(t.id),
+          ),
+      ],
     );
   }
 }

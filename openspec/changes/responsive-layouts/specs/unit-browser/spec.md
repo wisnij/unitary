@@ -64,14 +64,14 @@ top-level navigation.
 ## ADDED Requirements
 
 ### Requirement: Empty detail pane when nothing is selected
-The browse page's right pane SHALL show a "select a unit" placeholder, rather
+The browse page's right pane SHALL show a "select a unit to view details" placeholder, rather
 than detail content, at `medium` and `expanded` widths whenever no entry is
 currently selected.
 
 #### Scenario: Placeholder shown before any selection
 - **WHEN** the window size class is `medium` or `expanded` and no entry has been
   selected yet
-- **THEN** the right pane shows a "select a unit" placeholder instead of a
+- **THEN** the right pane shows a "select a unit to view details" placeholder instead of a
   detail body
 
 #### Scenario: Placeholder replaced once an entry is selected

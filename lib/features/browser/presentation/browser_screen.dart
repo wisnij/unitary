@@ -346,7 +346,7 @@ class _EmptyDetailPane extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Text(
-        'Select a unit',
+        'Select a unit to view details',
         style: theme.textTheme.bodyLarge?.copyWith(
           color: theme.colorScheme.onSurfaceVariant,
         ),

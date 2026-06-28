@@ -73,7 +73,7 @@ void main() {
   group('Wide-width embedded detail', () {
     testWidgets('empty placeholder before any selection', (tester) async {
       await pump(tester, expanded);
-      expect(find.text('Select a unit'), findsOneWidget);
+      expect(find.text('Select a unit to view details'), findsOneWidget);
       expect(find.byType(UnitEntryDetailBody), findsNothing);
     });
 
@@ -85,7 +85,7 @@ void main() {
       await tester.tap(find.widgetWithText(ListTile, 'ft'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Select a unit'), findsNothing);
+      expect(find.text('Select a unit to view details'), findsNothing);
       expect(find.byType(UnitEntryDetailScreen), findsNothing); // not pushed
       final body = tester.widget<UnitEntryDetailBody>(
         find.byType(UnitEntryDetailBody),
@@ -140,7 +140,7 @@ void main() {
       await pump(tester, compact);
 
       // No embedded pane at compact width.
-      expect(find.text('Select a unit'), findsNothing);
+      expect(find.text('Select a unit to view details'), findsNothing);
 
       await tester.tap(find.widgetWithText(ListTile, 'ft'));
       await tester.pumpAndSettle();

@@ -221,4 +221,35 @@ void main() {
       expect(find.byType(AboutScreen), findsOneWidget);
     });
   });
+
+  group('AppDrawer — short viewport', () {
+    testWidgets(
+      'Settings footer sits below the nav tiles, not over them, when short',
+      (tester) async {
+        // A short viewport where the header + nav tiles + footer do not all
+        // fit, forcing the drawer to scroll.
+        tester.view.devicePixelRatio = 1.0;
+        tester.view.physicalSize = const Size(800, 320);
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          _buildDrawer(currentPage: TopLevelPage.freeform),
+        );
+        await _openDrawer(tester);
+
+        // The Browse nav tile must not be overlapped by the Settings footer:
+        // the footer begins at or below the bottom of the Browse tile.
+        final browseBottom = tester.getBottomLeft(find.text('Browse')).dy;
+        final settingsTop = tester.getTopLeft(find.text('Settings')).dy;
+        expect(settingsTop, greaterThanOrEqualTo(browseBottom));
+
+        // The footer is reachable by scrolling and still navigates.
+        await tester.ensureVisible(find.text('Settings'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.text('Settings'));
+        await tester.pumpAndSettle();
+        expect(find.byType(SettingsScreen), findsOneWidget);
+      },
+    );
+  });
 }

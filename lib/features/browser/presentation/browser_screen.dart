@@ -89,7 +89,7 @@ class _BrowserScreenState extends ConsumerState<BrowserScreen> {
             ),
       body: TwoPaneLayout(
         compactPrimary: PaneSide.left,
-        leftSize: const PaneSize.fixed(360),
+        leftSize: const PaneSize.fill(),
         rightSize: const PaneSize.fill(),
         left: Column(
           children: [

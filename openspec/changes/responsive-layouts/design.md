@@ -88,7 +88,7 @@ Each mode is a thin wrapper over a `Row` child: `fixed` → `SizedBox(width:)`; 
 Per-page choices:
 
 - **Worksheet** — template list `fitContent()` (short, bounded names like "Digital Storage"), worksheet `fill()`.
-- **Browse** — catalog list `fixed(~320)` (or `fitContent(max:)`), detail/placeholder `fill()`.
+- **Browse** — catalog list and detail/placeholder both `fill()` (equal 1:1 split).
 - **Freeform** — input/result column `fill()`, history `fixed`/`fitContent(max:)`.
 
 Each page composes its own selection wiring on top:

@@ -8,7 +8,9 @@ import '../../../core/domain/errors.dart';
 import '../../../core/domain/models/quantity.dart';
 import '../../../core/domain/models/unit_repository.dart';
 import '../../../shared/top_level_page.dart';
+import '../../../shared/two_pane_layout.dart';
 import '../../../shared/widgets/app_drawer.dart';
+import '../../../shared/window_size_class.dart';
 import '../../settings/models/user_settings.dart';
 import '../../settings/state/settings_provider.dart';
 import '../data/freeform_history_repository.dart';
@@ -236,18 +238,25 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     final canSwap =
         _inputController.text.isNotEmpty && _outputController.text.isNotEmpty;
     final browseEnabled = conformableBrowseEnabled(result);
+    final sizeClass = WindowSizeClass.of(context);
+    final usesRail = sizeClass.usesRail;
+    // At medium/expanded the history lives in a persistent side pane, so the
+    // AppBar history button (which opens the modal) is only shown at compact.
+    final twoPane = sizeClass.showsTwoPanes;
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !usesRail,
         title: const Text('Unitary'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.history),
-            tooltip: 'Conversion history',
-            onPressed: history.isNotEmpty
-                ? () => _showHistoryModal(context)
-                : null,
-          ),
+          if (!twoPane)
+            IconButton(
+              icon: const Icon(Icons.history),
+              tooltip: 'Conversion history',
+              onPressed: history.isNotEmpty
+                  ? () => _showHistoryModal(context)
+                  : null,
+            ),
           IconButton(
             icon: const Icon(Icons.balance),
             tooltip: 'Browse conformable units',
@@ -257,89 +266,100 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
           ),
         ],
       ),
-      drawer: AppDrawer(
-        currentPage: TopLevelPage.freeform,
-        onNavigate: widget.onNavigate,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  CompletionField(
-                    controller: _inputController,
-                    focusNode: _inputFocus,
-                    decoration: InputDecoration(
-                      labelText: 'Convert from',
-                      border: const OutlineInputBorder(),
-                      suffixIcon: _inputController.text.isNotEmpty
-                          ? IconButton(
-                              icon: const Icon(Icons.clear),
-                              onPressed: _clear,
-                            )
+      drawer: usesRail
+          ? null
+          : AppDrawer(
+              currentPage: TopLevelPage.freeform,
+              onNavigate: widget.onNavigate,
+            ),
+      body: TwoPaneLayout(
+        compactPrimary: PaneSide.left,
+        leftSize: const PaneSize.fill(),
+        rightSize: const PaneSize.fixed(320),
+        right: _HistoryPane(
+          entries: history,
+          onSelect: _restoreHistoryEntry,
+        ),
+        left: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    CompletionField(
+                      controller: _inputController,
+                      focusNode: _inputFocus,
+                      decoration: InputDecoration(
+                        labelText: 'Convert from',
+                        border: const OutlineInputBorder(),
+                        suffixIcon: _inputController.text.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.clear),
+                                onPressed: _clear,
+                              )
+                            : null,
+                      ),
+                      textInputAction: TextInputAction.next,
+                      onChanged: _onInputChanged,
+                      onSubmitted: (_) {
+                        _evaluate();
+                        // Advance to the output field as the natural next step.
+                        _outputFocus.requestFocus();
+                      },
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.swap_vert),
+                          onPressed: canSwap ? _swap : null,
+                        ),
+                      ],
+                    ),
+                    CompletionField(
+                      controller: _outputController,
+                      focusNode: _outputFocus,
+                      decoration: const InputDecoration(
+                        labelText: 'Convert to (optional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      textInputAction: TextInputAction.done,
+                      onChanged: _onOutputChanged,
+                      onSubmitted: (_) => _evaluate(),
+                    ),
+                    const SizedBox(height: 24),
+                    ResultDisplay(
+                      result: result,
+                      onTap: result is EvaluationIdle && result.example != null
+                          ? () {
+                              final ex = result.example!;
+                              _inputController.text = ex.inputExpression;
+                              if (ex.outputExpression != null) {
+                                _outputController.text = ex.outputExpression!;
+                              }
+                              setState(() {});
+                              _cancelDebounce();
+                              _evaluate();
+                              FocusScope.of(context).unfocus();
+                            }
                           : null,
                     ),
-                    textInputAction: TextInputAction.next,
-                    onChanged: _onInputChanged,
-                    onSubmitted: (_) {
-                      _evaluate();
-                      // Advance to the output field as the natural next step.
-                      _outputFocus.requestFocus();
-                    },
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.swap_vert),
-                        onPressed: canSwap ? _swap : null,
+                    if (isOnSubmit) ...[
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _evaluate,
+                        child: const Text('Evaluate'),
                       ),
                     ],
-                  ),
-                  CompletionField(
-                    controller: _outputController,
-                    focusNode: _outputFocus,
-                    decoration: const InputDecoration(
-                      labelText: 'Convert to (optional)',
-                      border: OutlineInputBorder(),
-                    ),
-                    textInputAction: TextInputAction.done,
-                    onChanged: _onOutputChanged,
-                    onSubmitted: (_) => _evaluate(),
-                  ),
-                  const SizedBox(height: 24),
-                  ResultDisplay(
-                    result: result,
-                    onTap: result is EvaluationIdle && result.example != null
-                        ? () {
-                            final ex = result.example!;
-                            _inputController.text = ex.inputExpression;
-                            if (ex.outputExpression != null) {
-                              _outputController.text = ex.outputExpression!;
-                            }
-                            setState(() {});
-                            _cancelDebounce();
-                            _evaluate();
-                            FocusScope.of(context).unfocus();
-                          }
-                        : null,
-                  ),
-                  if (isOnSubmit) ...[
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _evaluate,
-                      child: const Text('Evaluate'),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
-          ),
-          if (_showPanel) _KeyPanel(onSymbol: _insertSymbol),
-        ],
+            if (_showPanel) _KeyPanel(onSymbol: _insertSymbol),
+          ],
+        ),
       ),
     );
   }
@@ -434,24 +454,87 @@ class _HistoryModal extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Expanded(
-              child: ListView.builder(
-                controller: scrollController,
-                itemCount: entries.length,
-                itemBuilder: (_, index) {
-                  final entry = entries[index];
-                  final label = entry.result.isNotEmpty
-                      ? '${entry.from} = ${entry.result}'
-                      : entry.from;
-                  return ListTile(
-                    title: Text(label),
-                    onTap: () => onSelect(entry),
-                  );
-                },
+              child: _HistoryList(
+                entries: entries,
+                onSelect: onSelect,
+                scrollController: scrollController,
               ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+/// The history label for an [entry]: `"from = result"`, or just `from` when
+/// the entry has no formatted result (e.g. a function-definition lookup).
+String _historyLabel(FreeformHistoryEntry entry) =>
+    entry.result.isNotEmpty ? '${entry.from} = ${entry.result}' : entry.from;
+
+/// Scrollable list of history entries, shared by the compact modal and the
+/// wide-screen [_HistoryPane].  Tapping an entry invokes [onSelect].
+class _HistoryList extends StatelessWidget {
+  const _HistoryList({
+    required this.entries,
+    required this.onSelect,
+    this.scrollController,
+  });
+
+  final List<FreeformHistoryEntry> entries;
+  final void Function(FreeformHistoryEntry) onSelect;
+  final ScrollController? scrollController;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      controller: scrollController,
+      itemCount: entries.length,
+      itemBuilder: (_, index) {
+        final entry = entries[index];
+        return ListTile(
+          title: Text(_historyLabel(entry)),
+          onTap: () => onSelect(entry),
+        );
+      },
+    );
+  }
+}
+
+/// Persistent history side pane shown at medium and expanded widths.
+///
+/// Lists the same entries as the compact modal; tapping one restores both
+/// fields and re-evaluates via [onSelect].  Shows an empty-state message when
+/// there is no history yet.
+class _HistoryPane extends StatelessWidget {
+  const _HistoryPane({required this.entries, required this.onSelect});
+
+  final List<FreeformHistoryEntry> entries;
+  final void Function(FreeformHistoryEntry) onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+          child: Text('History', style: theme.textTheme.titleSmall),
+        ),
+        Expanded(
+          child: entries.isEmpty
+              ? Center(
+                  child: Text(
+                    'No history yet',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+              : _HistoryList(entries: entries, onSelect: onSelect),
+        ),
+      ],
     );
   }
 }

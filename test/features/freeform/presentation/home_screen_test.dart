@@ -20,7 +20,7 @@ import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
 import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
-import 'package:unitary/shared/home_screen.dart';
+import 'package:unitary/shared/app_shell.dart';
 
 void main() {
   late SettingsRepository repo;
@@ -54,7 +54,7 @@ void main() {
         if (browserRepo != null)
           unitRepositoryProvider.overrideWithValue(browserRepo),
       ],
-      child: const MaterialApp(home: HomeScreen()),
+      child: const MaterialApp(home: AppShell()),
     );
   }
 
@@ -82,7 +82,16 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  group('HomeScreen', () {
+  /// Forces a compact width (still drawer-based) so the worksheet AppBar
+  /// dropdown selector is used.  At medium/expanded the worksheet uses a
+  /// left-pane template list instead (see worksheet_two_pane_test.dart).
+  void useCompact(WidgetTester tester) {
+    tester.view.devicePixelRatio = 1.0;
+    tester.view.physicalSize = const Size(590, 800);
+    addTearDown(tester.view.reset);
+  }
+
+  group('AppShell', () {
     testWidgets('renders app bar with title', (tester) async {
       await tester.pumpWidget(buildApp());
       expect(find.text('Unitary'), findsOneWidget);
@@ -123,6 +132,7 @@ void main() {
     testWidgets('Worksheet entry is enabled and shows worksheet content', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
@@ -170,7 +180,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Drawer should be closed, still on home screen.
-      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.byType(AppShell), findsOneWidget);
     });
 
     testWidgets('body contains FreeformScreen', (tester) async {
@@ -180,7 +190,7 @@ void main() {
     });
   });
 
-  group('HomeScreen — worksheet navigation', () {
+  group('AppShell — worksheet navigation', () {
     testWidgets('worksheet AppBar shows hamburger icon, not back arrow', (
       tester,
     ) async {
@@ -244,6 +254,7 @@ void main() {
     );
 
     testWidgets('dropdown lists all template names', (tester) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 
@@ -263,6 +274,7 @@ void main() {
     testWidgets('selecting a template from dropdown switches worksheet', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 
@@ -279,7 +291,7 @@ void main() {
     });
   });
 
-  group('HomeScreen — page state preservation', () {
+  group('AppShell — page state preservation', () {
     testWidgets(
       'freeform Convert-from text survives navigation to Worksheet and back',
       (tester) async {
@@ -358,6 +370,7 @@ void main() {
     testWidgets('active worksheet template survives navigation', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 
@@ -427,7 +440,7 @@ void main() {
     );
   });
 
-  group('HomeScreen — browse navigation', () {
+  group('AppShell — browse navigation', () {
     testWidgets('Expand All button is present on Browse page', (tester) async {
       await tester.pumpWidget(
         buildApp(browserRepo: buildTestBrowserRepo()),

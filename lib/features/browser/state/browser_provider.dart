@@ -26,11 +26,22 @@ class BrowserState {
   /// the search is cleared.
   final Set<String> collapsedGroups;
 
+  /// Primary ID of the currently selected entry, or null if none is selected.
+  ///
+  /// Drives the embedded detail pane at medium/expanded widths.  Selection is
+  /// only ever set (by tapping a row), so a non-clearing `copyWith` suffices.
+  final String? selectedPrimaryId;
+
+  /// Kind of the currently selected entry (paired with [selectedPrimaryId]).
+  final BrowseEntryKind? selectedKind;
+
   const BrowserState({
     required this.viewMode,
     required this.searchQuery,
     required this.searchVisible,
     required this.collapsedGroups,
+    this.selectedPrimaryId,
+    this.selectedKind,
   });
 
   BrowserState copyWith({
@@ -38,12 +49,16 @@ class BrowserState {
     String? searchQuery,
     bool? searchVisible,
     Set<String>? collapsedGroups,
+    String? selectedPrimaryId,
+    BrowseEntryKind? selectedKind,
   }) {
     return BrowserState(
       viewMode: viewMode ?? this.viewMode,
       searchQuery: searchQuery ?? this.searchQuery,
       searchVisible: searchVisible ?? this.searchVisible,
       collapsedGroups: collapsedGroups ?? this.collapsedGroups,
+      selectedPrimaryId: selectedPrimaryId ?? this.selectedPrimaryId,
+      selectedKind: selectedKind ?? this.selectedKind,
     );
   }
 }
@@ -149,6 +164,15 @@ class BrowserNotifier extends Notifier<BrowserState> {
   }
 
   /// Toggles the collapsed state of [groupLabel].
+  /// Selects [entry]'s primary as the current browse selection, driving the
+  /// embedded detail pane at medium/expanded widths.
+  void selectEntry(BrowseEntry entry) {
+    state = state.copyWith(
+      selectedPrimaryId: entry.primaryId,
+      selectedKind: entry.kind,
+    );
+  }
+
   void toggleGroup(String groupLabel) {
     final current = Set<String>.from(state.collapsedGroups);
     if (current.contains(groupLabel)) {

@@ -747,12 +747,22 @@ void main() {
   });
 
   group('FreeformScreen — history button', () {
+    // The AppBar history button + modal is the compact-width affordance; at
+    // medium/expanded the history lives in a side pane (see
+    // freeform_two_pane_test.dart).  Force compact for this group.
+    void useCompact(WidgetTester tester) {
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(400, 800);
+      addTearDown(tester.view.reset);
+    }
+
     Finder findHistoryButton() => find.ancestor(
       of: find.byIcon(Icons.history),
       matching: find.byType(IconButton),
     );
 
     testWidgets('history button is present in AppBar', (tester) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       expect(find.byIcon(Icons.history), findsOneWidget);
     });
@@ -760,6 +770,7 @@ void main() {
     testWidgets('history button is disabled when history is empty', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
       final btn = tester.widget<IconButton>(findHistoryButton());
       expect(btn.onPressed, isNull);
@@ -768,6 +779,7 @@ void main() {
     testWidgets('history button is enabled after a successful evaluation', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
@@ -784,6 +796,7 @@ void main() {
     testWidgets(
       'history button is enabled after evaluation in on-submit mode',
       (tester) async {
+        useCompact(tester);
         SharedPreferences.setMockInitialValues({
           'evaluationMode': 'onSubmit',
         });
@@ -801,9 +814,12 @@ void main() {
           ),
         );
 
+        // Trailing space keeps the cursor off an identifier token so the
+        // completion overlay (which can overlap the Evaluate button at compact
+        // width) does not appear.
         await tester.enterText(
           find.widgetWithText(TextField, 'Convert from'),
-          '5 km',
+          '5 km ',
         );
         await tester.pump();
 
@@ -826,6 +842,7 @@ void main() {
     );
 
     testWidgets('tapping history button opens modal', (tester) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
@@ -844,6 +861,7 @@ void main() {
     testWidgets('modal shows entry as "from = result" when result is set', (
       tester,
     ) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(
@@ -866,6 +884,7 @@ void main() {
     });
 
     testWidgets('modal shows only from when result is empty', (tester) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
 
       // tempF (bare function name) produces FunctionDefinitionResult with empty result.
@@ -886,6 +905,7 @@ void main() {
     testWidgets(
       'tapping a history entry restores both fields and closes modal',
       (tester) async {
+        useCompact(tester);
         await tester.pumpWidget(buildApp());
 
         // Create a history entry.
@@ -926,6 +946,7 @@ void main() {
     );
 
     testWidgets('tapping a history entry triggers evaluation', (tester) async {
+      useCompact(tester);
       await tester.pumpWidget(buildApp());
 
       await tester.enterText(

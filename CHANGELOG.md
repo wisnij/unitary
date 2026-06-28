@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]
 ------------
 
+### Added
+
+- Add responsive layouts for different screen sizes
+
 ### Fixed
 
 - Move focus to the output box after hitting Enter

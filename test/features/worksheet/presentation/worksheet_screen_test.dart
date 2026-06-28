@@ -83,6 +83,12 @@ void main() {
     testWidgets('dropdown lists templates in alphabetical order', (
       tester,
     ) async {
+      // The AppBar dropdown is the compact-width selector; at medium/expanded
+      // the templates are listed in a left pane instead (see
+      // worksheet_two_pane_test.dart).
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(590, 800);
+      addTearDown(tester.view.reset);
       await tester.pumpWidget(buildApp());
 
       await tester.tap(find.byType(DropdownButton<String>));

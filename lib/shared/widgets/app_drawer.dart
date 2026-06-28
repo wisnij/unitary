@@ -41,6 +41,9 @@ class AppDrawer extends StatelessWidget {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: IntrinsicHeight(
                 child: Column(
+                  // Stretch so the DrawerHeader (and divider) fill the drawer
+                  // width; the surrounding ListView used to force this.
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const DrawerHeader(
                       decoration: BoxDecoration(color: Colors.blue),

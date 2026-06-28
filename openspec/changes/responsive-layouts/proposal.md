@@ -9,7 +9,7 @@ Every screen in the app is a single column with its own `Scaffold`/`AppBar`/`Dra
   - **medium** (`600`–`1040`): navigation drawer, two panes
   - **expanded** (`> 1040`): persistent navigation rail, two panes
 - Add a `WindowSizeClass` primitive that derives the current tier from `MediaQuery` as the single source of truth for both breakpoints.
-- **BREAKING (internal):** Replace the per-page `Scaffold`/`AppBar`/`Drawer` duplication with a single app shell (`AppShell`) that owns the adaptive navigation (drawer ↔ rail) and builds the `AppBar` from an `AppDestination` describing each top-level page.  `HomeScreen` becomes this shell; top-level pages become content + an AppBar spec.
+- Add an app shell (`AppShell`, replacing `HomeScreen`) that owns the adaptive top-level navigation: a shared `AppDrawer` at compact/medium widths and a persistent `NavigationRail` at expanded width, built once around the existing pages.  Each page keeps its own `Scaffold`/`AppBar` and becomes width-aware (hides its hamburger/drawer when the rail is shown).  (Centralizing `AppBar` construction in the shell is deferred to a follow-up, since Freeform's AppBar is coupled to its widget state.)
 - Add a reusable `TwoPaneLayout` primitive (pure geometry) that shows both panes at medium/expanded and a single pane below.
 - Adopt two-pane views per page (each keeps its existing compact form):
   - **Freeform:** input history moves to a right pane on wide screens (a section below the body when compact).
@@ -36,7 +36,7 @@ Every screen in the app is a single column with its own `Scaffold`/`AppBar`/`Dra
 
 ## Impact
 
-- **Navigation/shell:** `lib/shared/home_screen.dart` (becomes the shell), `lib/shared/top_level_page.dart`, `lib/shared/widgets/app_drawer.dart`; new `AppShell`, `AppDestination`, `WindowSizeClass`, and `TwoPaneLayout` in `lib/shared/`.
-- **Pages:** `lib/features/freeform/presentation/freeform_screen.dart`, `lib/features/worksheet/presentation/worksheet_screen.dart`, `lib/features/browser/presentation/browser_screen.dart` lose their own `Scaffold`/`AppBar`/`Drawer` and adopt `TwoPaneLayout` for their wide form.
+- **Navigation/shell:** `lib/shared/home_screen.dart` (becomes `AppShell`), `lib/shared/top_level_page.dart`, `lib/shared/widgets/app_drawer.dart`; new `AppShell` (with a lightweight destination descriptor for rail/drawer items), `WindowSizeClass`, and `TwoPaneLayout` in `lib/shared/`.
+- **Pages:** `lib/features/freeform/presentation/freeform_screen.dart`, `lib/features/worksheet/presentation/worksheet_screen.dart`, `lib/features/browser/presentation/browser_screen.dart` keep their own `Scaffold`/`AppBar`, become width-aware (drawer/hamburger suppressed when the rail is shown), and adopt `TwoPaneLayout` for their wide form.
 - **Browse detail:** `lib/features/browser/presentation/unit_entry_detail_screen.dart` is split so its body renders both embedded (wide) and pushed (compact); selection state added to `BrowserNotifier`/`BrowserState`.
 - **No dependency or data-model changes;** persistence and the evaluation/worksheet engines are untouched.

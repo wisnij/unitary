@@ -11,8 +11,8 @@ The owner has stated a preference for an architecturally clean result over minim
 **Goals:**
 
 - Three responsive tiers from two width breakpoints: compact (`<600`, drawer + single pane), medium (`600–1040`, drawer + two panes), expanded (`>1040`, rail + two panes).
-- One source of truth for the current tier (`WindowSizeClass`) and for top-level navigation (`AppShell` + `AppDestination`).
-- Eliminate the per-page `Scaffold`/`AppBar`/`Drawer` duplication.
+- One source of truth for the current tier (`WindowSizeClass`) and for top-level navigation chrome (`AppShell`).
+- Centralize the rail-vs-drawer navigation decision in one shell, layered around the existing pages.
 - Two-pane views: Browse (list | detail), Worksheet (template list | worksheet), Freeform (page | history).
 - Preserve each page's existing compact behavior unchanged.
 - No new package dependency.
@@ -21,6 +21,7 @@ The owner has stated a preference for an architecturally clean result over minim
 
 - A draggable/resizable pane divider (fixed split for v1).
 - A shared `ListDetailLayout` abstraction (deliberately deferred — see Decisions).
+- Refactoring Freeform's field/evaluation state out of widget `State` into a notifier — Freeform is the only top-level page whose AppBar actions are coupled to widget `State` (its `TextEditingController`s), so the shell does **not** build its AppBar; this inconsistency is left for a separate follow-up change (see Decisions §2 and Open Questions).
 - Changing persistence, the evaluation engine, the worksheet engine, or any data model.
 - Re-theming, accessibility, or performance work (separate Phase 9 items).
 - Seamless live-resize handoff of an already-pushed compact detail route into the embedded pane (see Risks).
@@ -34,24 +35,31 @@ A `WindowSizeClass { compact, medium, expanded }` enum is computed as a pure fun
 - **Why a derived helper, not Riverpod state:** window size is ephemeral UI state already owned by `MediaQuery`.  Mirroring it into a provider would mean watching `MediaQuery` from outside the widget tree.  A pure `WindowSizeClass.of(context)` is idiomatic and trivially testable — widget tests set the surface size and the enum follows.
 - **Alternatives considered:** the `flutter_adaptive_scaffold` package (rejected: adds a dependency for ~10 lines of breakpoint logic and less control over the destination model); a single breakpoint (rejected: the requirement explicitly wants drawer + two-pane as a distinct middle tier).
 
-### 2. App shell with a destination model (replaces per-page chrome)
+### 2. App shell layers navigation around pages that keep their own AppBar
 
-`HomeScreen` becomes `AppShell`: a single `Scaffold` that owns navigation chrome and builds the `AppBar` and body from the **active** `AppDestination`.
+`HomeScreen` becomes `AppShell`, which owns the rail-vs-drawer decision and wraps the existing pages; each page keeps its own `Scaffold`, `AppBar`, and body.
 
 ```
-abstract class AppDestination {
-  IconData get icon;
-  String get label;
-  Widget buildTitle(BuildContext, WindowSizeClass);      // e.g. Worksheet: dropdown (compact) vs name (wide)
-  List<Widget> buildActions(BuildContext, WindowSizeClass);
-  Widget buildBody(BuildContext, WindowSizeClass);        // internally uses TwoPaneLayout when wide
+class AppShell ... {
+  // currentPage + onNavigate, as HomeScreen does today.
+  Widget build(...) {
+    final body = IndexedStack(index: currentPage.index, children: pages);
+    if (WindowSizeClass.of(context).usesRail) {
+      return Row([ NavigationRail(...), VerticalDivider(), Expanded(child: body) ]);
+    }
+    return body;   // pages own their drawer at compact/medium
+  }
 }
 ```
 
-`AppShell` keeps a `const destinations = [Freeform, Worksheet, Browse]` list — the rail items, drawer tiles, and active AppBar all derive from it.  At expanded width it renders `Scaffold(appBar:…, body: Row[NavigationRail, VerticalDivider, Expanded(IndexedStack)])` with no drawer; below expanded it renders `Scaffold(appBar:…, drawer: AppDrawer, body: IndexedStack)`.  The `IndexedStack` over the destination bodies is retained, so per-page state preservation is unchanged.
+- At **expanded**: the shell renders a persistent `NavigationRail` (with the three destinations plus Settings/About) beside the page; the rail is built **once**, outside the `IndexedStack`. The active page's `Scaffold` provides the `AppBar` to the right of the rail, with no hamburger and no drawer.
+- At **compact/medium**: the shell renders the page directly; the page's own `Scaffold` supplies its `AppBar` (with hamburger) and the shared `AppDrawer`, exactly as today.
 
-- **Why the shell owns the AppBar:** the leading icon (hamburger vs none) and the rail/drawer choice are navigation concerns, not page concerns.  Centralizing them removes three near-identical `Scaffold`/`AppBar`/`Drawer` blocks and makes "hamburger at compact/medium, rail at expanded" a single decision.  AppBar actions remain Riverpod `Consumer` widgets, so Worksheet's refresh button and Browse's search/expand controls work regardless of where the shell mounts them.
-- **Alternative considered — keep per-page Scaffolds, inject a rail into each page body** (the minimal-diff option): rejected per the clean-architecture preference; it triplicates the rail and leaves navigation logic smeared across three pages.
+Each page becomes width-aware in two small ways: `drawer: sizeClass.usesRail ? null : AppDrawer(...)` and `appBar: AppBar(automaticallyImplyLeading: !sizeClass.usesRail, …)`. A lightweight destination descriptor (`{icon, label, page}`) drives the rail items and drawer tiles; it does **not** build AppBars.
+
+- **Why pages keep their AppBar (approach B):** Freeform's AppBar history/conformable actions and its history-restore mutate the `TextEditingController`s that live in `_FreeformScreenState`, so unlike Worksheet and Browse (whose AppBar controls are notifier-driven), the shell cannot build Freeform's AppBar without first lifting that state into a notifier. Bundling that rewrite — which touches Freeform's debounce, focus handling, and the web select-all workaround — into a layout change risks a behavior regression in the trickiest code. Keeping pages' AppBars intact makes the layout change small, low-risk, and reviewable.
+- **Trade-off accepted:** the per-page `Scaffold`/`AppBar` wrappers remain (the `AppDrawer` is already a shared widget, so the residual duplication is small). Full AppBar centralization would require the Freeform state lift; it is deferred to its own change where it can be tested in isolation (see Open Questions). This sequencing keeps each change coherent and is reversible — the shell can absorb AppBar construction later without redoing the rail.
+- **Alternative considered — single shell `Scaffold` that builds every AppBar from a rich `AppDestination`** (`buildTitle`/`buildActions`/`buildBody`): rejected for this change because it forces the Freeform state rewrite; revisit once Freeform is notifier-backed.
 
 ### 3. `TwoPaneLayout` is pure geometry; pages own their selection logic
 
@@ -103,14 +111,18 @@ Pane widths are set per-pane via `PaneSize` (decision #3): fixed dp, fit-to-cont
 
 ## Risks / Trade-offs
 
-- **Large blast radius across navigation + all three pages** → Land it in ordered steps that each keep tests green: (1) `WindowSizeClass`, (2) `AppShell`/`AppDestination` (pages still single-pane), (3) `TwoPaneLayout`, (4) adopt per page (Freeform → Worksheet → Browse).  The disruptive shell step is isolated and independently reviewable.
+- **Large blast radius across navigation + all three pages** → Land it in ordered steps that each keep tests green: (1) `WindowSizeClass`, (2) `AppShell` wrapping pages (pages still single-pane), (3) `TwoPaneLayout`, (4) adopt per page (Freeform → Worksheet → Browse).  The shell step is isolated and independently reviewable.
 
 - **Browse selection-lift touches `BrowserState` + detail extraction** → Keep the existing pushed-route path working at compact width using the same lifted selection, so compact behavior is provably unchanged before the embedded pane is added.
 
-- **AppBar content becomes tier-dependent** (Worksheet title, Freeform history button) → Encapsulate the tier branch inside each destination's `buildTitle`/`buildActions`, driven by the single `WindowSizeClass`, so there is no second breakpoint definition.
+- **AppBar content becomes tier-dependent** (Worksheet dropdown vs static title, Freeform history button shown only at compact) → Each page reads the single `WindowSizeClass` inside its own `AppBar` build, so there is no second breakpoint definition.
 
 - **Live-resize of an already-pushed compact detail route** (web/foldables) → Out of scope; the pushed route simply remains on top until popped.  Acceptable because resize-during-detail is rare and selection state keeps the panes consistent once the route is dismissed.
 
-- **Three rail instances alive in the `IndexedStack`** (one per destination body) is avoided: the rail is built once by `AppShell` outside the `IndexedStack`, not inside each page.
+- **Rail must not be duplicated per page** → The rail is built once by `AppShell` outside the `IndexedStack`; pages never render it, so there is exactly one rail instance.
+
+## Open Questions
+
+- **Freeform state lift (deferred follow-up).** Freeform is the only top-level page holding significant logic in widget `State` (its input/output `TextEditingController`s and the evaluate/restore/swap/clear flow) rather than a notifier.  A future change should move this into a keepAlive notifier to match Worksheet/Browse, which would also let a later iteration centralize AppBar construction in `AppShell`.  Intentionally out of scope here to avoid regressions in Freeform's debounce/focus/web-select-all handling.
 
 - **`fitContent` panes require finite intrinsic width** → A vertical scrolling `ListView` has no intrinsic width and, as a non-flex `Row` child, receives an unbounded width constraint and throws.  So `fitContent` is safe only for content that sizes itself (e.g. a `Column`/`Wrap` like the Worksheet template list).  For the Browse catalog and Freeform history (scrolling lists) use `fixed`, or `fitContent` **with a `max`** — the `max` supplies the bounded constraint that makes the pane legal.  This constraint is called out so per-page sizing choices don't accidentally pick unbounded `fitContent` for a list.

@@ -2,23 +2,22 @@
 
 ### Requirement: Single app shell owns top-level navigation
 The application SHALL present its three top-level pages (Freeform, Worksheet,
-Browse) through a single app shell that owns one `Scaffold` and builds the
-`AppBar` and body for the active page from a destination description.  Each
-top-level page SHALL be described by a destination exposing its icon, label,
-AppBar title, AppBar actions, and body.  The shell SHALL host the page bodies
-in an `IndexedStack` so that each page's widget state is preserved while it is
-not the active page.
+Browse) through a single app shell that owns the top-level navigation chrome
+(the drawer at compact/medium widths and the rail at expanded width).  The shell
+SHALL host the pages in an `IndexedStack` so that each page's widget state is
+preserved while it is not the active page.  Selecting a destination in any
+navigation surface SHALL change which page is active.
 
 #### Scenario: Three top-level destinations are presented
 - **WHEN** the app is running
 - **THEN** the shell exposes exactly the Freeform, Worksheet, and Browse
   destinations
 
-#### Scenario: Active destination drives the AppBar
-- **WHEN** the active destination is Worksheet
-- **THEN** the AppBar shows the Worksheet destination's title and actions
+#### Scenario: Selecting a destination changes the active page
+- **WHEN** the user selects the Worksheet destination
+- **THEN** the Worksheet page becomes the active page
 
-#### Scenario: Page bodies are kept alive
+#### Scenario: Page state is kept alive
 - **WHEN** the user switches from one destination to another and back
 - **THEN** the first page's widget state (text fields, scroll position, active
   template, search state) is unchanged

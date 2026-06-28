@@ -1,16 +1,16 @@
 ## 1. WindowSizeClass primitive
 
-- [ ] 1.1 Write tests for `WindowSizeClass` covering the breakpoint boundaries (`<600` compact; `600` and `1040` medium; `>1040` expanded) and recompute-on-resize
-- [ ] 1.2 Implement `WindowSizeClass` enum + a `WindowSizeClass.of(BuildContext)` helper deriving the tier from `MediaQuery.sizeOf`, with the two breakpoints as named constants
-- [ ] 1.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
+- [x] 1.1 Write tests for `WindowSizeClass` covering the breakpoint boundaries (`<600` compact; `600` and `1040` medium; `>1040` expanded) and recompute-on-resize
+- [x] 1.2 Implement `WindowSizeClass` enum + a `WindowSizeClass.of(BuildContext)` helper deriving the tier from `MediaQuery.sizeOf`, with the two breakpoints as named constants
+- [x] 1.3 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
 
-## 2. App shell + destination model (navigation refactor)
+## 2. App shell (navigation refactor, approach B)
 
-- [ ] 2.1 Write widget tests for the shell: drawer + hamburger at compact/medium, persistent rail (no hamburger) at expanded, active-destination highlight in both surfaces, and page-state preservation across rail navigation and across the rail breakpoint
-- [ ] 2.2 Define `AppDestination` (icon, label, `buildTitle`, `buildActions`, `buildBody`, all tier-aware) and the three destinations (Freeform, Worksheet, Browse)
-- [ ] 2.3 Convert `HomeScreen` into `AppShell`: single `Scaffold` that builds the AppBar from the active destination, hosts bodies in an `IndexedStack`, and switches drawer ↔ `NavigationRail` by `WindowSizeClass`; add Settings/About to the rail trailing slot
-- [ ] 2.4 Remove the per-page `Scaffold`/`AppBar`/`Drawer` from Freeform, Worksheet, and Browse; each page now exposes its AppBar title/actions and body via its destination (pages still single-pane in this step)
-- [ ] 2.5 Update existing navigation/drawer tests and `app_drawer.dart` usage to the new shell; confirm `page-state-preservation` scenarios still pass
+- [ ] 2.1 Write widget tests for the shell: drawer + hamburger at compact/medium, persistent rail (no hamburger/drawer) at expanded, active-destination highlight in both surfaces, selecting a rail destination switches pages, and page-state preservation across rail navigation and across the rail breakpoint
+- [ ] 2.2 Define a lightweight destination descriptor (`{icon, label, page}`) for the three top-level pages; add Settings/About entries for the rail trailing slot
+- [ ] 2.3 Convert `HomeScreen` into `AppShell`: keeps `currentPage`/`onNavigate`, hosts the pages in an `IndexedStack`, and at expanded width wraps that stack in `Row[NavigationRail, VerticalDivider, Expanded(body)]` (rail built once, outside the stack); below expanded renders the stack directly
+- [ ] 2.4 Make each page width-aware: `drawer: sizeClass.usesRail ? null : AppDrawer(...)` and `AppBar(automaticallyImplyLeading: !sizeClass.usesRail, …)`; pages keep their own `Scaffold`/`AppBar` and stay single-pane in this step
+- [ ] 2.5 Update existing navigation/drawer tests and `app_drawer.dart` usage for the new rail; confirm `page-state-preservation` scenarios still pass
 - [ ] 2.6 Run `flutter test --reporter failures-only` and `flutter analyze`; confirm green
 
 ## 3. TwoPaneLayout primitive

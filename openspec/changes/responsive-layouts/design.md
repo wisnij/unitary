@@ -87,7 +87,7 @@ Each mode is a thin wrapper over a `Row` child: `fixed` → `SizedBox(width:)`; 
 
 Per-page choices:
 
-- **Worksheet** — template list `fitContent()` (short, bounded names like "Digital Storage"), worksheet `fill()`.
+- **Worksheet** — template list `fixed(220)` (the list is a scrolling `ListView`, which has no finite intrinsic width, so `fitContent` is not viable here), worksheet `fill()`.
 - **Browse** — catalog list and detail/placeholder both `fill()` (equal 1:1 split).
 - **Freeform** — input/result column `fill()`, history `fixed`/`fitContent(max:)`.
 

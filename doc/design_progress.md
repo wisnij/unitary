@@ -481,3 +481,10 @@ Questions that arose during design but haven't been resolved:
   - No new dependencies
   - Deferred: lift Freeform field/eval state into a notifier (only top-level page still coupled to widget `State`); pre-existing Worksheet dropdown overflow at very narrow widths
   - Design artifacts: `openspec/changes/responsive-layouts/`
+- *Worksheet picker — no default selection (June 28, 2026)* — Phase 9 UI/UX refinement
+  - 1894 tests passing
+  - Worksheet mode no longer defaults to the Length template; no worksheet is active until the user picks one (the choice is then persisted/restored as before)
+  - `WorksheetState.worksheetId` and `WorksheetPersistState.activeWorksheetId` are now nullable; `WorksheetRepository.load()` returns a null active id for missing/malformed data and drops an unrecognised id to null (preserving stored sources) instead of falling back to `'length'`
+  - `WorksheetScreen` branches on a null active id: compact width shows the full-screen template list (`_TemplateList`) until one is selected, then the worksheet (driven by `TwoPaneLayout.compactPrimary` switching left→right); medium/expanded shows the left-pane list plus a centered `_EmptyWorksheetPane` ("Select a worksheet") placeholder, mirroring Browse's empty detail pane; AppBar shows static "Worksheet" title when nothing is selected
+  - No new dependencies
+  - Design artifacts: `openspec/changes/worksheet-picker/`

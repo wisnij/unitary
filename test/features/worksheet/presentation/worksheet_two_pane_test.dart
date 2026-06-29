@@ -43,23 +43,56 @@ void main() {
   const compact = Size(590, 800);
   const expanded = Size(1300, 900);
 
-  group('Wide-width template list', () {
-    testWidgets('shows a left-pane list and a static AppBar title', (
+  group('Wide-width no selection', () {
+    testWidgets('shows a placeholder and the static "Worksheet" title', (
       tester,
     ) async {
       await pump(tester, expanded);
 
+      // No worksheet is selected on first launch.
+      expect(find.widgetWithText(AppBar, 'Worksheet'), findsOneWidget);
+      expect(find.text('Select a worksheet'), findsOneWidget);
       // No dropdown selector at wide width.
       expect(find.byType(DropdownButton<String>), findsNothing);
-      // Static AppBar title for the active (default Length) template.
-      expect(find.widgetWithText(AppBar, 'Length'), findsOneWidget);
-      // The left-pane list shows template names as list tiles.
+      // The left-pane list still shows template names as list tiles.
       expect(find.widgetWithText(ListTile, 'Length'), findsOneWidget);
       expect(find.widgetWithText(ListTile, 'Speed'), findsOneWidget);
     });
 
-    testWidgets('highlights the active template', (tester) async {
+    testWidgets('no tile is highlighted before selection', (tester) async {
       await pump(tester, expanded);
+
+      final tile = tester.widget<ListTile>(
+        find.widgetWithText(ListTile, 'Length'),
+      );
+      expect(tile.selected, isFalse);
+    });
+  });
+
+  group('Wide-width template list', () {
+    testWidgets(
+      'selecting a template shows it and a static AppBar title',
+      (tester) async {
+        await pump(tester, expanded);
+
+        await tester.tap(find.widgetWithText(ListTile, 'Speed'));
+        await tester.pumpAndSettle();
+
+        // Placeholder is gone; the active template name is the AppBar title.
+        expect(find.text('Select a worksheet'), findsNothing);
+        expect(find.widgetWithText(AppBar, 'Speed'), findsOneWidget);
+        // Still no dropdown at wide width.
+        expect(find.byType(DropdownButton<String>), findsNothing);
+      },
+    );
+
+    testWidgets('highlights the active template after selection', (
+      tester,
+    ) async {
+      await pump(tester, expanded);
+
+      await tester.tap(find.widgetWithText(ListTile, 'Length'));
+      await tester.pumpAndSettle();
 
       final tile = tester.widget<ListTile>(
         find.widgetWithText(ListTile, 'Length'),
@@ -77,6 +110,8 @@ void main() {
     ) async {
       await pump(tester, expanded);
 
+      await tester.tap(find.widgetWithText(ListTile, 'Length'));
+      await tester.pumpAndSettle();
       await tester.tap(find.widgetWithText(ListTile, 'Speed'));
       await tester.pumpAndSettle();
 
@@ -88,13 +123,33 @@ void main() {
     });
   });
 
-  group('Compact-width selector', () {
-    testWidgets('uses an AppBar dropdown, not a list pane', (tester) async {
+  group('Compact-width no selection', () {
+    testWidgets('shows a full-screen template list and "Worksheet" title', (
+      tester,
+    ) async {
       await pump(tester, compact);
 
+      expect(find.widgetWithText(AppBar, 'Worksheet'), findsOneWidget);
+      // No dropdown until a worksheet is selected.
+      expect(find.byType(DropdownButton<String>), findsNothing);
+      // The full-screen template list is shown.
+      expect(find.widgetWithText(ListTile, 'Speed'), findsOneWidget);
+      // No placeholder at compact width — the list fills the screen instead.
+      expect(find.text('Select a worksheet'), findsNothing);
+    });
+
+    testWidgets('selecting a template shows the dropdown selector', (
+      tester,
+    ) async {
+      await pump(tester, compact);
+
+      await tester.tap(find.widgetWithText(ListTile, 'Speed'));
+      await tester.pumpAndSettle();
+
+      // The AppBar dropdown selector appears once a worksheet is active.
       expect(find.byType(DropdownButton<String>), findsOneWidget);
-      // No left-pane template list tile at compact width.
-      expect(find.widgetWithText(ListTile, 'Speed'), findsNothing);
+      // The full-screen list is replaced by the worksheet (no list tile).
+      expect(find.widgetWithText(ListTile, 'Length'), findsNothing);
     });
   });
 }

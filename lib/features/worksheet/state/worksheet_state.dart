@@ -2,13 +2,14 @@ import '../services/worksheet_engine.dart';
 
 /// The in-memory state for the worksheet feature.
 ///
-/// [worksheetId] is the currently displayed template.
+/// [worksheetId] is the currently displayed template, or `null` if no worksheet
+/// has been selected yet.
 /// [activeRowIndex] is the row the user most recently typed in (null = no
 /// keystroke yet since the app started or since the last [clear]).
 /// [worksheetValues] maps each template id to its list of cell results.
 /// Entries are lazy: a missing key means all rows for that template are blank.
 class WorksheetState {
-  final String worksheetId;
+  final String? worksheetId;
   final int? activeRowIndex;
   final Map<String, List<WorksheetCellResult>> worksheetValues;
 

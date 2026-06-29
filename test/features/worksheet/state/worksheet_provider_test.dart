@@ -33,9 +33,9 @@ void main() {
   });
 
   group('WorksheetNotifier', () {
-    test('initial state uses length template and no active row', () {
+    test('initial state has no active worksheet and no active row', () {
       final state = container.read(worksheetProvider);
-      expect(state.worksheetId, 'length');
+      expect(state.worksheetId, isNull);
       expect(state.activeRowIndex, isNull);
     });
 
@@ -44,15 +44,16 @@ void main() {
       expect(container.read(worksheetProvider).worksheetId, 'mass');
     });
 
+    test('selectWorksheet from no selection sets the active template', () {
+      expect(container.read(worksheetProvider).worksheetId, isNull);
+      container.read(worksheetProvider.notifier).selectWorksheet('length');
+      expect(container.read(worksheetProvider).worksheetId, 'length');
+    });
+
     test('selectWorksheet with same id is a no-op', () {
-      final initial = container.read(worksheetProvider);
-      container
-          .read(worksheetProvider.notifier)
-          .selectWorksheet(initial.worksheetId);
-      expect(
-        container.read(worksheetProvider).worksheetId,
-        initial.worksheetId,
-      );
+      container.read(worksheetProvider.notifier).selectWorksheet('mass');
+      container.read(worksheetProvider.notifier).selectWorksheet('mass');
+      expect(container.read(worksheetProvider).worksheetId, 'mass');
     });
 
     test('selectWorksheet clears activeRowIndex', () {
@@ -146,11 +147,33 @@ void main() {
 
   group('WorksheetNotifier persistence', () {
     test(
-      'build initialises from empty persist state with default template',
+      'build initialises from empty persist state with no active template',
       () {
         final state = container.read(worksheetProvider);
-        expect(state.worksheetId, 'length');
+        expect(state.worksheetId, isNull);
         expect(state.worksheetValues, isEmpty);
+      },
+    );
+
+    test(
+      'build leaves no active template when persisted ID is unrecognised',
+      () async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(
+          WorksheetRepository.prefsKey,
+          '{"activeWorksheetId":"no_such_template","sources":{}}',
+        );
+        final worksheetRepo = WorksheetRepository(prefs);
+        final settingsRepo = SettingsRepository(prefs);
+        final c = ProviderContainer(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(settingsRepo),
+            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+          ],
+        );
+        addTearDown(c.dispose);
+        expect(c.read(worksheetProvider).worksheetId, isNull);
       },
     );
 

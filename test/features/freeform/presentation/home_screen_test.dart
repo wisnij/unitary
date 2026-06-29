@@ -144,8 +144,10 @@ void main() {
 
       await tester.tap(find.text('Worksheet'));
       await tester.pumpAndSettle();
-      // WorksheetScreen with dropdown in AppBar.
-      expect(find.byType(DropdownButton<String>), findsOneWidget);
+      // WorksheetScreen with no worksheet selected: the compact screen shows
+      // the full-screen template list (no dropdown until one is selected).
+      expect(find.byType(DropdownButton<String>), findsNothing);
+      expect(find.widgetWithText(ListTile, 'Speed'), findsOneWidget);
     });
 
     testWidgets('Settings tap navigates to SettingsScreen', (tester) async {
@@ -210,8 +212,10 @@ void main() {
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
 
+      // ('Worksheet' also appears as the AppBar title when none is selected, so
+      // scope the drawer-tile assertion to the ListTile.)
       expect(find.text('Freeform'), findsOneWidget);
-      expect(find.text('Worksheet'), findsOneWidget);
+      expect(find.widgetWithText(ListTile, 'Worksheet'), findsOneWidget);
     });
 
     testWidgets(
@@ -258,6 +262,10 @@ void main() {
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 
+      // Select a worksheet from the full-screen list so the dropdown appears.
+      await tester.tap(find.widgetWithText(ListTile, 'Length'));
+      await tester.pumpAndSettle();
+
       // Open the dropdown.
       await tester.tap(find.byType(DropdownButton<String>));
       await tester.pumpAndSettle();
@@ -277,6 +285,10 @@ void main() {
       useCompact(tester);
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
+
+      // Select an initial worksheet from the full-screen list.
+      await tester.tap(find.widgetWithText(ListTile, 'Length'));
+      await tester.pumpAndSettle();
 
       // Open dropdown and select Speed.
       await tester.tap(find.byType(DropdownButton<String>));
@@ -347,6 +359,11 @@ void main() {
         await tester.pumpWidget(buildApp());
         await navigateToWorksheet(tester);
 
+        // Select a worksheet first (none is active on launch); the left-pane
+        // list is shown at the default medium window width.
+        await tester.tap(find.widgetWithText(ListTile, 'Length'));
+        await tester.pumpAndSettle();
+
         // Type into the first row's numeric field while Worksheet is active.
         final rowField = find
             .descendant(
@@ -374,10 +391,9 @@ void main() {
       await tester.pumpWidget(buildApp());
       await navigateToWorksheet(tester);
 
-      // Switch to the Speed template.
-      await tester.tap(find.byType(DropdownButton<String>));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Speed').last);
+      // No worksheet is selected initially; the compact screen shows the
+      // full-screen template list.  Select the Speed template from it.
+      await tester.tap(find.widgetWithText(ListTile, 'Speed'));
       await tester.pumpAndSettle();
 
       await navigateToFreeform(tester);

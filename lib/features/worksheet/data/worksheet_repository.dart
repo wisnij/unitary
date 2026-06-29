@@ -23,8 +23,9 @@ class WorksheetSourceEntry {
 
 /// The data persisted for the worksheet feature across sessions.
 class WorksheetPersistState {
-  /// The ID of the active worksheet template.
-  final String activeWorksheetId;
+  /// The ID of the active worksheet template, or `null` if no worksheet has
+  /// been selected.
+  final String? activeWorksheetId;
 
   /// Per-template last source row, keyed by template ID.
   final Map<String, WorksheetSourceEntry> sources;
@@ -35,19 +36,19 @@ class WorksheetPersistState {
   });
 
   static WorksheetPersistState get defaults => const WorksheetPersistState(
-    activeWorksheetId: 'length',
+    activeWorksheetId: null,
     sources: {},
   );
 
   Map<String, Object> toJson() => {
-    'activeWorksheetId': activeWorksheetId,
+    'activeWorksheetId': ?activeWorksheetId,
     'sources': {
       for (final e in sources.entries) e.key: e.value.toJson(),
     },
   };
 
   static WorksheetPersistState fromJson(Map<Object?, Object?> json) {
-    final activeId = json['activeWorksheetId'] as String? ?? 'length';
+    final activeId = json['activeWorksheetId'] as String?;
     final rawSources = json['sources'] as Map<Object?, Object?>? ?? {};
     final sources = <String, WorksheetSourceEntry>{};
     for (final e in rawSources.entries) {
@@ -77,8 +78,10 @@ class WorksheetRepository {
 
   /// Loads worksheet persist state from storage.
   ///
-  /// Falls back to [WorksheetPersistState.defaults] if no data is stored,
-  /// the data is malformed, or the saved active ID is not a known template.
+  /// Falls back to [WorksheetPersistState.defaults] (no active worksheet) if no
+  /// data is stored or the data is malformed.  If the saved active ID is not a
+  /// known template, the active ID is dropped to `null` while preserving the
+  /// stored sources.
   WorksheetPersistState load() {
     final json = _prefs.getString(prefsKey);
     if (json == null) {
@@ -87,9 +90,10 @@ class WorksheetRepository {
     try {
       final decoded = jsonDecode(json) as Map<Object?, Object?>;
       final state = WorksheetPersistState.fromJson(decoded);
-      if (!_knownTemplateIds.contains(state.activeWorksheetId)) {
+      final activeId = state.activeWorksheetId;
+      if (activeId != null && !_knownTemplateIds.contains(activeId)) {
         return WorksheetPersistState(
-          activeWorksheetId: 'length',
+          activeWorksheetId: null,
           sources: state.sources,
         );
       }

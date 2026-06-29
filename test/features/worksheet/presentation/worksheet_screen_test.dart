@@ -40,18 +40,34 @@ void main() {
     );
   }
 
+  // Selects a worksheet template by id via the provider, so tests can assume
+  // an active worksheet (none is selected on launch).
+  void selectTemplate(WidgetTester tester, String id) {
+    final container = ProviderScope.containerOf(
+      tester.element(find.byType(WorksheetScreen)),
+    );
+    container.read(worksheetProvider.notifier).selectWorksheet(id);
+  }
+
   group('WorksheetScreen', () {
-    testWidgets('shows rows for the initial template', (tester) async {
+    testWidgets('no worksheet is selected on launch', (tester) async {
       await tester.pumpWidget(buildApp());
 
-      // Derive the active template from the provider without assuming which
-      // template is the default.
       final container = ProviderScope.containerOf(
         tester.element(find.byType(WorksheetScreen)),
       );
-      final activeId = container.read(worksheetProvider).worksheetId;
+      expect(container.read(worksheetProvider).worksheetId, isNull);
+      // The placeholder is shown (default test window is the medium tier).
+      expect(find.text('Select a worksheet'), findsOneWidget);
+    });
+
+    testWidgets('shows rows for the selected template', (tester) async {
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
+
       final activeTemplate = predefinedWorksheets.firstWhere(
-        (t) => t.id == activeId,
+        (t) => t.id == 'length',
       );
 
       // All row labels for the active template should be visible.
@@ -66,14 +82,11 @@ void main() {
 
     testWidgets('shows row expression as secondary label', (tester) async {
       await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
 
-      // Use the first row's expression from whatever template is active.
-      final container = ProviderScope.containerOf(
-        tester.element(find.byType(WorksheetScreen)),
-      );
-      final activeId = container.read(worksheetProvider).worksheetId;
       final activeTemplate = predefinedWorksheets.firstWhere(
-        (t) => t.id == activeId,
+        (t) => t.id == 'length',
       );
       final firstExpression = activeTemplate.rows.first.expression;
 
@@ -90,6 +103,9 @@ void main() {
       tester.view.physicalSize = const Size(590, 800);
       addTearDown(tester.view.reset);
       await tester.pumpWidget(buildApp());
+      // A worksheet must be active for the dropdown selector to appear.
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
 
       await tester.tap(find.byType(DropdownButton<String>));
       await tester.pumpAndSettle();
@@ -116,6 +132,8 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
 
       // Find the meters text field (first row of length worksheet).
       final textFields = find.byType(TextField);

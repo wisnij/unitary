@@ -11,6 +11,7 @@ import '../data/predefined_worksheets.dart';
 import '../models/worksheet.dart';
 import '../services/worksheet_engine.dart';
 import '../state/worksheet_provider.dart';
+import '../state/worksheet_state.dart';
 import 'widgets/worksheet_banner.dart';
 
 /// Worksheet mode screen.
@@ -85,16 +86,14 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
   Widget build(BuildContext context) {
     final worksheetState = ref.watch(worksheetProvider);
     final activeId = worksheetState.worksheetId;
-    final template = predefinedWorksheets.firstWhere(
-      (t) => t.id == activeId,
-    );
-    final values = worksheetState.valuesFor(activeId, template.rows.length);
-    final activeIndex = worksheetState.activeRowIndex;
+    // A null active id means no worksheet has been selected yet.  In that case
+    // there is no template to render: the screen presents the template list
+    // (compact) or a "Select a worksheet" placeholder (medium/expanded).
+    final template = activeId == null
+        ? null
+        : predefinedWorksheets.firstWhere((t) => t.id == activeId);
 
-    // Sync non-active controller texts from state after each rebuild.
-    _syncControllers(template, values, activeIndex);
-
-    final banner = template.banner;
+    final banner = template?.banner;
     final sizeClass = WindowSizeClass.of(context);
     final usesRail = sizeClass.usesRail;
     // At medium/expanded the templates are selected from a left-pane list and
@@ -110,7 +109,69 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     void selectTemplate(String id) =>
         ref.read(worksheetProvider.notifier).selectWorksheet(id);
 
-    final worksheetContent = Column(
+    final Widget worksheetContent = template == null
+        ? const _EmptyWorksheetPane()
+        : _buildWorksheetContent(context, template, worksheetState, activeId!);
+
+    final Widget appBarTitle;
+    if (template == null) {
+      appBarTitle = const Text('Worksheet');
+    } else if (twoPane) {
+      appBarTitle = Text(template.name);
+    } else {
+      appBarTitle = WorksheetDropdown(
+        templates: sortedTemplates,
+        selectedId: activeId!,
+        onChanged: selectTemplate,
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(
+        automaticallyImplyLeading: !usesRail,
+        title: appBarTitle,
+        actions: [
+          if (banner is CurrencyRatesBanner) const CurrencyRefreshButton(),
+        ],
+      ),
+      drawer: usesRail
+          ? null
+          : AppDrawer(
+              currentPage: TopLevelPage.worksheet,
+              onNavigate: widget.onNavigate,
+            ),
+      body: TwoPaneLayout(
+        // With no worksheet selected, compact width shows the template list;
+        // once one is selected it shows that worksheet.
+        compactPrimary: template == null ? PaneSide.left : PaneSide.right,
+        leftSize: const PaneSize.fixed(220),
+        rightSize: const PaneSize.fill(),
+        left: _TemplateList(
+          templates: sortedTemplates,
+          selectedId: activeId,
+          onSelect: selectTemplate,
+        ),
+        right: worksheetContent,
+      ),
+    );
+  }
+
+  /// Builds the scrollable row table for the active [template].
+  Widget _buildWorksheetContent(
+    BuildContext context,
+    WorksheetTemplate template,
+    WorksheetState worksheetState,
+    String activeId,
+  ) {
+    final values = worksheetState.valuesFor(activeId, template.rows.length);
+    final activeIndex = worksheetState.activeRowIndex;
+
+    // Sync non-active controller texts from state after each rebuild.
+    _syncControllers(template, values, activeIndex);
+
+    final banner = template.banner;
+
+    return Column(
       children: [
         if (banner != null) WorksheetBannerWidget(banner: banner),
         Expanded(
@@ -162,39 +223,6 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
           ),
         ),
       ],
-    );
-
-    return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: !usesRail,
-        title: twoPane
-            ? Text(template.name)
-            : WorksheetDropdown(
-                templates: sortedTemplates,
-                selectedId: activeId,
-                onChanged: selectTemplate,
-              ),
-        actions: [
-          if (banner is CurrencyRatesBanner) const CurrencyRefreshButton(),
-        ],
-      ),
-      drawer: usesRail
-          ? null
-          : AppDrawer(
-              currentPage: TopLevelPage.worksheet,
-              onNavigate: widget.onNavigate,
-            ),
-      body: TwoPaneLayout(
-        compactPrimary: PaneSide.right,
-        leftSize: const PaneSize.fixed(220),
-        rightSize: const PaneSize.fill(),
-        left: _TemplateList(
-          templates: sortedTemplates,
-          selectedId: activeId,
-          onSelect: selectTemplate,
-        ),
-        right: worksheetContent,
-      ),
     );
   }
 
@@ -371,10 +399,13 @@ class WorksheetDropdown extends StatelessWidget {
   }
 }
 
-/// Left-pane list of worksheet templates shown at medium and expanded widths.
+/// Left-pane list of worksheet templates shown at medium and expanded widths,
+/// and the full-screen selection list shown at compact width when no worksheet
+/// is selected.
 ///
 /// Lists [templates] (expected pre-sorted) with the active template
-/// highlighted; tapping one invokes [onSelect].
+/// highlighted; tapping one invokes [onSelect].  [selectedId] is `null` when no
+/// worksheet is selected, in which case no tile is highlighted.
 class _TemplateList extends StatelessWidget {
   const _TemplateList({
     required this.templates,
@@ -383,7 +414,7 @@ class _TemplateList extends StatelessWidget {
   });
 
   final List<WorksheetTemplate> templates;
-  final String selectedId;
+  final String? selectedId;
   final ValueChanged<String> onSelect;
 
   @override
@@ -397,6 +428,26 @@ class _TemplateList extends StatelessWidget {
             onTap: () => onSelect(t.id),
           ),
       ],
+    );
+  }
+}
+
+/// Placeholder shown in the worksheet's content pane when no worksheet is
+/// selected (medium and expanded widths only; at compact width the template
+/// list occupies the whole screen instead).
+class _EmptyWorksheetPane extends StatelessWidget {
+  const _EmptyWorksheetPane();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Text(
+        'Select a worksheet',
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
+      ),
     );
   }
 }

@@ -16,14 +16,27 @@ void main() {
 
     group('load', () {
       test(
-        'returns default active ID and empty sources when prefs are empty',
+        'returns null active ID and empty sources when prefs are empty',
         () async {
           final repo = await makeRepo();
           final state = repo.load();
-          expect(state.activeWorksheetId, 'length');
+          expect(state.activeWorksheetId, isNull);
           expect(state.sources, isEmpty);
         },
       );
+
+      test('round-trips a null active worksheet ID', () async {
+        final repo = await makeRepo();
+        await repo.save(
+          const WorksheetPersistState(
+            activeWorksheetId: null,
+            sources: {'mass': WorksheetSourceEntry(rowIndex: 0, text: '1 kg')},
+          ),
+        );
+        final restored = repo.load();
+        expect(restored.activeWorksheetId, isNull);
+        expect(restored.sources['mass']!.text, '1 kg');
+      });
 
       test('restores saved active worksheet ID', () async {
         final repo = await makeRepo();
@@ -78,16 +91,19 @@ void main() {
       });
 
       test(
-        'falls back to "length" when saved active ID is unrecognised',
+        'returns null active ID when saved active ID is unrecognised',
         () async {
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString(
             WorksheetRepository.prefsKey,
-            '{"activeWorksheetId":"no_such_template","sources":{}}',
+            '{"activeWorksheetId":"no_such_template","sources":'
+            '{"mass":{"rowIndex":0,"text":"1 kg"}}}',
           );
           final repo = WorksheetRepository(prefs);
           final state = repo.load();
-          expect(state.activeWorksheetId, 'length');
+          expect(state.activeWorksheetId, isNull);
+          // Sources are still preserved even when the active ID is dropped.
+          expect(state.sources['mass']!.text, '1 kg');
         },
       );
 
@@ -96,7 +112,7 @@ void main() {
         await prefs.setString(WorksheetRepository.prefsKey, 'not valid json');
         final repo = WorksheetRepository(prefs);
         final state = repo.load();
-        expect(state.activeWorksheetId, 'length');
+        expect(state.activeWorksheetId, isNull);
         expect(state.sources, isEmpty);
       });
     });

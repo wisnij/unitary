@@ -37,9 +37,9 @@
 
 ## 5. Verification
 
-- [ ] 5.1 Manually verify on-device in landscape that the previously-obscured
+- [x] 5.1 Manually verify on-device in landscape that the previously-obscured
       content (Freeform "Convert to", Browse list, Settings section headers) is
-      no longer behind the cutout — **requires a physical cutout device; pending
-      user.**
+      no longer behind the cutout — confirmed on-device: content now clears the
+      camera cutout in landscape.
 - [x] 5.2 Run `flutter test --reporter failures-only` — all tests pass (1898)
 - [x] 5.3 Run `flutter analyze` — no new lint issues ("No issues found!")

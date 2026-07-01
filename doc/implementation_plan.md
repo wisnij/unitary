@@ -364,8 +364,8 @@ Implementation Phases
        `titleLarge` — pre-existing, not addressed here.
    - Tablet support
      - [x] Persistent navigation rail at expanded width (replaces the drawer)
-     - Landscape handling across all screens
-       - [x] Display safe areas — every top-level screen body (plus the pushed
+     - [x] Landscape handling across all screens
+       - Display safe areas — every top-level screen body (plus the pushed
          detail/license sub-screens) and the navigation rail inset their content
          within the device-reported safe area (`MediaQuery.padding` via
          `SafeArea`), so display cutouts and system bars no longer obscure
@@ -374,8 +374,12 @@ Implementation Phases
          already reports cutout insets, so no manifest change was needed.
          Verified on-device with a left-edge camera cutout in landscape.  See
          `openspec/changes/archive/2026-07-01-safe-area/`.
-       - Remaining: short-height (landscape phone) layout review, including
-         on-screen-keyboard interaction with the Freeform key panel.
+       - Short-height landscape (phone + keyboard) accepted as a device
+         limitation, not planned: Freeform stays rotatable (consistent with the
+         other screens, and still useful in landscape for keyboard-free history
+         and result interaction), but active text entry in the sliver above the
+         keyboard is inherently cramped and won't be specially compacted or
+         locked to portrait.
      - Verify touch targets and spacing at tablet sizes
    - Accessibility improvements
      - Semantic labels on the operator key panel and completion overlay

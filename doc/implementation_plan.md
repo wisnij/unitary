@@ -365,6 +365,17 @@ Implementation Phases
    - Tablet support
      - [x] Persistent navigation rail at expanded width (replaces the drawer)
      - Landscape handling across all screens
+       - [x] Display safe areas — every top-level screen body (plus the pushed
+         detail/license sub-screens) and the navigation rail inset their content
+         within the device-reported safe area (`MediaQuery.padding` via
+         `SafeArea`), so display cutouts and system bars no longer obscure
+         fields, list rows, or section headers in any orientation.  Insets are
+         read dynamically from the platform (no hard-coded values); Android
+         already reports cutout insets, so no manifest change was needed.
+         Verified on-device with a left-edge camera cutout in landscape.  See
+         `openspec/changes/archive/2026-07-01-safe-area/`.
+       - Remaining: short-height (landscape phone) layout review, including
+         on-screen-keyboard interaction with the Freeform key panel.
      - Verify touch targets and spacing at tablet sizes
    - Accessibility improvements
      - Semantic labels on the operator key panel and completion overlay

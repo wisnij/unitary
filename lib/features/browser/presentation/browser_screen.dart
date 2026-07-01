@@ -87,54 +87,56 @@ class _BrowserScreenState extends ConsumerState<BrowserScreen> {
               currentPage: TopLevelPage.browser,
               onNavigate: widget.onNavigate,
             ),
-      body: TwoPaneLayout(
-        compactPrimary: PaneSide.left,
-        leftSize: const PaneSize.fill(),
-        rightSize: const PaneSize.fill(),
-        left: Column(
-          children: [
-            // Search bar (shown when active).
-            if (state.searchVisible)
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 4,
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: 'Search units…',
-                    isDense: true,
-                    border: const OutlineInputBorder(),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        _searchController.clear();
-                        notifier.setSearchQuery('');
-                      },
-                    ),
+      body: SafeArea(
+        child: TwoPaneLayout(
+          compactPrimary: PaneSide.left,
+          leftSize: const PaneSize.fill(),
+          rightSize: const PaneSize.fill(),
+          left: Column(
+            children: [
+              // Search bar (shown when active).
+              if (state.searchVisible)
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
                   ),
-                  onChanged: notifier.setSearchQuery,
+                  child: TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: InputDecoration(
+                      hintText: 'Search units…',
+                      isDense: true,
+                      border: const OutlineInputBorder(),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: () {
+                          _searchController.clear();
+                          notifier.setSearchQuery('');
+                        },
+                      ),
+                    ),
+                    onChanged: notifier.setSearchQuery,
+                  ),
+                ),
+              // Main list.
+              Expanded(
+                child: _BrowseListView(
+                  groups: groups,
+                  collapsedGroups: state.collapsedGroups,
+                  searchActive: state.searchQuery.isNotEmpty,
+                  onToggleGroup: notifier.toggleGroup,
                 ),
               ),
-            // Main list.
-            Expanded(
-              child: _BrowseListView(
-                groups: groups,
-                collapsedGroups: state.collapsedGroups,
-                searchActive: state.searchQuery.isNotEmpty,
-                onToggleGroup: notifier.toggleGroup,
-              ),
-            ),
-          ],
+            ],
+          ),
+          right: state.selectedPrimaryId != null
+              ? UnitEntryDetailBody(
+                  primaryId: state.selectedPrimaryId!,
+                  kind: state.selectedKind!,
+                )
+              : const _EmptyDetailPane(),
         ),
-        right: state.selectedPrimaryId != null
-            ? UnitEntryDetailBody(
-                primaryId: state.selectedPrimaryId!,
-                kind: state.selectedKind!,
-              )
-            : const _EmptyDetailPane(),
       ),
     );
   }

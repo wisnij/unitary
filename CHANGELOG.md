@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Don't choose a default worksheet on first startup
 
+### Fixed
+
+- Constrain UI elements to device-specific safe areas
+
 
 [0.9.1] - 2026-06-28
 --------------------

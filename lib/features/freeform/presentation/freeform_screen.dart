@@ -272,93 +272,96 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
               currentPage: TopLevelPage.freeform,
               onNavigate: widget.onNavigate,
             ),
-      body: TwoPaneLayout(
-        compactPrimary: PaneSide.left,
-        leftSize: const PaneSize.fill(),
-        rightSize: const PaneSize.fixed(320),
-        right: _HistoryPane(
-          entries: history,
-          onSelect: _restoreHistoryEntry,
-        ),
-        left: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    CompletionField(
-                      controller: _inputController,
-                      focusNode: _inputFocus,
-                      decoration: InputDecoration(
-                        labelText: 'Convert from',
-                        border: const OutlineInputBorder(),
-                        suffixIcon: _inputController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear),
-                                onPressed: _clear,
-                              )
+      body: SafeArea(
+        child: TwoPaneLayout(
+          compactPrimary: PaneSide.left,
+          leftSize: const PaneSize.fill(),
+          rightSize: const PaneSize.fixed(320),
+          right: _HistoryPane(
+            entries: history,
+            onSelect: _restoreHistoryEntry,
+          ),
+          left: Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      CompletionField(
+                        controller: _inputController,
+                        focusNode: _inputFocus,
+                        decoration: InputDecoration(
+                          labelText: 'Convert from',
+                          border: const OutlineInputBorder(),
+                          suffixIcon: _inputController.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear),
+                                  onPressed: _clear,
+                                )
+                              : null,
+                        ),
+                        textInputAction: TextInputAction.next,
+                        onChanged: _onInputChanged,
+                        onSubmitted: (_) {
+                          _evaluate();
+                          // Advance to the output field as the natural next step.
+                          _outputFocus.requestFocus();
+                        },
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.swap_vert),
+                            onPressed: canSwap ? _swap : null,
+                          ),
+                        ],
+                      ),
+                      CompletionField(
+                        controller: _outputController,
+                        focusNode: _outputFocus,
+                        decoration: const InputDecoration(
+                          labelText: 'Convert to (optional)',
+                          border: OutlineInputBorder(),
+                        ),
+                        textInputAction: TextInputAction.done,
+                        onChanged: _onOutputChanged,
+                        onSubmitted: (_) => _evaluate(),
+                      ),
+                      const SizedBox(height: 24),
+                      ResultDisplay(
+                        result: result,
+                        onTap:
+                            result is EvaluationIdle && result.example != null
+                            ? () {
+                                final ex = result.example!;
+                                _inputController.text = ex.inputExpression;
+                                if (ex.outputExpression != null) {
+                                  _outputController.text = ex.outputExpression!;
+                                }
+                                setState(() {});
+                                _cancelDebounce();
+                                _evaluate();
+                                FocusScope.of(context).unfocus();
+                              }
                             : null,
                       ),
-                      textInputAction: TextInputAction.next,
-                      onChanged: _onInputChanged,
-                      onSubmitted: (_) {
-                        _evaluate();
-                        // Advance to the output field as the natural next step.
-                        _outputFocus.requestFocus();
-                      },
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.swap_vert),
-                          onPressed: canSwap ? _swap : null,
+                      if (isOnSubmit) ...[
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _evaluate,
+                          child: const Text('Evaluate'),
                         ),
                       ],
-                    ),
-                    CompletionField(
-                      controller: _outputController,
-                      focusNode: _outputFocus,
-                      decoration: const InputDecoration(
-                        labelText: 'Convert to (optional)',
-                        border: OutlineInputBorder(),
-                      ),
-                      textInputAction: TextInputAction.done,
-                      onChanged: _onOutputChanged,
-                      onSubmitted: (_) => _evaluate(),
-                    ),
-                    const SizedBox(height: 24),
-                    ResultDisplay(
-                      result: result,
-                      onTap: result is EvaluationIdle && result.example != null
-                          ? () {
-                              final ex = result.example!;
-                              _inputController.text = ex.inputExpression;
-                              if (ex.outputExpression != null) {
-                                _outputController.text = ex.outputExpression!;
-                              }
-                              setState(() {});
-                              _cancelDebounce();
-                              _evaluate();
-                              FocusScope.of(context).unfocus();
-                            }
-                          : null,
-                    ),
-                    if (isOnSubmit) ...[
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: _evaluate,
-                        child: const Text('Evaluate'),
-                      ),
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-            if (_showPanel) _KeyPanel(onSymbol: _insertSymbol),
-          ],
+              if (_showPanel) _KeyPanel(onSymbol: _insertSymbol),
+            ],
+          ),
         ),
       ),
     );

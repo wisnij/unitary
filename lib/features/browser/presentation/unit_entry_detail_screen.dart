@@ -40,7 +40,13 @@ class UnitEntryDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(primaryId)),
-      body: UnitEntryDetailBody(primaryId: primaryId, kind: kind, repo: repo),
+      body: SafeArea(
+        child: UnitEntryDetailBody(
+          primaryId: primaryId,
+          kind: kind,
+          repo: repo,
+        ),
+      ),
     );
   }
 }

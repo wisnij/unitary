@@ -140,18 +140,20 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
               currentPage: TopLevelPage.worksheet,
               onNavigate: widget.onNavigate,
             ),
-      body: TwoPaneLayout(
-        // With no worksheet selected, compact width shows the template list;
-        // once one is selected it shows that worksheet.
-        compactPrimary: template == null ? PaneSide.left : PaneSide.right,
-        leftSize: const PaneSize.fixed(220),
-        rightSize: const PaneSize.fill(),
-        left: _TemplateList(
-          templates: sortedTemplates,
-          selectedId: activeId,
-          onSelect: selectTemplate,
+      body: SafeArea(
+        child: TwoPaneLayout(
+          // With no worksheet selected, compact width shows the template list;
+          // once one is selected it shows that worksheet.
+          compactPrimary: template == null ? PaneSide.left : PaneSide.right,
+          leftSize: const PaneSize.fixed(220),
+          rightSize: const PaneSize.fill(),
+          left: _TemplateList(
+            templates: sortedTemplates,
+            selectedId: activeId,
+            onSelect: selectTemplate,
+          ),
+          right: worksheetContent,
         ),
-        right: worksheetContent,
       ),
     );
   }

@@ -60,15 +60,17 @@ class _AppShellState extends State<AppShell> {
     // Expanded: a single persistent rail beside the active page.  The rail is
     // built once, outside the IndexedStack, so there is exactly one instance.
     return Scaffold(
-      body: Row(
-        children: [
-          _AppNavigationRail(
-            currentPage: _currentPage,
-            onNavigate: _switchPage,
-          ),
-          const VerticalDivider(width: 1, thickness: 1),
-          Expanded(child: body),
-        ],
+      body: SafeArea(
+        child: Row(
+          children: [
+            _AppNavigationRail(
+              currentPage: _currentPage,
+              onNavigate: _switchPage,
+            ),
+            const VerticalDivider(width: 1, thickness: 1),
+            Expanded(child: body),
+          ],
+        ),
       ),
     );
   }

@@ -35,47 +35,49 @@ class AboutScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: const Text('About')),
-      body: ListView(
-        children: [
-          ListTile(
-            title: const Text('Version'),
-            subtitle: Text(version),
-            onLongPress: () => _copyToClipboard(context, version),
-          ),
-          if (effectiveBuildMetadata.isNotEmpty)
+      body: SafeArea(
+        child: ListView(
+          children: [
             ListTile(
-              title: const Text('Build'),
-              subtitle: Text(effectiveBuildMetadata),
-              onLongPress: () =>
-                  _copyToClipboard(context, effectiveBuildMetadata),
+              title: const Text('Version'),
+              subtitle: Text(version),
+              onLongPress: () => _copyToClipboard(context, version),
             ),
-          ListTile(
-            leading: const Icon(Icons.description_outlined),
-            title: const Text('License terms'),
-            subtitle: const Text('GNU AGPL 3.0'),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const LicenseScreen(),
-                ),
-              );
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.open_in_new),
-            title: const Text('Project home'),
-            subtitle: const Text(projectHomeUrl),
-            onTap: () async {
-              final uri = Uri.parse(projectHomeUrl);
-              try {
-                await launchUrl(uri, mode: LaunchMode.platformDefault);
-              } catch (_) {
-                // Silently ignore launch failures (e.g. no browser available).
-              }
-            },
-          ),
-        ],
+            if (effectiveBuildMetadata.isNotEmpty)
+              ListTile(
+                title: const Text('Build'),
+                subtitle: Text(effectiveBuildMetadata),
+                onLongPress: () =>
+                    _copyToClipboard(context, effectiveBuildMetadata),
+              ),
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: const Text('License terms'),
+              subtitle: const Text('GNU AGPL 3.0'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const LicenseScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.open_in_new),
+              title: const Text('Project home'),
+              subtitle: const Text(projectHomeUrl),
+              onTap: () async {
+                final uri = Uri.parse(projectHomeUrl);
+                try {
+                  await launchUrl(uri, mode: LaunchMode.platformDefault);
+                } catch (_) {
+                  // Silently ignore launch failures (e.g. no browser available).
+                }
+              },
+            ),
+          ],
+        ),
       ),
     );
   }

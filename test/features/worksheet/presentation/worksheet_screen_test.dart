@@ -9,6 +9,7 @@ import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
 import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
+import 'package:unitary/shared/readable_width.dart';
 
 // Note: the "Label and input column widths" requirement in the worksheet-ui
 // spec (minimum 130 dp label column, 12 em input minimum, equal-width inputs)
@@ -59,6 +60,16 @@ void main() {
       expect(container.read(worksheetProvider).worksheetId, isNull);
       // The placeholder is shown (default test window is the medium tier).
       expect(find.text('Select a worksheet'), findsOneWidget);
+    });
+
+    testWidgets('wraps worksheet content in the shared ReadableWidth cap', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReadableWidth), findsOneWidget);
     });
 
     testWidgets('shows rows for the selected template', (tester) async {

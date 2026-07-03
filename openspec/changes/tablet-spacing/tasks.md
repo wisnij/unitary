@@ -27,8 +27,9 @@
 
 ## 4. Verification
 
-- [ ] 4.1 Manually verify on a landscape tablet that Freeform, Worksheet, and
+- [x] 4.1 Manually verify on a landscape tablet that Freeform, Worksheet, and
       Settings content is centered and no longer over-wide, and that phone
-      layouts are unchanged — **requires a device; pending user.**
+      layouts are unchanged — confirmed on-device: content is centered at the cap
+      on tablets and phone layouts are unchanged.
 - [x] 4.2 Run `flutter test --reporter failures-only` — all tests pass (1903)
 - [x] 4.3 Run `flutter analyze` — no new lint issues ("No issues found!")

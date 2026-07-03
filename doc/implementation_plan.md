@@ -362,7 +362,7 @@ Implementation Phases
      - Discovered: the Worksheet AppBar template dropdown can overflow at very
        narrow widths (~≤410 dp) because of the long "Digital Storage" label in
        `titleLarge` — pre-existing, not addressed here.
-   - Tablet support
+   - [x] Tablet support
      - [x] Persistent navigation rail at expanded width (replaces the drawer)
      - [x] Landscape handling across all screens
        - Display safe areas — every top-level screen body (plus the pushed
@@ -380,7 +380,17 @@ Implementation Phases
          and result interaction), but active text entry in the sliver above the
          keyboard is inherently cramped and won't be specially compacted or
          locked to portrait.
-     - Verify touch targets and spacing at tablet sizes
+     - [x] Verify touch targets and spacing at tablet sizes
+       - Touch targets — verified on-device (phone + tablet); the operator keys,
+         though narrower than 48 dp at phone width, are comfortable to tap, so no
+         change was made.  (The 48 dp concern is shared with the Accessibility
+         item below.)
+       - Spacing — single-column content on Freeform, Worksheet, and Settings was
+         over-wide on landscape tablets.  A shared `ReadableWidth` wrapper
+         (`Align(topCenter)` + `ConstrainedBox`, `kReadableMaxWidth = 600`) now
+         caps and centers that content on wide layouts while staying inert at
+         phone width.  Verified on-device.  See
+         `openspec/changes/archive/2026-07-03-tablet-spacing/`.
    - Accessibility improvements
      - Semantic labels on the operator key panel and completion overlay
      - Screen-reader announcement of evaluation results and per-row worksheet errors

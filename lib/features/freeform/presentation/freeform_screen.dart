@@ -375,6 +375,26 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 /// Ordered list of symbols shown in the freeform key panel.
 const freeformKeyPanelSymbols = ['^', '*', '/', '|', '+', '-', '~', '(', ')'];
 
+/// Accessible labels for the freeform key panel symbols, keyed by glyph.
+///
+/// These populate the semantics tree so a screen reader announces the
+/// operation a key performs rather than the bare glyph (e.g. "multiply"
+/// instead of "asterisk").  The wording matches each operator's meaning in the
+/// parser: `|` is the high-precedence "numeric divide" and `~` is the
+/// inverse-function operator.  A glyph missing from this map falls back to the
+/// glyph itself so a newly added key is never label-less.
+const freeformKeyPanelLabels = <String, String>{
+  '^': 'power',
+  '*': 'multiply',
+  '/': 'divide',
+  '|': 'numeric divide',
+  '+': 'plus',
+  '-': 'minus',
+  '~': 'inverse',
+  '(': 'open parenthesis',
+  ')': 'close parenthesis',
+};
+
 /// Supplementary symbol key panel displayed above the system keyboard.
 class _KeyPanel extends StatelessWidget {
   const _KeyPanel({required this.onSymbol});
@@ -409,16 +429,26 @@ class _KeyPanel extends StatelessWidget {
                           ),
                         ),
                         onPressed: () => onSymbol(sym),
-                        child: Text(
-                          sym,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            // 'monospace' is a CSS generic family recognised by
-                            // Android (resolves to Roboto Mono / Droid Sans
-                            // Mono) but is not guaranteed on iOS.  If iOS
-                            // support is added, replace with a bundled font or
-                            // a fontFamilyFallback list.
-                            fontFamily: 'monospace',
+                        // Announce the operation the key performs (e.g.
+                        // "multiply") rather than the bare glyph.  The glyph
+                        // itself is excluded from semantics so it is not also
+                        // read out; falling back to the glyph keeps a newly
+                        // added key from being label-less.
+                        child: Semantics(
+                          label: freeformKeyPanelLabels[sym] ?? sym,
+                          child: ExcludeSemantics(
+                            child: Text(
+                              sym,
+                              style: const TextStyle(
+                                fontSize: 18,
+                                // 'monospace' is a CSS generic family recognised
+                                // by Android (resolves to Roboto Mono / Droid
+                                // Sans Mono) but is not guaranteed on iOS.  If
+                                // iOS support is added, replace with a bundled
+                                // font or a fontFamilyFallback list.
+                                fontFamily: 'monospace',
+                              ),
+                            ),
                           ),
                         ),
                       ),

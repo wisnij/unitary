@@ -74,8 +74,10 @@ label-less (and a test asserts full coverage of `freeformKeyPanelSymbols`).
 Compose `"<name>, <kind>"` where kind is the lower-cased
 `CompletionEntryKind` value ("unit" / "prefix" / "function").  Reuse
 `entry.name` (not `_displayName`) so the spoken name has no trailing
-punctuation.  A small `_semanticLabel(entry)` helper mirrors the existing
-`_displayName` / `_insertText` switch.  Write the kind mapping as an
+punctuation.  Implement as a **top-level, public** pure function
+`completionSemanticLabel(entry)` (rather than a private helper) so a coverage
+test can call it directly over `CompletionEntryKind.values`; it mirrors the
+existing `_displayName` / `_insertText` switch.  Write the kind mapping as an
 **exhaustive `switch` expression with no `default`** so that adding a new
 `CompletionEntryKind` variant is a compile error until it is given a label —
 a compile-time coverage guard.

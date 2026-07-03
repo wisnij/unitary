@@ -1019,6 +1019,68 @@ void main() {
       },
     );
 
+    test('every key panel symbol has a non-empty, non-glyph label', () {
+      // Coverage guard: a symbol added to freeformKeyPanelSymbols without a
+      // corresponding entry in freeformKeyPanelLabels fails here, so new keys
+      // cannot silently ship without an accessible label.
+      for (final sym in symbols) {
+        final label = freeformKeyPanelLabels[sym];
+        expect(label, isNotNull, reason: 'No label for symbol "$sym"');
+        expect(label, isNotEmpty, reason: 'Empty label for symbol "$sym"');
+        expect(
+          label,
+          isNot(sym),
+          reason: 'Label for "$sym" is just the glyph',
+        );
+      }
+    });
+
+    testWidgets('focusing the * key exposes the label "multiply"', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(buildApp());
+      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.bySemanticsLabel('multiply'), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets(
+      'every rendered key exposes its mapped semantics label (coverage)',
+      (tester) async {
+        // Render-level coverage: assert one semantics-labelled key per symbol,
+        // guarding against a render path that bypasses the Semantics wrapper.
+        final handle = tester.ensureSemantics();
+
+        await tester.pumpWidget(buildApp());
+        await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+        await tester.pump();
+        await tester.pump();
+
+        for (final sym in symbols) {
+          final label = freeformKeyPanelLabels[sym]!;
+          expect(
+            find.bySemanticsLabel(label),
+            findsOneWidget,
+            reason: 'No semantics label "$label" for symbol "$sym"',
+          );
+          // The visible glyph is unchanged (no visual regression).
+          expect(
+            find.widgetWithText(TextButton, sym),
+            findsOneWidget,
+            reason: 'Glyph "$sym" no longer rendered',
+          );
+        }
+
+        handle.dispose();
+      },
+    );
+
     testWidgets('key panel is not visible when neither field is focused', (
       tester,
     ) async {

@@ -14,6 +14,7 @@ import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
+import 'package:unitary/shared/readable_width.dart';
 
 void main() {
   late SettingsRepository settingsRepo;
@@ -46,6 +47,13 @@ void main() {
   }
 
   group('FreeformScreen', () {
+    testWidgets('wraps content in the shared ReadableWidth cap', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      expect(find.byType(ReadableWidth), findsOneWidget);
+    });
+
     testWidgets('renders input and output fields', (tester) async {
       await tester.pumpWidget(buildApp());
       expect(find.widgetWithText(TextField, 'Convert from'), findsOneWidget);

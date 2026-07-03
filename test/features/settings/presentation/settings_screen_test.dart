@@ -9,6 +9,7 @@ import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
+import 'package:unitary/shared/readable_width.dart';
 
 void main() {
   late SettingsRepository repo;
@@ -32,6 +33,13 @@ void main() {
   }
 
   group('SettingsScreen', () {
+    testWidgets('wraps content in the shared ReadableWidth cap', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      expect(find.byType(ReadableWidth), findsOneWidget);
+    });
+
     testWidgets('renders all settings sections', (tester) async {
       await tester.pumpWidget(buildApp());
       expect(find.text('Settings'), findsOneWidget); // AppBar title.

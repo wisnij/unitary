@@ -392,7 +392,17 @@ Implementation Phases
          phone width.  Verified on-device.  See
          `openspec/changes/archive/2026-07-03-tablet-spacing/`.
    - Accessibility improvements
-     - Semantic labels on the operator key panel and completion overlay
+     - [x] Semantic labels on the operator key panel and completion overlay
+       — every operator key exposes an accessible action label (a glyph→word
+       map: `*`→"multiply", `|`→"numeric divide", `~`→"inverse", …) via
+       `Semantics` + `ExcludeSemantics`; every completion suggestion exposes a
+       `"<name>, <kind>"` label (unit/prefix/function) so the kind shown only
+       by the trailing `-`/`(` is available to a screen reader.  Labels are
+       inert without assistive tech and cause no visual change.  Coverage tests
+       guard against new keys/kinds shipping unlabelled (iterate
+       `freeformKeyPanelSymbols` / `CompletionEntryKind.values`, plus an
+       exhaustive `switch`).  See
+       `openspec/changes/archive/2026-07-03-semantic-labels/`.
      - Screen-reader announcement of evaluation results and per-row worksheet errors
      - Contrast audit (the muted currency banner / `onSurfaceVariant` text are
        candidates)

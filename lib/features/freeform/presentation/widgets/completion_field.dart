@@ -13,6 +13,25 @@ const double _kRowHeight = 48.0;
 /// More entries may be present and are accessible by scrolling.
 const int _kMaxVisibleRows = 8;
 
+/// The accessible label announced for a completion [entry].
+///
+/// Composed as `"<name>, <kind>"` so a screen reader hears both the identifier
+/// and what kind of entry it is (unit / prefix / function) — information the
+/// sighted display encodes only through the trailing `-` or `(` in
+/// [_CompletionFieldState._displayName].  Uses [CompletionEntry.name] (not the
+/// display text) so the spoken name carries no trailing punctuation.
+///
+/// Written as an exhaustive `switch` with no `default`: adding a new
+/// [CompletionEntryKind] is a compile error until it is given a label here.
+/// Public (rather than a private helper) so a coverage test can assert a label
+/// for every [CompletionEntryKind] value.
+String completionSemanticLabel(CompletionEntry entry) =>
+    switch (entry.entryKind) {
+      CompletionEntryKind.unit => '${entry.name}, unit',
+      CompletionEntryKind.prefix => '${entry.name}, prefix',
+      CompletionEntryKind.function => '${entry.name}, function',
+    };
+
 /// A [TextField] wrapper that displays an inline predictive-completion overlay
 /// as the user types.
 ///
@@ -279,7 +298,17 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
                               ),
                               child: Align(
                                 alignment: Alignment.centerLeft,
-                                child: Text(_displayName(suggestions[i])),
+                                // Announce "<name>, <kind>"; the visible display
+                                // text (with its trailing -/( ) is excluded so
+                                // the punctuation is not read out literally.
+                                child: Semantics(
+                                  label: completionSemanticLabel(
+                                    suggestions[i],
+                                  ),
+                                  child: ExcludeSemantics(
+                                    child: Text(_displayName(suggestions[i])),
+                                  ),
+                                ),
                               ),
                             ),
                           ),

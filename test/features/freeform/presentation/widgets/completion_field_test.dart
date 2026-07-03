@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:unitary/core/domain/models/completion_entry.dart';
 import 'package:unitary/features/freeform/presentation/widgets/completion_field.dart';
 
 /// Wraps [child] in a minimal app with Riverpod and Overlay support.
@@ -219,6 +220,118 @@ void main() {
 
         // The overlay row should show the name followed by '('.
         expect(find.text('tempC('), findsOneWidget);
+      },
+    );
+
+    // -------------------------------------------------------------------------
+    // Semantic labels
+    // -------------------------------------------------------------------------
+
+    test('every completion kind yields a name+kind label (coverage)', () {
+      // Coverage guard: iterate the whole enum so a new CompletionEntryKind
+      // added without a label word fails here (in addition to the compile-time
+      // guard from the exhaustive switch in completionSemanticLabel).
+      for (final kind in CompletionEntryKind.values) {
+        final label = completionSemanticLabel(
+          CompletionEntry(name: 'foo', isPrimaryId: true, entryKind: kind),
+        );
+        expect(label, contains('foo'), reason: 'label "$label" missing name');
+        expect(
+          label,
+          contains(kind.name),
+          reason: 'label "$label" missing kind word "${kind.name}"',
+        );
+      }
+    });
+
+    test('completion labels use the "<name>, <kind>" form', () {
+      expect(
+        completionSemanticLabel(
+          const CompletionEntry(
+            name: 'meter',
+            isPrimaryId: true,
+            entryKind: CompletionEntryKind.unit,
+          ),
+        ),
+        'meter, unit',
+      );
+      expect(
+        completionSemanticLabel(
+          const CompletionEntry(
+            name: 'kilo',
+            isPrimaryId: true,
+            entryKind: CompletionEntryKind.prefix,
+          ),
+        ),
+        'kilo, prefix',
+      );
+      expect(
+        completionSemanticLabel(
+          const CompletionEntry(
+            name: 'tempC',
+            isPrimaryId: true,
+            entryKind: CompletionEntryKind.function,
+          ),
+        ),
+        'tempC, function',
+      );
+    });
+
+    testWidgets('prefix row exposes its label while keeping the visual dash', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+
+      await tester.pumpWidget(
+        _wrap(_buildField(controller: controller, focusNode: focusNode)),
+      );
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+      controller.value = const TextEditingValue(
+        text: 'kilo',
+        selection: TextSelection.collapsed(offset: 4),
+      );
+      await tester.pump();
+      await tester.pump();
+      await tester.pump();
+
+      // Screen reader hears "kilo, prefix"...
+      expect(find.bySemanticsLabel('kilo, prefix'), findsOneWidget);
+      // ...while the visible display text still shows the trailing dash.
+      expect(find.text('kilo-'), findsOneWidget);
+
+      handle.dispose();
+    });
+
+    testWidgets(
+      'every rendered suggestion row carries one name+kind label (coverage)',
+      (tester) async {
+        // Render-level count guard: a row that bypasses the Semantics wrapper
+        // would make the label count differ from the row count.
+        final handle = tester.ensureSemantics();
+
+        await tester.pumpWidget(
+          _wrap(_buildField(controller: controller, focusNode: focusNode)),
+        );
+        await tester.tap(find.byType(TextField));
+        await tester.pump();
+        // 'me' matches many entries across kinds (meter, mega, mebibyte, …).
+        controller.value = const TextEditingValue(
+          text: 'me',
+          selection: TextSelection.collapsed(offset: 2),
+        );
+        await tester.pump();
+        await tester.pump();
+        await tester.pump();
+
+        final rowCount = find.byType(InkWell).evaluate().length;
+        expect(rowCount, greaterThan(0));
+        expect(
+          find.bySemanticsLabel(RegExp(r', (unit|prefix|function)$')),
+          findsNWidgets(rowCount),
+        );
+
+        handle.dispose();
       },
     );
 

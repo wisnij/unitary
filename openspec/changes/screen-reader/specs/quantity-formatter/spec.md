@@ -13,6 +13,8 @@ transformations, leaving all other content (including unit names) unchanged:
 - `/` SHALL be spoken as "per"
 - `^` SHALL be spoken as "to the power"
 - `×` SHALL be spoken as "times"
+- `*` SHALL be spoken as "times" (never emitted by the value formatters, but
+  present in unit and function definition expressions that are spoken)
 - An exponent suffix in the signed form emitted by the value formatters — a
   digit immediately followed by `e`, a `+` or `-` sign, and digits (e.g.
   `1.5e+3`) — SHALL be spoken as "times 10 to the N" for positive exponents

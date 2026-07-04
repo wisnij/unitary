@@ -1,6 +1,60 @@
 import 'package:flutter/material.dart';
 
+import '../../../../shared/utils/quantity_formatter.dart';
+import '../../data/idle_examples.dart';
 import '../../state/freeform_state.dart';
+
+/// The spoken form of [result], used as the accessible label of the
+/// live-region result display so a screen reader announces each settled
+/// evaluation.
+///
+/// Labels are composed from each variant's display strings via [formatSpeech]
+/// (structural symbols worded, exponents spoken), with multi-line variants
+/// joined as sentences.  The switch is exhaustive over the sealed
+/// [EvaluationResult] type so a new variant cannot ship without a spoken form.
+String resultSpeechLabel(EvaluationResult result) {
+  return switch (result) {
+    EvaluationIdle(:final example) => _idleSpeech(example),
+    EvaluationSuccess(:final formattedResult) => formatSpeech(formattedResult),
+    ConversionSuccess(:final formattedResult, :final formattedReciprocal) =>
+      '${formatSpeech(formattedResult)}. ${formatSpeech(formattedReciprocal)}',
+    UnitDefinitionResult(
+      :final aliasLine,
+      :final definitionLine,
+      :final formattedResult,
+    ) =>
+      [
+        aliasLine,
+        definitionLine,
+        formattedResult,
+      ].nonNulls.map(formatSpeech).join('. '),
+    FunctionDefinitionResult(:final label, :final expression) => formatSpeech(
+      '$label ${expression ?? 'not available'}',
+    ),
+    FunctionConversionResult(:final functionName, :final formattedValue) =>
+      formatSpeech('$functionName($formattedValue)'),
+    ReciprocalConversionSuccess(
+      :final reciprocalInputLabel,
+      :final formattedResult,
+      :final formattedReciprocal,
+    ) =>
+      'Reciprocal conversion. ${formatSpeech(reciprocalInputLabel)}. '
+          '${formatSpeech(formattedResult)}. '
+          '${formatSpeech(formattedReciprocal)}',
+    EvaluationError(:final message) => 'Error: $message',
+  };
+}
+
+String _idleSpeech(FreeformExample? example) {
+  const instruction = 'Enter an expression above.';
+  if (example == null) {
+    return instruction;
+  }
+  final hint = example.outputExpression != null
+      ? '${example.inputExpression} to ${example.outputExpression}'
+      : example.inputExpression;
+  return '$instruction Try: ${formatSpeech(hint)}';
+}
 
 /// Displays the evaluation result with appropriate styling.
 ///
@@ -245,15 +299,27 @@ class ResultDisplay extends StatelessWidget {
         border: Border.all(color: borderColor),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: child,
+      // The composed live-region label below carries the spoken form of the
+      // whole result, so the individual text nodes are excluded to avoid
+      // being read out a second time.
+      child: ExcludeSemantics(child: child),
     );
 
     if (result is EvaluationIdle && onTap != null) {
-      return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: GestureDetector(onTap: onTap, child: container),
+      return Semantics(
+        liveRegion: true,
+        button: true,
+        label: resultSpeechLabel(result),
+        child: MouseRegion(
+          cursor: SystemMouseCursors.click,
+          child: GestureDetector(onTap: onTap, child: container),
+        ),
       );
     }
-    return container;
+    return Semantics(
+      liveRegion: true,
+      label: resultSpeechLabel(result),
+      child: container,
+    );
   }
 }

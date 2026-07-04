@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -38,17 +39,31 @@ class AboutScreen extends ConsumerWidget {
       body: SafeArea(
         child: ListView(
           children: [
-            ListTile(
-              title: const Text('Version'),
-              subtitle: Text(version),
-              onLongPress: () => _copyToClipboard(context, version),
+            Semantics(
+              // Expose the long-press copy gesture as a discoverable action
+              // in the assistive-technology actions menu.
+              customSemanticsActions: {
+                const CustomSemanticsAction(label: 'Copy version'): () =>
+                    _copyToClipboard(context, version),
+              },
+              child: ListTile(
+                title: const Text('Version'),
+                subtitle: Text(version),
+                onLongPress: () => _copyToClipboard(context, version),
+              ),
             ),
             if (effectiveBuildMetadata.isNotEmpty)
-              ListTile(
-                title: const Text('Build'),
-                subtitle: Text(effectiveBuildMetadata),
-                onLongPress: () =>
-                    _copyToClipboard(context, effectiveBuildMetadata),
+              Semantics(
+                customSemanticsActions: {
+                  const CustomSemanticsAction(label: 'Copy build'): () =>
+                      _copyToClipboard(context, effectiveBuildMetadata),
+                },
+                child: ListTile(
+                  title: const Text('Build'),
+                  subtitle: Text(effectiveBuildMetadata),
+                  onLongPress: () =>
+                      _copyToClipboard(context, effectiveBuildMetadata),
+                ),
               ),
             ListTile(
               leading: const Icon(Icons.description_outlined),

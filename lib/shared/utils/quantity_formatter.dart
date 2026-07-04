@@ -121,6 +121,44 @@ String formatOutputUnit(String unit) {
   return unit;
 }
 
+/// Matches the signed exponent suffix emitted by the value formatters (and by
+/// `toStringAsPrecision`): a digit, `e`, an explicit sign, and digits.  The
+/// leading digit is captured so it can be preserved in the replacement.
+final _speechExponentPattern = RegExp(r'(\d)e([+-])(\d+)');
+
+/// Spoken replacements for structural symbols in formatted result strings.
+///
+/// Each symbol is replaced with its word padded by spaces (so forms without
+/// surrounding whitespace, like `km/hr` or `s^2`, remain word-separated);
+/// runs of spaces are collapsed afterwards.
+const _speechSymbolWords = <String, String>{
+  '=': 'equals',
+  '/': 'per',
+  '^': 'to the power',
+  '×': 'times',
+  '*': 'times',
+};
+
+/// Rewrites a formatted display string into a speech-friendly form for
+/// screen-reader announcement.
+///
+/// Structural symbols are worded (`=` "equals", `/` "per", `^` "to the
+/// power", `×` "times") and signed exponent suffixes such as `1.5e+3` are
+/// spoken as "1.5 times 10 to the 3" (negative exponents as "times 10 to the
+/// negative N").  Unit names and all other content are left unchanged; an
+/// unsigned form like `2e3` (never emitted by the value formatters) is not
+/// treated as an exponent.
+String formatSpeech(String formatted) {
+  var result = formatted.replaceAllMapped(_speechExponentPattern, (m) {
+    final negative = m[2] == '-';
+    return '${m[1]} times 10 to the ${negative ? 'negative ' : ''}${m[3]}';
+  });
+  _speechSymbolWords.forEach((symbol, word) {
+    result = result.replaceAll(symbol, ' $word ');
+  });
+  return result.replaceAll(RegExp(' {2,}'), ' ').trim();
+}
+
 /// Floor division that works correctly for negative numbers.
 int _floorDiv(int a, int b) {
   final result = a ~/ b;

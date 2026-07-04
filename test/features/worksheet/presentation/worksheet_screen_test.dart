@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -158,6 +160,229 @@ void main() {
           .widget<TextField>(textFields.first)
           .controller!;
       expect(firstController.text, '1');
+    });
+  });
+
+  group('WorksheetScreen error display', () {
+    // Typing -1 into the Kelvin row (below absolute zero) makes the Celsius
+    // and Fahrenheit function rows produce "out of bounds" errors, while the
+    // Rankine unit row converts normally.
+    Future<void> pumpTemperatureError(WidgetTester tester) async {
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'temperature');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '-1');
+      // Wait for debounce.
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+    }
+
+    testWidgets('erroring cell shows errorText below an empty field', (
+      tester,
+    ) async {
+      await pumpTemperatureError(tester);
+
+      final fields = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .toList();
+      final celsius = fields[1];
+      expect(celsius.controller!.text, isEmpty);
+      expect(celsius.decoration?.errorText, 'out of bounds');
+    });
+
+    testWidgets('erroring cell has no red text style override', (
+      tester,
+    ) async {
+      await pumpTemperatureError(tester);
+
+      final fields = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .toList();
+      expect(fields[1].style, isNull);
+    });
+
+    testWidgets('error is exposed to assistive technology', (tester) async {
+      final handle = tester.ensureSemantics();
+      await pumpTemperatureError(tester);
+
+      // The decoration's errorText is exposed as the text field's semantic
+      // hint, so a screen reader reads the error when focusing the field.
+      // With -1 K, four function rows error (Celsius, Fahrenheit, Réaumur,
+      // gas mark).
+      var errorHints = 0;
+      void visit(SemanticsNode node) {
+        if (node.hint == 'out of bounds') {
+          errorHints++;
+        }
+        node.visitChildren((child) {
+          visit(child);
+          return true;
+        });
+      }
+
+      var root = tester.getSemantics(find.byType(MaterialApp));
+      while (root.parent != null) {
+        root = root.parent!;
+      }
+      visit(root);
+      expect(errorHints, 4);
+
+      handle.dispose();
+    });
+
+    testWidgets('non-error cells are unaffected', (tester) async {
+      await pumpTemperatureError(tester);
+
+      final fields = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .toList();
+      // Kelvin row keeps the user's raw text.
+      expect(fields[0].controller!.text, '-1');
+      expect(fields[0].decoration?.errorText, isNull);
+      // Rankine row shows a normal converted value with no error.
+      expect(fields[3].controller!.text, isNotEmpty);
+      expect(fields[3].decoration?.errorText, isNull);
+    });
+
+    testWidgets('valid input shows no errorText anywhere', (tester) async {
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'temperature');
+      await tester.pumpAndSettle();
+      // 450 K is within every row's domain, including gas mark (oven range).
+      await tester.enterText(find.byType(TextField).first, '450');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+
+      final fields = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .toList();
+      for (final field in fields) {
+        expect(field.decoration?.errorText, isNull);
+      }
+    });
+
+    testWidgets('table renders cleanly with a taller error row present', (
+      tester,
+    ) async {
+      await pumpTemperatureError(tester);
+
+      // No layout exceptions, and the row labels alongside the taller
+      // error cells remain visible.
+      expect(tester.takeException(), isNull);
+      expect(find.text('Celsius'), findsOneWidget);
+      expect(find.text('Fahrenheit'), findsOneWidget);
+    });
+  });
+
+  group('WorksheetScreen copy semantics', () {
+    List<MethodCall> clipboardCalls = [];
+
+    setUp(() {
+      clipboardCalls = [];
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, (call) async {
+            if (call.method == 'Clipboard.setData') {
+              clipboardCalls.add(call);
+            }
+            return null;
+          });
+    });
+
+    tearDown(() {
+      TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+          .setMockMethodCallHandler(SystemChannels.platform, null);
+    });
+
+    String? lastClipboardText() {
+      if (clipboardCalls.isEmpty) {
+        return null;
+      }
+      final args = clipboardCalls.last.arguments as Map;
+      return args['text'] as String?;
+    }
+
+    // Returns the first semantics node exposing a custom action with [label].
+    SemanticsNode? findCustomActionNode(WidgetTester tester, String label) {
+      SemanticsNode? result;
+      bool visit(SemanticsNode node) {
+        if (result != null) {
+          return false;
+        }
+        final ids = node.getSemanticsData().customSemanticsActionIds;
+        if (ids != null) {
+          for (final id in ids) {
+            if (CustomSemanticsAction.getAction(id)?.label == label) {
+              result = node;
+              return false;
+            }
+          }
+        }
+        node.visitChildren(visit);
+        return true;
+      }
+
+      var root = tester.getSemantics(find.byType(MaterialApp));
+      while (root.parent != null) {
+        root = root.parent!;
+      }
+      visit(root);
+      return result;
+    }
+
+    testWidgets('value field exposes a Copy value custom action', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+
+      final node = findCustomActionNode(tester, 'Copy value');
+      expect(node, isNotNull);
+
+      // Invoking the custom action copies the field's current text.
+      final actionId = CustomSemanticsAction.getIdentifier(
+        const CustomSemanticsAction(label: 'Copy value'),
+      );
+      node!.owner!.performAction(
+        node.id,
+        SemanticsAction.customAction,
+        actionId,
+      );
+      await tester.pump();
+
+      expect(lastClipboardText(), '1');
+
+      handle.dispose();
+    });
+
+    testWidgets('Copy value action on an empty field is a no-op', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
+
+      final node = findCustomActionNode(tester, 'Copy value');
+      expect(node, isNotNull);
+
+      final actionId = CustomSemanticsAction.getIdentifier(
+        const CustomSemanticsAction(label: 'Copy value'),
+      );
+      node!.owner!.performAction(
+        node.id,
+        SemanticsAction.customAction,
+        actionId,
+      );
+      await tester.pump();
+
+      expect(lastClipboardText(), isNull);
+
+      handle.dispose();
     });
   });
 }

@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: June 27, 2026*
+*Last Updated: July 4, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -488,3 +488,14 @@ Questions that arose during design but haven't been resolved:
   - `WorksheetScreen` branches on a null active id: compact width shows the full-screen template list (`_TemplateList`) until one is selected, then the worksheet (driven by `TwoPaneLayout.compactPrimary` switching left→right); medium/expanded shows the left-pane list plus a centered `_EmptyWorksheetPane` ("Select a worksheet") placeholder, mirroring Browse's empty detail pane; AppBar shows static "Worksheet" title when nothing is selected
   - No new dependencies
   - Design artifacts: `openspec/changes/worksheet-picker/`
+- *Screen-reader support (July 4, 2026)* — Phase 9 accessibility improvement
+  - 1953 tests passing (59 new)
+  - Freeform result display is an unconditional polite live region (WCAG 4.1.3 status-message convention): `ResultDisplay` wraps its content in `Semantics(liveRegion: true, label: resultSpeechLabel(result))` + `ExcludeSemantics`, so every settled evaluation state (success, conversion, definition, error) is announced without moving focus, in both evaluation modes
+  - `formatSpeech(String)` in `lib/shared/utils/quantity_formatter.dart`: pure string rewrite of formatted display strings into speech-friendly form — `=`→"equals", `/`→"per", `^`→"to the power", `×`/`*`→"times", signed exponents (`1.5e+3`)→"1.5 times 10 to the 3" ("negative N" for `e-N`); unsigned `2e3` (never emitted by the formatters) is left alone
+  - `resultSpeechLabel(EvaluationResult)` in `result_display.dart`: exhaustive `switch` over the sealed type (a new variant without a spoken form is a compile error); "Error: " prefix on `EvaluationError` (message verbatim); idle speaks instruction + example (`→` spoken as "to"); multi-line variants joined as sentences
+  - Worksheet cell errors moved from red in-field text to `InputDecoration.errorText`: erroring cells show an empty field with the error string below it (native error semantics — exposed as the field's semantic hint — plus a non-color visual indicator, fixing WCAG 1.4.1); `_syncControllers` writes `''` for error cells; the red `style` override is gone
+  - Idle-example tap target exposes `button: true` semantics; long-press-to-copy gestures expose labeled `CustomSemanticsAction`s ("Copy value" on worksheet cells, "Copy version"/"Copy build" on About rows, "Copy" on unit detail `_DetailText`), discoverable in TalkBack's actions menu / VoiceOver's rotor
+  - Deferred to Phase 12: per-row worksheet error announcements (unreachable with predefined templates) and a semantics action for the label-cell transfer long-press
+  - Discovered: `WorksheetRowWidget` (`worksheet_row_widget.dart`) is orphaned dead code — only its own test references it; left unmodified
+  - On-device TalkBack pass still pending
+  - Design artifacts: `openspec/changes/screen-reader/`

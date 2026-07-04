@@ -403,7 +403,23 @@ Implementation Phases
        `freeformKeyPanelSymbols` / `CompletionEntryKind.values`, plus an
        exhaustive `switch`).  See
        `openspec/changes/archive/2026-07-03-semantic-labels/`.
-     - Screen-reader announcement of evaluation results and per-row worksheet errors
+     - [x] Screen-reader announcement of evaluation results and per-row worksheet errors
+       — the freeform result display is an unconditional polite live region
+       (WCAG 4.1.3): every settled evaluation state is announced from a
+       speech-friendly label built by `formatSpeech` (`=`→"equals", `/`→"per",
+       `^`→"to the power", `×`/`*`→"times", `1.5e+3`→"1.5 times 10 to the 3")
+       with an "Error: " prefix on errors; an exhaustive `switch` over the
+       sealed `EvaluationResult` keeps new variants from shipping without a
+       spoken form.  Worksheet cell errors moved from red in-field text to the
+       `TextField`'s `errorText` decoration (native error semantics + a
+       non-color visual indicator, fixing WCAG 1.4.1).  The idle-example hint
+       exposes `button` semantics, and every long-press-to-copy gesture
+       (worksheet cells, About rows, unit detail) exposes a labeled
+       `CustomSemanticsAction` discoverable in TalkBack's actions menu /
+       VoiceOver's rotor.  Per-row worksheet error *announcements* deferred to
+       Phase 12 (predefined templates can't produce row-level dimension
+       mismatches); on-device TalkBack pass still pending.  See
+       `openspec/changes/screen-reader/`.
      - Contrast audit (the muted currency banner / `onSurfaceVariant` text are
        candidates)
      - Minimum 48dp touch targets throughout
@@ -502,6 +518,12 @@ Future Enhancement Phases
 - Edit existing worksheets
 - Create new worksheets
 - Worksheet sharing (export/import)
+- Accessibility follow-ups deferred from the Phase 9 screen-reader change:
+  - Screen-reader *announcement* of per-row worksheet errors (row errors become
+    reachable once users can build mismatched rows; the error state itself is
+    already exposed via `errorText` semantics)
+  - A discoverable semantics action for the label-cell long-press gesture
+    (transfer the active row's value into another row)
 
 ### Phase 13: iOS Support
 

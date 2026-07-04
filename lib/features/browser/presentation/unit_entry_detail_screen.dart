@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -172,17 +173,26 @@ class _DetailText extends StatelessWidget {
       return textWidget;
     }
 
-    return GestureDetector(
-      onLongPress: () {
-        Clipboard.setData(ClipboardData(text: text));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Copied: $text'),
-            duration: const Duration(seconds: 2),
-          ),
-        );
+    void copy() {
+      Clipboard.setData(ClipboardData(text: text));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Copied: $text'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
+
+    return Semantics(
+      // Expose the long-press copy gesture as a discoverable action in the
+      // assistive-technology actions menu.
+      customSemanticsActions: {
+        const CustomSemanticsAction(label: 'Copy'): copy,
       },
-      child: textWidget,
+      child: GestureDetector(
+        onLongPress: copy,
+        child: textWidget,
+      ),
     );
   }
 }

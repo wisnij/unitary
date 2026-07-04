@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -52,6 +53,34 @@ void main() {
     );
   }
 
+  // Returns the first semantics node exposing a custom action with [label].
+  SemanticsNode? findCustomActionNode(WidgetTester tester, String label) {
+    SemanticsNode? result;
+    bool visit(SemanticsNode node) {
+      if (result != null) {
+        return false;
+      }
+      final ids = node.getSemanticsData().customSemanticsActionIds;
+      if (ids != null) {
+        for (final id in ids) {
+          if (CustomSemanticsAction.getAction(id)?.label == label) {
+            result = node;
+            return false;
+          }
+        }
+      }
+      node.visitChildren(visit);
+      return true;
+    }
+
+    var root = tester.getSemantics(find.byType(MaterialApp));
+    while (root.parent != null) {
+      root = root.parent!;
+    }
+    visit(root);
+    return result;
+  }
+
   group('AboutScreen', () {
     testWidgets('renders app bar with title "About"', (tester) async {
       await tester.pumpWidget(buildApp());
@@ -96,6 +125,53 @@ void main() {
       await tester.pump();
 
       expect(find.textContaining('Copied:'), findsOneWidget);
+    });
+
+    testWidgets('copy tiles expose labeled custom semantics actions', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            settingsRepositoryProvider.overrideWithValue(repo),
+            buildMetadataProvider.overrideWithValue('20260315-abc1234'),
+          ],
+          child: const MaterialApp(home: AboutScreen()),
+        ),
+      );
+      await tester.pump();
+
+      // Both copyable tiles expose their action in the semantics tree.
+      expect(findCustomActionNode(tester, 'Copy version'), isNotNull);
+      expect(findCustomActionNode(tester, 'Copy build'), isNotNull);
+
+      handle.dispose();
+    });
+
+    testWidgets('invoking the Copy version action shows the confirmation', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(buildApp());
+      await tester.pump();
+
+      final node = findCustomActionNode(tester, 'Copy version');
+      expect(node, isNotNull);
+
+      final actionId = CustomSemanticsAction.getIdentifier(
+        const CustomSemanticsAction(label: 'Copy version'),
+      );
+      node!.owner!.performAction(
+        node.id,
+        SemanticsAction.customAction,
+        actionId,
+      );
+      await tester.pump();
+
+      expect(find.textContaining('Copied:'), findsOneWidget);
+
+      handle.dispose();
     });
 
     testWidgets('Build tile is hidden when buildMetadata is empty', (

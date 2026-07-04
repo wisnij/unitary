@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -66,7 +67,9 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
       if (i == activeIndex) {
         continue; // let the user's raw text stand
       }
-      final newText = values[i].text;
+      // Error strings are shown via the field's errorText decoration, not as
+      // field content, so an erroring cell's field is left empty.
+      final newText = values[i].isError ? '' : values[i].text;
       if (controllers[i].text != newText) {
         controllers[i].text = newText;
       }
@@ -295,62 +298,71 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
         // Input cell — fills remaining space via FlexColumnWidth.
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
-          child: GestureDetector(
-            onLongPress: () {
-              final text = controllers[i].text;
-              if (text.isEmpty) {
-                return;
-              }
-              Clipboard.setData(ClipboardData(text: text));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Copied $text'),
-                  duration: const Duration(seconds: 1),
-                ),
-              );
+          child: Semantics(
+            // Expose the long-press copy gesture as a discoverable action in
+            // the assistive-technology actions menu.
+            customSemanticsActions: {
+              const CustomSemanticsAction(label: 'Copy value'): () =>
+                  _copyCellValue(context, controllers[i]),
             },
-            child: Focus(
-              onFocusChange: (focused) {
-                if (focused) {
-                  _onRowFocused(activeId, i);
-                }
-              },
-              child: TextField(
-                controller: controllers[i],
-                style: values[i].isError
-                    ? TextStyle(
-                        color: Theme.of(context).colorScheme.error,
-                      )
-                    : null,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                  signed: true,
-                ),
-                inputFormatters: [
-                  FilteringTextInputFormatter.allow(
-                    RegExp(r'^-?[0-9]*\.?[0-9]*(?:[eE][+-]?[0-9]*)?$'),
+            child: GestureDetector(
+              onLongPress: () => _copyCellValue(context, controllers[i]),
+              child: Focus(
+                onFocusChange: (focused) {
+                  if (focused) {
+                    _onRowFocused(activeId, i);
+                  }
+                },
+                child: TextField(
+                  controller: controllers[i],
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: true,
                   ),
-                ],
-                decoration: InputDecoration(
-                  border: const OutlineInputBorder(),
-                  isDense: true,
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 10,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^-?[0-9]*\.?[0-9]*(?:[eE][+-]?[0-9]*)?$'),
+                    ),
+                  ],
+                  decoration: InputDecoration(
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10,
+                    ),
+                    errorText: values[i].isError ? values[i].text : null,
+                    fillColor: isActive
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer.withValues(alpha: 0.3)
+                        : null,
+                    filled: isActive,
                   ),
-                  fillColor: isActive
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.primaryContainer.withValues(alpha: 0.3)
-                      : null,
-                  filled: isActive,
+                  onChanged: (text) => _onRowChanged(activeId, i, text),
                 ),
-                onChanged: (text) => _onRowChanged(activeId, i, text),
               ),
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// Copies the cell's current text to the clipboard with a confirmation
+  /// snackbar; a no-op when the cell is empty.  Shared by the long-press
+  /// gesture and its custom semantics action.
+  void _copyCellValue(BuildContext context, TextEditingController controller) {
+    final text = controller.text;
+    if (text.isEmpty) {
+      return;
+    }
+    Clipboard.setData(ClipboardData(text: text));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Copied $text'),
+        duration: const Duration(seconds: 1),
+      ),
     );
   }
 }

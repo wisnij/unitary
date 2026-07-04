@@ -65,7 +65,9 @@ When `WorksheetCellResult.isError`, the cell keeps the original presentation —
 - *Reserved helper line on all rows (rejected)*: Material's standard fix for the layout shift, but makes every row ~20 dp taller, costing vertical density on a screen whose value is seeing many rows at once.
 - *Collapsed `errorStyle` hack (validated but rejected)*: a spike confirmed `errorStyle: TextStyle(height: 0.001, fontSize: 0.001)` collapses the subtext row to 0 px while keeping the semantic hint, and using `errorText: 'Error'` as the hint avoids double-reading.  Works, but relies on empirically-verified rather than documented styling behavior; set aside in favor of the simpler icon approach.
 
-Trade-off accepted: the screen reader reads the error message as field *content* plus the icon's "Error" label, rather than through the decoration's native invalid-field semantics.  Revisit alongside the Phase 12 per-row announcement work if needed.
+The native invalid-field state is restored through `Semantics(validationResult: SemanticsValidationResult.invalid)` — the purpose-built framework API (which Material's own `errorText` does not even use yet in this SDK).  Placement matters, per probe: on a `Semantics` widget shared with `customSemanticsActions` the property stays on the wrapper's node, but on an inner `Semantics` wrapping the `TextField` directly it merges into the field's own text-field node (`value: "out of bounds", validationResult: invalid`) — exactly the native semantics `errorText` would have provided, with zero layout impact.  The cell therefore uses two `Semantics` widgets: outer for the copy action, inner for the validation state.
+
+Remaining redundancy to evaluate in the on-device TalkBack pass: the icon's "Error" label plus the invalid state may be announced together; if so, drop the icon's `semanticLabel` and rely on `validationResult` alone.
 
 ### D4: `CustomSemanticsAction` on copy gestures; `button: true` on the idle example
 

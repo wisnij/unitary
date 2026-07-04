@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/semantics.dart' show CustomSemanticsAction;
+import 'package:flutter/semantics.dart'
+    show CustomSemanticsAction, SemanticsValidationResult;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -311,54 +312,66 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
                     _onRowFocused(activeId, i);
                   }
                 },
-                child: TextField(
-                  controller: controllers[i],
-                  style: values[i].isError
-                      ? TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                        )
-                      : null,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                    signed: true,
-                  ),
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(
-                      RegExp(r'^-?[0-9]*\.?[0-9]*(?:[eE][+-]?[0-9]*)?$'),
-                    ),
-                  ],
-                  decoration: InputDecoration(
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 10,
-                    ),
-                    // Non-color error indicator, matching the freeform error
-                    // display; the semantic label conveys the error state to
-                    // assistive technology alongside the message text.
-                    prefixIcon: values[i].isError
-                        ? Icon(
-                            Icons.error_outline,
+                // This inner Semantics must wrap the TextField directly: its
+                // validationResult then merges into the text field's own
+                // semantics node, so assistive technology announces the error
+                // state as first-class field state.  (On the outer wrapper
+                // above it would stay on the wrapper's node instead.)
+                child: Semantics(
+                  validationResult: values[i].isError
+                      ? SemanticsValidationResult.invalid
+                      : SemanticsValidationResult.none,
+                  child: TextField(
+                    controller: controllers[i],
+                    style: values[i].isError
+                        ? TextStyle(
                             color: Theme.of(context).colorScheme.error,
-                            size: 20,
-                            semanticLabel: 'Error',
                           )
                         : null,
-                    // The default prefix-icon minimum (48 dp) would make
-                    // erroring fields taller than normal ones.
-                    prefixIconConstraints: const BoxConstraints(
-                      minWidth: 32,
-                      minHeight: 0,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                      signed: true,
                     ),
-                    fillColor: isActive
-                        ? Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer.withValues(alpha: 0.3)
-                        : null,
-                    filled: isActive,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(
+                        RegExp(r'^-?[0-9]*\.?[0-9]*(?:[eE][+-]?[0-9]*)?$'),
+                      ),
+                    ],
+                    decoration: InputDecoration(
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10,
+                      ),
+                      // Non-color error indicator, matching the freeform error
+                      // display; the semantic label conveys the error state to
+                      // assistive technology alongside the message text.
+                      prefixIcon: values[i].isError
+                          ? Icon(
+                              Icons.error_outline,
+                              color: Theme.of(context).colorScheme.error,
+                              size: 20,
+                              semanticLabel: 'Error',
+                            )
+                          : null,
+                      // The default prefix-icon minimum (48 dp) would make
+                      // erroring fields taller than normal ones.
+                      prefixIconConstraints: const BoxConstraints(
+                        minWidth: 32,
+                        minHeight: 0,
+                      ),
+                      fillColor: isActive
+                          ? Theme.of(
+                              context,
+                            ).colorScheme.primaryContainer.withValues(
+                              alpha: 0.3,
+                            )
+                          : null,
+                      filled: isActive,
+                    ),
+                    onChanged: (text) => _onRowChanged(activeId, i, text),
                   ),
-                  onChanged: (text) => _onRowChanged(activeId, i, text),
                 ),
               ),
             ),

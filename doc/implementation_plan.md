@@ -412,8 +412,10 @@ Implementation Phases
        sealed `EvaluationResult` keeps new variants from shipping without a
        spoken form.  Worksheet cell errors keep the red in-field message and
        gain a freeform-style `error_outline` prefix icon with an "Error"
-       semantic label (non-color indicator fixing WCAG 1.4.1, error state
-       conveyed to screen readers; field heights unchanged).  The idle-example hint
+       semantic label (non-color indicator fixing WCAG 1.4.1); the erroring
+       field's semantics node is marked `SemanticsValidationResult.invalid`,
+       so screen readers get native invalid-field state with field heights
+       unchanged.  The idle-example hint
        exposes `button` semantics, and every long-press-to-copy gesture
        (worksheet cells, About rows, unit detail) exposes a labeled
        `CustomSemanticsAction` discoverable in TalkBack's actions menu /

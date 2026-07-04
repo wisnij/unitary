@@ -19,8 +19,10 @@ SHALL show the error string as its text rendered in `colorScheme.error`,
 preceded by an error icon (`Icons.error_outline` in the error color, matching
 the freeform error display) as the field's prefix icon, so the error state is
 signaled by more than color alone.  The icon SHALL expose the semantic label
-"Error" so assistive technology conveys the error state alongside the message
-text.  An erroring field SHALL render at the same height as a non-error field,
+"Error", and the erroring field's own text-field semantics node SHALL carry
+`SemanticsValidationResult.invalid`, so assistive technology conveys the error
+state as first-class field state alongside the message text.  An erroring
+field SHALL render at the same height as a non-error field,
 so row spacing is unaffected by errors appearing or disappearing.  All other
 field styling (border, background, padding) SHALL remain unchanged.
 
@@ -38,6 +40,11 @@ field styling (border, background, padding) SHALL remain unchanged.
 - **WHEN** a row displays an error value
 - **THEN** the error icon exposes the semantic label "Error" in the semantics
   tree
+
+#### Scenario: Erroring field marked invalid
+- **WHEN** a row displays an error value
+- **THEN** the field's text-field semantics node has
+  `validationResult: invalid`, and valid rows' fields do not
 
 #### Scenario: Error row height matches normal rows
 - **WHEN** one row displays an error value and another displays a valid number

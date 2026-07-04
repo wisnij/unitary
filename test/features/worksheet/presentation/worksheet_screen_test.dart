@@ -212,6 +212,42 @@ void main() {
       handle.dispose();
     });
 
+    testWidgets('erroring fields are marked invalid in semantics', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await pumpTemperatureError(tester);
+
+      // The four erroring fields carry validationResult: invalid on their
+      // own text-field semantics node; the two valid fields do not.
+      var invalidFields = 0;
+      var otherFields = 0;
+      void visit(SemanticsNode node) {
+        final data = node.getSemanticsData();
+        if (data.flagsCollection.isTextField) {
+          if (data.validationResult == SemanticsValidationResult.invalid) {
+            invalidFields++;
+          } else {
+            otherFields++;
+          }
+        }
+        node.visitChildren((child) {
+          visit(child);
+          return true;
+        });
+      }
+
+      var root = tester.getSemantics(find.byType(MaterialApp));
+      while (root.parent != null) {
+        root = root.parent!;
+      }
+      visit(root);
+      expect(invalidFields, 4);
+      expect(otherFields, 2);
+
+      handle.dispose();
+    });
+
     testWidgets('error field height matches normal field height', (
       tester,
     ) async {

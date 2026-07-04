@@ -17,6 +17,7 @@
 - [x] 3.1 Write widget tests: erroring cell shows the message in-field in the error color with an `error_outline` prefix icon carrying an "Error" semantic label; error and normal fields render at the same height; non-error cells unchanged
 - [x] 3.2 Keep error rendering in-field in `worksheet_screen.dart` and add the freeform-style error prefix icon with overridden `prefixIconConstraints` (revised from the original `errorText` approach, which made erroring rows taller — see design D3)
 - [x] 3.3 Verify row height uniformity with an error present in a widget test and visually (on-device visual check covered by 5.2)
+- [x] 3.4 Mark erroring fields `SemanticsValidationResult.invalid` via an inner `Semantics` wrapping the `TextField` directly (merges into the field's own node; on the outer copy-action wrapper it would not), with a test asserting invalid on error fields only
 
 ## 4. Idle-example button and copy actions
 
@@ -28,6 +29,6 @@
 ## 5. Verification and documentation
 
 - [x] 5.1 Run `flutter test --reporter failures-only` and `flutter analyze`; fix any failures (1953 tests passing, no analyzer issues)
-- [ ] 5.2 On-device TalkBack pass: result announcements in both evaluation modes, worksheet error reading, actions menu shows copy actions, idle example announced as button
+- [ ] 5.2 On-device TalkBack pass: result announcements in both evaluation modes, worksheet error reading (check how the invalid field state and the icon's "Error" label combine — drop the icon's `semanticLabel` if redundant), error icon appearance in the dense fields, actions menu shows copy actions, idle example announced as button
 - [x] 5.3 Update `doc/implementation_plan.md` (check off the screen-reader item under Phase 9) and `doc/design_progress.md`; note the Phase 12 deferrals (per-row error announcements, label-cell transfer gesture labeling)
 - [x] 5.4 Update README project status if warranted

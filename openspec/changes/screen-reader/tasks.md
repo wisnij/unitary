@@ -14,9 +14,9 @@
 
 ## 3. Worksheet cell errors
 
-- [x] 3.1 Write widget tests: erroring cell has empty field text and the error string as `errorText`; error semantics exposed; non-error cells unchanged; red `style` override gone
-- [x] 3.2 Change error rendering in `worksheet_screen.dart` from red in-field text to `errorText` + empty field value; remove the error text `style` override
-- [x] 3.3 Verify table row alignment with an error present (label cell vs. taller input cell) in a widget test and visually (on-device visual check covered by 5.2)
+- [x] 3.1 Write widget tests: erroring cell shows the message in-field in the error color with an `error_outline` prefix icon carrying an "Error" semantic label; error and normal fields render at the same height; non-error cells unchanged
+- [x] 3.2 Keep error rendering in-field in `worksheet_screen.dart` and add the freeform-style error prefix icon with overridden `prefixIconConstraints` (revised from the original `errorText` approach, which made erroring rows taller — see design D3)
+- [x] 3.3 Verify row height uniformity with an error present in a widget test and visually (on-device visual check covered by 5.2)
 
 ## 4. Idle-example button and copy actions
 

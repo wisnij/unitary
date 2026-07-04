@@ -55,11 +55,17 @@ A presentation-layer helper (e.g. `resultSpeechLabel(EvaluationResult)` next to 
 
 **Alternative rejected:** rebuilding speech from structured `Quantity` data in the provider.  The state variants store pre-formatted strings assembled with display-specific logic (output-unit disambiguation, `replaceFirst('= ', '')` adjustments, reciprocal lines); regenerating them in parallel would duplicate that logic and drift.  String rewriting is safe because we own the string grammar: our formatters always emit the signed `e+N` form, so the exponent regex cannot misfire, and symbol wording matches the operator-key label map's spirit.  (A user-typed output unit like `2e+3 m` would also be rewritten — into a *correct* spoken form, so this is harmless.)
 
-### D3: Worksheet cell errors via `InputDecoration.errorText`
+### D3: Worksheet cell errors stay in-field, with a semantic error icon (revised)
 
-When `WorksheetCellResult.isError`, the cell's `TextField` gets `errorText: <error string>` and an **empty field value**, replacing today's red-styled error text inside the field.  This buys, for free: native error semantics (screen reader announces the field as invalid with the error message), a visible non-color indicator (message line below the field), and removal of the "error string pretends to be field content" confusion.
+When `WorksheetCellResult.isError`, the cell keeps the original presentation — the error string as the field's text in `colorScheme.error` — and gains a leading `Icons.error_outline` prefix icon in the error color, matching the freeform error display.  The icon is the non-color indicator (WCAG 1.4.1) and carries `semanticLabel: 'Error'`, so assistive technology hears the error state alongside the message (which it reads as the field's value).  The icon's default 48 dp minimum constraints are overridden so the erroring field renders at exactly the same height as a normal one; a widget test asserts the height parity.
 
-Layout note: `errorText` adds a helper-text line, growing that `TableRow`'s height.  `Table` handles per-row heights; the label cell shares the row, so verify vertical alignment visually and in widget tests.  The red text `style` override on the field becomes unnecessary and is removed.
+**History of this decision** (first implementation used `InputDecoration.errorText`, then was reverted):
+
+- *`errorText` (rejected on device)*: native error semantics for free, but the assistive-text line grows only the erroring rows, so worksheet row spacing jumps around as errors appear/disappear — visually unacceptable.
+- *Reserved helper line on all rows (rejected)*: Material's standard fix for the layout shift, but makes every row ~20 dp taller, costing vertical density on a screen whose value is seeing many rows at once.
+- *Collapsed `errorStyle` hack (validated but rejected)*: a spike confirmed `errorStyle: TextStyle(height: 0.001, fontSize: 0.001)` collapses the subtext row to 0 px while keeping the semantic hint, and using `errorText: 'Error'` as the hint avoids double-reading.  Works, but relies on empirically-verified rather than documented styling behavior; set aside in favor of the simpler icon approach.
+
+Trade-off accepted: the screen reader reads the error message as field *content* plus the icon's "Error" label, rather than through the decoration's native invalid-field semantics.  Revisit alongside the Phase 12 per-row announcement work if needed.
 
 ### D4: `CustomSemanticsAction` on copy gestures; `button: true` on the idle example
 
@@ -77,6 +83,6 @@ The idle-example tap target gains `button: true` semantics (plus the existing ta
 
 - [Live-region behavior differs between TalkBack and VoiceOver; iOS handling is less standardized] → Android is the primary target; add an on-device TalkBack pass to the task list, VoiceOver deferred with iOS support generally.
 - [Real-time mode announces intermediate errors mid-typing] → accepted per convention; polite queueing plus the 500 ms debounce bounds the noise, and on-submit mode exists.
-- [`errorText` changes worksheet row height when errors appear/disappear] → visual verification task; predefined templates rarely error, so churn is minimal in practice.
+- [The error prefix icon's default 48 dp minimum would grow the dense 44 dp fields] → overridden via `prefixIconConstraints`; a widget test asserts error and normal fields render at identical heights.
 - [`ExcludeSemantics` over the result hides individual text nodes from AT browsing] → intentional; the composed label carries the same content.  The result text was never selectable, so nothing is lost.
 - [String-level speech rewrite could mis-render exotic user-typed output units] → the rewrite only touches our five symbols and the signed-exponent pattern; worst case is slightly stilted but semantically correct speech.

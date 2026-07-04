@@ -67,9 +67,7 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
       if (i == activeIndex) {
         continue; // let the user's raw text stand
       }
-      // Error strings are shown via the field's errorText decoration, not as
-      // field content, so an erroring cell's field is left empty.
-      final newText = values[i].isError ? '' : values[i].text;
+      final newText = values[i].text;
       if (controllers[i].text != newText) {
         controllers[i].text = newText;
       }
@@ -315,6 +313,11 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
                 },
                 child: TextField(
                   controller: controllers[i],
+                  style: values[i].isError
+                      ? TextStyle(
+                          color: Theme.of(context).colorScheme.error,
+                        )
+                      : null,
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                     signed: true,
@@ -331,7 +334,23 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
                       horizontal: 10,
                       vertical: 10,
                     ),
-                    errorText: values[i].isError ? values[i].text : null,
+                    // Non-color error indicator, matching the freeform error
+                    // display; the semantic label conveys the error state to
+                    // assistive technology alongside the message text.
+                    prefixIcon: values[i].isError
+                        ? Icon(
+                            Icons.error_outline,
+                            color: Theme.of(context).colorScheme.error,
+                            size: 20,
+                            semanticLabel: 'Error',
+                          )
+                        : null,
+                    // The default prefix-icon minimum (48 dp) would make
+                    // erroring fields taller than normal ones.
+                    prefixIconConstraints: const BoxConstraints(
+                      minWidth: 32,
+                      minHeight: 0,
+                    ),
                     fillColor: isActive
                         ? Theme.of(
                             context,

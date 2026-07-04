@@ -177,7 +177,7 @@ void main() {
       await tester.pump();
     }
 
-    testWidgets('erroring cell shows errorText below an empty field', (
+    testWidgets('erroring cell shows the message in-field with error color', (
       tester,
     ) async {
       await pumpTemperatureError(tester);
@@ -186,48 +186,42 @@ void main() {
           .widgetList<TextField>(find.byType(TextField))
           .toList();
       final celsius = fields[1];
-      expect(celsius.controller!.text, isEmpty);
-      expect(celsius.decoration?.errorText, 'out of bounds');
+      expect(celsius.controller!.text, 'out of bounds');
+      final context = tester.element(find.byType(TextField).at(1));
+      expect(celsius.style?.color, Theme.of(context).colorScheme.error);
     });
 
-    testWidgets('erroring cell has no red text style override', (
+    testWidgets('erroring cell shows an error prefix icon', (tester) async {
+      await pumpTemperatureError(tester);
+
+      // With -1 K, four function rows error (Celsius, Fahrenheit, Réaumur,
+      // gas mark); each shows the freeform-style error icon.
+      expect(find.byIcon(Icons.error_outline), findsNWidgets(4));
+    });
+
+    testWidgets('error state is exposed to assistive technology', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      await pumpTemperatureError(tester);
+
+      // Each error icon carries an "Error" semantic label, so a screen
+      // reader conveys the error state alongside the message text.
+      expect(find.bySemanticsLabel('Error'), findsNWidgets(4));
+
+      handle.dispose();
+    });
+
+    testWidgets('error field height matches normal field height', (
       tester,
     ) async {
       await pumpTemperatureError(tester);
 
-      final fields = tester
-          .widgetList<TextField>(find.byType(TextField))
-          .toList();
-      expect(fields[1].style, isNull);
-    });
-
-    testWidgets('error is exposed to assistive technology', (tester) async {
-      final handle = tester.ensureSemantics();
-      await pumpTemperatureError(tester);
-
-      // The decoration's errorText is exposed as the text field's semantic
-      // hint, so a screen reader reads the error when focusing the field.
-      // With -1 K, four function rows error (Celsius, Fahrenheit, Réaumur,
-      // gas mark).
-      var errorHints = 0;
-      void visit(SemanticsNode node) {
-        if (node.hint == 'out of bounds') {
-          errorHints++;
-        }
-        node.visitChildren((child) {
-          visit(child);
-          return true;
-        });
-      }
-
-      var root = tester.getSemantics(find.byType(MaterialApp));
-      while (root.parent != null) {
-        root = root.parent!;
-      }
-      visit(root);
-      expect(errorHints, 4);
-
-      handle.dispose();
+      // The prefix icon must not change the field height (its default 48 dp
+      // minimum constraints are overridden), so row spacing stays uniform.
+      final errorHeight = tester.getSize(find.byType(TextField).at(1)).height;
+      final normalHeight = tester.getSize(find.byType(TextField).at(3)).height;
+      expect(errorHeight, normalHeight);
     });
 
     testWidgets('non-error cells are unaffected', (tester) async {
@@ -238,13 +232,15 @@ void main() {
           .toList();
       // Kelvin row keeps the user's raw text.
       expect(fields[0].controller!.text, '-1');
-      expect(fields[0].decoration?.errorText, isNull);
-      // Rankine row shows a normal converted value with no error.
+      expect(fields[0].style, isNull);
+      expect(fields[0].decoration?.prefixIcon, isNull);
+      // Rankine row shows a normal converted value with no error styling.
       expect(fields[3].controller!.text, isNotEmpty);
-      expect(fields[3].decoration?.errorText, isNull);
+      expect(fields[3].style, isNull);
+      expect(fields[3].decoration?.prefixIcon, isNull);
     });
 
-    testWidgets('valid input shows no errorText anywhere', (tester) async {
+    testWidgets('valid input shows no error icon anywhere', (tester) async {
       await tester.pumpWidget(buildApp());
       selectTemplate(tester, 'temperature');
       await tester.pumpAndSettle();
@@ -253,24 +249,13 @@ void main() {
       await tester.pump(const Duration(milliseconds: 600));
       await tester.pump();
 
+      expect(find.byIcon(Icons.error_outline), findsNothing);
       final fields = tester
           .widgetList<TextField>(find.byType(TextField))
           .toList();
       for (final field in fields) {
-        expect(field.decoration?.errorText, isNull);
+        expect(field.style, isNull);
       }
-    });
-
-    testWidgets('table renders cleanly with a taller error row present', (
-      tester,
-    ) async {
-      await pumpTemperatureError(tester);
-
-      // No layout exceptions, and the row labels alongside the taller
-      // error cells remain visible.
-      expect(tester.takeException(), isNull);
-      expect(find.text('Celsius'), findsOneWidget);
-      expect(find.text('Fahrenheit'), findsOneWidget);
     });
   });
 

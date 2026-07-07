@@ -48,10 +48,10 @@ The visible child widgets are wrapped in `ExcludeSemantics` (same pattern as the
 
 A `formatSpeech(String)` utility in `lib/shared/utils/quantity_formatter.dart` rewrites an already-formatted display string into its spoken form:
 
-- `=` → "equals", `/` → "per", `^` → "to the power", `×` → "times"
+- `=` → "equals", `/` → "per", `^` → "to the power", `×`/`*` → "times", `|` → "over" (`*` and `|` never appear in formatter output but do appear in spoken definition expressions; `|` was added after the device pass showed default punctuation verbosity drops the pipe, losing fraction structure)
 - exponent suffix `e+N` / `e-N` (digit followed by `e`, sign, digits — exactly the form our formatters emit) → " times 10 to the [negative] N"
 
-A presentation-layer helper (e.g. `resultSpeechLabel(EvaluationResult)` next to `ResultDisplay`) does an **exhaustive switch** over the sealed `EvaluationResult`, composing each variant's spoken label from its existing display strings via `formatSpeech`, joining multi-line variants (e.g. conversion + reciprocal line) with sentence breaks, and prefixing `EvaluationError` with "Error: ".  Idle announces the instruction/example text.
+A presentation-layer helper (e.g. `resultSpeechLabel(EvaluationResult)` next to `ResultDisplay`) does an **exhaustive switch** over the sealed `EvaluationResult`, composing each variant's spoken label from its existing display strings via `formatSpeech`, joining multi-line variants (e.g. conversion + reciprocal line) with sentence breaks, and prefixing success-type variants with "Result: " and `EvaluationError` with "Error: " (the prefixes mark the announcement as output, distinguishing it from the screen reader's echo of the typed input — a device-pass finding).  Idle announces the instruction/example text.
 
 **Alternative rejected:** rebuilding speech from structured `Quantity` data in the provider.  The state variants store pre-formatted strings assembled with display-specific logic (output-unit disambiguation, `replaceFirst('= ', '')` adjustments, reciprocal lines); regenerating them in parallel would duplicate that logic and drift.  String rewriting is safe because we own the string grammar: our formatters always emit the signed `e+N` form, so the exponent regex cannot misfire, and symbol wording matches the operator-key label map's spirit.  (A user-typed output unit like `2e+3 m` would also be rewritten — into a *correct* spoken form, so this is harmless.)
 

@@ -310,4 +310,64 @@ void main() {
       expect(formatOutputUnit(''), '');
     });
   });
+
+  group('formatSpeech', () {
+    test('words all structural symbols', () {
+      expect(
+        formatSpeech('= 8 kg m / s^2'),
+        'equals 8 kg m per s to the power 2',
+      );
+    });
+
+    test('words division without surrounding spaces', () {
+      expect(formatSpeech('100 km/hr'), '100 km per hr');
+    });
+
+    test('words multiplication sign', () {
+      expect(formatSpeech('0.5 × 5 km'), '0.5 times 5 km');
+    });
+
+    test('words asterisk multiplication in definition expressions', () {
+      expect(formatSpeech('x * 9|5 + 32'), 'x times 9 over 5 + 32');
+    });
+
+    test('words numeric division as "over"', () {
+      expect(formatSpeech('1|2 m'), '1 over 2 m');
+    });
+
+    test('speaks positive exponent', () {
+      expect(formatSpeech('1.5e+3 m'), '1.5 times 10 to the 3 m');
+    });
+
+    test('speaks negative exponent', () {
+      expect(formatSpeech('2.0e-6 s'), '2.0 times 10 to the negative 6 s');
+    });
+
+    test('speaks exponent on negative mantissa', () {
+      expect(formatSpeech('-1.5e+3 m'), '-1.5 times 10 to the 3 m');
+    });
+
+    test('combines exponent and symbol rewriting', () {
+      expect(
+        formatSpeech('= 1.5e+3 m / s'),
+        'equals 1.5 times 10 to the 3 m per s',
+      );
+    });
+
+    test('leaves unsigned scientific-style text unchanged', () {
+      expect(formatSpeech('2e3 m'), '2e3 m');
+    });
+
+    test('leaves signed exponent form not preceded by a digit unchanged', () {
+      expect(formatSpeech('e+3'), 'e+3');
+    });
+
+    test('plain string passes through unchanged', () {
+      expect(formatSpeech('42 meters'), '42 meters');
+    });
+
+    test('empty string is returned unchanged', () {
+      expect(formatSpeech(''), '');
+    });
+  });
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -686,6 +687,55 @@ void main() {
       await tester.longPress(find.text('tempC').first);
       await tester.pump();
       expect(lastClipboardText(), 'tempC');
+    });
+
+    testWidgets('copyable text exposes a Copy custom semantics action', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final repo = _buildRepo();
+      await tester.pumpWidget(_buildScreen('ft', BrowseEntryKind.unit, repo));
+
+      // Find the first node exposing the "Copy" custom action (the Name
+      // section's copyable text, 'ft').
+      SemanticsNode? found;
+      bool visit(SemanticsNode node) {
+        if (found != null) {
+          return false;
+        }
+        final ids = node.getSemanticsData().customSemanticsActionIds;
+        if (ids != null) {
+          for (final id in ids) {
+            if (CustomSemanticsAction.getAction(id)?.label == 'Copy') {
+              found = node;
+              return false;
+            }
+          }
+        }
+        node.visitChildren(visit);
+        return true;
+      }
+
+      var root = tester.getSemantics(find.byType(MaterialApp));
+      while (root.parent != null) {
+        root = root.parent!;
+      }
+      visit(root);
+      expect(found, isNotNull);
+
+      // Invoking the action copies the text, same as the long press.
+      final actionId = CustomSemanticsAction.getIdentifier(
+        const CustomSemanticsAction(label: 'Copy'),
+      );
+      found!.owner!.performAction(
+        found!.id,
+        SemanticsAction.customAction,
+        actionId,
+      );
+      await tester.pump();
+      expect(lastClipboardText(), 'ft');
+
+      handle.dispose();
     });
   });
 

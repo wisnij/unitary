@@ -17,14 +17,18 @@ purchases, tracking, data harvesting, or any other monetization scheme.
 Project Status
 --------------
 
-**Current Phase:** Currency Support\
-**Last Updated:** June 15, 2026
+**Current Phase:** Polish & Testing\
+**Last Updated:** July 4, 2026
 
-Phases 0-8 are complete with 1838 passing tests.  The expression parser,
+Phases 0-8 are complete with 1954 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
 unit database, worksheet mode, unit browser, cross-session data persistence,
 freeform conversion history, predictive completion, and currency support are
-fully implemented.  Currency exchange rates are fetched automatically on launch
+fully implemented.  Phase 9 (Polish & Testing) is in progress: the application
+icon, responsive phone/tablet layouts, display safe areas, and screen-reader
+support (semantic labels on custom controls, live-region announcement of
+evaluation results, accessible worksheet errors, and discoverable copy actions)
+are done.  Currency exchange rates are fetched automatically on launch
 (24-hour staleness check) from the Frankfurter v2 API, including precious metals
 (XAU, XAG, XPT).  Stored rates are applied to the unit repository at startup so
 currency conversions are live from the first frame.  A "Currency rates" section

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:unitary/core/domain/models/dimension.dart';
@@ -333,5 +334,128 @@ void main() {
         expect(texts.length, 1);
       },
     );
+  });
+
+  group('ResultDisplay live region semantics', () {
+    // ResultDisplay carries no evaluation-mode dependency, so asserting the
+    // live region per state covers both real-time and on-submit modes: the
+    // screen renders the same widget unconditionally in either mode.
+
+    testWidgets('success state is a live region with the spoken label', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      final state = EvaluationSuccess(
+        result: Quantity(8, Dimension({'kg': 1, 'm': 1, 's': -2})),
+        formattedResult: '8 kg m / s^2',
+      );
+      await tester.pumpWidget(wrap(ResultDisplay(result: state)));
+
+      final expected = resultSpeechLabel(state);
+      final node = tester.getSemantics(find.bySemanticsLabel(expected));
+      expect(node.flagsCollection.isLiveRegion, isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('error state announces with Error prefix', (tester) async {
+      final handle = tester.ensureSemantics();
+      const state = EvaluationError(message: 'Cannot add m and kg');
+      await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+
+      final node = tester.getSemantics(
+        find.bySemanticsLabel('Error: Cannot add m and kg'),
+      );
+      expect(node.flagsCollection.isLiveRegion, isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('idle state is a live region', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        wrap(const ResultDisplay(result: EvaluationIdle())),
+      );
+
+      final node = tester.getSemantics(
+        find.bySemanticsLabel('Enter an expression above.'),
+      );
+      expect(node.flagsCollection.isLiveRegion, isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('tappable idle example exposes button semantics', (
+      tester,
+    ) async {
+      final handle = tester.ensureSemantics();
+      const state = EvaluationIdle(
+        example: FreeformExample(inputExpression: '60 mph'),
+      );
+      await tester.pumpWidget(
+        wrap(ResultDisplay(result: state, onTap: () {})),
+      );
+
+      final node = tester.getSemantics(
+        find.bySemanticsLabel(resultSpeechLabel(state)),
+      );
+      expect(node.flagsCollection.isButton, isTrue);
+      expect(node.getSemanticsData().hasAction(SemanticsAction.tap), isTrue);
+
+      handle.dispose();
+    });
+
+    testWidgets('idle display without onTap is not a button', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        wrap(const ResultDisplay(result: EvaluationIdle())),
+      );
+
+      final node = tester.getSemantics(
+        find.bySemanticsLabel('Enter an expression above.'),
+      );
+      expect(node.flagsCollection.isButton, isFalse);
+
+      handle.dispose();
+    });
+
+    testWidgets('non-idle result is not a button', (tester) async {
+      final handle = tester.ensureSemantics();
+      final state = EvaluationSuccess(
+        result: Quantity.dimensionless(42),
+        formattedResult: '42',
+      );
+      await tester.pumpWidget(wrap(ResultDisplay(result: state)));
+
+      final node = tester.getSemantics(find.bySemanticsLabel('Result: 42'));
+      expect(node.flagsCollection.isButton, isFalse);
+
+      handle.dispose();
+    });
+
+    testWidgets('raw result text is excluded from semantics', (tester) async {
+      final handle = tester.ensureSemantics();
+      const state = ConversionSuccess(
+        convertedValue: 8.04672,
+        formattedResult: '= 8.04672 km',
+        formattedReciprocal: '= (1 / 0.12427424) km',
+        outputUnit: 'km',
+      );
+      await tester.pumpWidget(wrap(const ResultDisplay(result: state)));
+
+      // The visible text widgets are still rendered...
+      expect(find.text('= 8.04672 km'), findsOneWidget);
+      expect(find.text('= (1 / 0.12427424) km'), findsOneWidget);
+      // ...but contribute no semantics nodes of their own; only the composed
+      // spoken label is exposed.
+      expect(find.bySemanticsLabel('= 8.04672 km'), findsNothing);
+      expect(find.bySemanticsLabel('= (1 / 0.12427424) km'), findsNothing);
+      expect(
+        find.bySemanticsLabel(resultSpeechLabel(state)),
+        findsOneWidget,
+      );
+
+      handle.dispose();
+    });
   });
 }

@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: June 27, 2026*
+*Last Updated: July 4, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -488,3 +488,15 @@ Questions that arose during design but haven't been resolved:
   - `WorksheetScreen` branches on a null active id: compact width shows the full-screen template list (`_TemplateList`) until one is selected, then the worksheet (driven by `TwoPaneLayout.compactPrimary` switching left→right); medium/expanded shows the left-pane list plus a centered `_EmptyWorksheetPane` ("Select a worksheet") placeholder, mirroring Browse's empty detail pane; AppBar shows static "Worksheet" title when nothing is selected
   - No new dependencies
   - Design artifacts: `openspec/changes/worksheet-picker/`
+- *Screen-reader support (July 4, 2026)* — Phase 9 accessibility improvement
+  - 1954 tests passing (62 new; 2 removed with dead code)
+  - Freeform result display is an unconditional polite live region (WCAG 4.1.3 status-message convention): `ResultDisplay` wraps its content in `Semantics(liveRegion: true, label: resultSpeechLabel(result))` + `ExcludeSemantics`, so every settled evaluation state (success, conversion, definition, error) is announced without moving focus, in both evaluation modes
+  - `formatSpeech(String)` in `lib/shared/utils/quantity_formatter.dart`: pure string rewrite of formatted display strings into speech-friendly form — `=`→"equals", `/`→"per", `^`→"to the power", `×`/`*`→"times", `|`→"over", signed exponents (`1.5e+3`)→"1.5 times 10 to the 3" ("negative N" for `e-N`); unsigned `2e3` (never emitted by the formatters) is left alone.  The rewrite exists for meaning, not polish: at default screen-reader punctuation verbosity, symbols in a semantics label are skipped entirely, so a literal label would lose the division/exponent/fraction structure
+  - `resultSpeechLabel(EvaluationResult)` in `result_display.dart`: exhaustive `switch` over the sealed type (a new variant without a spoken form is a compile error); "Result: " prefix on success-type states and "Error: " on `EvaluationError` (message verbatim) so announcements are distinguishable from TalkBack's echo of the typed input; idle speaks instruction + example (`→` spoken as "to"); multi-line variants joined as sentences
+  - Worksheet cell errors keep the red in-field message and gain a freeform-style `error_outline` prefix icon (`size: 20`, `semanticLabel: 'Error'`, `prefixIconConstraints` overridden so erroring fields stay the same height as normal ones) — the icon is the non-color indicator (WCAG 1.4.1).  The erroring field's own semantics node is additionally marked `SemanticsValidationResult.invalid` via an inner `Semantics` wrapping the `TextField` directly (on a wrapper shared with the copy action the property stays on the wrapper's node instead of merging into the field's — verified by probe).  An initial `errorText`-based version was reverted: the assistive-text line grew only the erroring rows, making row spacing jump (a collapsed-`errorStyle` variant was spike-validated but set aside as a styling hack; see design.md D3)
+  - Idle-example tap target exposes `button: true` semantics; long-press-to-copy gestures expose labeled `CustomSemanticsAction`s ("Copy value" on worksheet cells, "Copy version"/"Copy build" on About rows, "Copy" on unit detail `_DetailText`), discoverable in TalkBack's actions menu / VoiceOver's rotor
+  - Deferred to Phase 12: per-row worksheet error announcements (unreachable with predefined templates) and a semantics action for the label-cell transfer long-press
+  - Discovered: `WorksheetRowWidget` (`worksheet_row_widget.dart`) was orphaned dead code — only its own test referenced it; deleted along with its test (which encoded the superseded red-text error styling) during verification cleanup
+  - Discovered (on-device TalkBack pass, July 7): `RenderTable` double-applies the cell offset to descendant semantics transforms when a cell's semantics child lacks the `cell` role, shifting AT focus rectangles sideways off the worksheet fields (latent since the worksheet moved to `Table`; visible only with assistive tech on).  Fixed by wrapping every worksheet cell in `TableCell` (which supplies `Semantics(role: SemanticsRole.cell)`); regression test asserts field semantics rects match render rects
+  - On-device TalkBack pass completed July 7; its findings (focus-rect fix, `|` mapping, "Result: " prefix) are folded in above
+  - Design artifacts: `openspec/changes/archive/2026-07-07-screen-reader/`

@@ -28,7 +28,7 @@ The recently shipped semantic-labels change covered the static controls (operato
 
 - `lib/shared/utils/quantity_formatter.dart` — new speech-form formatter sharing exponent computation with the display formatters.
 - `lib/features/freeform/presentation/widgets/result_display.dart` — live-region wrapper and per-variant spoken labels (exhaustive `switch` over the sealed `EvaluationResult`); button semantics on the idle-example tap target.
-- `lib/features/worksheet/presentation/worksheet_screen.dart` — `errorText`-based cell errors (check table row alignment tolerates the added helper-text line); custom semantics action on the value-cell copy gesture.  (`worksheet_row_widget.dart` is orphaned dead code — only its own test references it — and is not modified.)
+- `lib/features/worksheet/presentation/worksheet_screen.dart` — `errorText`-based cell errors (check table row alignment tolerates the added helper-text line); custom semantics action on the value-cell copy gesture.  (`worksheet_row_widget.dart` was orphaned dead code — only its own test referenced it — and was deleted along with its test during verification cleanup.)
 - `lib/features/about/presentation/about_screen.dart`, `lib/features/browser/presentation/unit_entry_detail_screen.dart` — labeled custom semantics actions on existing copy long-presses.
 - Tests: coverage-style semantics tests in the pattern of the semantic-labels change (exhaustive over `EvaluationResult` variants); speech-formatter unit tests; worksheet error-semantics widget tests.
 - No new dependencies; no behavior change for users without assistive technology except the worksheet error display (red in-field text → `errorText` helper line).

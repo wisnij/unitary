@@ -33,3 +33,4 @@
 - [x] 5.2 On-device TalkBack pass: result announcements in both evaluation modes, worksheet error reading (check how the invalid field state and the icon's "Error" label combine — drop the icon's `semanticLabel` if redundant), error icon appearance in the dense fields, actions menu shows copy actions, idle example announced as button.  Findings fixed during the pass: misplaced worksheet focus rectangles (5.5 / design D6), `|` missing from the speech map, "Result: " prefix on success announcements
 - [x] 5.3 Update `doc/implementation_plan.md` (check off the screen-reader item under Phase 9) and `doc/design_progress.md`; note the Phase 12 deferrals (per-row error announcements, label-cell transfer gesture labeling)
 - [x] 5.4 Update README project status if warranted
+- [x] 5.6 Delete the orphaned `WorksheetRowWidget` and its test (verification cleanup — the test encoded the superseded red-text error behavior)

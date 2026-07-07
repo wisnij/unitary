@@ -20,7 +20,7 @@ Project Status
 **Current Phase:** Polish & Testing\
 **Last Updated:** July 4, 2026
 
-Phases 0-8 are complete with 1955 passing tests.  The expression parser,
+Phases 0-8 are complete with 1954 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
 unit database, worksheet mode, unit browser, cross-session data persistence,
 freeform conversion history, predictive completion, and currency support are

@@ -328,7 +328,11 @@ void main() {
     });
 
     test('words asterisk multiplication in definition expressions', () {
-      expect(formatSpeech('x * 9|5 + 32'), 'x times 9|5 + 32');
+      expect(formatSpeech('x * 9|5 + 32'), 'x times 9 over 5 + 32');
+    });
+
+    test('words numeric division as "over"', () {
+      expect(formatSpeech('1|2 m'), '1 over 2 m');
     });
 
     test('speaks positive exponent', () {

@@ -137,13 +137,14 @@ const _speechSymbolWords = <String, String>{
   '^': 'to the power',
   '×': 'times',
   '*': 'times',
+  '|': 'over',
 };
 
 /// Rewrites a formatted display string into a speech-friendly form for
 /// screen-reader announcement.
 ///
 /// Structural symbols are worded (`=` "equals", `/` "per", `^` "to the
-/// power", `×` "times") and signed exponent suffixes such as `1.5e+3` are
+/// power", `×`/`*` "times", `|` "over") and signed exponent suffixes such as `1.5e+3` are
 /// spoken as "1.5 times 10 to the 3" (negative exponents as "times 10 to the
 /// negative N").  Unit names and all other content are left unchanged; an
 /// unsigned form like `2e3` (never emitted by the value formatters) is not

@@ -77,7 +77,7 @@ void main() {
       );
       expect(
         resultSpeechLabel(state),
-        'Enter an expression above. Try: 1|2 gallon to ml',
+        'Enter an expression above. Try: 1 over 2 gallon to ml',
       );
     });
 
@@ -129,7 +129,10 @@ void main() {
         label: 'tempF(x) =',
         expression: 'x * 9|5 + 32',
       );
-      expect(resultSpeechLabel(state), 'tempF(x) equals x times 9|5 + 32');
+      expect(
+        resultSpeechLabel(state),
+        'tempF(x) equals x times 9 over 5 + 32',
+      );
     });
 
     test('function definition with null expression speaks not available', () {

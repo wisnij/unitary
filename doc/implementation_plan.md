@@ -407,7 +407,8 @@ Implementation Phases
        — the freeform result display is an unconditional polite live region
        (WCAG 4.1.3): every settled evaluation state is announced from a
        speech-friendly label built by `formatSpeech` (`=`→"equals", `/`→"per",
-       `^`→"to the power", `×`/`*`→"times", `1.5e+3`→"1.5 times 10 to the 3")
+       `^`→"to the power", `×`/`*`→"times", `|`→"over",
+       `1.5e+3`→"1.5 times 10 to the 3")
        with an "Error: " prefix on errors; an exhaustive `switch` over the
        sealed `EvaluationResult` keeps new variants from shipping without a
        spoken form.  Worksheet cell errors keep the red in-field message and

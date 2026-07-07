@@ -498,5 +498,5 @@ Questions that arose during design but haven't been resolved:
   - Deferred to Phase 12: per-row worksheet error announcements (unreachable with predefined templates) and a semantics action for the label-cell transfer long-press
   - Discovered: `WorksheetRowWidget` (`worksheet_row_widget.dart`) was orphaned dead code — only its own test referenced it; deleted along with its test (which encoded the superseded red-text error styling) during verification cleanup
   - Discovered (on-device TalkBack pass, July 7): `RenderTable` double-applies the cell offset to descendant semantics transforms when a cell's semantics child lacks the `cell` role, shifting AT focus rectangles sideways off the worksheet fields (latent since the worksheet moved to `Table`; visible only with assistive tech on).  Fixed by wrapping every worksheet cell in `TableCell` (which supplies `Semantics(role: SemanticsRole.cell)`); regression test asserts field semantics rects match render rects
-  - On-device TalkBack pass still pending
-  - Design artifacts: `openspec/changes/screen-reader/`
+  - On-device TalkBack pass completed July 7; its findings (focus-rect fix, `|` mapping, "Result: " prefix) are folded in above
+  - Design artifacts: `openspec/changes/archive/2026-07-07-screen-reader/`

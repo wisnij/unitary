@@ -422,8 +422,8 @@ Implementation Phases
        `CustomSemanticsAction` discoverable in TalkBack's actions menu /
        VoiceOver's rotor.  Per-row worksheet error *announcements* deferred to
        Phase 12 (predefined templates can't produce row-level dimension
-       mismatches); on-device TalkBack pass still pending.  See
-       `openspec/changes/screen-reader/`.
+       mismatches); on-device TalkBack pass completed July 7, 2026.  See
+       `openspec/changes/archive/2026-07-07-screen-reader/`.
      - Contrast audit (the muted currency banner / `onSurfaceVariant` text are
        candidates)
      - Minimum 48dp touch targets throughout

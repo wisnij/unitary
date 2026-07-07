@@ -81,6 +81,12 @@ The idle-example tap target gains `button: true` semantics (plus the existing ta
 - `resultSpeechLabel`: exhaustive-switch compile guard (adding an `EvaluationResult` variant breaks the build) plus per-variant label assertions, including the "Error: " prefix.
 - Widget tests via `tester.getSemantics`: `ResultDisplay` node has `liveRegion` set and the expected label per state; erroring worksheet cell exposes error semantics/`errorText`; idle example exposes button; each copy site exposes its labeled custom action.
 
+### D6: TableCell wrappers fix misplaced assistive-technology focus rectangles (device-pass finding)
+
+The on-device TalkBack pass revealed that focus rectangles on worksheet fields were shifted sideways off the rendered fields.  Probing showed `RenderTable`'s semantics assembly (which builds row/cell wrapper nodes) double-applies the cell offset for cells whose semantics child lacks the `cell` role: it adds a cell-offset transform to a synthesized wrapper node, and its compensation heuristic (`localRect.left >= cellWidth`) fails to strip the child's own offset in the common case.  This affects bare `Table` children regardless of our `Semantics` wrappers (reproduced with a plain `TextField`), so it was a latent bug in the worksheet layout that only became visible with assistive technology on.
+
+Fix: wrap every worksheet cell in `TableCell`, whose build inserts `Semantics(role: SemanticsRole.cell)`; `RenderTable` then uses the child node directly with its correct transform.  A regression widget test asserts each field's semantics rect matches its render rect.
+
 ## Risks / Trade-offs
 
 - [Live-region behavior differs between TalkBack and VoiceOver; iOS handling is less standardized] → Android is the primary target; add an on-device TalkBack pass to the task list, VoiceOver deferred with iOS support generally.

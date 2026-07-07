@@ -246,131 +246,141 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
     final row = template.rows[i];
     final isActive = activeIndex == i;
 
+    // Every cell is wrapped in TableCell: besides vertical alignment, it
+    // gives the cell's semantics node the `cell` role, which RenderTable
+    // needs to position descendant semantics correctly.  Without it the
+    // table adds a cell-offset transform on top of the child's own offset,
+    // shifting assistive-technology focus rectangles sideways off the
+    // rendered fields.
     return TableRow(
       key: ValueKey('${template.id}_row_$i'),
       children: [
         // Label cell — intrinsic width, capped at maxLabelWidth.
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: GestureDetector(
-            onLongPress: (activeIndex != null && activeIndex != i)
-                ? () {
-                    final sourceText = values[activeIndex].text;
-                    if (sourceText.isEmpty) {
-                      return;
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: GestureDetector(
+              onLongPress: (activeIndex != null && activeIndex != i)
+                  ? () {
+                      final sourceText = values[activeIndex].text;
+                      if (sourceText.isEmpty) {
+                        return;
+                      }
+                      controllers[i].text = sourceText;
+                      _onRowChanged(activeId, i, sourceText);
                     }
-                    controllers[i].text = sourceText;
-                    _onRowChanged(activeId, i, sourceText);
-                  }
-                : null,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minWidth: 130,
-                maxWidth: maxLabelWidth,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    row.label,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  : null,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minWidth: 130,
+                  maxWidth: maxLabelWidth,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      row.label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    row.expression,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontWeight: FontWeight.w500,
+                    Text(
+                      row.expression,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
         ),
         // Spacer cell (FixedColumnWidth(8) provides the gap).
-        const SizedBox.shrink(),
+        const TableCell(child: SizedBox.shrink()),
         // Input cell — fills remaining space via FlexColumnWidth.
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Semantics(
-            // Expose the long-press copy gesture as a discoverable action in
-            // the assistive-technology actions menu.
-            customSemanticsActions: {
-              const CustomSemanticsAction(label: 'Copy value'): () =>
-                  _copyCellValue(context, controllers[i]),
-            },
-            child: GestureDetector(
-              onLongPress: () => _copyCellValue(context, controllers[i]),
-              child: Focus(
-                onFocusChange: (focused) {
-                  if (focused) {
-                    _onRowFocused(activeId, i);
-                  }
-                },
-                // This inner Semantics must wrap the TextField directly: its
-                // validationResult then merges into the text field's own
-                // semantics node, so assistive technology announces the error
-                // state as first-class field state.  (On the outer wrapper
-                // above it would stay on the wrapper's node instead.)
-                child: Semantics(
-                  validationResult: values[i].isError
-                      ? SemanticsValidationResult.invalid
-                      : SemanticsValidationResult.none,
-                  child: TextField(
-                    controller: controllers[i],
-                    style: values[i].isError
-                        ? TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                          )
-                        : null,
-                    keyboardType: const TextInputType.numberWithOptions(
-                      decimal: true,
-                      signed: true,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                        RegExp(r'^-?[0-9]*\.?[0-9]*(?:[eE][+-]?[0-9]*)?$'),
-                      ),
-                    ],
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 10,
-                      ),
-                      // Non-color error indicator, matching the freeform error
-                      // display; the semantic label conveys the error state to
-                      // assistive technology alongside the message text.
-                      prefixIcon: values[i].isError
-                          ? Icon(
-                              Icons.error_outline,
+        TableCell(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Semantics(
+              // Expose the long-press copy gesture as a discoverable action in
+              // the assistive-technology actions menu.
+              customSemanticsActions: {
+                const CustomSemanticsAction(label: 'Copy value'): () =>
+                    _copyCellValue(context, controllers[i]),
+              },
+              child: GestureDetector(
+                onLongPress: () => _copyCellValue(context, controllers[i]),
+                child: Focus(
+                  onFocusChange: (focused) {
+                    if (focused) {
+                      _onRowFocused(activeId, i);
+                    }
+                  },
+                  // This inner Semantics must wrap the TextField directly: its
+                  // validationResult then merges into the text field's own
+                  // semantics node, so assistive technology announces the error
+                  // state as first-class field state.  (On the outer wrapper
+                  // above it would stay on the wrapper's node instead.)
+                  child: Semantics(
+                    validationResult: values[i].isError
+                        ? SemanticsValidationResult.invalid
+                        : SemanticsValidationResult.none,
+                    child: TextField(
+                      controller: controllers[i],
+                      style: values[i].isError
+                          ? TextStyle(
                               color: Theme.of(context).colorScheme.error,
-                              size: 20,
-                              semanticLabel: 'Error',
                             )
                           : null,
-                      // The default prefix-icon minimum (48 dp) would make
-                      // erroring fields taller than normal ones.
-                      prefixIconConstraints: const BoxConstraints(
-                        minWidth: 32,
-                        minHeight: 0,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
                       ),
-                      fillColor: isActive
-                          ? Theme.of(
-                              context,
-                            ).colorScheme.primaryContainer.withValues(
-                              alpha: 0.3,
-                            )
-                          : null,
-                      filled: isActive,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                          RegExp(r'^-?[0-9]*\.?[0-9]*(?:[eE][+-]?[0-9]*)?$'),
+                        ),
+                      ],
+                      decoration: InputDecoration(
+                        border: const OutlineInputBorder(),
+                        isDense: true,
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 10,
+                        ),
+                        // Non-color error indicator, matching the freeform error
+                        // display; the semantic label conveys the error state to
+                        // assistive technology alongside the message text.
+                        prefixIcon: values[i].isError
+                            ? Icon(
+                                Icons.error_outline,
+                                color: Theme.of(context).colorScheme.error,
+                                size: 20,
+                                semanticLabel: 'Error',
+                              )
+                            : null,
+                        // The default prefix-icon minimum (48 dp) would make
+                        // erroring fields taller than normal ones.
+                        prefixIconConstraints: const BoxConstraints(
+                          minWidth: 32,
+                          minHeight: 0,
+                        ),
+                        fillColor: isActive
+                            ? Theme.of(
+                                context,
+                              ).colorScheme.primaryContainer.withValues(
+                                alpha: 0.3,
+                              )
+                            : null,
+                        filled: isActive,
+                      ),
+                      onChanged: (text) => _onRowChanged(activeId, i, text),
                     ),
-                    onChanged: (text) => _onRowChanged(activeId, i, text),
                   ),
                 ),
               ),

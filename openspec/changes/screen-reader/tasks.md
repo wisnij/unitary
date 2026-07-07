@@ -29,6 +29,7 @@
 ## 5. Verification and documentation
 
 - [x] 5.1 Run `flutter test --reporter failures-only` and `flutter analyze`; fix any failures (1953 tests passing, no analyzer issues)
+- [x] 5.5 Fix misplaced TalkBack focus rectangles on worksheet fields (device-pass finding): `RenderTable` double-applies the cell offset to semantics transforms for cells without the `cell` role; wrap all worksheet cells in `TableCell` (which supplies `Semantics(role: SemanticsRole.cell)`) and add a regression test asserting field semantics rects match their render rects — see design D6
 - [ ] 5.2 On-device TalkBack pass: result announcements in both evaluation modes, worksheet error reading (check how the invalid field state and the icon's "Error" label combine — drop the icon's `semanticLabel` if redundant), error icon appearance in the dense fields, actions menu shows copy actions, idle example announced as button
 - [x] 5.3 Update `doc/implementation_plan.md` (check off the screen-reader item under Phase 9) and `doc/design_progress.md`; note the Phase 12 deferrals (per-row error announcements, label-cell transfer gesture labeling)
 - [x] 5.4 Update README project status if warranted

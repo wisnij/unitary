@@ -295,6 +295,74 @@ void main() {
     });
   });
 
+  group('WorksheetScreen semantics geometry', () {
+    testWidgets('field semantics rects align with their render rects', (
+      tester,
+    ) async {
+      // Regression test for a RenderTable semantics bug: without an explicit
+      // cell role on each cell (provided by TableCell), the table adds a
+      // cell-offset transform on top of the child's own offset, shifting the
+      // assistive-technology focus rectangle sideways off the real field.
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'temperature');
+      await tester.pumpAndSettle();
+
+      // Collect the text-field semantics nodes in traversal order.
+      final nodes = <SemanticsNode>[];
+      void visit(SemanticsNode node) {
+        if (node.getSemanticsData().flagsCollection.isTextField) {
+          nodes.add(node);
+        }
+        node.visitChildren((child) {
+          visit(child);
+          return true;
+        });
+      }
+
+      var root = tester.getSemantics(find.byType(MaterialApp));
+      while (root.parent != null) {
+        root = root.parent!;
+      }
+      visit(root);
+
+      final fieldCount = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .length;
+      expect(nodes.length, fieldCount);
+
+      // The root semantics transform is scaled by the device pixel ratio.
+      final dpr = tester.view.devicePixelRatio;
+      for (var i = 0; i < nodes.length; i++) {
+        var transform = Matrix4.identity();
+        SemanticsNode? n = nodes[i];
+        while (n != null) {
+          if (n.transform != null) {
+            transform = (n.transform!.clone())..multiply(transform);
+          }
+          n = n.parent;
+        }
+        final semanticsRect = MatrixUtils.transformRect(
+          transform,
+          nodes[i].rect,
+        );
+        final renderRect = tester.getRect(find.byType(TextField).at(i));
+        expect(
+          semanticsRect.left,
+          closeTo(renderRect.left * dpr, 0.1),
+          reason: 'field $i semantics rect misaligned horizontally',
+        );
+        expect(
+          semanticsRect.top,
+          closeTo(renderRect.top * dpr, 0.1),
+          reason: 'field $i semantics rect misaligned vertically',
+        );
+      }
+
+      handle.dispose();
+    });
+  });
+
   group('WorksheetScreen copy semantics', () {
     List<MethodCall> clipboardCalls = [];
 

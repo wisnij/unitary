@@ -489,7 +489,7 @@ Questions that arose during design but haven't been resolved:
   - No new dependencies
   - Design artifacts: `openspec/changes/worksheet-picker/`
 - *Screen-reader support (July 4, 2026)* — Phase 9 accessibility improvement
-  - 1953 tests passing (59 new)
+  - 1955 tests passing (61 new)
   - Freeform result display is an unconditional polite live region (WCAG 4.1.3 status-message convention): `ResultDisplay` wraps its content in `Semantics(liveRegion: true, label: resultSpeechLabel(result))` + `ExcludeSemantics`, so every settled evaluation state (success, conversion, definition, error) is announced without moving focus, in both evaluation modes
   - `formatSpeech(String)` in `lib/shared/utils/quantity_formatter.dart`: pure string rewrite of formatted display strings into speech-friendly form — `=`→"equals", `/`→"per", `^`→"to the power", `×`/`*`→"times", signed exponents (`1.5e+3`)→"1.5 times 10 to the 3" ("negative N" for `e-N`); unsigned `2e3` (never emitted by the formatters) is left alone
   - `resultSpeechLabel(EvaluationResult)` in `result_display.dart`: exhaustive `switch` over the sealed type (a new variant without a spoken form is a compile error); "Error: " prefix on `EvaluationError` (message verbatim); idle speaks instruction + example (`→` spoken as "to"); multi-line variants joined as sentences
@@ -497,5 +497,6 @@ Questions that arose during design but haven't been resolved:
   - Idle-example tap target exposes `button: true` semantics; long-press-to-copy gestures expose labeled `CustomSemanticsAction`s ("Copy value" on worksheet cells, "Copy version"/"Copy build" on About rows, "Copy" on unit detail `_DetailText`), discoverable in TalkBack's actions menu / VoiceOver's rotor
   - Deferred to Phase 12: per-row worksheet error announcements (unreachable with predefined templates) and a semantics action for the label-cell transfer long-press
   - Discovered: `WorksheetRowWidget` (`worksheet_row_widget.dart`) is orphaned dead code — only its own test references it; left unmodified
+  - Discovered (on-device TalkBack pass, July 7): `RenderTable` double-applies the cell offset to descendant semantics transforms when a cell's semantics child lacks the `cell` role, shifting AT focus rectangles sideways off the worksheet fields (latent since the worksheet moved to `Table`; visible only with assistive tech on).  Fixed by wrapping every worksheet cell in `TableCell` (which supplies `Semantics(role: SemanticsRole.cell)`); regression test asserts field semantics rects match render rects
   - On-device TalkBack pass still pending
   - Design artifacts: `openspec/changes/screen-reader/`

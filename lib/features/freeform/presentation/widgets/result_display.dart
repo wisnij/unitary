@@ -10,35 +10,35 @@ import '../../state/freeform_state.dart';
 ///
 /// Labels are composed from each variant's display strings via [formatSpeech]
 /// (structural symbols worded, exponents spoken), with multi-line variants
-/// joined as sentences.  The switch is exhaustive over the sealed
-/// [EvaluationResult] type so a new variant cannot ship without a spoken form.
+/// joined as sentences.  Success-type states begin with "Result: " and the
+/// error state with "Error: ", so the announcement is distinguishable from
+/// the screen reader's echo of the typed input that precedes it.  The switch
+/// is exhaustive over the sealed [EvaluationResult] type so a new variant
+/// cannot ship without a spoken form.
 String resultSpeechLabel(EvaluationResult result) {
   return switch (result) {
     EvaluationIdle(:final example) => _idleSpeech(example),
-    EvaluationSuccess(:final formattedResult) => formatSpeech(formattedResult),
+    EvaluationSuccess(:final formattedResult) =>
+      'Result: ${formatSpeech(formattedResult)}',
     ConversionSuccess(:final formattedResult, :final formattedReciprocal) =>
-      '${formatSpeech(formattedResult)}. ${formatSpeech(formattedReciprocal)}',
+      'Result: ${formatSpeech(formattedResult)}. '
+          '${formatSpeech(formattedReciprocal)}',
     UnitDefinitionResult(
       :final aliasLine,
       :final definitionLine,
       :final formattedResult,
     ) =>
-      [
-        aliasLine,
-        definitionLine,
-        formattedResult,
-      ].nonNulls.map(formatSpeech).join('. '),
-    FunctionDefinitionResult(:final label, :final expression) => formatSpeech(
-      '$label ${expression ?? 'not available'}',
-    ),
+      'Result: ${[aliasLine, definitionLine, formattedResult].nonNulls.map(formatSpeech).join('. ')}',
+    FunctionDefinitionResult(:final label, :final expression) =>
+      'Result: ${formatSpeech('$label ${expression ?? 'not available'}')}',
     FunctionConversionResult(:final functionName, :final formattedValue) =>
-      formatSpeech('$functionName($formattedValue)'),
+      'Result: ${formatSpeech('$functionName($formattedValue)')}',
     ReciprocalConversionSuccess(
       :final reciprocalInputLabel,
       :final formattedResult,
       :final formattedReciprocal,
     ) =>
-      'Reciprocal conversion. ${formatSpeech(reciprocalInputLabel)}. '
+      'Result: reciprocal conversion. ${formatSpeech(reciprocalInputLabel)}. '
           '${formatSpeech(formattedResult)}. '
           '${formatSpeech(formattedReciprocal)}',
     EvaluationError(:final message) => 'Error: $message',

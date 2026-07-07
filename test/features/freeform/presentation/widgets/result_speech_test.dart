@@ -86,7 +86,7 @@ void main() {
         result: Quantity(8, Dimension({'kg': 1, 'm': 1, 's': -2})),
         formattedResult: '8 kg m / s^2',
       );
-      expect(resultSpeechLabel(state), '8 kg m per s to the power 2');
+      expect(resultSpeechLabel(state), 'Result: 8 kg m per s to the power 2');
     });
 
     test('conversion speaks result then reciprocal line', () {
@@ -98,7 +98,7 @@ void main() {
       );
       expect(
         resultSpeechLabel(state),
-        'equals 8.04672 km. equals (1 per 0.12427424) km',
+        'Result: equals 8.04672 km. equals (1 per 0.12427424) km',
       );
     });
 
@@ -110,7 +110,7 @@ void main() {
       );
       expect(
         resultSpeechLabel(state),
-        'equals calorie_th. equals 4.184 J. '
+        'Result: equals calorie_th. equals 4.184 J. '
         'equals 4.184 kg m to the power 2 per s to the power 2',
       );
     });
@@ -121,7 +121,7 @@ void main() {
         definitionLine: null,
         formattedResult: '= 1 m',
       );
-      expect(resultSpeechLabel(state), 'equals 1 m');
+      expect(resultSpeechLabel(state), 'Result: equals 1 m');
     });
 
     test('function definition speaks label and expression', () {
@@ -131,7 +131,7 @@ void main() {
       );
       expect(
         resultSpeechLabel(state),
-        'tempF(x) equals x times 9 over 5 + 32',
+        'Result: tempF(x) equals x times 9 over 5 + 32',
       );
     });
 
@@ -140,7 +140,10 @@ void main() {
         label: 'unknown(x) =',
         expression: null,
       );
-      expect(resultSpeechLabel(state), 'unknown(x) equals not available');
+      expect(
+        resultSpeechLabel(state),
+        'Result: unknown(x) equals not available',
+      );
     });
 
     test('function conversion speaks the composed call', () {
@@ -148,7 +151,7 @@ void main() {
         functionName: 'tempC',
         formattedValue: '20',
       );
-      expect(resultSpeechLabel(state), 'tempC(20)');
+      expect(resultSpeechLabel(state), 'Result: tempC(20)');
     });
 
     test('reciprocal conversion speaks notice, label, result, reciprocal', () {
@@ -160,7 +163,7 @@ void main() {
       );
       expect(
         resultSpeechLabel(state),
-        'Reciprocal conversion. 1 per mph. '
+        'Result: reciprocal conversion. 1 per mph. '
         'equals 2.2369363 s per m. equals (1 per 0.44704) s per m',
       );
     });

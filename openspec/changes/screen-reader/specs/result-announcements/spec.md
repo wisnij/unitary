@@ -52,6 +52,9 @@ new variant without a spoken form is a compile-time error.
 
 - The idle state SHALL speak the instruction line and, when present, the
   example hint.
+- Every success-type state (any variant other than idle and error) SHALL begin
+  with "Result: ", so the announcement is distinguishable from the screen
+  reader's echo of the typed input that immediately precedes it.
 - The error state's spoken form SHALL begin with "Error: " followed by the
   error message.
 - Conversion variants that display a reciprocal line SHALL include it in the
@@ -73,4 +76,10 @@ new variant without a spoken form is a compile-time error.
 - **WHEN** the evaluation state is a conversion success whose display string is
   `= 8 kg m / s^2`
 - **THEN** the spoken label renders the symbols in words, e.g.
-  `equals 8 kg m per s to the power 2`
+  `Result: equals 8 kg m per s to the power 2`
+
+#### Scenario: Success announcement marked as a result
+
+- **WHEN** the user types `2*3` and the evaluation settles
+- **THEN** the spoken label begins with "Result: " (e.g. `Result: 6`), so the
+  announcement following the input echo is heard as output, not more input

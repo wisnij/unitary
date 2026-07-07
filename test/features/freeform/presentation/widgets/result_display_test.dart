@@ -427,7 +427,7 @@ void main() {
       );
       await tester.pumpWidget(wrap(ResultDisplay(result: state)));
 
-      final node = tester.getSemantics(find.bySemanticsLabel('42'));
+      final node = tester.getSemantics(find.bySemanticsLabel('Result: 42'));
       expect(node.flagsCollection.isButton, isFalse);
 
       handle.dispose();

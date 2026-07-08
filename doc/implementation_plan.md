@@ -391,7 +391,7 @@ Implementation Phases
          caps and centers that content on wide layouts while staying inert at
          phone width.  Verified on-device.  See
          `openspec/changes/archive/2026-07-03-tablet-spacing/`.
-   - Accessibility improvements
+   - [x] Accessibility improvements
      - [x] Semantic labels on the operator key panel and completion overlay
        — every operator key exposes an accessible action label (a glyph→word
        map: `*`→"multiply", `|`→"numeric divide", `~`→"inverse", …) via
@@ -440,7 +440,7 @@ Implementation Phases
        `test/shared/color_contrast_test.dart`, which recomputes ratios from
        the real color schemes and fails on regression.  See
        `openspec/changes/archive/2026-07-08-contrast-audit/`.
-     - Minimum 48dp touch targets throughout
+     - [x] Minimum 48dp touch targets throughout
    - Resolve outstanding UX open questions (see design_progress.md):
      - Long-expression handling in the input fields (scroll/wrap) — #2
      - Worksheet field reordering — #3

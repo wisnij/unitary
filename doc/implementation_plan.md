@@ -424,8 +424,22 @@ Implementation Phases
        Phase 12 (predefined templates can't produce row-level dimension
        mismatches); on-device TalkBack pass completed July 7, 2026.  See
        `openspec/changes/archive/2026-07-07-screen-reader/`.
-     - Contrast audit (the muted currency banner / `onSurfaceVariant` text are
-       candidates)
+     - [x] Contrast audit — computed WCAG 2.x ratios for every custom-composed
+       color pairing in both `fromSeed(Colors.blue)` schemes.  The suspected
+       candidates (muted currency banner, `onSurfaceVariant` text) all pass
+       (≥7.2:1); every real failure was a custom alpha blend.  Fixed: the
+       worksheet source-row indicator (fill was 1.06:1 and the only cue; now a
+       2 dp `primary` border ≥6.1:1, width difference as the non-color cue,
+       tint retained as supplement), fast-scroll preview neighbour labels
+       (`onPrimary` alpha 0.65→0.85, now ≥4.8:1), and the fast-scroll thumb
+       (`primary` alpha 0.6→0.8, now ≥3.9:1; grip lines switched to
+       `onPrimary`@0.9).  Accepted as decorative (WCAG 1.4.11 exempt):
+       `outlineVariant` borders on the completion overlay and unit-detail
+       tables, and the banner / browse sticky-header background tints.  All
+       pairings and exemptions are pinned by
+       `test/shared/color_contrast_test.dart`, which recomputes ratios from
+       the real color schemes and fails on regression.  See
+       `openspec/changes/contrast-audit/`.
      - Minimum 48dp touch targets throughout
    - Resolve outstanding UX open questions (see design_progress.md):
      - Long-expression handling in the input fields (scroll/wrap) — #2

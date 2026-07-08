@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: July 4, 2026*
+*Last Updated: July 8, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -500,3 +500,11 @@ Questions that arose during design but haven't been resolved:
   - Discovered (on-device TalkBack pass, July 7): `RenderTable` double-applies the cell offset to descendant semantics transforms when a cell's semantics child lacks the `cell` role, shifting AT focus rectangles sideways off the worksheet fields (latent since the worksheet moved to `Table`; visible only with assistive tech on).  Fixed by wrapping every worksheet cell in `TableCell` (which supplies `Semantics(role: SemanticsRole.cell)`); regression test asserts field semantics rects match render rects
   - On-device TalkBack pass completed July 7; its findings (focus-rect fix, `|` mapping, "Result: " prefix) are folded in above
   - Design artifacts: `openspec/changes/archive/2026-07-07-screen-reader/`
+- *Contrast audit (July 8, 2026)* — Phase 9 accessibility improvement
+  - 1988 tests passing (34 new)
+  - Computed exact WCAG 2.x contrast ratios for every custom-composed color pairing (including alpha blends composited over their real backgrounds) in both `ColorScheme.fromSeed(Colors.blue)` schemes; the suspected candidates from the plan (muted currency banner, `onSurfaceVariant` text) all pass ≥7.2:1 — every genuine failure involved a custom alpha blend
+  - Worksheet source-row indicator: the `primaryContainer`@0.3 fill was 1.06:1 (light) / 1.17:1 (dark) against unfilled cells and was the *only* cue for which row drives the conversion (focus alone doesn't transfer source).  Even a solid `primaryContainer` fill only reaches ~1.2:1 in light mode, so the fix is a 2 dp `colorScheme.primary` `enabledBorder` on the source row (6.14:1 light / 10.87:1 dark); the width difference vs the default 1 dp border is the non-color cue (WCAG 1.4.1), the border draws inward so field geometry is unchanged, and the tint is retained as a supplement
+  - `FastScrollBar`: peek-panel neighbour labels `onPrimary` alpha 0.65→0.85 (3.77/3.50 → 4.81/5.56, passing the 4.5:1 text threshold); thumb `primary` alpha 0.6→0.8 (2.64 light → 3.93); grip lines switched from `onSurface`@0.4 (1.65–2.0:1, wrong role) to `onPrimary`@0.9 (≥3:1 against the composited thumb)
+  - Accepted as decorative (WCAG 1.4.11 exempt), recorded in the `color-contrast` spec: `outlineVariant` borders on the completion overlay (delineated by elevation + filled surface) and unit-detail tables; `surfaceContainerHighest`-derived background tints of the currency banner and browse sticky headers (text on them passes 4.5:1)
+  - New `test/shared/color_contrast_test.dart`: WCAG relative-luminance/contrast/compositing helpers + a case table mirroring each widget's role/alpha literals, asserted ≥4.5:1 (text) / ≥3:1 (non-text) in both schemes — a Flutter upgrade that shifts `fromSeed` tones or a styling change below threshold fails the test
+  - Design artifacts: `openspec/changes/contrast-audit/`

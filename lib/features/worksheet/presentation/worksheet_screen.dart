@@ -348,6 +348,21 @@ class _WorksheetScreenState extends ConsumerState<WorksheetScreen> {
                       ],
                       decoration: InputDecoration(
                         border: const OutlineInputBorder(),
+                        // Source-row indicator: the fill tint below is far too
+                        // low-contrast to satisfy WCAG 1.4.11 (≈1.1:1), so the
+                        // source row gets a primary border at double width —
+                        // the color clears 3:1 against the surface and the
+                        // width difference is the non-color cue (WCAG 1.4.1).
+                        // The border draws inward, leaving field geometry
+                        // unchanged.
+                        enabledBorder: isActive
+                            ? OutlineInputBorder(
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 2,
+                                ),
+                              )
+                            : null,
                         isDense: true,
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 10,

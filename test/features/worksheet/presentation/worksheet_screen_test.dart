@@ -163,6 +163,77 @@ void main() {
     });
   });
 
+  group('WorksheetScreen source row indicator', () {
+    // Makes the first row of the length worksheet the source row by typing
+    // into it, then settles the debounced recompute.
+    Future<void> pumpWithSourceRow(WidgetTester tester) async {
+      await tester.pumpWidget(buildApp());
+      selectTemplate(tester, 'length');
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).first, '1');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+    }
+
+    OutlineInputBorder? enabledBorderOf(WidgetTester tester, int index) {
+      final field = tester.widget<TextField>(find.byType(TextField).at(index));
+      return field.decoration?.enabledBorder as OutlineInputBorder?;
+    }
+
+    testWidgets('source row shows a 2 dp primary border, others default', (
+      tester,
+    ) async {
+      await pumpWithSourceRow(tester);
+
+      final context = tester.element(find.byType(TextField).first);
+      final primary = Theme.of(context).colorScheme.primary;
+
+      final sourceBorder = enabledBorderOf(tester, 0);
+      expect(sourceBorder, isNotNull);
+      expect(sourceBorder!.borderSide.color, primary);
+      expect(sourceBorder.borderSide.width, 2);
+
+      // Non-source rows keep the default enabled border.
+      expect(enabledBorderOf(tester, 1), isNull);
+      expect(enabledBorderOf(tester, 2), isNull);
+    });
+
+    testWidgets('source row keeps the supplementary tint', (tester) async {
+      await pumpWithSourceRow(tester);
+
+      final fields = tester
+          .widgetList<TextField>(find.byType(TextField))
+          .toList();
+      expect(fields[0].decoration?.filled, isTrue);
+      expect(fields[0].decoration?.fillColor, isNotNull);
+      expect(fields[1].decoration?.filled, isNot(isTrue));
+    });
+
+    testWidgets('source row height matches non-source row height', (
+      tester,
+    ) async {
+      await pumpWithSourceRow(tester);
+
+      final sourceHeight = tester.getSize(find.byType(TextField).first).height;
+      final normalHeight = tester.getSize(find.byType(TextField).at(1)).height;
+      expect(sourceHeight, normalHeight);
+    });
+
+    testWidgets('focus without keystroke does not move the border', (
+      tester,
+    ) async {
+      await pumpWithSourceRow(tester);
+
+      // Tap another row without typing; source ownership must not transfer.
+      await tester.tap(find.byType(TextField).at(2));
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pump();
+
+      expect(enabledBorderOf(tester, 0), isNotNull);
+      expect(enabledBorderOf(tester, 2), isNull);
+    });
+  });
+
   group('WorksheetScreen error display', () {
     // Typing -1 into the Kelvin row (below absolute zero) makes the Celsius
     // and Fahrenheit function rows produce "out of bounds" errors, while the

@@ -300,6 +300,99 @@ void main() {
       expect(find.byKey(FastScrollBar.thumbKey), findsOneWidget);
       expect(find.byKey(FastScrollBar.gripLinesKey), findsOneWidget);
     });
+
+    // The alphas below are contrast-audit values; test/shared/
+    // color_contrast_test.dart asserts the resulting WCAG ratios.
+    testWidgets('thumb fill is primary at alpha 0.8', (tester) async {
+      final controller = await _pumpScrollBar(tester, contentHeight: 2000);
+      controller.jumpTo(1);
+      await tester.pump();
+
+      final scheme = Theme.of(
+        tester.element(find.byKey(FastScrollBar.thumbKey)),
+      ).colorScheme;
+      final decorations = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byKey(FastScrollBar.thumbKey),
+              matching: find.byType(Container),
+              matchRoot: true,
+            ),
+          )
+          .map((c) => c.decoration)
+          .whereType<BoxDecoration>();
+      expect(
+        decorations.map((d) => d.color),
+        contains(scheme.primary.withValues(alpha: 0.8)),
+      );
+    });
+
+    testWidgets('grip lines are onPrimary at alpha 0.9', (tester) async {
+      final controller = await _pumpScrollBar(tester, contentHeight: 2000);
+      controller.jumpTo(1);
+      await tester.pump();
+
+      final scheme = Theme.of(
+        tester.element(find.byKey(FastScrollBar.gripLinesKey)),
+      ).colorScheme;
+      final gripColors = tester
+          .widgetList<Container>(
+            find.descendant(
+              of: find.byKey(FastScrollBar.gripLinesKey),
+              matching: find.byType(Container),
+            ),
+          )
+          .map((c) => (c.decoration as BoxDecoration?)?.color)
+          .toList();
+      expect(gripColors, hasLength(3));
+      expect(
+        gripColors,
+        everyElement(scheme.onPrimary.withValues(alpha: 0.9)),
+      );
+    });
+
+    testWidgets('peek panel neighbour labels are onPrimary at alpha 0.85', (
+      tester,
+    ) async {
+      final controller = await _pumpScrollBar(
+        tester,
+        contentHeight: 2000,
+        groupAnchors: [(0, 'A'), (4, 'M'), (8, 'Z')],
+        itemCount: 10,
+      );
+      controller.jumpTo(700); // mid-list, so neighbours exist on both sides
+      await tester.pump();
+
+      final dragGesture = await tester.startGesture(
+        tester.getCenter(find.byKey(FastScrollBar.thumbKey)),
+      );
+      await dragGesture.moveBy(const Offset(0, 1));
+      await tester.pump();
+
+      final scheme = Theme.of(
+        tester.element(find.byKey(FastScrollBar.peekPanelKey)),
+      ).colorScheme;
+      final labelColors = tester
+          .widgetList<Text>(
+            find.descendant(
+              of: find.byKey(FastScrollBar.peekPanelKey),
+              matching: find.byType(Text),
+            ),
+          )
+          .map((t) => t.style?.color)
+          .toList();
+      // Current label in full onPrimary; the neighbours de-emphasised at 0.85.
+      expect(labelColors, contains(scheme.onPrimary));
+      expect(
+        labelColors.where(
+          (c) => c == scheme.onPrimary.withValues(alpha: 0.85),
+        ),
+        hasLength(2),
+      );
+
+      await dragGesture.up();
+      await tester.pump();
+    });
   });
 
   // ---------------------------------------------------------------------------

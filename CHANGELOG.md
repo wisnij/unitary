@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add semantic labels to operator keys and completion overlay
 - Add accessibility semantics for screen readers
+- Ensure UI element contrast meets WCAG standards
 
 
 [0.9.2] - 2026-07-03

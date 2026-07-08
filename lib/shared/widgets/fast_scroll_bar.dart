@@ -382,12 +382,15 @@ class _ThumbWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final gripColor = theme.colorScheme.onSurface.withValues(alpha: 0.4);
+    // Alphas chosen so the composited thumb clears the WCAG 3:1 non-text
+    // threshold against the surface, and the grip lines clear 3:1 against the
+    // composited thumb, in both themes (see color_contrast_test.dart).
+    final gripColor = theme.colorScheme.onPrimary.withValues(alpha: 0.9);
     return Container(
       width: _thumbWidth,
       height: _thumbHeight,
       decoration: BoxDecoration(
-        color: theme.colorScheme.primary.withValues(alpha: 0.6),
+        color: theme.colorScheme.primary.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(6.0),
       ),
       child: Column(
@@ -461,8 +464,11 @@ class _PeekPanel extends StatelessWidget {
                   color: theme.colorScheme.onPrimary,
                   fontWeight: FontWeight.bold,
                 )
+              // De-emphasis relative to the current label is carried by size
+              // and weight; alpha 0.85 keeps these above the WCAG 4.5:1 text
+              // threshold on the panel (see color_contrast_test.dart).
               : theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.65),
+                  color: theme.colorScheme.onPrimary.withValues(alpha: 0.85),
                 ),
         ),
       );

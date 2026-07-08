@@ -1,47 +1,6 @@
-# Fast Scroll Bar Spec
+# Fast Scroll Bar — contrast-audit delta
 
-## Purpose
-
-Define the requirements for `FastScrollBar`, a draggable thumb overlay that
-enables fast navigation of long scrollable lists and displays a group-label
-bubble while dragging.
-
-## Requirements
-
-### Requirement: Draggable scroll thumb
-The `FastScrollBar` widget SHALL display a draggable thumb on the right edge of
-its child scrollable area when the content is taller than the viewport.
-
-- The thumb SHALL be positioned vertically in proportion to the current scroll
-  fraction (`pixels / maxScrollExtent`).
-- Dragging the thumb SHALL call `ScrollController.jumpTo()` to move the list to
-  the corresponding scroll offset.
-- All `ScrollController` interactions SHALL be guarded by `hasClients`; no
-  call SHALL be made while the controller has no attached scroll position.
-- The thumb SHALL not be rendered when `ScrollController.position.maxScrollExtent`
-  is zero (content fits on screen without scrolling).
-- The interactive hit area of the thumb SHALL be at least 44 dp wide,
-  independent of the visual thumb width, to meet mobile touch-target guidelines.
-
-#### Scenario: Thumb position reflects scroll offset
-- **WHEN** the user scrolls the list to the halfway point
-- **THEN** the thumb is positioned at the vertical midpoint of the list area
-
-#### Scenario: Dragging thumb scrolls the list
-- **WHEN** the user drags the thumb downward by half the list height
-- **THEN** the list scrolls forward to approximately the midpoint of its total
-  content
-
-#### Scenario: Thumb absent when content fits on screen
-- **WHEN** the total content height is less than or equal to the viewport height
-- **THEN** no thumb is rendered
-
-#### Scenario: Hit area wider than visual thumb
-- **WHEN** the thumb is visible
-- **THEN** the draggable hit area extends at least 44 dp from the right edge,
-  regardless of the visual thumb width
-
----
+## MODIFIED Requirements
 
 ### Requirement: Drag handle appearance
 The `FastScrollBar` thumb SHALL be styled to communicate that it is a draggable
@@ -68,8 +27,6 @@ handle, not a passive indicator.
 #### Scenario: Thumb perceivable against light surface
 - **WHEN** the thumb is rendered over the light-theme surface
 - **THEN** its composited fill has at least 3:1 contrast against that surface
-
----
 
 ### Requirement: Group label bubble
 While the thumb is being dragged, the `FastScrollBar` SHALL display a label
@@ -121,40 +78,3 @@ neighbours.
 - **WHEN** the panel shows neighbour labels in either theme
 - **THEN** each neighbour label's composited text color has at least 4.5:1
   contrast against the panel background
-
----
-
-### Requirement: Thumb fade visibility
-The thumb SHALL fade in when the list is scrolled and fade out after a short
-idle period.
-
-- The thumb SHALL fade in (become fully visible) whenever the
-  `ScrollController` emits a scroll event.
-- After the last scroll event, the thumb SHALL fade out after an idle timeout
-  of approximately 1.5 seconds.
-- While the thumb is being dragged, the idle timer SHALL be suspended and the
-  thumb SHALL remain fully visible.
-- When the drag ends, the idle timer SHALL restart.
-
-#### Scenario: Thumb fades in on scroll
-- **WHEN** the user scrolls the list
-- **THEN** the thumb becomes visible
-
-#### Scenario: Thumb fades out after idle
-- **WHEN** the user stops scrolling and does not interact with the thumb for
-  approximately 1.5 seconds
-- **THEN** the thumb fades out and is no longer visible
-
-#### Scenario: Thumb stays visible while dragging
-- **WHEN** the user is actively dragging the thumb
-- **THEN** the thumb remains fully visible regardless of idle timeout
-
----
-
-### Requirement: Active flag suppresses overlay
-When the `active` parameter is `false`, `FastScrollBar` SHALL render only its
-`child` with no thumb or label bubble.
-
-#### Scenario: Thumb hidden when inactive
-- **WHEN** `FastScrollBar.active` is `false`
-- **THEN** neither the thumb nor any label bubble is visible

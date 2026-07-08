@@ -507,4 +507,4 @@ Questions that arose during design but haven't been resolved:
   - `FastScrollBar`: peek-panel neighbour labels `onPrimary` alpha 0.65→0.85 (3.77/3.50 → 4.81/5.56, passing the 4.5:1 text threshold); thumb `primary` alpha 0.6→0.8 (2.64 light → 3.93); grip lines switched from `onSurface`@0.4 (1.65–2.0:1, wrong role) to `onPrimary`@0.9 (≥3:1 against the composited thumb)
   - Accepted as decorative (WCAG 1.4.11 exempt), recorded in the `color-contrast` spec: `outlineVariant` borders on the completion overlay (delineated by elevation + filled surface) and unit-detail tables; `surfaceContainerHighest`-derived background tints of the currency banner and browse sticky headers (text on them passes 4.5:1)
   - New `test/shared/color_contrast_test.dart`: WCAG relative-luminance/contrast/compositing helpers + a case table mirroring each widget's role/alpha literals, asserted ≥4.5:1 (text) / ≥3:1 (non-text) in both schemes — a Flutter upgrade that shifts `fromSeed` tones or a styling change below threshold fails the test
-  - Design artifacts: `openspec/changes/contrast-audit/`
+  - Design artifacts: `openspec/changes/archive/2026-07-08-contrast-audit/`

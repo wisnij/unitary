@@ -439,7 +439,7 @@ Implementation Phases
        pairings and exemptions are pinned by
        `test/shared/color_contrast_test.dart`, which recomputes ratios from
        the real color schemes and fails on regression.  See
-       `openspec/changes/contrast-audit/`.
+       `openspec/changes/archive/2026-07-08-contrast-audit/`.
      - Minimum 48dp touch targets throughout
    - Resolve outstanding UX open questions (see design_progress.md):
      - Long-expression handling in the input fields (scroll/wrap) — #2

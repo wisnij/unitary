@@ -48,10 +48,13 @@ The `FastScrollBar` thumb SHALL be styled to communicate that it is a draggable
 handle, not a passive indicator.
 
 - The thumb SHALL use a pill shape wider than a standard scrollbar (≥ 10 dp).
+- The thumb's composited fill SHALL have a WCAG 2.x contrast ratio of at least
+  3:1 against the page surface in both light and dark themes.
 - The thumb SHALL display three short horizontal grip lines centred vertically
   within the pill, visually indicating vertical drag affordance.
-- The grip lines SHALL be rendered in a colour that contrasts with the pill
-  background and remains legible in both light and dark themes.
+- The grip lines SHALL be rendered in a colour derived from `onPrimary` with a
+  WCAG 2.x contrast ratio of at least 3:1 against the composited thumb fill in
+  both light and dark themes.
 
 #### Scenario: Thumb displays grip lines
 - **WHEN** the thumb is visible
@@ -59,7 +62,12 @@ handle, not a passive indicator.
 
 #### Scenario: Grip lines visible in dark theme
 - **WHEN** the app is in dark mode and the thumb is visible
-- **THEN** the grip lines are visually distinct from the pill background
+- **THEN** the grip lines are visually distinct from the pill background, with
+  at least 3:1 contrast against it
+
+#### Scenario: Thumb perceivable against light surface
+- **WHEN** the thumb is rendered over the light-theme surface
+- **THEN** its composited fill has at least 3:1 contrast against that surface
 
 ---
 
@@ -75,6 +83,9 @@ neighbours.
 - The panel SHALL display the current group label prominently in the centre,
   with up to 2 neighbouring group labels above and up to 2 below, in a
   de-emphasised style.
+- The de-emphasised neighbour labels SHALL retain a WCAG 2.x contrast ratio of
+  at least 4.5:1 against the panel background in both light and dark themes;
+  de-emphasis is carried by text size and weight, not by contrast alone.
 - Neighbour rows SHALL be omitted when fewer than the maximum number of
   neighbours exist in that direction (e.g. at the start or end of the list).
 - The panel SHALL appear immediately when a drag gesture begins and disappear
@@ -105,6 +116,11 @@ neighbours.
 #### Scenario: Panel hidden when not dragging
 - **WHEN** the user is not actively dragging the thumb
 - **THEN** no label panel is shown
+
+#### Scenario: Neighbour labels legible while de-emphasised
+- **WHEN** the panel shows neighbour labels in either theme
+- **THEN** each neighbour label's composited text color has at least 4.5:1
+  contrast against the panel background
 
 ---
 

@@ -37,7 +37,7 @@
 - [x] 4.1 Run `flutter test --reporter failures-only` — all tests pass,
   including the contrast test's post-fix assertions
 - [x] 4.2 Run `flutter analyze` — no lint errors
-- [ ] 4.3 On-device (or emulator) visual check in both themes: source-row
+- [x] 4.3 On-device (or emulator) visual check in both themes: source-row
   border visible but unobtrusive; thumb and preview panel look right
 - [x] 4.4 Update `doc/implementation_plan.md` (check off the contrast-audit
   item, note the accepted decorative usages) and `doc/design_progress.md`;

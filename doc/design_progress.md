@@ -248,7 +248,7 @@ Open Questions
 Questions that arose during design but haven't been resolved:
 
 1. ~~Should we support variable-precision arithmetic, or is fixed precision acceptable?~~ → **RESOLVED**: Use `double` for MVP, rational numbers in Phase 15+
-2. How should we handle very long expressions in the UI (scrolling, wrapping, etc.)?
+2. ~~How should we handle very long expressions in the UI (scrolling, wrapping, etc.)?~~ → **RESOLVED**: Soft-wrap — the freeform expression fields wrap visually and grow vertically without bound; Enter keeps its submit semantics and never inserts a newline (Phase 9, see `openspec/changes/long-expressions/`)
 3. ~~Should worksheet field reordering be supported?~~ → **RESOLVED**: Yes, but as part of worksheet customization (Phase 12) — reordering only makes sense once worksheets are user-editable
 4. ~~Do we need undo/redo functionality?~~ → **RESOLVED**: Won't do for now — freeform history covers recalling past inputs, and no need for it has come up in practice
 5. Should conversion history be searchable/filterable?
@@ -508,3 +508,10 @@ Questions that arose during design but haven't been resolved:
   - Accepted as decorative (WCAG 1.4.11 exempt), recorded in the `color-contrast` spec: `outlineVariant` borders on the completion overlay (delineated by elevation + filled surface) and unit-detail tables; `surfaceContainerHighest`-derived background tints of the currency banner and browse sticky headers (text on them passes 4.5:1)
   - New `test/shared/color_contrast_test.dart`: WCAG relative-luminance/contrast/compositing helpers + a case table mirroring each widget's role/alpha literals, asserted ≥4.5:1 (text) / ≥3:1 (non-text) in both schemes — a Flutter upgrade that shifts `fromSeed` tones or a styling change below threshold fails the test
   - Design artifacts: `openspec/changes/archive/2026-07-08-contrast-audit/`
+- *Long-expression soft wrapping (July 9, 2026)* — Phase 9 UI/UX refinement; resolves open question #2
+  - 1993 tests passing (5 new)
+  - Both freeform expression fields now soft-wrap and grow vertically without bound: `maxLines: null` on the inner `TextField` in `CompletionField`; the explicit `textInputAction` (`next` / `done`) already passed by both call sites keeps Enter as submit instead of the multiline default of inserting a newline
+  - Wrapping is purely visual — no newline characters enter the text; pasted newlines are already treated as whitespace by the lexer (`_skipWhitespace`), pinned by a new end-to-end test in `expression_parser_test.dart`
+  - Completion overlay needed no changes: `CompositedTransformFollower` recomputes from the field's render box, so the overlay tracks the grown bottom edge (pinned by a new widget test)
+  - No existing tests assumed single-line geometry; all passed unchanged
+  - Design artifacts: `openspec/changes/long-expressions/`

@@ -347,6 +347,10 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
           controller: widget.controller,
           focusNode: widget.focusNode,
           decoration: widget.decoration,
+          // Soft-wrap long expressions and grow vertically without bound.
+          // The explicit textInputAction passed by callers keeps Enter as
+          // submit rather than the multiline default of inserting a newline.
+          maxLines: null,
           textInputAction: widget.textInputAction,
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,

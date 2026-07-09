@@ -442,12 +442,16 @@ Implementation Phases
        `openspec/changes/archive/2026-07-08-contrast-audit/`.
      - [x] Minimum 48dp touch targets throughout
    - Resolve outstanding UX open questions (see design_progress.md):
-     - Long-expression handling in the input fields (scroll/wrap) — #2
-     - Worksheet field reordering — #3
-     - Undo/redo — #4
-     - Searchable/filterable freeform history — #5
-     - Landscape orientation support — #7
-     - First-run onboarding / tutorial — #8
+     - [ ] Long-expression handling in the input fields (scroll/wrap) — #2
+     - [x] Worksheet field reordering — #3 → deferred to Phase 12 (worksheet
+       customization); reordering only makes sense once worksheets are
+       user-editable
+     - [x] Undo/redo — #4 → won't do for now; freeform history covers
+       recalling past inputs, and no need has come up in practice
+     - [ ] Searchable/filterable freeform history — #5
+     - [x] Landscape orientation support — #7 → resolved yes; shipped via the
+       responsive-layouts, safe-area, and tablet-spacing work above
+     - [ ] First-run onboarding / tutorial — #8
 
 3. Performance optimization
    - Parser/evaluator tuning
@@ -535,6 +539,7 @@ Future Enhancement Phases
 
 - Edit existing worksheets
 - Create new worksheets
+- Worksheet row reordering (open question #3, deferred from Phase 9)
 - Worksheet sharing (export/import)
 - Accessibility follow-ups deferred from the Phase 9 screen-reader change:
   - Screen-reader *announcement* of per-row worksheet errors (row errors become

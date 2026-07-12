@@ -13,5 +13,5 @@
 ## 3. Verification and documentation
 
 - [x] 3.1 Run `flutter test --reporter failures-only` (full suite) and `flutter analyze`; all pass (1993 tests, no analyzer issues)
-- [ ] 3.2 Manual check (device or web): long expression wraps and stays editable, Enter behavior unchanged, overlay positions correctly, clear-button placement acceptable on a tall field
+- [x] 3.2 Manual check (device or web): long expression wraps and stays editable, Enter behavior unchanged, overlay positions correctly, clear-button placement acceptable on a tall field
 - [x] 3.3 Mark open question #2 resolved in `doc/design_progress.md` and check it off in the Phase 9 list in `doc/implementation_plan.md`; update the README status blurb if warranted

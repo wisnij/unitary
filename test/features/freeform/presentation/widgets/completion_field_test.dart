@@ -12,6 +12,17 @@ Widget _wrap(Widget child) {
   );
 }
 
+/// Like [_wrap], but constrains the field to a narrow width so that long
+/// expressions wrap onto multiple lines.
+Widget _wrapNarrow(Widget child, {double width = 280}) {
+  return _wrap(
+    Align(
+      alignment: Alignment.topCenter,
+      child: SizedBox(width: width, child: child),
+    ),
+  );
+}
+
 /// Builds a [CompletionField] bound to [controller] and [focusNode].
 Widget _buildField({
   required TextEditingController controller,
@@ -501,6 +512,76 @@ void main() {
         find.byType(SingleChildScrollView),
       );
       expect(scrollBox.size.height, equals(8 * 48.0)); // 8 × _kRowHeight
+    });
+
+    // -------------------------------------------------------------------------
+    // Wrapping (long expressions)
+    // -------------------------------------------------------------------------
+
+    testWidgets('long expression wraps and grows the field height', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapNarrow(_buildField(controller: controller, focusNode: focusNode)),
+      );
+
+      final singleLineHeight = tester.getSize(find.byType(TextField)).height;
+
+      // Long enough to require multiple lines at 280 px width.
+      final longText = '${'1 + ' * 10}2';
+      controller.value = TextEditingValue(
+        text: longText,
+        selection: TextSelection.collapsed(offset: longText.length),
+      );
+      await tester.pump();
+
+      final wrappedHeight = tester.getSize(find.byType(TextField)).height;
+      expect(wrappedHeight, greaterThan(singleLineHeight));
+
+      // Wrapping is purely visual: no newline characters in the text value.
+      expect(controller.text, isNot(contains('\n')));
+
+      // Shortening the text shrinks the field back to a single line.
+      controller.value = const TextEditingValue(
+        text: '1 + 2',
+        selection: TextSelection.collapsed(offset: 5),
+      );
+      await tester.pump();
+      expect(
+        tester.getSize(find.byType(TextField)).height,
+        equals(singleLineHeight),
+      );
+    });
+
+    testWidgets('overlay appears below the bottom edge of a wrapped field', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrapNarrow(_buildField(controller: controller, focusNode: focusNode)),
+      );
+
+      await tester.tap(find.byType(TextField));
+      await tester.pump();
+
+      final singleLineHeight = tester.getSize(find.byType(TextField)).height;
+
+      // Wraps to multiple lines and ends in a completable identifier.
+      final longText = '${'1 + ' * 10}kg';
+      controller.value = TextEditingValue(
+        text: longText,
+        selection: TextSelection.collapsed(offset: longText.length),
+      );
+      await tester.pump(); // controller listener fires
+      await tester.pump(); // post-frame callback fires
+      await tester.pump(); // overlay renders
+
+      final fieldRect = tester.getRect(find.byType(TextField));
+      expect(fieldRect.height, greaterThan(singleLineHeight));
+
+      // The first suggestion row starts at (or just below, allowing for the
+      // overlay border) the field's current, taller bottom edge.
+      final rowRect = tester.getRect(find.byType(InkWell).first);
+      expect(rowRect.top, greaterThanOrEqualTo(fieldRect.bottom - 2));
     });
 
     testWidgets('overlay dismissed after suggestion tap', (tester) async {

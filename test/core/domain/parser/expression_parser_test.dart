@@ -29,6 +29,15 @@ void main() {
       expect(result.value, 3.0);
       expect(result.dimension, Dimension({'m': 1}));
     });
+
+    test('newlines are treated as whitespace', () {
+      // Pasted text may contain literal newlines; they must evaluate exactly
+      // like spaces (see openspec freeform-field-wrapping spec).
+      final withNewline = parser.evaluate('5 m\n* 3');
+      final withSpace = parser.evaluate('5 m * 3');
+      expect(withNewline.value, withSpace.value);
+      expect(withNewline.dimension, withSpace.dimension);
+    });
   });
 
   group('ExpressionParser.parseExpression', () {

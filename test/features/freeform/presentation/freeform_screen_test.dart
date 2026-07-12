@@ -325,6 +325,78 @@ void main() {
         expect(find.text('Enter an expression above.'), findsNothing);
       },
     );
+
+    testWidgets(
+      'Enter on a wrapped Convert-from field submits without inserting a newline',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        final fromFinder = find.widgetWithText(TextField, 'Convert from');
+        final singleLineHeight = tester
+            .getSize(find.widgetWithText(TextField, 'Convert to (optional)'))
+            .height;
+
+        // Long enough to wrap within the ReadableWidth-capped field.
+        final longExpression = '${'1 + ' * 30}1'; // evaluates to 31
+        await tester.tap(fromFinder);
+        await tester.pump();
+        await tester.enterText(fromFinder, longExpression);
+        await tester.pump();
+
+        // The field has wrapped: taller than the single-line output field.
+        expect(
+          tester.getSize(fromFinder).height,
+          greaterThan(singleLineHeight),
+        );
+
+        await tester.testTextInput.receiveAction(TextInputAction.next);
+        await tester.pump();
+
+        // Submit semantics preserved: evaluated, focus advanced, no newline.
+        expect(find.text('31'), findsWidgets);
+        expect(fieldHasFocus(tester, 'Convert from'), isFalse);
+        expect(fieldHasFocus(tester, 'Convert to (optional)'), isTrue);
+        final fromField = tester.widget<TextField>(fromFinder);
+        expect(fromField.controller?.text, isNot(contains('\n')));
+      },
+    );
+
+    testWidgets(
+      'Enter on a wrapped Convert-to field submits without inserting a newline',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        final toFinder = find.widgetWithText(
+          TextField,
+          'Convert to (optional)',
+        );
+
+        await tester.enterText(
+          find.widgetWithText(TextField, 'Convert from'),
+          '5 miles',
+        );
+        await tester.tap(toFinder);
+        await tester.pump();
+        final singleLineHeight = tester
+            .getSize(find.widgetWithText(TextField, 'Convert from'))
+            .height;
+        // A conformable sum of lengths, long enough to wrap.
+        final longTarget = '${'km + ' * 25}km';
+        await tester.enterText(toFinder, longTarget);
+        await tester.pump();
+
+        expect(tester.getSize(toFinder).height, greaterThan(singleLineHeight));
+
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pump();
+
+        // Submit semantics preserved: evaluated, focus dismissed, no newline.
+        expect(find.text('Enter an expression above.'), findsNothing);
+        expect(fieldHasFocus(tester, 'Convert to (optional)'), isFalse);
+        final toField = tester.widget<TextField>(toFinder);
+        expect(toField.controller?.text, isNot(contains('\n')));
+      },
+    );
   });
 
   group('FreeformScreen — swap button', () {

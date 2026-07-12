@@ -442,7 +442,11 @@ Implementation Phases
        `openspec/changes/archive/2026-07-08-contrast-audit/`.
      - [x] Minimum 48dp touch targets throughout
    - Resolve outstanding UX open questions (see design_progress.md):
-     - [ ] Long-expression handling in the input fields (scroll/wrap) — #2
+     - [x] Long-expression handling in the input fields (scroll/wrap) — #2 →
+       resolved as soft-wrap: the freeform fields wrap and grow vertically
+       without bound, Enter still submits (never inserts a newline), and the
+       completion overlay tracks the field's grown edges.  See
+       `openspec/changes/long-expressions/`.
      - [x] Worksheet field reordering — #3 → deferred to Phase 12 (worksheet
        customization); reordering only makes sense once worksheets are
        user-editable

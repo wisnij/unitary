@@ -452,10 +452,14 @@ Implementation Phases
        user-editable
      - [x] Undo/redo — #4 → won't do for now; freeform history covers
        recalling past inputs, and no need has come up in practice
-     - [ ] Searchable/filterable freeform history — #5
+     - [x] Searchable/filterable freeform history — #5 → deferred as a
+       nice-to-have future enhancement (see Phase 14); the 100-entry cap
+       keeps the plain list manageable
      - [x] Landscape orientation support — #7 → resolved yes; shipped via the
        responsive-layouts, safe-area, and tablet-spacing work above
-     - [ ] First-run onboarding / tutorial — #8
+     - [x] First-run onboarding / tutorial — #8 → deferred as a nice-to-have
+       future enhancement (see Phase 14); the idle-state tappable example
+       already provides lightweight onboarding
 
 3. Performance optimization
    - Parser/evaluator tuning
@@ -562,6 +566,10 @@ Future Enhancement Phases
 
 - Equation solver
 - Graphing
+- Searchable/filterable freeform history (open question #5, deferred from
+  Phase 9 as nice-to-have)
+- First-run onboarding / tutorial screens (open question #8, deferred from
+  Phase 9 as nice-to-have)
 - ~~Additional functions~~ — substantially covered by the GNU Units import and
   defined-functions work (101 defined functions + 46 aliases); more can be added
   as needed

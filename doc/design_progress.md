@@ -251,14 +251,14 @@ Questions that arose during design but haven't been resolved:
 2. ~~How should we handle very long expressions in the UI (scrolling, wrapping, etc.)?~~ → **RESOLVED**: Soft-wrap — the freeform expression fields wrap visually and grow vertically without bound; Enter keeps its submit semantics and never inserts a newline (Phase 9, see `openspec/changes/long-expressions/`)
 3. ~~Should worksheet field reordering be supported?~~ → **RESOLVED**: Yes, but as part of worksheet customization (Phase 12) — reordering only makes sense once worksheets are user-editable
 4. ~~Do we need undo/redo functionality?~~ → **RESOLVED**: Won't do for now — freeform history covers recalling past inputs, and no need for it has come up in practice
-5. Should conversion history be searchable/filterable?
+5. ~~Should conversion history be searchable/filterable?~~ → **RESOLVED**: Deferred as a nice-to-have future enhancement (post-MVP); the 100-entry cap keeps the plain list manageable for now
 6. ~~How many decimal places should be shown by default?~~ → **RESOLVED**: 6 decimal places, configurable 2-10 (Phase 4)
 7. ~~Should the app support landscape orientation?~~ → **RESOLVED**: Yes — shipped in Phase 9 (responsive layouts, safe areas, tablet spacing; short-height phone landscape accepted as a device limitation)
-8. Do we need tutorial/onboarding screens for first-time users?
+8. ~~Do we need tutorial/onboarding screens for first-time users?~~ → **RESOLVED**: Deferred as a nice-to-have future enhancement (post-MVP); the idle-state tappable example already provides lightweight onboarding
 
 ---
 
-*Last Updated: July 9, 2026*
+*Last Updated: July 12, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*

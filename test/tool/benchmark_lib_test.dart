@@ -134,6 +134,25 @@ void main() {
       expect(decoded['operatingSystem'], isA<String>());
     });
 
+    test('entries carry iteration count and derived timing statistics', () {
+      final decoded =
+          jsonDecode(resultsToJson(results)) as Map<String, Object?>;
+      final entry = (decoded['results'] as List).first as Map<String, Object?>;
+      expect(entry['iterations'], 3);
+      expect(entry['minUs'], 10);
+      expect(entry['medianUs'], 20.0);
+      expect(entry['meanUs'], 20.0);
+    });
+
+    test('parses baseline files without the derived statistics fields', () {
+      const legacyJson = '''
+      {"results": [{"name": "old", "samplesUs": [5, 15]}]}
+      ''';
+      final parsed = resultsFromJson(legacyJson);
+      expect(parsed.single.name, 'old');
+      expect(parsed.single.samplesUs, [5, 15]);
+    });
+
     test('throws FormatException on malformed input', () {
       expect(() => resultsFromJson('{"nope": true}'), throwsFormatException);
       expect(() => resultsFromJson('not json'), throwsFormatException);

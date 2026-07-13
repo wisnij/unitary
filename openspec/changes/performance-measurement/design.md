@@ -71,12 +71,14 @@ Timing baselines only mean something on the machine that produced them.  The too
 
 ### D6: Rebuild-scope widget tests, written after the manual DevTools pass
 
-Most Flutter UI performance bugs are rebuild-*scope* bugs (widgets rebuilding that shouldn't, or rebuilding multiple times per event), and scope is deterministic — assertable in plain `flutter test` with zero flakiness.  A counter probe (a lightweight widget that increments a counter in `build()`, wrapped around the subtrees of interest) pins:
+Most Flutter UI performance bugs are rebuild-*scope* bugs (widgets rebuilding that shouldn't, or rebuilding multiple times per event), and scope is deterministic — assertable in plain `flutter test` with zero flakiness.  The probe is `RebuildCounter` (`test/shared/rebuild_counter.dart`), which hooks the framework's `debugOnRebuildDirtyWidget` — the same mechanism DevTools' "track widget builds" uses — so real screens are probed without wrapper widgets in application code, counts match what a manual DevTools pass reports, and private widget types are addressable by name.  (An earlier draft envisioned a wrapper-widget probe; the hook supersedes it.)
 
-- One keystroke in a freeform field → completion overlay content rebuilds; result display, history pane, and the *other* field's overlay do not; no double-builds per keystroke
-- One worksheet cell edit → row value fields rebuild (after debounce); banner and template list do not
+The manual DevTools pass (July 13, 2026) found the actual scope broader than the ideal this design originally sketched, so the tests pin the verified *bounds* rather than narrow-scope assertions:
 
-Exact assertions are chosen *after* the manual DevTools pass confirms today's scope is actually correct — the tests encode observed-good behavior, they don't guess at it.  Assertions favor scoped invariants ("did not rebuild", "rebuilt at most N times") over brittle exact counts where the framework may legitimately pump extra frames.
+- One keystroke in a freeform field → at most two rebuilds of the `FreeformScreen` subtree (one immediate button-state `setState`, one when the debounced evaluation arrives); the whole-subtree breadth is a recorded follow-up (freeform-notifier refactor), not endorsed behavior
+- One worksheet cell edit → at most one rebuild of the `WorksheetScreen` subtree, with recomputed row values; the recompute path turned out to be synchronous (no worksheet-side debounce, contrary to Phase 6 notes)
+
+Exact assertions were chosen *after* the manual DevTools pass — the tests encode observed behavior, they don't guess at it.  Assertions favor scoped invariants ("at most N rebuilds") over brittle exact counts, so a future scope-narrowing refactor still passes.
 
 Timing inside widget tests (Stopwatch under `FakeAsync`, debug JIT) was considered and rejected: unrepresentative and noisy, and the pure-Dart benchmarks already cover the compute cost.
 

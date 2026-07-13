@@ -107,7 +107,16 @@ String resultsToJson(List<BenchmarkResult> results) {
     'operatingSystem': Platform.operatingSystem,
     'results': [
       for (final result in results)
-        {'name': result.name, 'samplesUs': result.samplesUs},
+        {
+          'name': result.name,
+          'samplesUs': result.samplesUs,
+          // Derived from samplesUs; included so the JSON is self-describing.
+          // resultsFromJson reads only name and samplesUs.
+          'iterations': result.iterations,
+          'minUs': result.minUs,
+          'medianUs': result.medianUs,
+          'meanUs': result.meanUs,
+        },
     ],
   };
   return const JsonEncoder.withIndent('  ').convert(document);

@@ -52,7 +52,8 @@ Initial case list (one benchmark per plan item, plus the startup-adjacent paths 
 5. `browse-catalog` — `buildBrowseCatalog()`
 6. `currency-descriptors` — `buildCurrencyDescriptors()` on a fresh repo (its result is memoized, so warm runs are trivial)
 7. `suggest-completions` — representative queries (short prefix with many hits, infix match, near-miss)
-8. `worksheet-compute` — `computeWorksheet()` for a large template (Length) and a `FunctionRow` template (Temperature)
+
+**`worksheet-compute` runs as a companion `flutter test` benchmark, not in the tool** (decided during implementation): `computeWorksheet()` takes a `UserSettings`, and `user_settings.dart` imports `package:flutter/material.dart` (for `ThemeMode`), which the standalone `dart run` VM cannot compile — verified empirically.  Rather than approximate with a copy (measures the wrong code) or refactor `UserSettings` (application code is out of scope here), the case lives in `test/tool/worksheet_benchmark_test.dart`: it reuses `benchmark_lib.dart`'s runner and table formatting, times the real `computeWorksheet()` for a large `UnitRow` template (Length) and a `FunctionRow` template (Temperature), prints the table, and asserts only sanity conditions (non-empty results) so it doubles as a smoke test in normal suite runs.  Run it directly (`flutter test test/tool/worksheet_benchmark_test.dart --reporter expanded`) to see the numbers.  It is table-only — no JSON/baseline support; its numbers are recorded in `doc/performance.md` prose like the others, with the added caveat that `flutter test` runs debug-mode JIT with asserts enabled (fine for the relative/order-of-magnitude questions asked of it).
 
 ### D3: Baseline JSON files are not committed; numbers are recorded in prose
 
@@ -64,7 +65,9 @@ Timing baselines only mean something on the machine that produced them.  The too
 
 ### D5: Memory report via `ProcessInfo.currentRss` stage deltas
 
-`tool/memory_report.dart` builds structures stage by stage — baseline VM → `withPredefinedUnits()` → `resolveUnit()` all (cache populated) → `buildBrowseCatalog()` → `buildCurrencyDescriptors()` — and reports RSS after each stage, with deltas.  RSS is coarse (includes VM overhead, GC timing effects), so the tool triggers what GC it can and reports the caveat in its own output; the question it answers ("is the catalog tens of KB, single-digit MB, or hundreds of MB?") only needs order-of-magnitude resolution.  Finer allocation profiling via VM-service/DevTools is documented as a manual escalation path, not scripted.
+`tool/memory_report.dart` builds structures stage by stage — baseline VM → `withPredefinedUnits()` → `resolveUnit()` all (cache populated) → `buildBrowseCatalog()` → `buildCurrencyDescriptors()` — and reports RSS after each stage, with deltas.  RSS is coarse (includes VM overhead, GC timing effects), so the tool reports the caveat in its own output; the question it answers ("is the catalog tens of KB, single-digit MB, or hundreds of MB?") only needs order-of-magnitude resolution.  Finer allocation profiling via VM-service/DevTools is documented as a manual escalation path, not scripted.
+
+**Discovered during implementation: the tool must run AOT-compiled.**  Under `dart run` (JIT), the in-process kernel compiler dominates RSS (~246 MB baseline, with GC-driven *negative* deltas mid-report); AOT-compiled (`dart compile exe`), the baseline is ~8 MB and stage deltas are clean.  The tool detects JIT mode via `bool.fromEnvironment('dart.vm.product')` and prints a warning recommending the AOT invocation, which is also the documented usage.
 
 ### D6: Rebuild-scope widget tests, written after the manual DevTools pass
 
@@ -98,3 +101,4 @@ The doc also states the decision rules: a user interaction measured at over 100 
 
 - Memory payoff threshold: deliberately deferred until `memory_report` produces first real numbers (per proposal).
 - Whether any follow-up optimization changes get opened at all — answered by the measurements themselves; candidate outcomes are pre-warming (D2 case 2), moving `buildCurrencyDescriptors()` off the pre-frame path, and a frame-timing harness (D7).
+- **Deferred follow-up (independent of measurements): decouple `UserSettings` from Flutter.**  `user_settings.dart` imports `package:flutter/material.dart` only for `ThemeMode`, which drags Flutter into everything that touches settings — including the pure-logic worksheet engine, forcing the D2 companion-benchmark workaround.  Splitting the theme preference out of `UserSettings` (or giving the engine a narrower parameter than the full settings object) would make the engine pure Dart and let `worksheet-compute` join the main benchmark tool.  Out of scope for this change; noted for a future cleanup.

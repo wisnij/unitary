@@ -16,23 +16,23 @@
 
 ## 3. Manual measurement passes
 
-- [ ] 3.1 On-device startup measurement: `flutter run --profile --trace-startup` on a real device, with stored currency rates present and absent; record `start_up_info.json` timings
-- [ ] 3.2 DevTools profile pass on a real device: widget rebuild tracking + frame chart while typing in freeform (overlay open), editing worksheet cells, and opening/scrolling Browse; record frame times and observed rebuild scope
-- [ ] 3.3 Record any scope or jank findings as follow-up candidates (do not fix in this change)
+- [x] 3.1 On-device startup measurement: `flutter run --profile --trace-startup` on a real device, with stored currency rates present and absent; record `start_up_info.json` timings (recorded in measurements.md)
+- [x] 3.2 DevTools profile pass on a real device: widget rebuild tracking + frame chart while typing in freeform (overlay open), editing worksheet cells, and opening/scrolling Browse; record frame times and observed rebuild scope (frame chart in profile mode; rebuild counts in debug mode, where tracking is available)
+- [x] 3.3 Record any scope or jank findings as follow-up candidates (do not fix in this change): freeform whole-screen ×2 rebuild per keystroke (existing deferred notifier refactor, now evidence-backed) and FastScrollBar/_PeekPanel per-frame drag cost (see measurements.md)
 
 ## 4. Rebuild-scope widget tests
 
-- [ ] 4.1 Build the rebuild-count probe helper for widget tests
-- [ ] 4.2 Write freeform keystroke scope tests (overlay content rebuilds; history pane and other field's overlay do not; no redundant rebuilds), with assertions matching the scope verified in 3.2
-- [ ] 4.3 Write worksheet edit scope tests (row value fields rebuild after debounce; template list and banner do not), with assertions matching the scope verified in 3.2
+- [x] 4.1 Build the rebuild-count probe helper for widget tests (`test/shared/rebuild_counter.dart`, via the framework's `debugOnRebuildDirtyWidget` hook — the same mechanism DevTools' build tracking uses — with its own tests)
+- [x] 4.2 Write freeform keystroke scope tests, with assertions matching the scope verified in 3.2 (whole-screen ×2 observed → tests pin the ≤2 upper bound; spec revised accordingly, narrow-scope ideal recorded as follow-up)
+- [x] 4.3 Write worksheet edit scope tests, with assertions matching the scope verified in 3.2 (≤1 screen rebuild per edit + recomputed rows; discovered the worksheet path is synchronous with no debounce — spec revised accordingly)
 
 ## 5. Documentation and decisions
 
-- [ ] 5.1 Write `doc/performance.md` (setext headers): how to run both tools, baseline workflow with machine-dependence caveat, both manual procedures, decision rules (interactions measured at over 100 ms warrant action, memory threshold TBD, frame-timing harness only if jank found), and the dated, machine-labeled baseline numbers from 1.4, 2.3, 3.1, and 3.2
-- [ ] 5.2 Record go/no-go outcomes for the deferred questions: cache pre-warming (from `resolve-all-cold`), `buildCurrencyDescriptors()` pre-frame cost (from benchmarks + startup trace), frame-timing harness (from 3.2), and a first memory-threshold judgment (from 2.3)
-- [ ] 5.3 Update `doc/implementation_plan.md` Phase 9 performance section checkboxes and notes, and `doc/design_progress.md`, to reflect the measurement results and outcomes; record the deferred `UserSettings`-decoupling refactor (drop the `material.dart` import so the worksheet engine is pure Dart) as a future enhancement
-- [ ] 5.4 Update README project status if warranted
+- [x] 5.1 Write `doc/performance.md` (setext headers): how to run both tools, baseline workflow with machine-dependence caveat, both manual procedures, decision rules (interactions measured at over 100 ms warrant action, memory threshold set at ~50 MB, frame-timing harness deferred to the follow-up change that needs it), and the dated, machine-labeled baseline numbers
+- [x] 5.2 Record go/no-go outcomes: cache pre-warming **rejected** (~11 ms cold total); currency pre-frame path **kept** (~1.5 ms, bounded well under 100 ms on-device); frame-timing harness **deferred** to the FastScrollBar follow-up; memory threshold set at ~50 MB (core domain is ~10.6 MB) — in `doc/performance.md` "Findings and decisions"
+- [x] 5.3 Update `doc/implementation_plan.md` (Phase 9 performance section complete with per-item outcomes; new "Performance Follow-ups" future section incl. the `UserSettings`-decoupling refactor; pre-warming item closed as rejected) and `doc/design_progress.md` (new session entry, date bumped)
+- [x] 5.4 Update README project status (2034 tests, performance pass added to the Phase 9 done list, date bumped)
 
 ## 6. Verification
 
-- [ ] 6.1 Run `flutter test --reporter failures-only` (all tests pass) and `flutter analyze` (no lints)
+- [x] 6.1 Run `flutter test --reporter failures-only` (2034 tests pass) and `flutter analyze` (no issues)

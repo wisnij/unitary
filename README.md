@@ -18,9 +18,9 @@ Project Status
 --------------
 
 **Current Phase:** Polish & Testing\
-**Last Updated:** July 9, 2026
+**Last Updated:** July 13, 2026
 
-Phases 0-8 are complete with 1993 passing tests.  The expression parser,
+Phases 0-8 are complete with 2034 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
 unit database, worksheet mode, unit browser, cross-session data persistence,
 freeform conversion history, predictive completion, and currency support are
@@ -32,7 +32,10 @@ a WCAG contrast audit (a perceivable worksheet source-row border, compliant
 fast-scroll colors, and a regression test pinning every custom color pairing's
 contrast ratio in both themes), and soft-wrapping freeform input fields (long
 expressions wrap and grow the field vertically instead of scrolling out of
-sight; Enter still submits) are done.  Currency exchange rates are fetched automatically on launch
+sight; Enter still submits), and a measurement-first performance pass
+(checked-in benchmark and memory-report tools, rebuild-scope widget tests,
+on-device startup and frame profiling; no optimization crossed the action
+thresholds — see [doc/performance.md](doc/performance.md)) are done.  Currency exchange rates are fetched automatically on launch
 (24-hour staleness check) from the Frankfurter v2 API, including precious metals
 (XAU, XAG, XPT).  Stored rates are applied to the unit repository at startup so
 currency conversions are live from the first frame.  A "Currency rates" section

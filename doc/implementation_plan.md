@@ -461,22 +461,41 @@ Implementation Phases
        future enhancement (see Phase 14); the idle-state tappable example
        already provides lightweight onboarding
 
-3. Performance optimization
-   - Parser/evaluator tuning
-     - Pre-warm the resolution cache for all registered units as a background task
-       at startup (the one remaining unchecked item under "Unit Resolution
-       Caching" below)
-     - Benchmark cold-start evaluation vs. warmed-cache evaluation
-   - UI rendering optimization
-     - Profile the completion overlay (rebuilds on every keystroke)
-     - Profile worksheet cross-row recompute on each edit
-     - Profile the eager Browse catalog build in `BrowserNotifier.build()`
-   - Memory usage analysis
-     - Measure the footprint of the ~7400-unit catalog plus the browse-entry list
-       held in memory
-   - Startup time
-     - Measure cold-start cost, including synchronous stored-rate load before first
-       frame
+3. Performance optimization — **COMPLETE (as measurement; see [performance.md](performance.md))**
+   Closed measurement-first: checked-in tools (`tool/benchmark.dart` with
+   `--baseline` diffing, `tool/memory_report.dart`, a companion
+   `computeWorksheet` benchmark under `flutter test`), rebuild-scope widget
+   tests (`RebuildCounter` probe), and documented on-device procedures.  No
+   optimization crossed the action thresholds (interaction >100 ms; memory
+   >~50 MB); results and decisions recorded in `doc/performance.md`.
+   - [x] Parser/evaluator tuning
+     - [x] Pre-warm the resolution cache — **rejected**: cold resolution of all
+       ~6200 units totals ~11 ms, so pre-warming buys nothing (see "Unit
+       Resolution Caching" below)
+     - [x] Benchmark cold-start evaluation vs. warmed-cache evaluation —
+       `resolve-all-cold` ~11 ms vs. `resolve-all-warm` ~133 µs (~80×)
+   - [x] UI rendering optimization
+     - [x] Profile the completion overlay — suggestion computation ~0.5 ms per
+       keystroke; the dominant cost is the whole `FreeformScreen` rebuilding
+       twice per keystroke (13–16 ms frames, over budget on 120 Hz devices) →
+       follow-up: lift freeform field/eval state into a notifier (the refactor
+       already deferred from responsive-layouts, now evidence-backed)
+     - [x] Profile worksheet cross-row recompute — ~150–190 µs per full
+       recompute, one screen rebuild per edit (the path is synchronous; the
+       "500 ms debounce" in the Phase 6 notes is stale for worksheets); fine
+       as is
+     - [x] Profile the eager Browse catalog build — ~12 ms on a cold repo;
+       fine as is.  Discovered instead: the fast-scroll thumb drag overruns
+       the 8.3 ms/120 Hz frame budget frequently (`FastScrollBar` + peek panel
+       rebuild every drag frame) → follow-up candidate (see "Performance
+       Follow-ups" under Future Enhancement Phases)
+   - [x] Memory usage analysis — core domain totals ~10.6 MB (repository
+     1.9 MB + resolution cache 8.6 MB + catalog ~0 + descriptors 0.1 MB);
+     non-problem, threshold set at ~50 MB
+   - [x] Startup time — first frame ~650 ms cold clean install / ~380 ms warm
+     relaunch with the full stored-rate path (profile mode, real device);
+     stored-rate cost bounded well under 100 ms → keep rates on the pre-frame
+     path
 
 4. Comprehensive testing
    - Integration tests — none exist yet (no `integration_test/` directory). Add
@@ -582,7 +601,32 @@ Future Enhancement Phases
 - Convert from decimal to rational where beneficial
 - UI for displaying rational results
 
-### Future: Unit Resolution Caching — PARTIALLY COMPLETE
+### Future: Performance Follow-ups (from the Phase 9 measurement, July 2026)
+
+Candidates identified by `doc/performance.md`; none are urgent (nothing
+crossed the action thresholds), roughly in value order:
+
+- **Freeform rebuild scope** — lift the freeform field/eval state out of
+  `FreeformScreen`'s widget `State` into a notifier (deferred from
+  responsive-layouts) so a keystroke no longer rebuilds the whole screen
+  twice; the cause of the 13–16 ms typing frames that overrun a 120 Hz
+  device's 8.3 ms budget.  Rebuild-scope tests pin today's ×2 bound, so the
+  refactor can only improve them.
+- **Fast-scroll thumb drag cost** — Browse's `FastScrollBar` + peek panel
+  rebuild every frame during a thumb drag and frequently overrun the 120 Hz
+  budget (unlike plain fling-scrolling).  Profile the UI vs. raster split,
+  then consider RepaintBoundary isolation, transform-based repositioning, or
+  cheaper peek-panel styling.  This change is also where an
+  `integration_test` frame-timing harness (`traceAction`) would be built to
+  verify the fix.
+- **Decouple `UserSettings` from Flutter** — its `material.dart` import (for
+  `ThemeMode`) drags Flutter into the pure-logic worksheet engine, which
+  forces `computeWorksheet()`'s benchmark to run as a `flutter test`
+  companion instead of inside `tool/benchmark.dart`.  Split the theme
+  preference out (or narrow the engine's parameter) to make the engine pure
+  Dart.
+
+### Future: Unit Resolution Caching — COMPLETE (pre-warming rejected)
 
 - [x] Cache the resulting base-unit Quantity the first time a unit is fully
   reduced during evaluation, so subsequent evaluations skip the resolution chain
@@ -593,9 +637,13 @@ Future Enhancement Phases
   `registerDynamic()` / `unregisterDynamic()` clear the cache (currently the
   currency dynamic-layer path; a general definition-edit feature does not exist
   yet but would hook in here)
-- [ ] Explore pre-warming the cache for all registered units as a background task
+- [x] Explore pre-warming the cache for all registered units as a background task
   at initial app startup and after definition edits, to minimize user-visible
-  processing time
+  processing time — **rejected (July 2026)**: the Phase 9 performance
+  measurement showed cold resolution of *all* ~6200 registered units totals
+  ~11 ms (`tool/benchmark.dart` `resolve-all-cold`), so pre-warming would save
+  a few milliseconds spread across first uses; not worth the complexity.  See
+  [performance.md](performance.md).
 
 ---
 

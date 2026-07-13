@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: July 12, 2026*
+*Last Updated: July 13, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -515,3 +515,13 @@ Questions that arose during design but haven't been resolved:
   - Completion overlay needed no changes: `CompositedTransformFollower` recomputes from the field's render box, so the overlay tracks the grown bottom edge (pinned by a new widget test)
   - No existing tests assumed single-line geometry; all passed unchanged
   - Design artifacts: `openspec/changes/long-expressions/`
+- *Performance measurement (July 13, 2026)* — Phase 9 performance section closed measurement-first; no optimization crossed the action thresholds (interaction >100 ms; memory >~50 MB)
+  - 2034 tests passing (41 new)
+  - New reusable tools following the `tool/` lib/exe convention: `tool/benchmark.dart` + `benchmark_lib.dart` (7 pure-Dart hot-path cases, warmup + min/median/mean, `--filter`, `--json`, `--baseline` diff with ±20% flagging and machine-dependence caveat) and `tool/memory_report.dart` + `memory_report_lib.dart` (staged RSS deltas; must run AOT — the tool warns under JIT, where the in-process compiler inflates RSS ~246 MB vs. ~8 MB AOT)
+  - Companion `test/tool/worksheet_benchmark_test.dart` times the real `computeWorksheet()` under `flutter test` because the engine's import chain reaches `package:flutter/material.dart` via `UserSettings` (decoupling refactor recorded as a future enhancement)
+  - Key numbers (dev machine JIT): cold resolution of all ~6200 units ~11 ms total (pre-warming **rejected**); warm ~133 µs; `buildCurrencyDescriptors()` ~1.5 ms (stays on the pre-frame startup path); worksheet recompute ~150–190 µs; completions ~0.5 ms/keystroke; core-domain memory ~10.6 MB (AOT RSS)
+  - On-device (120 Hz phone, profile mode): first frame ~650 ms cold clean install / ~380 ms warm relaunch with full stored-rate path; typing produces 13–16 ms frames (over the 8.3 ms/120 Hz budget) caused by the whole `FreeformScreen` rebuilding twice per keystroke; Browse fast-scroll thumb drags overrun the budget frequently (`FastScrollBar` + peek panel rebuild every drag frame) — both recorded as follow-up candidates, not fixed here
+  - New `RebuildCounter` widget-test probe (`test/shared/rebuild_counter.dart`, via the framework's `debugOnRebuildDirtyWidget` hook — the same mechanism DevTools' build tracking uses) with rebuild-scope tests pinning freeform ≤2 builds/keystroke and worksheet ≤1 build/edit
+  - Discovered: the worksheet recompute path is synchronous (`onRowChanged` runs the engine in the same turn) — the "500 ms debounce" in the Phase 6 notes is stale for worksheets; at ~150 µs per pass this is sound
+  - New `doc/performance.md`: tool usage, baseline workflow, manual on-device procedures (startup trace, DevTools passes), decision rules, dated baselines, and findings
+  - Design artifacts: `openspec/changes/performance-measurement/`

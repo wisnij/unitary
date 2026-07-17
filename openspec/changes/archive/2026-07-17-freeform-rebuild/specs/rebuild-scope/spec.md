@@ -1,10 +1,6 @@
-# Rebuild Scope
+# rebuild-scope Delta Specification
 
-## Purpose
-
-Pin the widget-rebuild bounds of the freeform and worksheet screens with rebuild-count widget tests (the `RebuildCounter` probe in `test/shared/rebuild_counter.dart`, built on the framework's `debugOnRebuildDirtyWidget` hook), so rebuild regressions cannot ship unnoticed.  The bounds encode behavior verified by on-device measurement (DevTools rebuild-tracking passes, July 2026; see `doc/performance.md`).
-
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Freeform keystroke rebuild bound
 
@@ -19,15 +15,6 @@ A single keystroke in a freeform expression field, including its debounced evalu
 
 - **WHEN** a keystroke makes both fields non-empty and its debounced evaluation completes
 - **THEN** the result display shows the new evaluation result and the clear and swap buttons reflect the new field contents, without a screen-subtree rebuild
-
-### Requirement: Worksheet edit rebuild bound
-
-A single edit to a worksheet value cell SHALL trigger at most one rebuild of the worksheet screen subtree, in which the row value fields display the recomputed values.  (The worksheet recompute path is synchronous — `onRowChanged` updates the source row and runs the engine in the same turn; there is no worksheet-side debounce, contrary to older design notes.)  Widget tests SHALL pin this bound with rebuild-count probes.
-
-#### Scenario: One rebuild per cell edit
-
-- **WHEN** a value is typed into a worksheet cell in a widget test instrumented with rebuild-count probes
-- **THEN** the probed worksheet screen subtree records at most one rebuild and the other rows show recomputed values
 
 ### Requirement: Assertions derived from verified behavior
 

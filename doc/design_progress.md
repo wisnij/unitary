@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: July 13, 2026*
+*Last Updated: July 17, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -525,3 +525,10 @@ Questions that arose during design but haven't been resolved:
   - Discovered: the worksheet recompute path is synchronous (`onRowChanged` runs the engine in the same turn) — the "500 ms debounce" in the Phase 6 notes is stale for worksheets; at ~150 µs per pass this is sound
   - New `doc/performance.md`: tool usage, baseline workflow, manual on-device procedures (startup trace, DevTools passes), decision rules, dated baselines, and findings
   - Design artifacts: `openspec/changes/performance-measurement/`
+- *Freeform rebuild scoping (July 17, 2026)* — minimal fix for the whole-screen ×2 rebuild per keystroke found by the performance measurement; the notifier/AppBar refactor stays deferred
+  - 2036 tests passing (rebuild-scope tests tightened, written red-first against the old code)
+  - Removed the per-keystroke `setState(() {})` from `_onInputChanged`/`_onOutputChanged`; the clear button re-evaluates via a `ListenableBuilder` wrapping the input `CompletionField` (the `suffixIcon: null`/non-null switch is preserved verbatim, so empty-field geometry is unchanged by construction — an always-present suffix widget would have reserved `InputDecorator`'s 48 dp slot), and the swap button listens via `Listenable.merge` over both controllers
+  - Screen-level `ref.watch`es for `freeformProvider`/`freeformHistoryProvider` pushed into four scoped `Consumer`s (result display + idle-example tap, AppBar conformable-browse button, history pane, compact AppBar history button); `settingsProvider` watch intentionally stays at screen level
+  - `rebuild-scope` spec tightened (MODIFIED): a keystroke plus its debounced evaluation rebuilds the `FreeformScreen` subtree root zero times, with positive-effect assertions so the bound can't pass vacuously
+  - On-device re-pass (120 Hz phone): rebuild list shows only the scoped dependents, each ×1; normal typing now entirely under the 8.3 ms budget (was 13–16 ms), over-budget frames only during very rapid typing
+  - Design artifacts: `openspec/changes/freeform-rebuild/`

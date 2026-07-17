@@ -11,13 +11,12 @@ import 'package:unitary/features/settings/state/settings_provider.dart';
 
 import '../../../shared/rebuild_counter.dart';
 
-// Pins the freeform rebuild bound observed in the July 13, 2026 DevTools
-// rebuild-tracking pass (see openspec/changes/performance-measurement/
-// measurements.md): one keystroke triggers at most two rebuilds of the
-// FreeformScreen subtree — one immediate (button-state setState) and one when
-// the debounced evaluation result arrives.  The whole-subtree scope itself is
-// a recorded follow-up finding (freeform-notifier refactor), so these tests
-// assert only the upper bound, which a narrowing refactor would still pass.
+// Pins the scoped freeform rebuild behavior from the freeform-rebuild change:
+// a keystroke (plus its debounced evaluation) rebuilds the FreeformScreen
+// subtree root zero times — only the widgets that depend on the changed state
+// rebuild (controller-listening buttons, scoped result/history consumers).
+// Positive-effect assertions (result shown, buttons reacting) guard against
+// the zero bound passing vacuously.
 
 void main() {
   late SettingsRepository settingsRepo;
@@ -42,60 +41,93 @@ void main() {
     );
   }
 
-  testWidgets('one keystroke rebuilds the freeform screen at most twice '
-      '(immediate + debounced evaluation)', (tester) async {
+  testWidgets(
+    'a keystroke and its debounced evaluation do not rebuild the screen '
+    'subtree, while the result and clear button still update',
+    (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      await tester.pumpAndSettle();
+
+      // Focus the field first so focus changes are not part of the count.
+      final inputField = find.widgetWithText(TextField, 'Convert from');
+      await tester.tap(inputField);
+      await tester.pumpAndSettle();
+      expect(find.byIcon(Icons.clear), findsNothing);
+
+      final counter = RebuildCounter()..install(tester);
+      addTearDown(() => counter.uninstall(tester));
+
+      // One text-change event, then let the debounce fire and settle.
+      await tester.enterText(inputField, '5 ft');
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 600));
+      await tester.pumpAndSettle();
+
+      expect(
+        counter.of('FreeformScreen'),
+        0,
+        reason:
+            'keystroke and evaluation rebuild only scoped dependents, '
+            'never the screen subtree root',
+      );
+
+      // Positive effects: the scoped rebuilds actually happened.  (The result
+      // text can appear both in the result display and as the recorded entry
+      // in the history pane.)
+      expect(
+        find.textContaining('1.524'),
+        findsWidgets,
+        reason: 'the evaluation result is displayed',
+      );
+      expect(
+        find.byIcon(Icons.clear),
+        findsOneWidget,
+        reason: 'the clear button appears once the input is non-empty',
+      );
+    },
+  );
+
+  testWidgets('filling both fields enables the swap button without a screen '
+      'subtree rebuild', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.pumpAndSettle();
 
-    // Focus the field first so focus changes are not part of the count.
     final inputField = find.widgetWithText(TextField, 'Convert from');
+    final outputField = find.widgetWithText(TextField, 'Convert to (optional)');
+
+    IconButton swapButton() => tester.widget<IconButton>(
+      find.widgetWithIcon(IconButton, Icons.swap_vert),
+    );
+
     await tester.tap(inputField);
     await tester.pumpAndSettle();
+    expect(
+      swapButton().onPressed,
+      isNull,
+      reason: 'swap is disabled while a field is empty',
+    );
 
     final counter = RebuildCounter()..install(tester);
     addTearDown(() => counter.uninstall(tester));
 
-    // One text-change event, then let the debounce fire and settle.
     await tester.enterText(inputField, '5 ft');
+    await tester.pump();
+    await tester.enterText(outputField, 'm');
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pumpAndSettle();
 
     expect(
       counter.of('FreeformScreen'),
-      lessThanOrEqualTo(2),
-      reason:
-          'a keystroke must not trigger rebuild storms; '
-          'observed bound is one immediate + one debounced rebuild',
+      0,
+      reason: 'button-state updates are scoped to the controller listeners',
+    );
+    expect(
+      swapButton().onPressed,
+      isNotNull,
+      reason: 'swap enables once both fields are non-empty',
     );
   });
-
-  testWidgets(
-    'the debounced evaluation causes at most one additional rebuild',
-    (tester) async {
-      await tester.pumpWidget(buildApp());
-      await tester.pumpAndSettle();
-
-      final inputField = find.widgetWithText(TextField, 'Convert from');
-      await tester.tap(inputField);
-      await tester.pumpAndSettle();
-
-      final counter = RebuildCounter()..install(tester);
-      addTearDown(() => counter.uninstall(tester));
-
-      await tester.enterText(inputField, '5 ft');
-      await tester.pump();
-      final buildsBeforeDebounce = counter.of('FreeformScreen');
-
-      await tester.pump(const Duration(milliseconds: 600));
-      await tester.pumpAndSettle();
-
-      expect(
-        counter.of('FreeformScreen') - buildsBeforeDebounce,
-        lessThanOrEqualTo(1),
-        reason:
-            'the arriving evaluation result rebuilds the screen at most once',
-      );
-    },
-  );
 }

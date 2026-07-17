@@ -95,8 +95,10 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
     });
   }
 
+  // The clear and swap buttons react to text changes via ListenableBuilders
+  // on the controllers, so no setState is needed here — a keystroke must not
+  // rebuild the whole screen (see the rebuild-scope spec).
   void _onInputChanged(String _) {
-    setState(() {}); // Rebuild to update clear button and swap button states.
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();
@@ -104,7 +106,6 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   }
 
   void _onOutputChanged(String _) {
-    setState(() {}); // Rebuild to update swap button enabled state.
     final settings = ref.read(settingsProvider);
     if (settings.evaluationMode == EvaluationMode.realtime) {
       _debounceEvaluate();
@@ -232,13 +233,13 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final result = ref.watch(freeformProvider);
-    final history = ref.watch(freeformHistoryProvider);
+    // The evaluation result and history are watched by scoped Consumers below
+    // (result display, AppBar buttons, history pane) so that an arriving
+    // result rebuilds only its dependents, never this whole subtree.  The
+    // settings watch stays here: evaluationMode changes rarely and genuinely
+    // restructures the layout.
     final settings = ref.watch(settingsProvider);
     final isOnSubmit = settings.evaluationMode == EvaluationMode.onSubmit;
-    final canSwap =
-        _inputController.text.isNotEmpty && _outputController.text.isNotEmpty;
-    final browseEnabled = conformableBrowseEnabled(result);
     final sizeClass = WindowSizeClass.of(context);
     final usesRail = sizeClass.usesRail;
     // At medium/expanded the history lives in a persistent side pane, so the
@@ -251,19 +252,29 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
         title: const Text('Unitary'),
         actions: [
           if (!twoPane)
-            IconButton(
-              icon: const Icon(Icons.history),
-              tooltip: 'Conversion history',
-              onPressed: history.isNotEmpty
-                  ? () => _showHistoryModal(context)
-                  : null,
+            Consumer(
+              builder: (context, ref, _) {
+                final history = ref.watch(freeformHistoryProvider);
+                return IconButton(
+                  icon: const Icon(Icons.history),
+                  tooltip: 'Conversion history',
+                  onPressed: history.isNotEmpty
+                      ? () => _showHistoryModal(context)
+                      : null,
+                );
+              },
             ),
-          IconButton(
-            icon: const Icon(Icons.balance),
-            tooltip: 'Browse conformable units',
-            onPressed: browseEnabled
-                ? () => _showConformableModal(context)
-                : null,
+          Consumer(
+            builder: (context, ref, _) {
+              final result = ref.watch(freeformProvider);
+              return IconButton(
+                icon: const Icon(Icons.balance),
+                tooltip: 'Browse conformable units',
+                onPressed: conformableBrowseEnabled(result)
+                    ? () => _showConformableModal(context)
+                    : null,
+              );
+            },
           ),
         ],
       ),
@@ -278,9 +289,14 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
           compactPrimary: PaneSide.left,
           leftSize: const PaneSize.fill(),
           rightSize: const PaneSize.fixed(320),
-          right: _HistoryPane(
-            entries: history,
-            onSelect: _restoreHistoryEntry,
+          right: Consumer(
+            builder: (context, ref, _) {
+              final history = ref.watch(freeformHistoryProvider);
+              return _HistoryPane(
+                entries: history,
+                onSelect: _restoreHistoryEntry,
+              );
+            },
           ),
           left: Column(
             children: [
@@ -291,33 +307,54 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        CompletionField(
-                          controller: _inputController,
-                          focusNode: _inputFocus,
-                          decoration: InputDecoration(
-                            labelText: 'Convert from',
-                            border: const OutlineInputBorder(),
-                            suffixIcon: _inputController.text.isNotEmpty
-                                ? IconButton(
-                                    icon: const Icon(Icons.clear),
-                                    onPressed: _clear,
-                                  )
-                                : null,
+                        // The ListenableBuilder re-evaluates the clear
+                        // suffixIcon on each text change.  It wraps the whole
+                        // field (rather than supplying an always-present
+                        // suffixIcon widget) because InputDecorator reserves
+                        // the 48 dp suffix slot whenever suffixIcon is
+                        // non-null — the null/non-null switch must stay to
+                        // keep the empty field's geometry unchanged.
+                        ListenableBuilder(
+                          listenable: _inputController,
+                          builder: (context, _) => CompletionField(
+                            controller: _inputController,
+                            focusNode: _inputFocus,
+                            decoration: InputDecoration(
+                              labelText: 'Convert from',
+                              border: const OutlineInputBorder(),
+                              suffixIcon: _inputController.text.isNotEmpty
+                                  ? IconButton(
+                                      icon: const Icon(Icons.clear),
+                                      onPressed: _clear,
+                                    )
+                                  : null,
+                            ),
+                            textInputAction: TextInputAction.next,
+                            onChanged: _onInputChanged,
+                            onSubmitted: (_) {
+                              _evaluate();
+                              // Advance to the output field as the natural next step.
+                              _outputFocus.requestFocus();
+                            },
                           ),
-                          textInputAction: TextInputAction.next,
-                          onChanged: _onInputChanged,
-                          onSubmitted: (_) {
-                            _evaluate();
-                            // Advance to the output field as the natural next step.
-                            _outputFocus.requestFocus();
-                          },
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.swap_vert),
-                              onPressed: canSwap ? _swap : null,
+                            ListenableBuilder(
+                              listenable: Listenable.merge([
+                                _inputController,
+                                _outputController,
+                              ]),
+                              builder: (context, _) {
+                                final canSwap =
+                                    _inputController.text.isNotEmpty &&
+                                    _outputController.text.isNotEmpty;
+                                return IconButton(
+                                  icon: const Icon(Icons.swap_vert),
+                                  onPressed: canSwap ? _swap : null,
+                                );
+                              },
                             ),
                           ],
                         ),
@@ -333,23 +370,29 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
                           onSubmitted: (_) => _evaluate(),
                         ),
                         const SizedBox(height: 24),
-                        ResultDisplay(
-                          result: result,
-                          onTap:
-                              result is EvaluationIdle && result.example != null
-                              ? () {
-                                  final ex = result.example!;
-                                  _inputController.text = ex.inputExpression;
-                                  if (ex.outputExpression != null) {
-                                    _outputController.text =
-                                        ex.outputExpression!;
-                                  }
-                                  setState(() {});
-                                  _cancelDebounce();
-                                  _evaluate();
-                                  FocusScope.of(context).unfocus();
-                                }
-                              : null,
+                        Consumer(
+                          builder: (context, ref, _) {
+                            final result = ref.watch(freeformProvider);
+                            return ResultDisplay(
+                              result: result,
+                              onTap:
+                                  result is EvaluationIdle &&
+                                      result.example != null
+                                  ? () {
+                                      final ex = result.example!;
+                                      _inputController.text =
+                                          ex.inputExpression;
+                                      if (ex.outputExpression != null) {
+                                        _outputController.text =
+                                            ex.outputExpression!;
+                                      }
+                                      _cancelDebounce();
+                                      _evaluate();
+                                      FocusScope.of(context).unfocus();
+                                    }
+                                  : null,
+                            );
+                          },
                         ),
                         if (isOnSubmit) ...[
                           const SizedBox(height: 16),

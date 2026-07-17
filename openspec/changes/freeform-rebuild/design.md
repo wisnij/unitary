@@ -43,9 +43,9 @@ Consumer map of the screen-level state (from reading `build()`):
 
 Alternative considered: keeping `setState` but splitting the screen into smaller stateful widgets — more invasive for the same effect; `ListenableBuilder` is the idiomatic minimal tool.
 
-### D2: Clear-button visibility inside the builder, not by toggling `suffixIcon` null/non-null
+### D2: Clear-button listener wraps the whole input `CompletionField` (geometry-identical form)
 
-Today `suffixIcon` switches between `null` and an `IconButton` at screen-rebuild time.  A builder must always return a widget, so visibility moves inside it.  Preferred form: return the `IconButton` when non-empty, else `const SizedBox.shrink()`.  Risk: `InputDecoration` reserves the suffix slot whenever `suffixIcon` is non-null, so an empty-but-present widget could change the field's content padding versus today's `null`.  Mitigation: the existing widget tests pin clear-button presence/absence; verify the empty-state field geometry manually (or with a golden-free layout assertion) during implementation, and if the reserved slot is visible, fall back to `Visibility(visible: ..., child: IconButton(...))` or wrap the whole `CompletionField` in the `ListenableBuilder` instead (slightly wider scope — one field instead of one icon — still far below whole-screen).
+Today `suffixIcon` switches between `null` and an `IconButton` at screen-rebuild time, and `InputDecorator` reserves the 48 dp suffix slot whenever `suffixIcon` is non-null.  That makes any "always-present suffix widget that hides itself" form (`SizedBox.shrink()`, `Visibility`) a guaranteed empty-state geometry change — so the implementation uses what an earlier draft of this decision listed as the fallback: the `ListenableBuilder` wraps the input `CompletionField` itself, and the `suffixIcon: null`/non-null switch is preserved verbatim, just re-evaluated by the controller listener instead of a screen `setState`.  Scope per keystroke: one field widget rebuild (which already happened under the old whole-screen rebuild) — still far below the old scope, and the empty-field geometry is unchanged by construction, so no manual geometry check is needed.
 
 ### D3: Result and history watches move into scoped `Consumer`s
 
@@ -72,6 +72,19 @@ The "assertions derived from verified behavior" requirement keeps its intent but
 ### D5: Verification is tests-first, device re-pass after
 
 Order: tighten the rebuild-scope tests first (they fail against current code — true red/green), implement D1–D3, confirm the full suite passes unchanged (the behavior pins), then a brief on-device DevTools re-pass records the new typing frame times in `doc/performance.md`.  The 120 Hz frame budget is explicitly not a gate (Non-Goals).
+
+## Verification Results (July 17, 2026, on-device)
+
+Debug-mode DevTools rebuild check after the fix, one keystroke (counts cleared first):
+
+```
+CompletionField 1, Consumer 1×3, Container 1, Icon 1, Icon 13, IconButton 1×4,
+ListenableBuilder 1×2, OverlayPortal 1, ResultDisplay 1, Text 1, TextField 1
+```
+
+`FreeformScreen`, `Scaffold`, `AppBar`, `TwoPaneLayout`, and `_KeyPanel` are absent — the whole-screen ×2 rebuild is gone; only the scoped dependents rebuild, each exactly once.
+
+Profile-mode frame times (tracking off, same 120 Hz device): typing one character at a time stays entirely under the 8.3 ms jank threshold (previously 13–16 ms per keystroke); over-budget bars appear only during very rapid typing.  Non-gating criterion met and exceeded.
 
 ## Risks / Trade-offs
 

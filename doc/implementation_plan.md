@@ -606,12 +606,15 @@ Future Enhancement Phases
 Candidates identified by `doc/performance.md`; none are urgent (nothing
 crossed the action thresholds), roughly in value order:
 
-- **Freeform rebuild scope** — lift the freeform field/eval state out of
-  `FreeformScreen`'s widget `State` into a notifier (deferred from
-  responsive-layouts) so a keystroke no longer rebuilds the whole screen
-  twice; the cause of the 13–16 ms typing frames that overrun a 120 Hz
-  device's 8.3 ms budget.  Rebuild-scope tests pin today's ×2 bound, so the
-  refactor can only improve them.
+- ~~**Freeform rebuild scope**~~ — **ADDRESSED (July 17, 2026)** by the
+  `freeform-rebuild` change without the notifier refactor: the per-keystroke
+  `setState` was replaced with controller `ListenableBuilder`s (clear/swap
+  buttons) and the result/history watches moved into scoped `Consumer`s.
+  Keystrokes now rebuild zero screen-subtree widgets (pinned by the tightened
+  rebuild-scope tests) and normal typing runs under the 8.3 ms/120 Hz budget
+  on-device.  The notifier/AppShell-AppBar refactor from responsive-layouts
+  remains deferred as an architecture cleanup — it is no longer
+  performance-motivated.
 - **Fast-scroll thumb drag cost** — Browse's `FastScrollBar` + peek panel
   rebuild every frame during a thumb drag and frequently overrun the 120 Hz
   budget (unlike plain fling-scrolling).  Profile the UI vs. raster split,

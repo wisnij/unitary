@@ -179,6 +179,13 @@ stored-rate path's cost (a small fraction of 189 ms) rather than isolate it.
   budget; would pass at 60 Hz).  Cause: the whole `FreeformScreen` rebuilds
   twice per keystroke (an immediate button-state `setState` plus the debounced
   evaluation arriving at a screen-level watch).
+  **Fixed (July 17, 2026, `freeform-rebuild` change)**: the per-keystroke
+  `setState` was replaced with controller `ListenableBuilder`s and the
+  result/history watches moved into scoped `Consumer`s.  Re-measured on the
+  same device: one keystroke rebuilds only the scoped dependents (screen
+  subtree root: zero rebuilds, pinned by widget tests), and normal typing
+  stays entirely under the 8.3 ms threshold, with over-budget frames only
+  during very rapid typing.
 - Worksheet cell editing: a single flagged frame per keystroke; the screen
   rebuilds once per edit (the recompute path is synchronous — no worksheet
   debounce).
@@ -201,11 +208,14 @@ Findings and decisions (July 2026)
 - **Memory: non-problem.**  The entire core domain (repository + fully
   populated resolution cache + browse catalog + currency descriptors) adds
   ~10.6 MB.  Threshold set at ~50 MB for future investigation.
-- **Follow-up candidate: freeform whole-screen rebuild.**  One keystroke
-  rebuilds the entire freeform screen twice, contributing to over-budget
-  frames on 120 Hz devices.  The fix is the already-deferred refactor to lift
-  field/eval state into a notifier; rebuild-scope tests pin today's ×2 bound
-  so it can only improve.
+- **Freeform whole-screen rebuild: fixed (July 17, 2026).**  The minimal
+  scoping fix (`freeform-rebuild` change) — controller `ListenableBuilder`s
+  for the clear/swap buttons plus scoped `Consumer`s for the result and
+  history — eliminated both whole-screen rebuilds per keystroke; the
+  rebuild-scope tests now pin a zero-subtree-rebuild bound, and normal typing
+  runs under the 8.3 ms/120 Hz budget on-device.  The larger
+  freeform-notifier/AppBar-centralization refactor remains deferred (it is an
+  architecture cleanup, no longer performance-motivated).
 - **Follow-up candidate: fast-scroll thumb drag cost.**  Browse's
   `FastScrollBar`/peek panel overrun the 8.3 ms budget frequently during
   drags.  A follow-up change should profile the UI vs. raster split and

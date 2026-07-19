@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: July 17, 2026*
+*Last Updated: July 19, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -532,3 +532,5 @@ Questions that arose during design but haven't been resolved:
   - `rebuild-scope` spec tightened (MODIFIED): a keystroke plus its debounced evaluation rebuilds the `FreeformScreen` subtree root zero times, with positive-effect assertions so the bound can't pass vacuously
   - On-device re-pass (120 Hz phone): rebuild list shows only the scoped dependents, each ×1; normal typing now entirely under the 8.3 ms budget (was 13–16 ms), over-budget frames only during very rapid typing
   - Design artifacts: `openspec/changes/freeform-rebuild/`
+- *Remove conformable-modal debug instrumentation (July 19, 2026)* — code review finding F6 (see `doc/code_review_2026-07.md`)
+  - Deleted the `kDebugMode`-gated `Stopwatch` + `debugPrint('findConformable took …')` block from `_showConformableModal` in `freeform_screen.dart`, leftover from the Phase 9 performance measurement (the durable measurement lives in `tool/benchmark.dart` / `doc/performance.md`)

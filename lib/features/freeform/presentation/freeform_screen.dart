@@ -180,15 +180,7 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
       return;
     }
 
-    final stopwatch = kDebugMode ? (Stopwatch()..start()) : null;
     final entries = parser.repo.findConformable(inputQty.dimension);
-    if (kDebugMode) {
-      stopwatch!.stop();
-      debugPrint(
-        'findConformable took ${stopwatch.elapsedMilliseconds}ms '
-        '(${entries.length} entries)',
-      );
-    }
 
     showModalBottomSheet<void>(
       context: context,

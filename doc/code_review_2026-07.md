@@ -28,8 +28,8 @@ urgent; the highest-value items are small.
    single biggest friction multiplier for future work.
 4. **F12/F13** — Do the README rewrite and doc audit now (both already
    Phase 9 tasks); the README has outright broken links.
-5. **F6** — Delete the leftover `findConformable` debug instrumentation
-   (two-minute fix).
+5. **F6** — ~~Delete the leftover `findConformable` debug instrumentation
+   (two-minute fix).~~ **Done** (July 19, 2026).
 
 
 Findings
@@ -131,8 +131,9 @@ re-ranked alongside new findings.
   completion-overlay interplay.  Revisit only when a feature change has to
   rework freeform state anyway.
 
-### F6: Leftover debug instrumentation in `_showConformableModal`
+### F6: Leftover debug instrumentation in `_showConformableModal` — DONE
 
+- **Status:** ✅ **Completed** July 19, 2026
 - **Category:** debt · **Effort:** S (trivial)
 - **Evidence:** `freeform_screen.dart:183–191` — a `kDebugMode`-gated
   `Stopwatch` + `debugPrint('findConformable took …')` around the
@@ -327,7 +328,7 @@ Suggested sequencing
 
 **Fold into remaining Phase 9 work** (all small, most already planned):
 
-- F6 (delete debug instrumentation) — immediately.
+- ~~F6 (delete debug instrumentation) — immediately.~~ **Done** (July 19, 2026).
 - F12 + F13 + F14 + F15 — one documentation change (the planned Phase 9 doc
   cleanup, now with a concrete worklist).
 - F8 (dropdown overflow) — small UI fix.

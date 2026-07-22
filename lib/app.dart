@@ -2,8 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'features/currency/state/currency_provider.dart';
+import 'features/settings/models/user_settings.dart';
 import 'features/settings/state/settings_provider.dart';
 import 'shared/app_shell.dart';
+
+/// Maps the persisted [ThemePreference] to Flutter's [ThemeMode], the only
+/// place the two are bridged (see [ThemePreference]'s doc comment).
+ThemeMode _toFlutterThemeMode(ThemePreference preference) =>
+    switch (preference) {
+      ThemePreference.system => ThemeMode.system,
+      ThemePreference.dark => ThemeMode.dark,
+      ThemePreference.light => ThemeMode.light,
+    };
 
 class UnitaryApp extends ConsumerStatefulWidget {
   const UnitaryApp({super.key});
@@ -40,7 +50,7 @@ class _UnitaryAppState extends ConsumerState<UnitaryApp> {
         ),
         useMaterial3: true,
       ),
-      themeMode: settings.themeMode,
+      themeMode: _toFlutterThemeMode(settings.themeMode),
       home: const AppShell(),
     );
   }

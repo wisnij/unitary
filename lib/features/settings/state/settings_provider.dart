@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/settings_repository.dart';
@@ -35,7 +34,7 @@ class SettingsNotifier extends Notifier<UserSettings> {
     ref.read(settingsRepositoryProvider).save(state);
   }
 
-  void updateThemeMode(ThemeMode themeMode) {
+  void updateThemeMode(ThemePreference themeMode) {
     state = state.copyWith(themeMode: themeMode);
     ref.read(settingsRepositoryProvider).save(state);
   }

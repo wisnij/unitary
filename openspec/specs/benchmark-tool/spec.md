@@ -8,19 +8,14 @@ Provide a checked-in, reusable performance benchmark script (`tool/benchmark.dar
 
 ### Requirement: Benchmark coverage of named hot paths
 
-The benchmark tool SHALL provide a benchmark case for each pure-Dart core-domain hot path named in the implementation plan's performance section: repository construction (`UnitRepository.withPredefinedUnits()`), cold resolution of every registered unit, warm (cached) resolution of every registered unit, representative expression parse/evaluate round trips, `buildBrowseCatalog()`, `buildCurrencyDescriptors()`, and `suggestCompletions()`.
+The benchmark tool SHALL provide a benchmark case for each pure-Dart core-domain hot path named in the implementation plan's performance section: repository construction (`UnitRepository.withPredefinedUnits()`), cold resolution of every registered unit, warm (cached) resolution of every registered unit, representative expression parse/evaluate round trips, `buildBrowseCatalog()`, `buildCurrencyDescriptors()`, `suggestCompletions()`, and `computeWorksheet()` for a `UnitRow` template and a `FunctionRow` template.
 
-`computeWorksheet()` SHALL be covered by a companion benchmark run under `flutter test` (its import chain reaches `package:flutter/material.dart` via `UserSettings`, which the standalone `dart run` VM cannot compile).  The companion SHALL reuse the benchmark library's runner and table formatting, and print its results when run directly.
+`computeWorksheet()`'s import chain no longer reaches Flutter (`UserSettings` was decoupled from `package:flutter/material.dart`), so unlike previously, it SHALL run as an ordinary case in `tool/benchmark.dart` rather than a separate `flutter test`-hosted companion.
 
 #### Scenario: Full run covers all cases
 
 - **WHEN** `dart run tool/benchmark.dart` is invoked with no case filter
-- **THEN** every registered benchmark case executes and appears in the output
-
-#### Scenario: Companion worksheet benchmark
-
-- **WHEN** `flutter test test/tool/worksheet_benchmark_test.dart` is run directly
-- **THEN** it times the real `computeWorksheet()` for a `UnitRow` template and a `FunctionRow` template and prints a results table
+- **THEN** every registered benchmark case executes and appears in the output, including the `computeWorksheet()` cases
 
 #### Scenario: Cold-cache cases use fresh state
 

@@ -53,7 +53,7 @@ class SettingsScreen extends ConsumerWidget {
                 ),
               ),
               const _SectionHeader(title: 'Appearance'),
-              RadioGroup<ThemeMode>(
+              RadioGroup<ThemePreference>(
                 groupValue: settings.themeMode,
                 onChanged: (value) {
                   if (value != null) {
@@ -62,17 +62,17 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 child: const Column(
                   children: [
-                    RadioListTile<ThemeMode>(
+                    RadioListTile<ThemePreference>(
                       title: Text('Use system theme'),
-                      value: ThemeMode.system,
+                      value: ThemePreference.system,
                     ),
-                    RadioListTile<ThemeMode>(
+                    RadioListTile<ThemePreference>(
                       title: Text('Dark mode'),
-                      value: ThemeMode.dark,
+                      value: ThemePreference.dark,
                     ),
-                    RadioListTile<ThemeMode>(
+                    RadioListTile<ThemePreference>(
                       title: Text('Light mode'),
-                      value: ThemeMode.light,
+                      value: ThemePreference.light,
                     ),
                   ],
                 ),

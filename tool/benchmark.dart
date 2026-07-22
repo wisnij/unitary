@@ -7,23 +7,22 @@
 ///
 /// Runs pure-Dart benchmarks over the core-domain hot paths (repository
 /// construction, unit resolution, expression evaluation, browse catalog,
-/// currency descriptors, completion suggestions) and prints a results table.
+/// currency descriptors, completion suggestions, worksheet computation) and
+/// prints a results table.
 ///
 /// `--json path` additionally writes the results as JSON; `--baseline path`
 /// compares this run against a previous JSON file.  Timings are machine- and
 /// mode-dependent, so baselines are only comparable to runs on the same
 /// machine; baseline files should not be committed.
-///
-/// The `computeWorksheet()` benchmark lives separately in
-/// `test/tool/worksheet_benchmark_test.dart` (run via `flutter test`) because
-/// its import chain reaches Flutter, which this standalone-VM script cannot
-/// load.
 library;
 
 import 'dart:io';
 
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/parser/expression_parser.dart';
+import 'package:unitary/features/settings/models/user_settings.dart';
+import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
+import 'package:unitary/features/worksheet/services/worksheet_engine.dart';
 
 import 'benchmark_lib.dart';
 
@@ -130,7 +129,35 @@ List<BenchmarkCase> buildDefaultCases() {
         };
       },
     ),
+    _worksheetCase(sharedParser, 'length', '12.5'),
+    _worksheetCase(sharedParser, 'temperature', '100'),
   ];
+}
+
+/// Builds a [BenchmarkCase] that times [computeWorksheet] for the predefined
+/// template [id], sourced from row 0 with [sourceText].
+BenchmarkCase _worksheetCase(
+  ExpressionParser parser,
+  String id,
+  String sourceText,
+) {
+  final template = predefinedWorksheets.firstWhere((t) => t.id == id);
+  final settings = UserSettings();
+  return BenchmarkCase(
+    name: 'worksheet-compute-$id',
+    iterations: 20,
+    iteration: () {
+      return () {
+        benchmarkSink = computeWorksheet(
+          rows: template.rows,
+          sourceIndex: 0,
+          sourceText: sourceText,
+          parser: parser,
+          settings: settings,
+        );
+      };
+    },
+  );
 }
 
 void main(List<String> args) {

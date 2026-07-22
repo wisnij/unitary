@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:unitary/features/settings/models/user_settings.dart';
@@ -37,7 +36,7 @@ void main() {
       final settings = UserSettings.defaults();
       expect(settings.precision, 8);
       expect(settings.notation, Notation.automatic);
-      expect(settings.themeMode, ThemeMode.system);
+      expect(settings.themeMode, ThemePreference.system);
       expect(settings.evaluationMode, EvaluationMode.realtime);
     });
 
@@ -82,7 +81,7 @@ void main() {
     });
 
     test('constructor accepts all themeMode values', () {
-      for (final m in ThemeMode.values) {
+      for (final m in ThemePreference.values) {
         final settings = UserSettings(themeMode: m);
         expect(settings.themeMode, m);
       }
@@ -100,7 +99,7 @@ void main() {
         final original = UserSettings(
           precision: 4,
           notation: Notation.scientific,
-          themeMode: ThemeMode.dark,
+          themeMode: ThemePreference.dark,
           evaluationMode: EvaluationMode.onSubmit,
         );
         final copy = original.copyWith();
@@ -127,20 +126,20 @@ void main() {
 
       test('changes themeMode', () {
         final original = UserSettings.defaults();
-        final copy = original.copyWith(themeMode: ThemeMode.dark);
-        expect(copy.themeMode, ThemeMode.dark);
+        final copy = original.copyWith(themeMode: ThemePreference.dark);
+        expect(copy.themeMode, ThemePreference.dark);
       });
 
       test('changes themeMode to light', () {
-        final original = UserSettings(themeMode: ThemeMode.dark);
-        final copy = original.copyWith(themeMode: ThemeMode.light);
-        expect(copy.themeMode, ThemeMode.light);
+        final original = UserSettings(themeMode: ThemePreference.dark);
+        final copy = original.copyWith(themeMode: ThemePreference.light);
+        expect(copy.themeMode, ThemePreference.light);
       });
 
       test('changes themeMode back to system', () {
-        final original = UserSettings(themeMode: ThemeMode.dark);
-        final copy = original.copyWith(themeMode: ThemeMode.system);
-        expect(copy.themeMode, ThemeMode.system);
+        final original = UserSettings(themeMode: ThemePreference.dark);
+        final copy = original.copyWith(themeMode: ThemePreference.system);
+        expect(copy.themeMode, ThemePreference.system);
       });
 
       test('changes evaluationMode', () {
@@ -181,8 +180,8 @@ void main() {
       });
 
       test('different themeMode makes unequal', () {
-        final a = UserSettings(themeMode: ThemeMode.system);
-        final b = UserSettings(themeMode: ThemeMode.dark);
+        final a = UserSettings(themeMode: ThemePreference.system);
+        final b = UserSettings(themeMode: ThemePreference.dark);
         expect(a, isNot(equals(b)));
       });
 

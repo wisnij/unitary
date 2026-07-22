@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [Unreleased]
 ------------
 
+### Changed
+
+- Decouple `UserSettings` from Flutter
+
 ### Documentation
 
 - Add code review findings

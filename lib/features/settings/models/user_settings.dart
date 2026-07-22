@@ -1,5 +1,3 @@
-import 'package:flutter/material.dart';
-
 /// Number notation style for result formatting.
 enum Notation {
   automatic('Automatic'),
@@ -19,17 +17,24 @@ enum EvaluationMode {
   const EvaluationMode(this.label);
 }
 
+/// The user's stored dark-mode preference.
+///
+/// Distinct from Flutter's [ThemeMode]: this is the persisted model-layer
+/// value, kept free of any Flutter dependency.  It is mapped to [ThemeMode]
+/// at the single UI consumption point in `lib/app.dart`.
+enum ThemePreference { system, dark, light }
+
 /// Immutable user settings model.
 class UserSettings {
   final int precision;
   final Notation notation;
-  final ThemeMode themeMode;
+  final ThemePreference themeMode;
   final EvaluationMode evaluationMode;
 
   UserSettings({
     this.precision = 8,
     this.notation = Notation.automatic,
-    this.themeMode = ThemeMode.system,
+    this.themeMode = ThemePreference.system,
     this.evaluationMode = EvaluationMode.realtime,
   }) {
     if (precision < 2 || precision > 10) {
@@ -47,7 +52,7 @@ class UserSettings {
   UserSettings copyWith({
     int? precision,
     Notation? notation,
-    ThemeMode? themeMode,
+    ThemePreference? themeMode,
     EvaluationMode? evaluationMode,
   }) {
     return UserSettings(

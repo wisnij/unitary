@@ -38,10 +38,11 @@ dart run tool/benchmark.dart --baseline out.json # diff against a saved run
 
 Cases: `repo-construct`, `resolve-all-cold`, `resolve-all-warm`,
 `evaluate-expressions`, `browse-catalog`, `currency-descriptors`,
-`suggest-completions`.  Each case runs untimed warmup iterations followed by
-timed ones and reports min/median/mean.  Cold-cache cases construct a fresh
-`UnitRepository` per iteration (notably `currency-descriptors`, whose result
-is memoized per repository).
+`suggest-completions`, `worksheet-compute-length`,
+`worksheet-compute-temperature`.  Each case runs untimed warmup iterations
+followed by timed ones and reports min/median/mean.  Cold-cache cases
+construct a fresh `UnitRepository` per iteration (notably
+`currency-descriptors`, whose result is memoized per repository).
 
 ### Baseline workflow
 
@@ -55,20 +56,6 @@ trusting a flagged regression.
 JIT numbers (from `dart run`) answer *relative* questions — cold vs. warm,
 before vs. after a change.  For absolute claims use the on-device procedures
 below, or `dart compile exe` for AOT-flavored numbers.
-
-### Companion worksheet benchmark
-
-`computeWorksheet()` cannot be benchmarked from the pure-Dart tool because its
-import chain reaches `package:flutter/material.dart` (via `UserSettings`).
-Its benchmark runs under `flutter test` instead:
-
-~~~~ bash
-flutter test test/tool/worksheet_benchmark_test.dart --reporter expanded
-~~~~
-
-It prints the same table format and doubles as a smoke test in normal suite
-runs.  Note `flutter test` runs debug-mode JIT with asserts enabled: its
-numbers are not comparable to `tool/benchmark.dart` output.
 
 
 Memory report tool
@@ -146,13 +133,23 @@ suggest-completions   20     2.12 ms  2.17 ms  2.22 ms
 `evaluate-expressions` is 6 expressions per iteration (~10 µs each);
 `suggest-completions` is 4 queries per iteration (~0.5 ms per keystroke).
 
-### Companion worksheet benchmark — `flutter test`, debug JIT
+### Worksheet cases folded into the benchmark tool (July 22, 2026)
+
+The `decouple-usersettings-flutter` change removed the Flutter dependency
+that previously forced `computeWorksheet()` into a separate `flutter test`
+companion (see "Findings and decisions" below); it now runs as an ordinary
+`dart run tool/benchmark.dart` case, same machine as above:
 
 ~~~~
 case                           iters  min     median  mean
-worksheet-compute-length       20     136 µs  151 µs  170 µs
-worksheet-compute-temperature  20     162 µs  183 µs  194 µs
+worksheet-compute-length       20     21 µs   22 µs   23 µs
+worksheet-compute-temperature  20     41 µs   41 µs   42 µs
 ~~~~
+
+Lower than the old debug-JIT-under-`flutter-test` numbers, consistent with
+running release-mode-adjacent `dart run` JIT instead of `flutter test`'s
+debug JIT with asserts enabled — the two were never comparable, per the
+machine-dependence caveat above.
 
 ### Memory report — dev machine (Linux x64), AOT
 
@@ -222,6 +219,10 @@ Findings and decisions (July 2026)
   consider RepaintBoundary isolation or transform-based repositioning; that
   change is also where a frame-timing harness would be built to verify the
   fix.
-- **Deferred refactor: decouple `UserSettings` from Flutter.**  Its
-  `material.dart` import (for `ThemeMode`) drags Flutter into the worksheet
-  engine, forcing the companion-benchmark workaround.
+- **`UserSettings`/Flutter decoupling: fixed (July 22, 2026).**  `UserSettings`
+  no longer imports `package:flutter/material.dart` (its `themeMode` field
+  now holds a project-owned `ThemePreference`, mapped to Flutter's `ThemeMode`
+  at the single UI consumption point in `lib/app.dart`).  The worksheet
+  engine's import chain is pure Dart, so `computeWorksheet()`'s benchmark
+  cases moved from the `flutter test` companion into `tool/benchmark.dart`
+  directly (see "Worksheet cases folded into the benchmark tool" above).

@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/user_settings.dart';
@@ -57,20 +56,20 @@ class SettingsRepository {
     return defaultValue;
   }
 
-  ThemeMode _loadThemeMode() {
+  ThemePreference _loadThemeMode() {
     final s = _prefs.getString(_keyThemeMode);
     return _themeModeFromString(s);
   }
 
-  static String _themeModeToString(ThemeMode m) => switch (m) {
-    ThemeMode.system => 'system',
-    ThemeMode.dark => 'dark',
-    ThemeMode.light => 'light',
+  static String _themeModeToString(ThemePreference m) => switch (m) {
+    ThemePreference.system => 'system',
+    ThemePreference.dark => 'dark',
+    ThemePreference.light => 'light',
   };
 
-  static ThemeMode _themeModeFromString(String? s) => switch (s) {
-    'dark' => ThemeMode.dark,
-    'light' => ThemeMode.light,
-    _ => ThemeMode.system,
+  static ThemePreference _themeModeFromString(String? s) => switch (s) {
+    'dark' => ThemePreference.dark,
+    'light' => ThemePreference.light,
+    _ => ThemePreference.system,
   };
 }

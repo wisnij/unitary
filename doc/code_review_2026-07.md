@@ -20,8 +20,9 @@ urgent; the highest-value items are small.
 
 **Top five recommendations:**
 
-1. **F1** — Decouple `UserSettings` from Flutter (small change, unlocks a
-   pure-Dart worksheet benchmark and cleans the model layer).
+1. **F1** — ~~Decouple `UserSettings` from Flutter (small change, unlocks a
+   pure-Dart worksheet benchmark and cleans the model layer).~~ **Done**
+   (July 22, 2026).
 2. **F4** — Fix the dynamic-unit-layer inconsistencies in `UnitRepository`
    before Phase 11 (user-defined units) turns them into real bugs.
 3. **F10** — Consolidate the widget-test harness boilerplate; it is the
@@ -39,8 +40,13 @@ Each finding: category, evidence, impact, effort (S/M/L), suggested fix.
 Known-deferred items from the implementation plan are included and
 re-ranked alongside new findings.
 
-### F1: `UserSettings` couples the pure-logic layer to Flutter
+### F1: `UserSettings` couples the pure-logic layer to Flutter — DONE
 
+- **Status:** ✅ **Completed** July 22, 2026
+  (`openspec/changes/decouple-usersettings-flutter/`); `UserSettings.themeMode`
+  now uses a project-owned `ThemePreference` enum, `user_settings.dart` no
+  longer imports Flutter, and `computeWorksheet()`'s benchmark cases moved
+  into `tool/benchmark.dart`.
 - **Category:** architecture · **Effort:** S · **Known-deferred item**
 - **Evidence:** `lib/features/settings/models/user_settings.dart:1` imports
   `package:flutter/material.dart` solely for `ThemeMode` (line 26).  The
@@ -333,8 +339,9 @@ Suggested sequencing
   cleanup, now with a concrete worklist).
 - F8 (dropdown overflow) — small UI fix.
 - F11 (coverage threshold) — small CI change.
-- F1 (UserSettings decoupling) — small, and moves the worksheet benchmark
-  where it belongs.
+- ~~F1 (UserSettings decoupling) — small, and moves the worksheet benchmark
+  where it belongs.~~ **Done** (July 22, 2026,
+  `decouple-usersettings-flutter`).
 - F9 + F10 together — stand up `integration_test/` and the shared widget-test
   harness as one testing change (the harness pays for itself immediately in
   the new tests).

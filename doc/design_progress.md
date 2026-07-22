@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: July 19, 2026*
+*Last Updated: July 22, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -534,3 +534,13 @@ Questions that arose during design but haven't been resolved:
   - Design artifacts: `openspec/changes/freeform-rebuild/`
 - *Remove conformable-modal debug instrumentation (July 19, 2026)* — code review finding F6 (see `doc/code_review_2026-07.md`)
   - Deleted the `kDebugMode`-gated `Stopwatch` + `debugPrint('findConformable took …')` block from `_showConformableModal` in `freeform_screen.dart`, leftover from the Phase 9 performance measurement (the durable measurement lives in `tool/benchmark.dart` / `doc/performance.md`)
+- *Decouple `UserSettings` from Flutter (July 22, 2026)* — code review finding F1 (see `doc/code_review_2026-07.md`)
+  - 2035 tests passing (net -1: the deleted companion benchmark test's single case)
+  - `UserSettings.themeMode` retyped from Flutter's `ThemeMode` to a new project-owned `ThemePreference` enum (`system`/`dark`/`light`, colocated with `Notation`/`EvaluationMode` in `user_settings.dart`); `user_settings.dart` no longer imports `package:flutter/material.dart`
+  - `SettingsRepository` and `SettingsNotifier` follow suit and each lose their own now-unneeded Flutter import; persisted string values (`"system"/"dark"/"light"`) are unchanged, so no migration and no effect on existing users' saved preference
+  - `settings_screen.dart`'s `RadioGroup`/`RadioListTile` retyped to `ThemePreference` (still legitimately Flutter UI code)
+  - New `ThemePreference` → `ThemeMode` mapping (`_toFlutterThemeMode`) added at the single UI consumption point, `lib/app.dart`, feeding `MaterialApp.themeMode`
+  - The worksheet engine's import chain (`worksheet_engine.dart` → `user_settings.dart`) is now pure Dart, so `computeWorksheet()`'s benchmark cases (`worksheet-compute-length`, `worksheet-compute-temperature`) moved from the `flutter test`-hosted `test/tool/worksheet_benchmark_test.dart` (deleted) into `tool/benchmark.dart`'s `buildDefaultCases()`; correctness coverage for `computeWorksheet()` continues via the 14 existing tests in `test/features/worksheet/services/worksheet_engine_test.dart`
+  - `benchmark-tool` spec's "Benchmark coverage of named hot paths" requirement updated: `computeWorksheet()` cases are now covered by the ordinary "Full run covers all cases" scenario rather than a separate companion-benchmark scenario
+  - `doc/performance.md` updated: companion-benchmark section replaced with dated worksheet-case numbers folded into the main benchmark tool section; the "deferred refactor" follow-up item marked fixed
+  - Design artifacts: `openspec/changes/decouple-usersettings-flutter/`

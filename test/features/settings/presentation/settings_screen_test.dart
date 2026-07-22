@@ -119,7 +119,7 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(SettingsScreen)),
       );
-      expect(container.read(settingsProvider).themeMode, ThemeMode.dark);
+      expect(container.read(settingsProvider).themeMode, ThemePreference.dark);
     });
 
     testWidgets('selecting light mode radio updates themeMode', (
@@ -133,7 +133,7 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(SettingsScreen)),
       );
-      expect(container.read(settingsProvider).themeMode, ThemeMode.light);
+      expect(container.read(settingsProvider).themeMode, ThemePreference.light);
     });
 
     testWidgets('selecting system theme radio updates themeMode', (
@@ -151,7 +151,10 @@ void main() {
       final container = ProviderScope.containerOf(
         tester.element(find.byType(SettingsScreen)),
       );
-      expect(container.read(settingsProvider).themeMode, ThemeMode.system);
+      expect(
+        container.read(settingsProvider).themeMode,
+        ThemePreference.system,
+      );
     });
 
     testWidgets('evaluation mode selection works', (tester) async {

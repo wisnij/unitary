@@ -2,37 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
-import 'package:unitary/features/currency/data/currency_rate_repository.dart';
-import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
-import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
-import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
-import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 import 'package:unitary/shared/app_shell.dart';
+
+import '../helpers/repository_overrides.dart';
 
 /// Tests that screen content is inset within the device's safe area (display
 /// cutouts / system bars), driven by `MediaQuery.padding`.
 void main() {
-  late SettingsRepository settingsRepo;
-  late WorksheetRepository worksheetRepo;
-  late FreeformHistoryRepository historyRepo;
-  late CurrencyRateRepository currencyRateRepo;
+  late TestRepositories repos;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    worksheetRepo = WorksheetRepository(prefs);
-    historyRepo = FreeformHistoryRepository(prefs);
-    currencyRateRepo = CurrencyRateRepository(prefs);
+    repos = await TestRepositories.create();
     PackageInfo.setMockInitialValues(
       appName: 'unitary',
       packageName: 'dev.wisnij.unitary',
@@ -71,7 +56,7 @@ void main() {
 
   Widget aboutApp(EdgeInsets padding) {
     return ProviderScope(
-      overrides: [settingsRepositoryProvider.overrideWithValue(settingsRepo)],
+      overrides: repos.overrides,
       child: MaterialApp(home: withPadding(padding, const AboutScreen())),
     );
   }
@@ -79,10 +64,7 @@ void main() {
   Widget shellApp(EdgeInsets padding) {
     return ProviderScope(
       overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
-        currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
+        ...repos.overrides,
         unitRepositoryProvider.overrideWithValue(buildTestRepo()),
       ],
       child: MaterialApp(home: withPadding(padding, const AppShell())),

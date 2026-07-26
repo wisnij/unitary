@@ -25,8 +25,9 @@ urgent; the highest-value items are small.
    (July 22, 2026).
 2. **F4** — Fix the dynamic-unit-layer inconsistencies in `UnitRepository`
    before Phase 11 (user-defined units) turns them into real bugs.
-3. **F10** — Consolidate the widget-test harness boilerplate; it is the
-   single biggest friction multiplier for future work.
+3. **F10** — ~~Consolidate the widget-test harness boilerplate; it is the
+   single biggest friction multiplier for future work.~~ **Done**
+   (July 26, 2026).
 4. **F12/F13** — Do the README rewrite and doc audit now (both already
    Phase 9 tasks); the README has outright broken links.
 5. **F6** — ~~Delete the leftover `findConformable` debug instrumentation
@@ -193,7 +194,7 @@ re-ranked alongside new findings.
   conversions reflect updated rates.  Build the frame-timing harness here as
   part of the F7 fix rather than as a separate effort.
 
-### F10: Widget-test harness boilerplate is repeated across ~28 files
+### F10: Widget-test harness boilerplate is repeated across ~28 files — DONE (July 26, 2026)
 
 - **Category:** testing · **Effort:** M (mechanical)
 - **Evidence:** ~28 test files each hand-roll
@@ -211,6 +212,18 @@ re-ranked alongside new findings.
   repositories for all must-override providers and merges per-test
   overrides.  Migrate opportunistically — new tests use it immediately; old
   tests can be converted file-by-file.
+- **Resolution:** `test/helpers/repository_overrides.dart` (`TestRepositories`,
+  bundling default in-memory instances of all four repositories plus a
+  computed `overrides` list) and `test/helpers/pump_app.dart` (`pumpApp`,
+  merging caller overrides over the defaults keyed by `Override.origin` so a
+  caller-supplied override for an already-defaulted provider wins). All 21
+  files matching the pattern were migrated in one pass rather than left to
+  grow a second coexisting convention. See `openspec/changes/archive/`
+  (`test-harness-cleanup`) for the full design record, including a real
+  Riverpod gotcha found during migration: duplicate overrides for the same
+  provider in a raw list use *first*-occurrence-wins, not last — `pumpApp`'s
+  explicit origin-keyed merge handles this correctly, but one file that
+  bypassed `pumpApp` initially got it backwards and was fixed.
 
 ### F11: Coverage is measured in CI but the 80% criterion is not enforced
 
@@ -342,9 +355,9 @@ Suggested sequencing
 - ~~F1 (UserSettings decoupling) — small, and moves the worksheet benchmark
   where it belongs.~~ **Done** (July 22, 2026,
   `decouple-usersettings-flutter`).
-- F9 + F10 together — stand up `integration_test/` and the shared widget-test
-  harness as one testing change (the harness pays for itself immediately in
-  the new tests).
+- ~~F10 (shared widget-test harness)~~ **Done** (July 26, 2026,
+  `test-harness-cleanup`) — done standalone rather than bundled with F9;
+  F9 (`integration_test/`) remains open and can now build on the harness.
 
 **Do with its natural trigger, not standalone:**
 

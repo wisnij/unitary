@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
@@ -10,24 +9,16 @@ import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/freeform/state/parser_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
+
+import '../../../helpers/repository_overrides.dart';
 
 void main() {
   group('FreeformNotifier', () {
     late ProviderContainer container;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final settingsRepo = SettingsRepository(prefs);
-      final historyRepo = FreeformHistoryRepository(prefs);
-      container = ProviderContainer(
-        overrides: [
-          settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
-        ],
-      );
+      final repos = await TestRepositories.create();
+      container = ProviderContainer(overrides: repos.overrides);
     });
 
     tearDown(() {
@@ -427,16 +418,10 @@ void main() {
         repo.register(
           const DerivedUnit(id: '_test_mps', expression: '1 m/s'),
         );
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final testSettings = SettingsRepository(prefs);
-        final testHistoryRepo = FreeformHistoryRepository(prefs);
+        final testRepos = await TestRepositories.create();
         final testContainer = ProviderContainer(
           overrides: [
-            settingsRepositoryProvider.overrideWithValue(testSettings),
-            freeformHistoryRepositoryProvider.overrideWithValue(
-              testHistoryRepo,
-            ),
+            ...testRepos.overrides,
             parserProvider.overrideWithValue(ExpressionParser(repo: repo)),
           ],
         );

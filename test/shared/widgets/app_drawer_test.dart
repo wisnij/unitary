@@ -1,29 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/about/presentation/about_screen.dart';
-import 'package:unitary/features/currency/data/currency_rate_repository.dart';
-import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/shared/top_level_page.dart';
 import 'package:unitary/shared/widgets/app_drawer.dart';
 
-late SettingsRepository _settingsRepo;
-late CurrencyRateRepository _currencyRateRepo;
+import '../../helpers/repository_overrides.dart';
+
+late TestRepositories _repos;
 
 Widget _buildDrawer({
   required TopLevelPage currentPage,
   void Function(TopLevelPage)? onNavigate,
 }) {
   return ProviderScope(
-    overrides: [
-      settingsRepositoryProvider.overrideWithValue(_settingsRepo),
-      currencyRateRepositoryProvider.overrideWithValue(_currencyRateRepo),
-    ],
+    overrides: _repos.overrides,
     child: MaterialApp(
       home: Scaffold(
         appBar: AppBar(title: const Text('Test')),
@@ -44,10 +37,7 @@ Future<void> _openDrawer(WidgetTester tester) async {
 
 void main() {
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    _settingsRepo = SettingsRepository(prefs);
-    _currencyRateRepo = CurrencyRateRepository(prefs);
+    _repos = await TestRepositories.create();
   });
 
   group('AppDrawer — renders all tiles', () {

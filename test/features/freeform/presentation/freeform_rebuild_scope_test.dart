@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
-import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 
+import '../../../helpers/pump_app.dart';
 import '../../../shared/rebuild_counter.dart';
 
 // Pins the scoped freeform rebuild behavior from the freeform-rebuild change:
@@ -19,35 +14,13 @@ import '../../../shared/rebuild_counter.dart';
 // the zero bound passing vacuously.
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late FreeformHistoryRepository historyRepo;
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    historyRepo = FreeformHistoryRepository(prefs);
-  });
-
-  Widget buildApp() {
-    return ProviderScope(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
-      ],
-      child: MaterialApp(
-        home: FreeformScreen(onNavigate: (_) {}),
-      ),
-    );
-  }
-
   testWidgets(
     'a keystroke and its debounced evaluation do not rebuild the screen '
     'subtree, while the result and clear button still update',
     (
       tester,
     ) async {
-      await tester.pumpWidget(buildApp());
+      await pumpApp(tester, FreeformScreen(onNavigate: (_) {}));
       await tester.pumpAndSettle();
 
       // Focus the field first so focus changes are not part of the count.
@@ -91,7 +64,7 @@ void main() {
 
   testWidgets('filling both fields enables the swap button without a screen '
       'subtree rebuild', (tester) async {
-    await tester.pumpWidget(buildApp());
+    await pumpApp(tester, FreeformScreen(onNavigate: (_) {}));
     await tester.pumpAndSettle();
 
     final inputField = find.widgetWithText(TextField, 'Convert from');

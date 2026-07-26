@@ -3,7 +3,6 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/browse_entry.dart';
 import 'package:unitary/core/domain/models/dimension.dart';
@@ -15,21 +14,18 @@ import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';
 import 'package:unitary/features/currency/data/currency_rate_repository.dart';
 import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
+
+import '../../../helpers/repository_overrides.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-late SettingsRepository _settingsRepo;
-late CurrencyRateRepository _currencyRateRepo;
+late TestRepositories _repos;
 
-Future<void> _setUpSettings() async {
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
-  _settingsRepo = SettingsRepository(prefs);
-  _currencyRateRepo = CurrencyRateRepository(prefs);
+Future<void> _setUpRepos() async {
+  _repos = await TestRepositories.create();
 }
 
 /// Builds a [CurrencyRateRepository] pre-seeded with [rates] (keyed by unit
@@ -37,13 +33,11 @@ Future<void> _setUpSettings() async {
 Future<CurrencyRateRepository> _buildSeededCurrencyRateRepo(
   Map<String, CurrencyRateEntry> rates,
 ) async {
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
-  final repo = CurrencyRateRepository(prefs);
-  await repo.save(
+  final seeded = await TestRepositories.create();
+  await seeded.currencyRate.save(
     CurrencyRates(updatedAt: DateTime.utc(2026, 6, 6), rates: rates),
   );
-  return repo;
+  return seeded.currencyRate;
 }
 
 Widget _buildScreen(
@@ -54,9 +48,9 @@ Widget _buildScreen(
 }) {
   return ProviderScope(
     overrides: [
-      settingsRepositoryProvider.overrideWithValue(_settingsRepo),
+      settingsRepositoryProvider.overrideWithValue(_repos.settings),
       currencyRateRepositoryProvider.overrideWithValue(
-        currencyRateRepo ?? _currencyRateRepo,
+        currencyRateRepo ?? _repos.currencyRate,
       ),
     ],
     child: MaterialApp(
@@ -250,7 +244,7 @@ UnitRepository _buildRepoWithConstrainedFunctions() {
 // ---------------------------------------------------------------------------
 
 void main() {
-  setUp(_setUpSettings);
+  setUp(_setUpRepos);
 
   group('UnitEntryDetailScreen — unit kind', () {
     testWidgets('shows name section', (tester) async {
@@ -740,7 +734,7 @@ void main() {
   });
 
   group('UnitEntryDetailScreen — live unitRepositoryProvider path', () {
-    setUpAll(_setUpSettings);
+    setUpAll(_setUpRepos);
 
     testWidgets('uses unitRepositoryProvider when repo is null', (
       tester,
@@ -754,11 +748,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            settingsRepositoryProvider.overrideWithValue(_settingsRepo),
+            ..._repos.overrides,
             unitRepositoryProvider.overrideWithValue(liveRepo),
-            currencyRateRepositoryProvider.overrideWithValue(
-              _currencyRateRepo,
-            ),
           ],
           child: const MaterialApp(
             home: UnitEntryDetailScreen(
@@ -789,11 +780,8 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            settingsRepositoryProvider.overrideWithValue(_settingsRepo),
+            ..._repos.overrides,
             unitRepositoryProvider.overrideWithValue(liveRepo),
-            currencyRateRepositoryProvider.overrideWithValue(
-              _currencyRateRepo,
-            ),
           ],
           child: const MaterialApp(
             home: UnitEntryDetailScreen(

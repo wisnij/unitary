@@ -3,15 +3,13 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
-import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 import 'package:unitary/shared/readable_width.dart';
+
+import '../../../helpers/repository_overrides.dart';
 
 // Note: the "Label and input column widths" requirement in the worksheet-ui
 // spec (minimum 130 dp label column, 12 em input minimum, equal-width inputs)
@@ -21,22 +19,15 @@ import 'package:unitary/shared/readable_width.dart';
 // automated widget tests.
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late WorksheetRepository worksheetRepo;
+  late TestRepositories repos;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    worksheetRepo = WorksheetRepository(prefs);
+    repos = await TestRepositories.create();
   });
 
   Widget buildApp() {
     return ProviderScope(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-      ],
+      overrides: repos.overrides,
       child: MaterialApp(
         home: WorksheetScreen(onNavigate: (_) {}),
       ),

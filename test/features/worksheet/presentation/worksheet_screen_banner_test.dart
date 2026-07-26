@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/currency/presentation/currency_refresh_button.dart';
 import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
-import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/widgets/worksheet_banner.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
+
+import '../../../helpers/repository_overrides.dart';
 
 class _FixedStatusNotifier extends CurrencyStatusNotifier {
   _FixedStatusNotifier(this._initial);
@@ -22,21 +20,16 @@ class _FixedStatusNotifier extends CurrencyStatusNotifier {
 }
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late WorksheetRepository worksheetRepo;
+  late TestRepositories repos;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    worksheetRepo = WorksheetRepository(prefs);
+    repos = await TestRepositories.create();
   });
 
   Widget buildApp({CurrencyStatus status = const CurrencyStatus()}) {
     return ProviderScope(
       overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+        ...repos.overrides,
         currencyStatusProvider.overrideWith(() => _FixedStatusNotifier(status)),
       ],
       child: MaterialApp(home: WorksheetScreen(onNavigate: (_) {})),

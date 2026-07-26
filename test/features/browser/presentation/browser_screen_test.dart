@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/function.dart';
 import 'package:unitary/core/domain/models/unit.dart';
@@ -9,9 +8,9 @@ import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
 import 'package:unitary/features/browser/state/browser_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/shared/widgets/fast_scroll_bar.dart';
+
+import '../../../helpers/repository_overrides.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -33,20 +32,18 @@ class _TestBrowserNotifier extends BrowserNotifier {
   }
 }
 
-late SettingsRepository _settingsRepo;
+late TestRepositories _repos;
 
-Future<void> _setUpSettings() async {
-  SharedPreferences.setMockInitialValues({});
-  final prefs = await SharedPreferences.getInstance();
-  _settingsRepo = SettingsRepository(prefs);
+Future<void> _setUpRepos() async {
+  _repos = await TestRepositories.create();
 }
 
 Widget _buildScreen(UnitRepository repo) {
   return ProviderScope(
     overrides: [
+      ..._repos.overrides,
       unitRepositoryProvider.overrideWithValue(repo),
       browserProvider.overrideWith(_TestBrowserNotifier.new),
-      settingsRepositoryProvider.overrideWithValue(_settingsRepo),
     ],
     child: MaterialApp(
       home: BrowserScreen(onNavigate: (_) {}),
@@ -77,7 +74,7 @@ UnitRepository _buildDecorationRepo() {
 // ---------------------------------------------------------------------------
 
 void main() {
-  setUp(_setUpSettings);
+  setUp(_setUpRepos);
 
   group('BrowserScreen — entry row decoration', () {
     testWidgets('prefix entry title has trailing dash', (tester) async {

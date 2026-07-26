@@ -1,26 +1,19 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 
+import '../../../helpers/repository_overrides.dart';
+
 void main() {
   group('SettingsNotifier', () {
+    late TestRepositories repos;
     late ProviderContainer container;
-    late SettingsRepository repository;
 
     setUp(() async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      repository = SettingsRepository(prefs);
-
-      container = ProviderContainer(
-        overrides: [
-          settingsRepositoryProvider.overrideWithValue(repository),
-        ],
-      );
+      repos = await TestRepositories.create();
+      container = ProviderContainer(overrides: repos.overrides);
     });
 
     tearDown(() {
@@ -33,12 +26,10 @@ void main() {
     });
 
     test('initial state loads from repository', () async {
-      SharedPreferences.setMockInitialValues({'precision': 8});
-      final prefs = await SharedPreferences.getInstance();
-      final repo = SettingsRepository(prefs);
-      final c = ProviderContainer(
-        overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+      final seeded = await TestRepositories.create(
+        initialPrefs: {'precision': 8},
       );
+      final c = ProviderContainer(overrides: seeded.overrides);
       addTearDown(c.dispose);
 
       final settings = c.read(settingsProvider);
@@ -66,7 +57,10 @@ void main() {
     test('updateThemeMode changes state to light', () {
       final notifier = container.read(settingsProvider.notifier);
       notifier.updateThemeMode(ThemePreference.light);
-      expect(container.read(settingsProvider).themeMode, ThemePreference.light);
+      expect(
+        container.read(settingsProvider).themeMode,
+        ThemePreference.light,
+      );
     });
 
     test('updateThemeMode changes state to system', () {
@@ -95,7 +89,7 @@ void main() {
       // Allow async save to complete.
       await Future<void>.delayed(Duration.zero);
 
-      final loaded = repository.load();
+      final loaded = repos.settings.load();
       expect(loaded.precision, 3);
     });
   });

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
@@ -9,10 +7,8 @@ import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
 import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';
 import 'package:unitary/features/browser/state/browser_provider.dart';
-import 'package:unitary/features/currency/data/currency_rate_repository.dart';
-import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
+
+import '../../../helpers/pump_app.dart';
 
 /// Browser notifier override: alphabetical view, all groups expanded, so
 /// entries are immediately visible in widget tests.
@@ -28,16 +24,6 @@ class _TestBrowserNotifier extends BrowserNotifier {
 }
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late CurrencyRateRepository currencyRateRepo;
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    currencyRateRepo = CurrencyRateRepository(prefs);
-  });
-
   UnitRepository buildRepo() {
     final r = UnitRepository();
     r.register(const PrimitiveUnit(id: 'm', aliases: ['meter', 'meters']));
@@ -47,23 +33,18 @@ void main() {
     return r;
   }
 
-  Widget buildApp() {
-    return ProviderScope(
-      overrides: [
-        unitRepositoryProvider.overrideWithValue(buildRepo()),
-        browserProvider.overrideWith(_TestBrowserNotifier.new),
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
-      ],
-      child: MaterialApp(home: BrowserScreen(onNavigate: (_) {})),
-    );
-  }
-
   Future<void> pump(WidgetTester tester, Size size) async {
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(buildApp());
+    await pumpApp(
+      tester,
+      BrowserScreen(onNavigate: (_) {}),
+      overrides: [
+        unitRepositoryProvider.overrideWithValue(buildRepo()),
+        browserProvider.overrideWith(_TestBrowserNotifier.new),
+      ],
+    );
     await tester.pumpAndSettle();
   }
 

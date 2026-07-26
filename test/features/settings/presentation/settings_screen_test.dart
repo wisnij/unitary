@@ -1,33 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/features/currency/data/currency_rate_repository.dart';
-import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/shared/readable_width.dart';
 
+import '../../../helpers/repository_overrides.dart';
+
 void main() {
-  late SettingsRepository repo;
-  late CurrencyRateRepository currencyRateRepo;
+  late TestRepositories repos;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    repo = SettingsRepository(prefs);
-    currencyRateRepo = CurrencyRateRepository(prefs);
+    repos = await TestRepositories.create();
   });
 
   Widget buildApp() {
     return ProviderScope(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(repo),
-        currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
-      ],
+      overrides: repos.overrides,
       child: const MaterialApp(home: SettingsScreen()),
     );
   }
@@ -140,9 +131,9 @@ void main() {
       tester,
     ) async {
       // Start with dark mode set.
-      SharedPreferences.setMockInitialValues({'themeMode': 'dark'});
-      final prefs = await SharedPreferences.getInstance();
-      repo = SettingsRepository(prefs);
+      repos = await TestRepositories.create(
+        initialPrefs: {'themeMode': 'dark'},
+      );
       await tester.pumpWidget(buildApp());
 
       await tester.tap(find.text('Use system theme'));

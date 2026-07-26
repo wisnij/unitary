@@ -3,15 +3,13 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/about/presentation/license_screen.dart';
 import 'package:unitary/features/about/state/build_metadata_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
+
+import '../../../helpers/repository_overrides.dart';
 
 /// Fake [UrlLauncherPlatform] that records launched URLs.
 class FakeUrlLauncher extends UrlLauncherPlatform {
@@ -28,13 +26,11 @@ class FakeUrlLauncher extends UrlLauncherPlatform {
 }
 
 void main() {
-  late SettingsRepository repo;
+  late TestRepositories repos;
   late FakeUrlLauncher fakeUrlLauncher;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    repo = SettingsRepository(prefs);
+    repos = await TestRepositories.create();
     PackageInfo.setMockInitialValues(
       appName: 'unitary',
       packageName: 'dev.wisnij.unitary',
@@ -48,7 +44,7 @@ void main() {
 
   Widget buildApp() {
     return ProviderScope(
-      overrides: [settingsRepositoryProvider.overrideWithValue(repo)],
+      overrides: repos.overrides,
       child: const MaterialApp(home: AboutScreen()),
     );
   }
@@ -113,7 +109,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            settingsRepositoryProvider.overrideWithValue(repo),
+            ...repos.overrides,
             buildMetadataProvider.overrideWithValue('20260315-abc1234'),
           ],
           child: const MaterialApp(home: AboutScreen()),
@@ -134,7 +130,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            settingsRepositoryProvider.overrideWithValue(repo),
+            ...repos.overrides,
             buildMetadataProvider.overrideWithValue('20260315-abc1234'),
           ],
           child: const MaterialApp(home: AboutScreen()),

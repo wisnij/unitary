@@ -162,12 +162,21 @@ suite.
 
 ## Open Questions
 
-- Should the new CI step live in `.github/actions/test/action.yml` (same
-  job, extra step) or a new sibling job? Leaning toward a new step in the
-  same composite action for now, since it shares the `flutter pub get` /
-  SDK setup; revisit if the job needs to be gated independently (e.g. to
-  not block on flaky Chrome-driven runs).
-- Exact list of "restart" scenarios in tasks.md (worksheet, settings,
-  history) — confirmed in the proposal; open to trimming if one proves
-  redundant with existing notifier-level restore tests during
-  implementation.
+- ~~Should the new CI step live in `.github/actions/test/action.yml` (same
+  job, extra step) or a new sibling job?~~ **Resolved**: new step in the
+  same composite action (`.github/actions/test/action.yml`), sharing the
+  existing `flutter pub get` / SDK setup rather than duplicating it in a
+  separate job.
+- ~~Exact list of "restart" scenarios in tasks.md (worksheet, settings,
+  history)~~ **Resolved**: keep all three. No existing test (notifier-level
+  or repository-level) exercises the real, platform-channel-backed
+  `SharedPreferences` plugin — every one uses
+  `SharedPreferences.setMockInitialValues`, so none of the three restart
+  scenarios is actually redundant with existing coverage. The theoretical
+  overlap (all three exercise the same underlying real-plugin round-trip
+  mechanism) is outweighed by two things: each repository's storage shape
+  differs enough to plausibly catch different bugs (worksheet's nested map
+  vs. settings' flat enum-as-string fields vs. history's capped JSON list),
+  and the marginal cost of an extra scenario is small once the shared
+  `restart()` helper (task 3.1) exists — the Chrome/app-boot overhead
+  dominates runtime, not the number of assertions per boot.

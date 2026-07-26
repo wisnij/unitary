@@ -220,10 +220,15 @@ re-ranked alongside new findings.
   files matching the pattern were migrated in one pass rather than left to
   grow a second coexisting convention. See `openspec/changes/archive/`
   (`test-harness-cleanup`) for the full design record, including a real
-  Riverpod gotcha found during migration: duplicate overrides for the same
-  provider in a raw list use *first*-occurrence-wins, not last — `pumpApp`'s
-  explicit origin-keyed merge handles this correctly, but one file that
-  bypassed `pumpApp` initially got it backwards and was fixed.
+  Riverpod gotcha found during migration: `ProviderContainer`/`ProviderScope`
+  don't resolve a duplicate-provider override by list order at all — they
+  throw `AssertionError: Tried to override a provider twice within the same
+  container` in `kDebugMode` the instant two overrides share an `origin`.
+  `pumpApp`'s explicit origin-keyed merge avoids ever constructing such a
+  list; one file that bypassed `pumpApp` initially built one and hit the
+  crash (its symptom — ordinary-looking `expect()` failures from an
+  unbuilt widget tree — made it easy to first misdiagnose as a silent
+  wrong-default bug) and was fixed.
 
 ### F11: Coverage is measured in CI but the 80% criterion is not enforced
 

@@ -86,12 +86,17 @@ Override>` keyed by `Override.origin` before passing the values to
 `ProviderScope`. A caller-supplied override for a provider that also has a
 default (e.g. a custom `settingsRepositoryProvider.overrideWithValue(...)`)
 replaces the default deterministically.
-- *Alternative considered*: rely on Riverpod's own last-in-list-wins
-  behavior for duplicate overrides and just concatenate
-  `[...repos.overrides, ...overrides]`. Rejected — that behavior isn't part
-  of Riverpod's documented public contract, so keying explicitly by
-  `origin` is the same amount of code and doesn't depend on undocumented
-  ordering semantics.
+- *Alternative considered*: just concatenate `[...repos.overrides,
+  ...overrides]` and rely on Riverpod resolving the duplicate. Rejected —
+  verified directly that Riverpod does not resolve a duplicate-provider
+  override by list order at all: `ProviderContainer`/`ProviderScope` throw
+  `AssertionError: Tried to override a provider twice within the same
+  container` in `kDebugMode` the moment two overrides share an `origin`,
+  regardless of which one is "supposed" to win. A flat concatenation would
+  crash on construction for any test that both gets a provider's default
+  from `repos.overrides` and separately overrides that same provider.
+  Keying explicitly by `origin` and merging into a `Map` avoids ever
+  constructing a duplicate-provider list in the first place.
 
 **Split into two files: `repository_overrides.dart` (the `TestRepositories`
 class, no Flutter widget dependency beyond `flutter_riverpod`'s `Override`

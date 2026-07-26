@@ -104,16 +104,24 @@
 - [x] 6.2 Migrate `test/features/browser/presentation/unit_entry_detail_screen_test.dart`
   (kept its `_buildSeededCurrencyRateRepo` helper, now building a
   `TestRepositories` and returning its pre-seeded `currencyRate`. Discovered
-  and fixed a real bug here: `ProviderScope`/`ProviderContainer` overrides
-  use *first*-occurrence-wins for duplicate providers in a raw list, not
-  last — the opposite of what `pumpApp`'s explicit origin-keyed merge
-  provides. An initial `[...repos.overrides, if (x != null)
-  currencyRateRepositoryProvider.overrideWithValue(x)]` silently kept the
-  unseeded default. Fixed by building `_buildScreen`'s override list
-  explicitly (matching the original code's shape) instead of spreading
-  `repos.overrides`. Audited all other migrated files for the same pattern —
-  no other file spreads `repos.overrides` while also separately overriding
-  one of the same 4 providers, so this was an isolated case.).
+  and fixed a real bug here: `ProviderScope`/`ProviderContainer` do not
+  resolve a duplicate-provider override by list order at all — they throw
+  `AssertionError: Tried to override a provider twice within the same
+  container` in `kDebugMode` the instant two overrides share an `origin`
+  (verified directly against this project's resolved riverpod 3.2.1). An
+  initial `[...repos.overrides, if (x != null)
+  currencyRateRepositoryProvider.overrideWithValue(x)]` duplicated the
+  `currencyRateRepositoryProvider` override and crashed `ProviderScope`'s
+  construction for every test that passed a seeded `currencyRateRepo`; the
+  crash's downstream symptom (the widget tree never built) surfaced as
+  ordinary-looking `expect()` failures ("Value" text not found) rather than
+  a visible assertion message, which is what made the actual cause easy to
+  misdiagnose as a silent wrong-default bug. Fixed by building
+  `_buildScreen`'s override list explicitly (matching the original code's
+  shape) instead of spreading `repos.overrides`. Audited all other migrated
+  files for the same pattern — no other file spreads `repos.overrides`
+  while also separately overriding one of the same 4 providers, so this was
+  an isolated case.).
 - [x] 6.3 Migrate `test/shared/widgets/app_drawer_test.dart`.
 - [x] 6.4 Migrate `test/features/freeform/presentation/home_screen_test.dart`.
 - [x] 6.5 Run `flutter test --reporter failures-only` on the four files

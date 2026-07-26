@@ -14,7 +14,9 @@ import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';
 import 'package:unitary/features/currency/data/currency_rate_repository.dart';
 import 'package:unitary/features/currency/state/currency_provider.dart';
+import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/settings/state/settings_provider.dart';
+import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 
 import '../../../helpers/repository_overrides.dart';
 
@@ -49,6 +51,10 @@ Widget _buildScreen(
   return ProviderScope(
     overrides: [
       settingsRepositoryProvider.overrideWithValue(_repos.settings),
+      worksheetRepositoryProvider.overrideWithValue(_repos.worksheet),
+      freeformHistoryRepositoryProvider.overrideWithValue(
+        _repos.freeformHistory,
+      ),
       currencyRateRepositoryProvider.overrideWithValue(
         currencyRateRepo ?? _repos.currencyRate,
       ),

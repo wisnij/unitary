@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
-import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 
+import '../../../helpers/pump_app.dart';
 import '../../../shared/rebuild_counter.dart';
 
 // Pins the worksheet rebuild bound observed in the July 13, 2026 DevTools
@@ -20,28 +17,6 @@ import '../../../shared/rebuild_counter.dart';
 // makes that sound).
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late WorksheetRepository worksheetRepo;
-
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    worksheetRepo = WorksheetRepository(prefs);
-  });
-
-  Widget buildApp() {
-    return ProviderScope(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-      ],
-      child: MaterialApp(
-        home: WorksheetScreen(onNavigate: (_) {}),
-      ),
-    );
-  }
-
   void selectTemplate(WidgetTester tester, String id) {
     final container = ProviderScope.containerOf(
       tester.element(find.byType(WorksheetScreen)),
@@ -51,7 +26,7 @@ void main() {
 
   testWidgets('a cell edit rebuilds the worksheet screen at most once '
       'and recomputes the other rows', (tester) async {
-    await tester.pumpWidget(buildApp());
+    await pumpApp(tester, WorksheetScreen(onNavigate: (_) {}));
     selectTemplate(tester, 'length');
     await tester.pumpAndSettle();
 
@@ -82,7 +57,7 @@ void main() {
   testWidgets('a second edit in the same cell also rebuilds at most once', (
     tester,
   ) async {
-    await tester.pumpWidget(buildApp());
+    await pumpApp(tester, WorksheetScreen(onNavigate: (_) {}));
     selectTemplate(tester, 'length');
     await tester.pumpAndSettle();
 

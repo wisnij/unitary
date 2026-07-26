@@ -1,16 +1,14 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/currency/presentation/currency_refresh_button.dart';
 import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
-import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/widgets/worksheet_banner.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
+
+import '../../../helpers/pump_app.dart';
+import '../../../helpers/repository_overrides.dart';
 
 class _FixedStatusNotifier extends CurrencyStatusNotifier {
   _FixedStatusNotifier(this._initial);
@@ -22,24 +20,23 @@ class _FixedStatusNotifier extends CurrencyStatusNotifier {
 }
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late WorksheetRepository worksheetRepo;
+  late TestRepositories repos;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    worksheetRepo = WorksheetRepository(prefs);
+    repos = await TestRepositories.create();
   });
 
-  Widget buildApp({CurrencyStatus status = const CurrencyStatus()}) {
-    return ProviderScope(
+  Future<void> pumpScreen(
+    WidgetTester tester, {
+    CurrencyStatus status = const CurrencyStatus(),
+  }) {
+    return pumpApp(
+      tester,
+      WorksheetScreen(onNavigate: (_) {}),
+      repos: repos,
       overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
         currencyStatusProvider.overrideWith(() => _FixedStatusNotifier(status)),
       ],
-      child: MaterialApp(home: WorksheetScreen(onNavigate: (_) {})),
     );
   }
 
@@ -52,7 +49,7 @@ void main() {
 
   group('WorksheetScreen — banner', () {
     testWidgets('banner is shown for the Currency worksheet', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'currency');
       await tester.pump();
 
@@ -60,7 +57,7 @@ void main() {
     });
 
     testWidgets('no banner for a non-currency worksheet', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pump();
 
@@ -68,12 +65,9 @@ void main() {
     });
 
     testWidgets('banner reflects the last-updated timestamp', (tester) async {
-      await tester.pumpWidget(
-        buildApp(
-          status: CurrencyStatus(
-            lastUpdatedAt: DateTime.utc(2026, 6, 6, 10, 0),
-          ),
-        ),
+      await pumpScreen(
+        tester,
+        status: CurrencyStatus(lastUpdatedAt: DateTime.utc(2026, 6, 6, 10, 0)),
       );
       selectTemplate(tester, 'currency');
       await tester.pump();
@@ -86,7 +80,7 @@ void main() {
     testWidgets('refresh action present on the Currency worksheet', (
       tester,
     ) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'currency');
       await tester.pump();
 
@@ -96,7 +90,7 @@ void main() {
     testWidgets('refresh action absent on a non-currency worksheet', (
       tester,
     ) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pump();
 

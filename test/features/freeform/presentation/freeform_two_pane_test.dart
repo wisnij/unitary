@@ -1,17 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
-import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
+
+import '../../../helpers/pump_app.dart';
+import '../../../helpers/repository_overrides.dart';
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late FreeformHistoryRepository historyRepo;
+  late TestRepositories repos;
 
   const entry0 = FreeformHistoryEntry(
     from: '5 miles',
@@ -22,30 +19,17 @@ void main() {
   const entry1 = FreeformHistoryEntry(from: '1 ft', to: '');
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    historyRepo = FreeformHistoryRepository(prefs);
+    repos = await TestRepositories.create();
   });
 
   Future<void> seed(List<FreeformHistoryEntry> entries) =>
-      historyRepo.save(entries);
-
-  Widget buildApp() {
-    return ProviderScope(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
-      ],
-      child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
-    );
-  }
+      repos.freeformHistory.save(entries);
 
   Future<void> pump(WidgetTester tester, Size size) async {
     tester.view.devicePixelRatio = 1.0;
     tester.view.physicalSize = size;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(buildApp());
+    await pumpApp(tester, FreeformScreen(onNavigate: (_) {}), repos: repos);
     await tester.pumpAndSettle();
   }
 

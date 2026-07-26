@@ -1,39 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/features/about/presentation/about_screen.dart';
-import 'package:unitary/features/currency/data/currency_rate_repository.dart';
-import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/presentation/settings_screen.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/shared/top_level_page.dart';
 import 'package:unitary/shared/widgets/app_drawer.dart';
 
-late SettingsRepository _settingsRepo;
-late CurrencyRateRepository _currencyRateRepo;
+import '../../helpers/pump_app.dart';
+import '../../helpers/repository_overrides.dart';
 
-Widget _buildDrawer({
+late TestRepositories _repos;
+
+Future<void> _pumpDrawer(
+  WidgetTester tester, {
   required TopLevelPage currentPage,
   void Function(TopLevelPage)? onNavigate,
 }) {
-  return ProviderScope(
-    overrides: [
-      settingsRepositoryProvider.overrideWithValue(_settingsRepo),
-      currencyRateRepositoryProvider.overrideWithValue(_currencyRateRepo),
-    ],
-    child: MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(title: const Text('Test')),
-        drawer: AppDrawer(
-          currentPage: currentPage,
-          onNavigate: onNavigate ?? (_) {},
-        ),
-        body: const SizedBox.shrink(),
+  return pumpApp(
+    tester,
+    Scaffold(
+      appBar: AppBar(title: const Text('Test')),
+      drawer: AppDrawer(
+        currentPage: currentPage,
+        onNavigate: onNavigate ?? (_) {},
       ),
+      body: const SizedBox.shrink(),
     ),
+    repos: _repos,
   );
 }
 
@@ -44,17 +37,12 @@ Future<void> _openDrawer(WidgetTester tester) async {
 
 void main() {
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    _settingsRepo = SettingsRepository(prefs);
-    _currencyRateRepo = CurrencyRateRepository(prefs);
+    _repos = await TestRepositories.create();
   });
 
   group('AppDrawer — renders all tiles', () {
     testWidgets('drawer contains all navigation tiles', (tester) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.freeform),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.freeform);
       await _openDrawer(tester);
 
       expect(find.text('Freeform'), findsOneWidget);
@@ -65,9 +53,7 @@ void main() {
     });
 
     testWidgets('drawer shows expected icons', (tester) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.freeform),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.freeform);
       await _openDrawer(tester);
 
       expect(find.byIcon(Icons.calculate), findsOneWidget);
@@ -82,9 +68,7 @@ void main() {
     testWidgets('Freeform tile is selected when currentPage is freeform', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.freeform),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.freeform);
       await _openDrawer(tester);
 
       final tile = tester.widget<ListTile>(
@@ -96,9 +80,7 @@ void main() {
     testWidgets('Worksheet tile is selected when currentPage is worksheet', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.worksheet),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.worksheet);
       await _openDrawer(tester);
 
       final worksheetTile = tester.widget<ListTile>(
@@ -114,9 +96,7 @@ void main() {
     testWidgets('Browse tile is selected when currentPage is browser', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.browser),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.browser);
       await _openDrawer(tester);
 
       final browseTile = tester.widget<ListTile>(
@@ -133,11 +113,10 @@ void main() {
   group('AppDrawer — navigation callbacks', () {
     testWidgets('tapping Freeform calls onNavigate(freeform)', (tester) async {
       TopLevelPage? navigatedTo;
-      await tester.pumpWidget(
-        _buildDrawer(
-          currentPage: TopLevelPage.worksheet,
-          onNavigate: (p) => navigatedTo = p,
-        ),
+      await _pumpDrawer(
+        tester,
+        currentPage: TopLevelPage.worksheet,
+        onNavigate: (p) => navigatedTo = p,
       );
       await _openDrawer(tester);
 
@@ -151,11 +130,10 @@ void main() {
       tester,
     ) async {
       TopLevelPage? navigatedTo;
-      await tester.pumpWidget(
-        _buildDrawer(
-          currentPage: TopLevelPage.freeform,
-          onNavigate: (p) => navigatedTo = p,
-        ),
+      await _pumpDrawer(
+        tester,
+        currentPage: TopLevelPage.freeform,
+        onNavigate: (p) => navigatedTo = p,
       );
       await _openDrawer(tester);
 
@@ -167,11 +145,10 @@ void main() {
 
     testWidgets('tapping Browse calls onNavigate(browser)', (tester) async {
       TopLevelPage? navigatedTo;
-      await tester.pumpWidget(
-        _buildDrawer(
-          currentPage: TopLevelPage.freeform,
-          onNavigate: (p) => navigatedTo = p,
-        ),
+      await _pumpDrawer(
+        tester,
+        currentPage: TopLevelPage.freeform,
+        onNavigate: (p) => navigatedTo = p,
       );
       await _openDrawer(tester);
 
@@ -182,9 +159,7 @@ void main() {
     });
 
     testWidgets('tapping a page tile closes the drawer', (tester) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.freeform),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.freeform);
       await _openDrawer(tester);
 
       expect(find.text('Freeform'), findsOneWidget);
@@ -198,9 +173,7 @@ void main() {
 
   group('AppDrawer — Settings and About navigation', () {
     testWidgets('tapping Settings navigates to SettingsScreen', (tester) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.freeform),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.freeform);
       await _openDrawer(tester);
 
       await tester.tap(find.text('Settings'));
@@ -210,9 +183,7 @@ void main() {
     });
 
     testWidgets('tapping About navigates to AboutScreen', (tester) async {
-      await tester.pumpWidget(
-        _buildDrawer(currentPage: TopLevelPage.freeform),
-      );
+      await _pumpDrawer(tester, currentPage: TopLevelPage.freeform);
       await _openDrawer(tester);
 
       await tester.tap(find.text('About'));
@@ -232,9 +203,7 @@ void main() {
         tester.view.physicalSize = const Size(800, 320);
         addTearDown(tester.view.reset);
 
-        await tester.pumpWidget(
-          _buildDrawer(currentPage: TopLevelPage.freeform),
-        );
+        await _pumpDrawer(tester, currentPage: TopLevelPage.freeform);
         await _openDrawer(tester);
 
         // The Browse nav tile must not be overlapped by the Settings footer:

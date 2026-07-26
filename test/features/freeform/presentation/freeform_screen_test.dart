@@ -1,30 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
-import 'package:unitary/features/freeform/data/freeform_history_repository.dart';
 import 'package:unitary/features/freeform/data/idle_examples.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
-import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/shared/readable_width.dart';
 
+import '../../../helpers/pump_app.dart';
+import '../../../helpers/repository_overrides.dart';
+
 void main() {
-  late SettingsRepository settingsRepo;
-  late FreeformHistoryRepository historyRepo;
+  late TestRepositories repos;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    historyRepo = FreeformHistoryRepository(prefs);
+    repos = await TestRepositories.create();
   });
 
   Widget buildApp({
@@ -33,8 +27,7 @@ void main() {
   }) {
     return ProviderScope(
       overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        freeformHistoryRepositoryProvider.overrideWithValue(historyRepo),
+        ...repos.overrides,
         if (freeformState != null)
           freeformProvider.overrideWith(
             () => _StubFreeformNotifier(freeformState),
@@ -136,20 +129,11 @@ void main() {
     });
 
     testWidgets('on-submit mode shows evaluate button', (tester) async {
-      SharedPreferences.setMockInitialValues({
-        'evaluationMode': 'onSubmit',
-      });
-      final prefs = await SharedPreferences.getInstance();
-      final repo = SettingsRepository(prefs);
-      final history = FreeformHistoryRepository(prefs);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(repo),
-            freeformHistoryRepositoryProvider.overrideWithValue(history),
-          ],
-          child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+      await pumpApp(
+        tester,
+        FreeformScreen(onNavigate: (_) {}),
+        repos: await TestRepositories.create(
+          initialPrefs: {'evaluationMode': 'onSubmit'},
         ),
       );
 
@@ -157,20 +141,11 @@ void main() {
     });
 
     testWidgets('on-submit mode does not evaluate on typing', (tester) async {
-      SharedPreferences.setMockInitialValues({
-        'evaluationMode': 'onSubmit',
-      });
-      final prefs = await SharedPreferences.getInstance();
-      final repo = SettingsRepository(prefs);
-      final history = FreeformHistoryRepository(prefs);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(repo),
-            freeformHistoryRepositoryProvider.overrideWithValue(history),
-          ],
-          child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+      await pumpApp(
+        tester,
+        FreeformScreen(onNavigate: (_) {}),
+        repos: await TestRepositories.create(
+          initialPrefs: {'evaluationMode': 'onSubmit'},
         ),
       );
 
@@ -187,20 +162,11 @@ void main() {
     testWidgets('evaluate button triggers evaluation in on-submit mode', (
       tester,
     ) async {
-      SharedPreferences.setMockInitialValues({
-        'evaluationMode': 'onSubmit',
-      });
-      final prefs = await SharedPreferences.getInstance();
-      final repo = SettingsRepository(prefs);
-      final history = FreeformHistoryRepository(prefs);
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(repo),
-            freeformHistoryRepositoryProvider.overrideWithValue(history),
-          ],
-          child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+      await pumpApp(
+        tester,
+        FreeformScreen(onNavigate: (_) {}),
+        repos: await TestRepositories.create(
+          initialPrefs: {'evaluationMode': 'onSubmit'},
         ),
       );
 
@@ -267,20 +233,11 @@ void main() {
     testWidgets(
       'Enter in Convert-from still evaluates in on-submit mode',
       (tester) async {
-        SharedPreferences.setMockInitialValues({
-          'evaluationMode': 'onSubmit',
-        });
-        final prefs = await SharedPreferences.getInstance();
-        final repo = SettingsRepository(prefs);
-        final history = FreeformHistoryRepository(prefs);
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformHistoryRepositoryProvider.overrideWithValue(history),
-            ],
-            child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+        await pumpApp(
+          tester,
+          FreeformScreen(onNavigate: (_) {}),
+          repos: await TestRepositories.create(
+            initialPrefs: {'evaluationMode': 'onSubmit'},
           ),
         );
 
@@ -877,20 +834,11 @@ void main() {
       'history button is enabled after evaluation in on-submit mode',
       (tester) async {
         useCompact(tester);
-        SharedPreferences.setMockInitialValues({
-          'evaluationMode': 'onSubmit',
-        });
-        final prefs = await SharedPreferences.getInstance();
-        final repo = SettingsRepository(prefs);
-        final history = FreeformHistoryRepository(prefs);
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformHistoryRepositoryProvider.overrideWithValue(history),
-            ],
-            child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+        await pumpApp(
+          tester,
+          FreeformScreen(onNavigate: (_) {}),
+          repos: await TestRepositories.create(
+            initialPrefs: {'evaluationMode': 'onSubmit'},
           ),
         );
 
@@ -1269,18 +1217,11 @@ void main() {
     testWidgets(
       'insertion does not trigger evaluation in on-submit mode',
       (tester) async {
-        SharedPreferences.setMockInitialValues({'evaluationMode': 'onSubmit'});
-        final prefs = await SharedPreferences.getInstance();
-        final repo = SettingsRepository(prefs);
-        final history = FreeformHistoryRepository(prefs);
-
-        await tester.pumpWidget(
-          ProviderScope(
-            overrides: [
-              settingsRepositoryProvider.overrideWithValue(repo),
-              freeformHistoryRepositoryProvider.overrideWithValue(history),
-            ],
-            child: MaterialApp(home: FreeformScreen(onNavigate: (_) {})),
+        await pumpApp(
+          tester,
+          FreeformScreen(onNavigate: (_) {}),
+          repos: await TestRepositories.create(
+            initialPrefs: {'evaluationMode': 'onSubmit'},
           ),
         );
 

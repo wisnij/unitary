@@ -3,15 +3,14 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
-import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 import 'package:unitary/shared/readable_width.dart';
+
+import '../../../helpers/pump_app.dart';
+import '../../../helpers/repository_overrides.dart';
 
 // Note: the "Label and input column widths" requirement in the worksheet-ui
 // spec (minimum 130 dp label column, 12 em input minimum, equal-width inputs)
@@ -21,27 +20,14 @@ import 'package:unitary/shared/readable_width.dart';
 // automated widget tests.
 
 void main() {
-  late SettingsRepository settingsRepo;
-  late WorksheetRepository worksheetRepo;
+  late TestRepositories repos;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    settingsRepo = SettingsRepository(prefs);
-    worksheetRepo = WorksheetRepository(prefs);
+    repos = await TestRepositories.create();
   });
 
-  Widget buildApp() {
-    return ProviderScope(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-      ],
-      child: MaterialApp(
-        home: WorksheetScreen(onNavigate: (_) {}),
-      ),
-    );
-  }
+  Future<void> pumpScreen(WidgetTester tester) =>
+      pumpApp(tester, WorksheetScreen(onNavigate: (_) {}), repos: repos);
 
   // Selects a worksheet template by id via the provider, so tests can assume
   // an active worksheet (none is selected on launch).
@@ -54,7 +40,7 @@ void main() {
 
   group('WorksheetScreen', () {
     testWidgets('no worksheet is selected on launch', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
 
       final container = ProviderScope.containerOf(
         tester.element(find.byType(WorksheetScreen)),
@@ -67,7 +53,7 @@ void main() {
     testWidgets('wraps worksheet content in the shared ReadableWidth cap', (
       tester,
     ) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
 
@@ -75,7 +61,7 @@ void main() {
     });
 
     testWidgets('shows rows for the selected template', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
 
@@ -94,7 +80,7 @@ void main() {
     });
 
     testWidgets('shows row expression as secondary label', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
 
@@ -115,7 +101,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       tester.view.physicalSize = const Size(590, 800);
       addTearDown(tester.view.reset);
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       // A worksheet must be active for the dropdown selector to appear.
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
@@ -144,7 +130,7 @@ void main() {
     testWidgets('active row is not overwritten when engine updates', (
       tester,
     ) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
 
@@ -167,7 +153,7 @@ void main() {
     // Makes the first row of the length worksheet the source row by typing
     // into it, then settles the debounced recompute.
     Future<void> pumpWithSourceRow(WidgetTester tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).first, '1');
@@ -239,7 +225,7 @@ void main() {
     // and Fahrenheit function rows produce "out of bounds" errors, while the
     // Rankine unit row converts normally.
     Future<void> pumpTemperatureError(WidgetTester tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'temperature');
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).first, '-1');
@@ -348,7 +334,7 @@ void main() {
     });
 
     testWidgets('valid input shows no error icon anywhere', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'temperature');
       await tester.pumpAndSettle();
       // 450 K is within every row's domain, including gas mark (oven range).
@@ -375,7 +361,7 @@ void main() {
       // cell-offset transform on top of the child's own offset, shifting the
       // assistive-technology focus rectangle sideways off the real field.
       final handle = tester.ensureSemantics();
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'temperature');
       await tester.pumpAndSettle();
 
@@ -493,7 +479,7 @@ void main() {
       tester,
     ) async {
       final handle = tester.ensureSemantics();
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
       await tester.enterText(find.byType(TextField).first, '1');
@@ -523,7 +509,7 @@ void main() {
       tester,
     ) async {
       final handle = tester.ensureSemantics();
-      await tester.pumpWidget(buildApp());
+      await pumpScreen(tester);
       selectTemplate(tester, 'length');
       await tester.pumpAndSettle();
 

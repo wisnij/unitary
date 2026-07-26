@@ -1,31 +1,23 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:unitary/core/domain/models/unit.dart';
 import 'package:unitary/core/domain/models/unit_repository.dart';
 import 'package:unitary/core/domain/models/unit_repository_provider.dart';
-import 'package:unitary/features/settings/data/settings_repository.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
 import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
 import 'package:unitary/features/worksheet/data/worksheet_repository.dart';
 import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 import 'package:unitary/features/worksheet/state/worksheet_state.dart';
 
+import '../../../helpers/repository_overrides.dart';
+
 void main() {
+  late TestRepositories repos;
   late ProviderContainer container;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    final prefs = await SharedPreferences.getInstance();
-    final settingsRepo = SettingsRepository(prefs);
-    final worksheetRepo = WorksheetRepository(prefs);
-    container = ProviderContainer(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(settingsRepo),
-        worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-      ],
-    );
+    repos = await TestRepositories.create();
+    container = ProviderContainer(overrides: repos.overrides);
   });
 
   tearDown(() {
@@ -158,42 +150,26 @@ void main() {
     test(
       'build leaves no active template when persisted ID is unrecognised',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString(
+        final seeded = await TestRepositories.create();
+        await seeded.prefs.setString(
           WorksheetRepository.prefsKey,
           '{"activeWorksheetId":"no_such_template","sources":{}}',
         );
-        final worksheetRepo = WorksheetRepository(prefs);
-        final settingsRepo = SettingsRepository(prefs);
-        final c = ProviderContainer(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-          ],
-        );
+        final c = ProviderContainer(overrides: seeded.overrides);
         addTearDown(c.dispose);
         expect(c.read(worksheetProvider).worksheetId, isNull);
       },
     );
 
     test('build restores active worksheet ID from persisted state', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final worksheetRepo = WorksheetRepository(prefs);
-      await worksheetRepo.save(
+      final seeded = await TestRepositories.create();
+      await seeded.worksheet.save(
         const WorksheetPersistState(
           activeWorksheetId: 'mass',
           sources: {},
         ),
       );
-      final settingsRepo = SettingsRepository(prefs);
-      final c = ProviderContainer(
-        overrides: [
-          settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-        ],
-      );
+      final c = ProviderContainer(overrides: seeded.overrides);
       addTearDown(c.dispose);
       expect(c.read(worksheetProvider).worksheetId, 'mass');
     });
@@ -201,10 +177,8 @@ void main() {
     test(
       'build seeds worksheet values by running engine for persisted sources',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final worksheetRepo = WorksheetRepository(prefs);
-        await worksheetRepo.save(
+        final seeded = await TestRepositories.create();
+        await seeded.worksheet.save(
           const WorksheetPersistState(
             activeWorksheetId: 'length',
             sources: {
@@ -212,13 +186,7 @@ void main() {
             },
           ),
         );
-        final settingsRepo = SettingsRepository(prefs);
-        final c = ProviderContainer(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-          ],
-        );
+        final c = ProviderContainer(overrides: seeded.overrides);
         addTearDown(c.dispose);
 
         final template = predefinedWorksheets.firstWhere(
@@ -238,10 +206,8 @@ void main() {
     test(
       'engine error on restore is isolated to the affected template',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final worksheetRepo = WorksheetRepository(prefs);
-        await worksheetRepo.save(
+        final seeded = await TestRepositories.create();
+        await seeded.worksheet.save(
           const WorksheetPersistState(
             activeWorksheetId: 'length',
             sources: {
@@ -252,13 +218,7 @@ void main() {
             },
           ),
         );
-        final settingsRepo = SettingsRepository(prefs);
-        final c = ProviderContainer(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-          ],
-        );
+        final c = ProviderContainer(overrides: seeded.overrides);
         addTearDown(c.dispose);
 
         // Should not throw.
@@ -271,8 +231,7 @@ void main() {
           .read(worksheetProvider.notifier)
           .onRowChanged('length', 0, '5 ft');
 
-      final prefs = await SharedPreferences.getInstance();
-      final persisted = WorksheetRepository(prefs).load();
+      final persisted = repos.worksheet.load();
       expect(persisted.sources['length']!.rowIndex, 0);
       expect(persisted.sources['length']!.text, '5 ft');
     });
@@ -280,16 +239,13 @@ void main() {
     test('selectWorksheet writes through the updated active ID', () async {
       container.read(worksheetProvider.notifier).selectWorksheet('mass');
 
-      final prefs = await SharedPreferences.getInstance();
-      final persisted = WorksheetRepository(prefs).load();
+      final persisted = repos.worksheet.load();
       expect(persisted.activeWorksheetId, 'mass');
     });
 
     test('multiple templates are restored independently', () async {
-      SharedPreferences.setMockInitialValues({});
-      final prefs = await SharedPreferences.getInstance();
-      final worksheetRepo = WorksheetRepository(prefs);
-      await worksheetRepo.save(
+      final seeded = await TestRepositories.create();
+      await seeded.worksheet.save(
         const WorksheetPersistState(
           activeWorksheetId: 'length',
           sources: {
@@ -298,13 +254,7 @@ void main() {
           },
         ),
       );
-      final settingsRepo = SettingsRepository(prefs);
-      final c = ProviderContainer(
-        overrides: [
-          settingsRepositoryProvider.overrideWithValue(settingsRepo),
-          worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-        ],
-      );
+      final c = ProviderContainer(overrides: seeded.overrides);
       addTearDown(c.dispose);
 
       final lengthTemplate = predefinedWorksheets.firstWhere(
@@ -336,10 +286,7 @@ void main() {
     test(
       'worksheet computations use the shared unitRepositoryProvider repo',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final settingsRepo = SettingsRepository(prefs);
-        final worksheetRepo = WorksheetRepository(prefs);
+        final seeded = await TestRepositories.create();
 
         final repo = UnitRepository.withPredefinedUnits();
         // Override the compiled euro rate with a synthetic test-only rate
@@ -355,8 +302,7 @@ void main() {
 
         final c = ProviderContainer(
           overrides: [
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
+            ...seeded.overrides,
             unitRepositoryProvider.overrideWithValue(repo),
           ],
         );
@@ -387,10 +333,7 @@ void main() {
       'recomputes display values for persisted sources when '
       'unitRepositoryVersionProvider increments',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final settingsRepo = SettingsRepository(prefs);
-        final worksheetRepo = WorksheetRepository(prefs);
+        final seeded = await TestRepositories.create();
 
         final template = predefinedWorksheets.firstWhere(
           (t) => t.id == 'currency',
@@ -402,7 +345,7 @@ void main() {
           (r) => r.expression == 'EUR',
         );
 
-        await worksheetRepo.save(
+        await seeded.worksheet.save(
           WorksheetPersistState(
             activeWorksheetId: 'currency',
             sources: {
@@ -411,12 +354,7 @@ void main() {
           ),
         );
 
-        final c = ProviderContainer(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-          ],
-        );
+        final c = ProviderContainer(overrides: seeded.overrides);
         addTearDown(c.dispose);
 
         // Initial value uses the compiled fallback rate
@@ -450,17 +388,8 @@ void main() {
       'templates with no persisted source remain blank after '
       'unitRepositoryVersionProvider increments',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final settingsRepo = SettingsRepository(prefs);
-        final worksheetRepo = WorksheetRepository(prefs);
-
-        final c = ProviderContainer(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-          ],
-        );
+        final seeded = await TestRepositories.create();
+        final c = ProviderContainer(overrides: seeded.overrides);
         addTearDown(c.dispose);
 
         // No persisted sources at all.
@@ -481,10 +410,7 @@ void main() {
       'recompute after unitRepositoryVersionProvider increment is isolated '
       'to affected templates',
       () async {
-        SharedPreferences.setMockInitialValues({});
-        final prefs = await SharedPreferences.getInstance();
-        final settingsRepo = SettingsRepository(prefs);
-        final worksheetRepo = WorksheetRepository(prefs);
+        final seeded = await TestRepositories.create();
 
         final currencyTemplate = predefinedWorksheets.firstWhere(
           (t) => t.id == 'currency',
@@ -496,7 +422,7 @@ void main() {
           (r) => r.expression == 'EUR',
         );
 
-        await worksheetRepo.save(
+        await seeded.worksheet.save(
           WorksheetPersistState(
             activeWorksheetId: 'currency',
             sources: {
@@ -508,12 +434,7 @@ void main() {
           ),
         );
 
-        final c = ProviderContainer(
-          overrides: [
-            settingsRepositoryProvider.overrideWithValue(settingsRepo),
-            worksheetRepositoryProvider.overrideWithValue(worksheetRepo),
-          ],
-        );
+        final c = ProviderContainer(overrides: seeded.overrides);
         addTearDown(c.dispose);
 
         final repo = c.read(unitRepositoryProvider);

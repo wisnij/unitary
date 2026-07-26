@@ -153,3 +153,31 @@
 - [x] 7.5 Add a dated entry to `doc/design_progress.md` (test count, new
   helper files, migrated-file count, design decisions) and bump "Last
   Updated"; cross-reference from `doc/code_review_2026-07.md`'s F10 entry.
+
+## 8. Follow-up: adopt `pumpApp` uniformly (post-review)
+
+Groups 4–6 deliberately kept a local `buildApp()`/`_buildScreen()`/
+`_buildDrawer()` widget-builder in 9 files (4.2, 4.3, 4.10, 4.11, 5.3, 6.1,
+6.2, 6.3, 6.4) to minimize the size of the initial migration diff, sourcing
+each builder's overrides from `TestRepositories` rather than eliminating the
+builder itself. A subsequent review flagged this as leaving the PR's own
+"one shared pattern, not two" goal (`design.md`) only partially realized: a
+future change to how `pumpApp` wraps its child would require editing 9
+near-duplicate wrapper functions individually. This group closes that gap.
+
+- [x] 8.1 Convert all 9 files to call `pumpApp` directly (via a thin,
+  file-local `async` wrapper only where a call site needs to vary the pumped
+  widget or add per-test overrides — e.g. `pumpScreen(tester, {status})` in
+  `worksheet_screen_banner_test.dart` — never a widget-returning `buildApp()`
+  that hand-builds `ProviderScope`/`MaterialApp` itself). Also converted the
+  two ad-hoc `ProviderScope` calls in
+  `unit_entry_detail_screen_test.dart`'s "live unitRepositoryProvider path"
+  group, which predated `pumpApp` and were never using it.
+- [x] 8.2 Remove now-unused `flutter_riverpod`/`flutter/material.dart`
+  imports left behind in each file once `ProviderScope`/`MaterialApp` are no
+  longer referenced directly.
+- [x] 8.3 Run `flutter test --reporter failures-only` and `flutter analyze`
+  on the full suite. 2043/2043 tests passing (no count change — this is a
+  pure refactor of test setup, not new coverage), `flutter analyze` clean.
+- [x] 8.4 `dart format` the full `test/` tree to normalize formatting from
+  the mechanical call-site rewrites.

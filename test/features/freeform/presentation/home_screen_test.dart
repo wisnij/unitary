@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:unitary/core/domain/models/unit.dart';
@@ -13,6 +12,7 @@ import 'package:unitary/features/worksheet/data/predefined_worksheets.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/shared/app_shell.dart';
 
+import '../../../helpers/pump_app.dart';
 import '../../../helpers/repository_overrides.dart';
 
 void main() {
@@ -29,14 +29,15 @@ void main() {
     return r;
   }
 
-  Widget buildApp({UnitRepository? browserRepo}) {
-    return ProviderScope(
+  Future<void> pumpShell(WidgetTester tester, {UnitRepository? browserRepo}) {
+    return pumpApp(
+      tester,
+      const AppShell(),
+      repos: repos,
       overrides: [
-        ...repos.overrides,
         if (browserRepo != null)
           unitRepositoryProvider.overrideWithValue(browserRepo),
       ],
-      child: const MaterialApp(home: AppShell()),
     );
   }
 
@@ -75,12 +76,12 @@ void main() {
 
   group('AppShell', () {
     testWidgets('renders app bar with title', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       expect(find.text('Unitary'), findsOneWidget);
     });
 
     testWidgets('drawer opens with hamburger icon', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
 
       // Tap the hamburger icon to open the drawer.
       final menuButton = find.byIcon(Icons.menu);
@@ -100,7 +101,7 @@ void main() {
       (
         tester,
       ) async {
-        await tester.pumpWidget(buildApp());
+        await pumpShell(tester);
         await tester.tap(find.byIcon(Icons.menu));
         await tester.pumpAndSettle();
 
@@ -115,7 +116,7 @@ void main() {
       tester,
     ) async {
       useCompact(tester);
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
 
@@ -133,7 +134,7 @@ void main() {
     });
 
     testWidgets('Settings tap navigates to SettingsScreen', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
 
@@ -145,7 +146,7 @@ void main() {
     });
 
     testWidgets('About tap navigates to AboutScreen', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
 
@@ -156,7 +157,7 @@ void main() {
     });
 
     testWidgets('Freeform tap closes drawer', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.tap(find.byIcon(Icons.menu));
       await tester.pumpAndSettle();
 
@@ -168,7 +169,7 @@ void main() {
     });
 
     testWidgets('body contains FreeformScreen', (tester) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       // FreeformScreen renders input/output fields.
       expect(find.text('Convert from'), findsOneWidget);
     });
@@ -178,7 +179,7 @@ void main() {
     testWidgets('worksheet AppBar shows hamburger icon, not back arrow', (
       tester,
     ) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await navigateToWorksheet(tester);
 
       expect(find.byIcon(Icons.menu), findsOneWidget);
@@ -188,7 +189,7 @@ void main() {
     testWidgets('hamburger icon on worksheet screen opens the drawer', (
       tester,
     ) async {
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await navigateToWorksheet(tester);
 
       await tester.tap(find.byIcon(Icons.menu));
@@ -203,7 +204,7 @@ void main() {
     testWidgets(
       'Worksheet drawer tile is selected when on worksheet screen',
       (tester) async {
-        await tester.pumpWidget(buildApp());
+        await pumpShell(tester);
         await navigateToWorksheet(tester);
 
         await tester.tap(find.byIcon(Icons.menu));
@@ -223,7 +224,7 @@ void main() {
     testWidgets(
       'Freeform drawer tile is selected when on freeform screen',
       (tester) async {
-        await tester.pumpWidget(buildApp());
+        await pumpShell(tester);
 
         await tester.tap(find.byIcon(Icons.menu));
         await tester.pumpAndSettle();
@@ -241,7 +242,7 @@ void main() {
 
     testWidgets('dropdown lists all template names', (tester) async {
       useCompact(tester);
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await navigateToWorksheet(tester);
 
       // Select a worksheet from the full-screen list so the dropdown appears.
@@ -265,7 +266,7 @@ void main() {
       tester,
     ) async {
       useCompact(tester);
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await navigateToWorksheet(tester);
 
       // Select an initial worksheet from the full-screen list.
@@ -289,7 +290,7 @@ void main() {
     testWidgets(
       'freeform Convert-from text survives navigation to Worksheet and back',
       (tester) async {
-        await tester.pumpWidget(buildApp());
+        await pumpShell(tester);
 
         // Type into the Convert-from field while Freeform is the active page.
         final inputField = find
@@ -314,7 +315,7 @@ void main() {
     testWidgets(
       'freeform Convert-from text survives navigation to Browse and back',
       (tester) async {
-        await tester.pumpWidget(buildApp(browserRepo: buildTestBrowserRepo()));
+        await pumpShell(tester, browserRepo: buildTestBrowserRepo());
 
         final inputField = find
             .descendant(
@@ -338,7 +339,7 @@ void main() {
     testWidgets(
       'worksheet row value survives navigation to Freeform and back',
       (tester) async {
-        await tester.pumpWidget(buildApp());
+        await pumpShell(tester);
         await navigateToWorksheet(tester);
 
         // Select a worksheet first (none is active on launch); the left-pane
@@ -370,7 +371,7 @@ void main() {
       tester,
     ) async {
       useCompact(tester);
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await navigateToWorksheet(tester);
 
       // No worksheet is selected initially; the compact screen shows the
@@ -389,7 +390,7 @@ void main() {
     });
 
     testWidgets('browse search query survives navigation', (tester) async {
-      await tester.pumpWidget(buildApp(browserRepo: buildTestBrowserRepo()));
+      await pumpShell(tester, browserRepo: buildTestBrowserRepo());
       await navigateToBrowser(tester);
 
       // Open search bar and type a query.
@@ -416,7 +417,7 @@ void main() {
     testWidgets(
       'browse expand-all state survives navigation',
       (tester) async {
-        await tester.pumpWidget(buildApp(browserRepo: buildTestBrowserRepo()));
+        await pumpShell(tester, browserRepo: buildTestBrowserRepo());
         await navigateToBrowser(tester);
 
         // Default: dimension view with all groups collapsed.
@@ -440,9 +441,7 @@ void main() {
 
   group('AppShell — browse navigation', () {
     testWidgets('Expand All button is present on Browse page', (tester) async {
-      await tester.pumpWidget(
-        buildApp(browserRepo: buildTestBrowserRepo()),
-      );
+      await pumpShell(tester, browserRepo: buildTestBrowserRepo());
       await navigateToBrowser(tester);
       expect(find.byIcon(Icons.unfold_more), findsOneWidget);
     });
@@ -450,9 +449,7 @@ void main() {
     testWidgets('Collapse All button is present on Browse page', (
       tester,
     ) async {
-      await tester.pumpWidget(
-        buildApp(browserRepo: buildTestBrowserRepo()),
-      );
+      await pumpShell(tester, browserRepo: buildTestBrowserRepo());
       await navigateToBrowser(tester);
       expect(find.byIcon(Icons.unfold_less), findsOneWidget);
     });
@@ -460,9 +457,7 @@ void main() {
     testWidgets(
       'Browse drawer tile is selected when on browse screen',
       (tester) async {
-        await tester.pumpWidget(
-          buildApp(browserRepo: buildTestBrowserRepo()),
-        );
+        await pumpShell(tester, browserRepo: buildTestBrowserRepo());
         await navigateToBrowser(tester);
 
         await tester.tap(find.byIcon(Icons.menu));

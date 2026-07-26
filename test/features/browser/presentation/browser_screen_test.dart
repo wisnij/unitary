@@ -10,6 +10,7 @@ import 'package:unitary/features/browser/presentation/browser_screen.dart';
 import 'package:unitary/features/browser/state/browser_provider.dart';
 import 'package:unitary/shared/widgets/fast_scroll_bar.dart';
 
+import '../../../helpers/pump_app.dart';
 import '../../../helpers/repository_overrides.dart';
 
 // ---------------------------------------------------------------------------
@@ -38,16 +39,15 @@ Future<void> _setUpRepos() async {
   _repos = await TestRepositories.create();
 }
 
-Widget _buildScreen(UnitRepository repo) {
-  return ProviderScope(
+Future<void> _pumpScreen(WidgetTester tester, UnitRepository repo) {
+  return pumpApp(
+    tester,
+    BrowserScreen(onNavigate: (_) {}),
+    repos: _repos,
     overrides: [
-      ..._repos.overrides,
       unitRepositoryProvider.overrideWithValue(repo),
       browserProvider.overrideWith(_TestBrowserNotifier.new),
     ],
-    child: MaterialApp(
-      home: BrowserScreen(onNavigate: (_) {}),
-    ),
   );
 }
 
@@ -79,13 +79,13 @@ void main() {
   group('BrowserScreen — entry row decoration', () {
     testWidgets('prefix entry title has trailing dash', (tester) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       expect(find.text('kilo-'), findsOneWidget);
     });
 
     testWidgets('function entry title includes parameter list', (tester) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       expect(find.text('circlearea(r)'), findsOneWidget);
     });
 
@@ -101,7 +101,7 @@ void main() {
           expression: '0.3048 m',
         ),
       );
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       expect(find.text('foot = ft'), findsOneWidget);
     });
   });
@@ -115,7 +115,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
 
       // Start a search query so all groups are expanded.
       final container = ProviderScope.containerOf(
@@ -145,7 +145,7 @@ void main() {
         tester,
       ) async {
         final repo = _buildDecorationRepo();
-        await tester.pumpWidget(_buildScreen(repo));
+        await _pumpScreen(tester, repo);
 
         final container = ProviderScope.containerOf(
           tester.element(find.byType(BrowserScreen)),
@@ -173,7 +173,7 @@ void main() {
 
     testWidgets('Expand All during search expands all groups', (tester) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
 
       final container = ProviderScope.containerOf(
         tester.element(find.byType(BrowserScreen)),
@@ -198,7 +198,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
 
       final container = ProviderScope.containerOf(
         tester.element(find.byType(BrowserScreen)),
@@ -233,7 +233,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       await tester.pump(); // allow post-frame callbacks
       expect(find.byType(FastScrollBar), findsOneWidget);
     });
@@ -242,7 +242,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       await tester.pump();
 
       final widget = tester.widget<FastScrollBar>(find.byType(FastScrollBar));
@@ -253,7 +253,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       await tester.pump();
 
       // Open the search bar and type a query via the provider notifier.
@@ -272,7 +272,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       await tester.pump();
 
       final container = ProviderScope.containerOf(
@@ -293,13 +293,13 @@ void main() {
   group('BrowserScreen — AppBar buttons', () {
     testWidgets('Expand All button is present in AppBar', (tester) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       expect(find.byIcon(Icons.unfold_more), findsOneWidget);
     });
 
     testWidgets('Collapse All button is present in AppBar', (tester) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
       expect(find.byIcon(Icons.unfold_less), findsOneWidget);
     });
 
@@ -307,7 +307,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildDecorationRepo();
-      await tester.pumpWidget(_buildScreen(repo));
+      await _pumpScreen(tester, repo);
 
       // Activate the search bar and type a query.
       await tester.tap(find.byIcon(Icons.search));

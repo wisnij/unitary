@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -9,6 +8,7 @@ import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/shared/app_shell.dart';
 
+import '../helpers/pump_app.dart';
 import '../helpers/repository_overrides.dart';
 
 /// Tests that screen content is inset within the device's safe area (display
@@ -54,20 +54,20 @@ void main() {
     );
   }
 
-  Widget aboutApp(EdgeInsets padding) {
-    return ProviderScope(
-      overrides: repos.overrides,
-      child: MaterialApp(home: withPadding(padding, const AboutScreen())),
+  Future<void> pumpAbout(WidgetTester tester, EdgeInsets padding) {
+    return pumpApp(
+      tester,
+      withPadding(padding, const AboutScreen()),
+      repos: repos,
     );
   }
 
-  Widget shellApp(EdgeInsets padding) {
-    return ProviderScope(
-      overrides: [
-        ...repos.overrides,
-        unitRepositoryProvider.overrideWithValue(buildTestRepo()),
-      ],
-      child: MaterialApp(home: withPadding(padding, const AppShell())),
+  Future<void> pumpShell(WidgetTester tester, EdgeInsets padding) {
+    return pumpApp(
+      tester,
+      withPadding(padding, const AppShell()),
+      repos: repos,
+      overrides: [unitRepositoryProvider.overrideWithValue(buildTestRepo())],
     );
   }
 
@@ -75,7 +75,7 @@ void main() {
     testWidgets('body content is offset by a non-zero left inset', (
       tester,
     ) async {
-      await tester.pumpWidget(aboutApp(const EdgeInsets.only(left: 50)));
+      await pumpAbout(tester, const EdgeInsets.only(left: 50));
       await tester.pumpAndSettle();
 
       // The body ListView should start at (or past) the safe-area inset,
@@ -87,7 +87,7 @@ void main() {
     testWidgets('body content is not offset when there is no inset', (
       tester,
     ) async {
-      await tester.pumpWidget(aboutApp(EdgeInsets.zero));
+      await pumpAbout(tester, EdgeInsets.zero);
       await tester.pumpAndSettle();
 
       final left = tester.getTopLeft(find.byType(ListView)).dx;
@@ -100,7 +100,7 @@ void main() {
       tester,
     ) async {
       setSize(tester, const Size(1200, 800));
-      await tester.pumpWidget(shellApp(const EdgeInsets.only(left: 50)));
+      await pumpShell(tester, const EdgeInsets.only(left: 50));
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationRail), findsOneWidget);
@@ -110,7 +110,7 @@ void main() {
 
     testWidgets('rail sits at the edge when there is no inset', (tester) async {
       setSize(tester, const Size(1200, 800));
-      await tester.pumpWidget(shellApp(EdgeInsets.zero));
+      await pumpShell(tester, EdgeInsets.zero);
       await tester.pumpAndSettle();
 
       final left = tester.getTopLeft(find.byType(NavigationRail)).dx;

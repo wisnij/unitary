@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:unitary/core/domain/models/unit.dart';
@@ -8,6 +7,7 @@ import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/shared/app_shell.dart';
 import 'package:unitary/shared/widgets/app_drawer.dart';
 
+import '../helpers/pump_app.dart';
 import '../helpers/repository_overrides.dart';
 
 void main() {
@@ -24,15 +24,12 @@ void main() {
     return r;
   }
 
-  Widget buildApp() {
-    return ProviderScope(
-      overrides: [
-        ...repos.overrides,
-        unitRepositoryProvider.overrideWithValue(buildTestRepo()),
-      ],
-      child: const MaterialApp(home: AppShell()),
-    );
-  }
+  Future<void> pumpShell(WidgetTester tester) => pumpApp(
+    tester,
+    const AppShell(),
+    repos: repos,
+    overrides: [unitRepositoryProvider.overrideWithValue(buildTestRepo())],
+  );
 
   /// Sets the logical screen size for the duration of a test.
   void setSize(WidgetTester tester, Size size) {
@@ -44,7 +41,7 @@ void main() {
   group('AppShell — compact width (drawer)', () {
     testWidgets('shows hamburger and no rail', (tester) async {
       setSize(tester, const Size(400, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.menu), findsOneWidget);
@@ -55,7 +52,7 @@ void main() {
   group('AppShell — medium width (drawer)', () {
     testWidgets('shows hamburger and no rail', (tester) async {
       setSize(tester, const Size(800, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.menu), findsOneWidget);
@@ -68,7 +65,7 @@ void main() {
       tester,
     ) async {
       setSize(tester, const Size(1200, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       expect(find.byType(NavigationRail), findsOneWidget);
@@ -78,7 +75,7 @@ void main() {
 
     testWidgets('rail highlights the active destination', (tester) async {
       setSize(tester, const Size(1200, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       final rail = tester.widget<NavigationRail>(find.byType(NavigationRail));
@@ -90,7 +87,7 @@ void main() {
       tester,
     ) async {
       setSize(tester, const Size(1200, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Browse'));
@@ -104,7 +101,7 @@ void main() {
 
     testWidgets('rail exposes Settings and About', (tester) async {
       setSize(tester, const Size(1200, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       expect(find.byTooltip('Settings'), findsOneWidget);
@@ -115,7 +112,7 @@ void main() {
   group('AppShell — state preservation', () {
     testWidgets('page state preserved across rail navigation', (tester) async {
       setSize(tester, const Size(1200, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       // Type into the freeform "Convert from" field.
@@ -136,7 +133,7 @@ void main() {
     ) async {
       // Start medium (drawer), type, then widen to expanded (rail).
       setSize(tester, const Size(800, 800));
-      await tester.pumpWidget(buildApp());
+      await pumpShell(tester);
       await tester.pumpAndSettle();
 
       await tester.enterText(find.byType(TextField).first, '5 ft');

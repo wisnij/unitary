@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:unitary/core/domain/models/browse_entry.dart';
@@ -14,10 +13,8 @@ import 'package:unitary/core/domain/models/unit_repository_provider.dart';
 import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';
 import 'package:unitary/features/currency/data/currency_rate_repository.dart';
 import 'package:unitary/features/currency/state/currency_provider.dart';
-import 'package:unitary/features/freeform/state/freeform_history_provider.dart';
-import 'package:unitary/features/settings/state/settings_provider.dart';
-import 'package:unitary/features/worksheet/state/worksheet_provider.dart';
 
+import '../../../helpers/pump_app.dart';
 import '../../../helpers/repository_overrides.dart';
 
 // ---------------------------------------------------------------------------
@@ -42,30 +39,21 @@ Future<CurrencyRateRepository> _buildSeededCurrencyRateRepo(
   return seeded.currencyRate;
 }
 
-Widget _buildScreen(
+Future<void> _pumpScreen(
+  WidgetTester tester,
   String primaryId,
   BrowseEntryKind kind,
   UnitRepository repo, {
   CurrencyRateRepository? currencyRateRepo,
 }) {
-  return ProviderScope(
+  return pumpApp(
+    tester,
+    UnitEntryDetailScreen(primaryId: primaryId, kind: kind, repo: repo),
+    repos: _repos,
     overrides: [
-      settingsRepositoryProvider.overrideWithValue(_repos.settings),
-      worksheetRepositoryProvider.overrideWithValue(_repos.worksheet),
-      freeformHistoryRepositoryProvider.overrideWithValue(
-        _repos.freeformHistory,
-      ),
-      currencyRateRepositoryProvider.overrideWithValue(
-        currencyRateRepo ?? _repos.currencyRate,
-      ),
+      if (currencyRateRepo != null)
+        currencyRateRepositoryProvider.overrideWithValue(currencyRateRepo),
     ],
-    child: MaterialApp(
-      home: UnitEntryDetailScreen(
-        primaryId: primaryId,
-        kind: kind,
-        repo: repo,
-      ),
-    ),
   );
 }
 
@@ -255,7 +243,7 @@ void main() {
   group('UnitEntryDetailScreen — unit kind', () {
     testWidgets('shows name section', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       expect(find.text('Name'), findsOneWidget);
       expect(find.text('m'), findsAtLeastNWidgets(1));
     });
@@ -264,7 +252,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       expect(find.text('Type'), findsOneWidget);
       expect(find.text('Primitive unit'), findsOneWidget);
     });
@@ -275,9 +263,7 @@ void main() {
         tester,
       ) async {
         final repo = _buildRepo();
-        await tester.pumpWidget(
-          _buildScreen('rad', BrowseEntryKind.unit, repo),
-        );
+        await _pumpScreen(tester, 'rad', BrowseEntryKind.unit, repo);
         expect(find.text('Type'), findsOneWidget);
         expect(find.text('Primitive unit (dimensionless)'), findsOneWidget);
       },
@@ -287,27 +273,27 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('ft', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'ft', BrowseEntryKind.unit, repo);
       expect(find.text('Type'), findsOneWidget);
       expect(find.text('Derived unit'), findsOneWidget);
     });
 
     testWidgets('definition section absent for primitive unit', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       expect(find.text('Definition'), findsNothing);
     });
 
     testWidgets('shows definition expression for derived unit', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('ft', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'ft', BrowseEntryKind.unit, repo);
       expect(find.text('Definition'), findsOneWidget);
       expect(find.text('0.3048 m'), findsAtLeastNWidgets(1));
     });
 
     testWidgets('aliases section shown when unit has aliases', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('ft', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'ft', BrowseEntryKind.unit, repo);
       expect(find.text('Aliases'), findsOneWidget);
       expect(find.text('feet, foot'), findsOneWidget);
     });
@@ -316,26 +302,26 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       expect(find.text('Aliases'), findsNothing);
     });
 
     testWidgets('description section shown when present', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('kg', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'kg', BrowseEntryKind.unit, repo);
       expect(find.text('Description'), findsOneWidget);
       expect(find.text('The SI unit of mass.'), findsOneWidget);
     });
 
     testWidgets('description section absent when null', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       expect(find.text('Description'), findsNothing);
     });
 
     testWidgets('value section shown for resolvable unit', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       expect(find.text('Value'), findsOneWidget);
       // The formatted quantity contains the unit dimension.
       expect(find.textContaining('m'), findsAtLeastNWidgets(1));
@@ -343,17 +329,13 @@ void main() {
 
     testWidgets('value section absent on resolution failure', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(
-        _buildScreen('noexpr', BrowseEntryKind.unit, repo),
-      );
+      await _pumpScreen(tester, 'noexpr', BrowseEntryKind.unit, repo);
       expect(find.text('Value'), findsNothing);
     });
 
     testWidgets('shows not-found message for unknown id', (tester) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(
-        _buildScreen('xyz_missing', BrowseEntryKind.unit, repo),
-      );
+      await _pumpScreen(tester, 'xyz_missing', BrowseEntryKind.unit, repo);
       expect(find.textContaining('Unit not found'), findsOneWidget);
     });
   });
@@ -361,18 +343,14 @@ void main() {
   group('UnitEntryDetailScreen — prefix kind', () {
     testWidgets('type section shows Prefix', (tester) async {
       final repo = _buildRepoWithPrefix();
-      await tester.pumpWidget(
-        _buildScreen('kilo', BrowseEntryKind.prefix, repo),
-      );
+      await _pumpScreen(tester, 'kilo', BrowseEntryKind.prefix, repo);
       expect(find.text('Type'), findsOneWidget);
       expect(find.text('Prefix'), findsOneWidget);
     });
 
     testWidgets('definition section shows expression', (tester) async {
       final repo = _buildRepoWithPrefix();
-      await tester.pumpWidget(
-        _buildScreen('kilo', BrowseEntryKind.prefix, repo),
-      );
+      await _pumpScreen(tester, 'kilo', BrowseEntryKind.prefix, repo);
       expect(find.text('Definition'), findsOneWidget);
       expect(find.text('1e3'), findsOneWidget);
     });
@@ -381,27 +359,21 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithPrefix();
-      await tester.pumpWidget(
-        _buildScreen('kilo', BrowseEntryKind.prefix, repo),
-      );
+      await _pumpScreen(tester, 'kilo', BrowseEntryKind.prefix, repo);
       expect(find.text('Aliases'), findsOneWidget);
       expect(find.text('k'), findsOneWidget);
     });
 
     testWidgets('description section shown when present', (tester) async {
       final repo = _buildRepoWithPrefix();
-      await tester.pumpWidget(
-        _buildScreen('kilo', BrowseEntryKind.prefix, repo),
-      );
+      await _pumpScreen(tester, 'kilo', BrowseEntryKind.prefix, repo);
       expect(find.text('Description'), findsOneWidget);
       expect(find.text('SI prefix for 1000.'), findsOneWidget);
     });
 
     testWidgets('value section shows resolved scale factor', (tester) async {
       final repo = _buildRepoWithPrefix();
-      await tester.pumpWidget(
-        _buildScreen('kilo', BrowseEntryKind.prefix, repo),
-      );
+      await _pumpScreen(tester, 'kilo', BrowseEntryKind.prefix, repo);
       expect(find.text('Value'), findsOneWidget);
       // kilo resolves to 1000 (dimensionless).
       expect(find.textContaining('1000'), findsAtLeastNWidgets(1));
@@ -409,9 +381,7 @@ void main() {
 
     testWidgets('value section absent for function', (tester) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Value'), findsNothing);
     });
   });
@@ -419,9 +389,7 @@ void main() {
   group('UnitEntryDetailScreen — function kind', () {
     testWidgets('shows name section', (tester) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Name'), findsOneWidget);
       expect(find.text('tempC'), findsAtLeastNWidgets(1));
     });
@@ -430,9 +398,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Aliases'), findsOneWidget);
       expect(find.text('celsius'), findsOneWidget);
     });
@@ -441,9 +407,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Type'), findsOneWidget);
       expect(find.text('Function'), findsOneWidget);
     });
@@ -452,9 +416,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Definition'), findsOneWidget);
       expect(find.text('tempC(x) = x + 273.15'), findsOneWidget);
     });
@@ -463,17 +425,13 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Inverse'), findsOneWidget);
     });
 
     testWidgets('value section absent for function', (tester) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Value'), findsNothing);
     });
 
@@ -481,9 +439,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('unknownFn', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'unknownFn', BrowseEntryKind.function, repo);
       expect(find.textContaining('Function not found'), findsOneWidget);
     });
   });
@@ -491,18 +447,14 @@ void main() {
   group('UnitEntryDetailScreen — piecewise function', () {
     testWidgets('type section shows Piecewise linear function', (tester) async {
       final repo = _buildRepoWithPiecewise();
-      await tester.pumpWidget(
-        _buildScreen('gasmark', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'gasmark', BrowseEntryKind.function, repo);
       expect(find.text('Type'), findsOneWidget);
       expect(find.text('Piecewise linear function'), findsOneWidget);
     });
 
     testWidgets('shows table in definition section', (tester) async {
       final repo = _buildRepoWithPiecewise();
-      await tester.pumpWidget(
-        _buildScreen('gasmark', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'gasmark', BrowseEntryKind.function, repo);
       expect(find.text('Definition'), findsOneWidget);
       // 3 data points + 1 header row — each data row shows the x value.
       expect(find.textContaining('1'), findsAtLeastNWidgets(1));
@@ -514,9 +466,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithPiecewise();
-      await tester.pumpWidget(
-        _buildScreen('gasmark', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'gasmark', BrowseEntryKind.function, repo);
       expect(find.text('Domain / Range'), findsNothing);
       expect(find.text('Values'), findsNothing);
     });
@@ -526,9 +476,7 @@ void main() {
       (tester) async {
         // gasmark has outputUnit dimension {K:1} and no outputUnitExpression.
         final repo = _buildRepoWithPiecewise();
-        await tester.pumpWidget(
-          _buildScreen('gasmark', BrowseEntryKind.function, repo),
-        );
+        await _pumpScreen(tester, 'gasmark', BrowseEntryKind.function, repo);
         expect(find.text('Output (K)'), findsOneWidget);
       },
     );
@@ -538,8 +486,11 @@ void main() {
       (tester) async {
         // mypiecewise has K dimension but outputUnitExpression == 'degR'.
         final repo = _buildRepoWithPiecewiseUnitExpr();
-        await tester.pumpWidget(
-          _buildScreen('mypiecewise', BrowseEntryKind.function, repo),
+        await _pumpScreen(
+          tester,
+          'mypiecewise',
+          BrowseEntryKind.function,
+          repo,
         );
         expect(find.text('Output (degR)'), findsOneWidget);
         // The canonical rep ('K') should NOT appear as the header.
@@ -553,8 +504,11 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithConstrainedFunctions();
-      await tester.pumpWidget(
-        _buildScreen('withDegDomain', BrowseEntryKind.function, repo),
+      await _pumpScreen(
+        tester,
+        'withDegDomain',
+        BrowseEntryKind.function,
+        repo,
       );
       expect(find.text('Domain / Range'), findsOneWidget);
     });
@@ -563,9 +517,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       expect(find.text('Domain / Range'), findsNothing);
     });
 
@@ -573,8 +525,11 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithConstrainedFunctions();
-      await tester.pumpWidget(
-        _buildScreen('withDegDomain', BrowseEntryKind.function, repo),
+      await _pumpScreen(
+        tester,
+        'withDegDomain',
+        BrowseEntryKind.function,
+        repo,
       );
       // "Argument lat: deg [0, 90]"
       expect(
@@ -587,8 +542,11 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepoWithConstrainedFunctions();
-      await tester.pumpWidget(
-        _buildScreen('withDimensionlessDomain', BrowseEntryKind.function, repo),
+      await _pumpScreen(
+        tester,
+        'withDimensionlessDomain',
+        BrowseEntryKind.function,
+        repo,
       );
       expect(find.text('Argument x: dimensionless'), findsOneWidget);
     });
@@ -597,8 +555,11 @@ void main() {
       'domain falls back to canonical representation when no unitExpression',
       (tester) async {
         final repo = _buildRepoWithConstrainedFunctions();
-        await tester.pumpWidget(
-          _buildScreen('withKDomain', BrowseEntryKind.function, repo),
+        await _pumpScreen(
+          tester,
+          'withKDomain',
+          BrowseEntryKind.function,
+          repo,
         );
         expect(find.text('Argument temp: K'), findsOneWidget);
       },
@@ -606,8 +567,11 @@ void main() {
 
     testWidgets('range shows unitExpression string', (tester) async {
       final repo = _buildRepoWithConstrainedFunctions();
-      await tester.pumpWidget(
-        _buildScreen('withDegDomain', BrowseEntryKind.function, repo),
+      await _pumpScreen(
+        tester,
+        'withDegDomain',
+        BrowseEntryKind.function,
+        repo,
       );
       // Range has unitExpression: 'K'.
       expect(find.text('Range: K'), findsOneWidget);
@@ -649,7 +613,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       // The 'm' text under the Name heading is copyable.
       await tester.longPress(find.text('m').first);
       await tester.pump();
@@ -662,7 +626,7 @@ void main() {
     ) async {
       // Use 'ft' (derived unit) since primitive units have no Definition section.
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('ft', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'ft', BrowseEntryKind.unit, repo);
       await tester.longPress(find.text('0.3048 m').first);
       await tester.pump();
       expect(lastClipboardText(), '0.3048 m');
@@ -672,7 +636,7 @@ void main() {
       tester,
     ) async {
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('m', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'm', BrowseEntryKind.unit, repo);
       // 'm' resolves to Quantity(1, {m:1}); formatted as '1 m'.
       await tester.longPress(find.text('1 m'));
       await tester.pump();
@@ -681,9 +645,7 @@ void main() {
 
     testWidgets('long-pressing Name copies the function id', (tester) async {
       final repo = _buildRepoWithFunction();
-      await tester.pumpWidget(
-        _buildScreen('tempC', BrowseEntryKind.function, repo),
-      );
+      await _pumpScreen(tester, 'tempC', BrowseEntryKind.function, repo);
       await tester.longPress(find.text('tempC').first);
       await tester.pump();
       expect(lastClipboardText(), 'tempC');
@@ -694,7 +656,7 @@ void main() {
     ) async {
       final handle = tester.ensureSemantics();
       final repo = _buildRepo();
-      await tester.pumpWidget(_buildScreen('ft', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'ft', BrowseEntryKind.unit, repo);
 
       // Find the first node exposing the "Copy" custom action (the Name
       // section's copyable text, 'ft').
@@ -751,19 +713,14 @@ void main() {
         const DerivedUnit(id: 'ft', expression: '0.3048 m'),
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            ..._repos.overrides,
-            unitRepositoryProvider.overrideWithValue(liveRepo),
-          ],
-          child: const MaterialApp(
-            home: UnitEntryDetailScreen(
-              primaryId: 'ft',
-              kind: BrowseEntryKind.unit,
-            ),
-          ),
+      await pumpApp(
+        tester,
+        const UnitEntryDetailScreen(
+          primaryId: 'ft',
+          kind: BrowseEntryKind.unit,
         ),
+        repos: _repos,
+        overrides: [unitRepositoryProvider.overrideWithValue(liveRepo)],
       );
 
       // Expression appears in both the Definition and Value sections.
@@ -783,19 +740,14 @@ void main() {
         const DerivedUnit(id: 'ft', expression: '0.9999 m'),
       );
 
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            ..._repos.overrides,
-            unitRepositoryProvider.overrideWithValue(liveRepo),
-          ],
-          child: const MaterialApp(
-            home: UnitEntryDetailScreen(
-              primaryId: 'ft',
-              kind: BrowseEntryKind.unit,
-            ),
-          ),
+      await pumpApp(
+        tester,
+        const UnitEntryDetailScreen(
+          primaryId: 'ft',
+          kind: BrowseEntryKind.unit,
         ),
+        repos: _repos,
+        overrides: [unitRepositoryProvider.overrideWithValue(liveRepo)],
       );
 
       // Dynamic expression shadows compiled one.
@@ -812,13 +764,12 @@ void main() {
       final currencyRateRepo = await _buildSeededCurrencyRateRepo({
         'euro': const CurrencyRateEntry(rate: 1.09, date: '2026-06-06'),
       });
-      await tester.pumpWidget(
-        _buildScreen(
-          'euro',
-          BrowseEntryKind.unit,
-          repo,
-          currencyRateRepo: currencyRateRepo,
-        ),
+      await _pumpScreen(
+        tester,
+        'euro',
+        BrowseEntryKind.unit,
+        repo,
+        currencyRateRepo: currencyRateRepo,
       );
       expect(find.text('Last updated'), findsOneWidget);
       expect(find.text('Jun 6, 2026'), findsOneWidget);
@@ -831,13 +782,12 @@ void main() {
       final currencyRateRepo = await _buildSeededCurrencyRateRepo({
         'goldprice': const CurrencyRateEntry(rate: 3312.5, date: '2026-06-05'),
       });
-      await tester.pumpWidget(
-        _buildScreen(
-          'goldounce',
-          BrowseEntryKind.unit,
-          repo,
-          currencyRateRepo: currencyRateRepo,
-        ),
+      await _pumpScreen(
+        tester,
+        'goldounce',
+        BrowseEntryKind.unit,
+        repo,
+        currencyRateRepo: currencyRateRepo,
       );
       expect(find.text('Last updated'), findsOneWidget);
       expect(find.text('Jun 5, 2026'), findsOneWidget);
@@ -850,13 +800,12 @@ void main() {
       final currencyRateRepo = await _buildSeededCurrencyRateRepo({
         'goldprice': const CurrencyRateEntry(rate: 3312.5, date: '2026-06-05'),
       });
-      await tester.pumpWidget(
-        _buildScreen(
-          'goldprice',
-          BrowseEntryKind.unit,
-          repo,
-          currencyRateRepo: currencyRateRepo,
-        ),
+      await _pumpScreen(
+        tester,
+        'goldprice',
+        BrowseEntryKind.unit,
+        repo,
+        currencyRateRepo: currencyRateRepo,
       );
       expect(find.text('Last updated'), findsOneWidget);
       expect(find.text('Jun 5, 2026'), findsOneWidget);
@@ -866,16 +815,14 @@ void main() {
       tester,
     ) async {
       final repo = _buildCurrencyRepo();
-      await tester.pumpWidget(_buildScreen('euro', BrowseEntryKind.unit, repo));
+      await _pumpScreen(tester, 'euro', BrowseEntryKind.unit, repo);
       expect(find.text('Last updated'), findsOneWidget);
       expect(find.text('Using built-in rates'), findsOneWidget);
     });
 
     testWidgets('absent for a non-currency unit', (tester) async {
       final repo = _buildCurrencyRepo();
-      await tester.pumpWidget(
-        _buildScreen('meter', BrowseEntryKind.unit, repo),
-      );
+      await _pumpScreen(tester, 'meter', BrowseEntryKind.unit, repo);
       expect(find.text('Last updated'), findsNothing);
     });
 
@@ -884,13 +831,12 @@ void main() {
       final currencyRateRepo = await _buildSeededCurrencyRateRepo({
         'euro': const CurrencyRateEntry(rate: 1.09, date: '2026-06-06'),
       });
-      await tester.pumpWidget(
-        _buildScreen(
-          'euro',
-          BrowseEntryKind.unit,
-          repo,
-          currencyRateRepo: currencyRateRepo,
-        ),
+      await _pumpScreen(
+        tester,
+        'euro',
+        BrowseEntryKind.unit,
+        repo,
+        currencyRateRepo: currencyRateRepo,
       );
       final valueY = tester.getTopLeft(find.text('Value')).dy;
       final lastUpdatedY = tester.getTopLeft(find.text('Last updated')).dy;

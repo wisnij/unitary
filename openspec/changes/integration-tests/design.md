@@ -29,7 +29,14 @@ change.
 test integration_test/ -d chrome` would run the suite; it does not exist as
 a supported combination in Flutter 3.44 ("Web devices are not supported for
 integration tests yet"). Web integration tests require the older `flutter
-drive` mechanism instead — see the new Decision below.
+drive` mechanism instead. That path was pursued at length (chromedriver,
+`--web-run-headless`, running in an isolated Docker container to rule out
+local-machine causes) and ultimately abandoned: the failure is a
+long-standing, currently-unresolved upstream Flutter/DWDS bug, not anything
+fixable in this project. **The suite ended up running against a local
+Android emulator instead** — see "Pivot to Android" under Decisions for the
+full account, including why this turned out to be straightforward rather
+than a compromise.
 
 ## Goals / Non-Goals
 
@@ -42,39 +49,60 @@ drive` mechanism instead — see the new Decision below.
 - Exercise the currency-refresh flow end to end (status → dynamic unit
   registration → a conversion reflecting the new rate) without ever
   contacting the real Frankfurter API.
-- Run entirely against the `chrome` target so no emulator/device is needed,
-  reusing infrastructure this repo already has for web builds.
+- Run against a target that doesn't need new CI infrastructure beyond what's
+  already documented/available. (Originally read as "the `chrome` target,
+  no emulator" — revised to "a local Android emulator" once the web path
+  proved unreliable upstream; see Decisions. Android tooling turned out to
+  already be fully present and working on the dev machine used for this
+  change, so "no new infrastructure" still held, just not in the shape
+  originally planned.)
 
 **Non-Goals:**
 
-- Android/iOS emulator-driven tests. Deferred; the one platform branch in
-  the app (`freeform_screen.dart`'s mobile-vs-desktop key panel visibility)
-  isn't covered by this change.
+- iOS-simulator-driven tests. Out of scope; the project's own README lists
+  iOS as secondary. Android was adopted (see Decisions) but iOS wasn't
+  evaluated.
 - True OS-level process kill/relaunch. "Restart" here means tearing down
-  the widget tree and calling `app.main()` again within the same Chrome
-  tab/test process — the same real backing store, but not a genuine cold
-  process start. Accepted approximation (see Risks).
+  the widget tree and calling `app.main()` again within the same test
+  process — the same real backing store, but not a genuine cold process
+  start. This is now a **confirmed**, not just theoretical, approximation:
+  it was directly observed to leak old-session widget state (a stale
+  `TextEditingController`) across the simulated restart — see Risks.
 - Frame-timing, rendering-performance, or touch-physics assertions. Stays a
   manual on-device procedure per `doc/performance.md`.
 - Testing the currency-refresh cooldown timer's expiry-then-re-enable
   behavior. Pre-existing gap (no test today touches `cooldownExpiry` or the
   re-enable `Timer` in `CurrencyStatusNotifier`), unrelated to this change's
   purpose — a candidate follow-up, not folded in here.
-- Any change to `lib/` production code. This change is test-only.
+- Changes to `lib/` production code, **with one narrow exception**: a
+  `FastScrollBar` crash (`lib/shared/widgets/fast_scroll_bar.dart`) that
+  blocked every restart-based test was root-caused and fixed inline rather
+  than deferred to a separate change — see "FastScrollBar clamp crash"
+  under Decisions for the justification and evidence it doesn't affect real
+  users.
 
 ## Decisions
 
-### Run against `chrome`, not an Android emulator
+### ~~Run against `chrome`, not an Android emulator~~ — superseded
 
-`main.dart` and every provider it wires have no platform-specific branches;
-`shared_preferences` and `http` both have working web implementations. CI
-already has Chrome available (`ubuntu-latest`) and already builds this app
-for web. An Android emulator (e.g. `reactivecircus/android-emulator-runner`)
-would add real CI cost and flakiness for coverage this change doesn't need.
-**Alternative considered**: run against a headless Android emulator in CI
-from the start — rejected as disproportionate to the boot/persistence/
-currency-refresh scope; revisit only if Android-specific behavior needs
-coverage later.
+Original reasoning: `main.dart` and every provider it wires have no
+platform-specific branches; `shared_preferences` and `http` both have
+working web implementations, and an Android emulator would add real CI cost
+and flakiness for coverage this change didn't seem to need.
+
+**Superseded during implementation.** The web path was pursued at length —
+`flutter drive` (the only mechanism that supports `integration_test` on
+web), `chromedriver`, `--web-run-headless`, then an isolated Docker
+container specifically to rule out the local machine's networking as the
+cause — and every attempt hit the identical `AppConnectionException` from
+DWDS's `_startLocalDebugService`. A web search confirmed this is a
+long-standing, currently-unresolved Flutter/DWDS bug (GitHub issues
+#178725, #181357, #153165, #89534, #84353, spanning Flutter versions from
+2021 through 3.38 as of January 2026) — not something fixable in this
+project, and not specific to the local machine (the clean, isolated Docker
+container hit the exact same failure).
+
+See "Pivot to Android" below for what replaced it.
 
 ### Drive `app.main()` directly for boot and restart tests
 
@@ -130,51 +158,130 @@ prefs-seeding trick here as well while adding no coverage the isolated
 `ProviderScope` approach doesn't already give, since the refresh flow is a
 single-screen concern.
 
-### Web execution requires `flutter drive`, `chromedriver`, and `--web-run-headless`
+### (Historical/abandoned) Web execution requires `flutter drive`, `chromedriver`, and `--web-run-headless`
 
-Discovered during implementation, correcting the original plan: `flutter
-test integration_test/*.dart -d chrome` is rejected outright ("Web devices
-are not supported for integration tests yet"). The actual mechanism is
-`flutter drive --driver=test_driver/integration_test.dart --target=<file> -d
-chrome`, which requires two things `flutter test` doesn't: a
-`test_driver/integration_test.dart` entrypoint (`integrationDriver()` from
-`package:integration_test/integration_test_driver.dart`), and a separately
-running `chromedriver` WebDriver server (not bundled; installed via
-`apt-get install chromium-driver` in CI, matching the runner's preinstalled
-Chrome version).
+Kept for the record — this path was abandoned (see the superseded Decision
+above) but the tooling facts remain accurate documentation of why web
+integration testing is unusually heavy in current Flutter, should it ever
+be revisited: `flutter test integration_test/*.dart -d chrome` is rejected
+outright ("Web devices are not supported for integration tests yet"). The
+actual mechanism is `flutter drive
+--driver=test_driver/integration_test.dart --target=<file> -d chrome`,
+which requires a `test_driver/integration_test.dart` entrypoint and a
+separately running `chromedriver` WebDriver server (not bundled). Further,
+`flutter drive -d chrome` launches a **visible** Chrome window by default —
+`--[no-]headless` (default on) only governs the WebDriver-side "driver"
+browser; the separate app-hosting browser (via `chrome_launcher`) defaults
+to visible, requiring the separate `--web-run-headless` flag. This was
+found the hard way during local diagnosis (a real, if brief and now-fixed,
+disruption — see Risks) before any of it turned out to be moot.
 
-A further correction: `flutter drive -d chrome` launches a **visible**
-Chrome window by default — `--[no-]headless` (default on) only governs the
-WebDriver-side "driver" browser chromedriver controls; the separate
-app-hosting browser (via `chrome_launcher`, the same mechanism `flutter run
--d chrome` uses) defaults to visible. The fix is the `--web-run-headless`
-flag, which specifically targets that second browser. This was found the
-hard way during local diagnosis — see Risks.
-**Alternative considered**: none seriously — this is simply how Flutter's
-web integration-test tooling works in this version; there is no alternative
-invocation that avoids `flutter drive`.
+### Pivot to Android emulator
 
-### Gate the whole suite behind an opt-in CI toggle, off by default
+Once the web path was conclusively an upstream dead end, Android was
+re-evaluated — the local dev machine turned out to already have everything
+needed: `flutter doctor` reported a fully-configured Android toolchain
+("No issues found"), an existing AVD (`Pixel_6_Pro_API_33_13.0_`), and
+confirmed KVM hardware-acceleration access (an explicit per-user ACL entry
+on `/dev/kvm`, not just group membership). Native `integration_test` on
+Android doesn't route through DWDS/web-driver at all — it's the simple
+`flutter test integration_test/<file>.dart -d <device>` command directly,
+no `flutter drive`, no chromedriver, no headless-browser flags. Every test
+file, unmodified in its actual assertions (only two small test-logic fixes
+were needed — see "Restart-technique test fixes" below), now passes for
+real: `boot_test.dart` (2/2), `restart_test.dart` (3/3, after the
+`FastScrollBar` fix), `currency_refresh_test.dart` (3/3).
+**Alternative considered**: keep trying to fix the web path — rejected once
+the upstream-bug evidence was conclusive (identical failure in a clean
+Docker container, and multiple long-standing open Flutter issues matching
+the exact stack trace); no amount of local environment tweaking was going
+to fix an upstream tooling bug.
 
-Local diagnosis (see Risks) could not get a full pass: after chromedriver
-established a session and the DWDS debug service started, the run hung/
-failed with an unresolved `AppConnectionException` before reporting a test
-result. Root cause wasn't isolated in the time available, and it's unclear
-whether it's specific to the local dev machine's networking or a more
-general fragility in this Flutter version's web-driver path. Rather than
-wire the CI step to run unconditionally (risking either a permanently red
-step or, worse, a step that silently never passes and gets ignored),
-`.github/workflows/ci.yml`'s `test` job sets
-`ENABLE_CHROME_INTEGRATION_TESTS: 'false'`, and the new step in
-`.github/actions/test/action.yml` only runs when that's `'true'`. This is a
-one-line flip once someone confirms the suite passes reliably against the
-clean `ubuntu-latest` runner (which lacks the local machine's VPN/mesh
-networking, so may well not reproduce the hang at all).
-**Alternative considered**: an in-app, Dart-level skip gate (e.g. reading an
-environment variable inside the test files) — rejected: `dart:io`'s
-`Platform.environment` isn't available on the `web` compile target at all,
-so gating has to happen at the shell/CI level (whether the step runs),
-not inside the Dart test code.
+### FastScrollBar clamp crash — found, root-caused, and fixed
+
+The restart-based tests reliably crashed on **every** restart (not just
+one scenario) with `ArgumentError: Invalid argument(s): 0.0` from
+`double.clamp` inside `_FastScrollBarState.build` (was `fast_scroll_bar.dart:317`).
+Root cause: `AppShell` keeps every top-level page alive in an `IndexedStack`
+for page-state preservation, so `BrowserScreen`'s `FastScrollBar` is laid
+out even while a different page is visible. During the transient frame
+right after a second `app.main()` call replaces the already-attached root
+widget tree, that `LayoutBuilder` reported a **tight zero-height**
+constraint (`BoxConstraints(0.0<=w<=400.0, h=0.0)`, captured via a
+temporary diagnostic print, since reverted) — smaller than the fixed
+48.0-logical-pixel thumb height, making the clamp's upper bound negative
+(below its 0.0 lower bound), which Dart's `num.clamp` treats as an invalid
+range and throws for, rather than clamping to something sane.
+
+**Confirmed not reachable through real single-launch usage**: a standalone
+diagnostic test that boots the app once (`app.main()` called exactly once,
+same compact window size, same eagerly-loaded Browse catalog) never hit the
+degenerate branch and threw nothing. The bug requires literally replacing
+an already-attached root widget tree via a second `runApp()` call within
+one process — something no real user action does (a genuine app relaunch,
+even after a real process kill, is a fresh process with exactly one
+`main()` call, which is the case just proven safe).
+
+**Fix**: floor both affected clamp upper-bounds at `0.0` via `math.max`
+(`fast_scroll_bar.dart`, the crash site and one structurally-identical
+`.clamp()` in `_peekPanelTop` audited and fixed the same way for
+consistency) — when the available height is smaller than the thumb, the
+thumb simply pins at the top instead of throwing. Mirrors the defensive
+`trackHeight <= 0` early-return already present in `_onDragUpdate` in the
+same file, so it's consistent with an existing pattern, not a new one.
+**Alternative considered**: work around it in the test technique instead of
+fixing production code (e.g. avoid triggering the degenerate layout pass
+somehow) — rejected: no such workaround was identified, the crash is
+inherent to any restart-style test that replaces the root widget while
+`BrowserScreen` is instantiated, and the fix itself is small, low-risk, and
+strictly defensive (behavior is unchanged whenever `_listHeight >=
+_thumbHeight`, which is every real-world case observed so far).
+
+### Restart-technique test fixes
+
+Two remaining restart-test failures, after the `FastScrollBar` fix, were
+test-code issues, not app bugs:
+- The settings scenario navigated to (and stayed on) the pushed `Settings`
+  route before calling `restart()`; something about a second `runApp()`
+  replacing the root while a pushed route sits on top of it left the new
+  tree without its drawer/hamburger icon. Fixed by popping back to the base
+  app (`tester.pageBack()`) before restarting, so every restart scenario
+  restarts from the same tabbed-page footing — this also isn't something
+  meaningfully under test (we care whether settings *data* persists, not
+  whether mid-navigation state survives a simulated restart).
+- The freeform-history scenario's `find.textContaining('5 miles')`
+  ambiguously matched two widgets after restart: the intended history-modal
+  entry, and — confirmed unexpectedly — the "Convert from" field's
+  `TextEditingController` from the *pre-restart* session, still showing
+  "5 miles" despite freeform input explicitly not persisting across
+  sessions (see `doc/design_progress.md`'s "Remove freeform persistence"
+  entry). This is a second, non-crashing instance of the same
+  same-process-restart leaking widget state that the `FastScrollBar` bug
+  exposed as a crash — recorded as a confirmed Risk below rather than
+  chased further, since it doesn't undermine what these tests actually
+  verify (repository-level persistence, not widget/controller lifecycle).
+  Fixed by scoping the finder to `find.descendant(of:
+  find.byType(DraggableScrollableSheet), matching: ...)` so only the
+  history modal's own content is checked.
+
+### Gate the CI step behind an opt-in toggle — kept, for a narrower reason
+
+The web-path version of this gate existed because zero runs ever passed
+locally. That's no longer true — all three files now pass repeatedly
+against a real Android emulator — but the specific CI YAML
+(`reactivecircus/android-emulator-runner`) has never itself been executed;
+only reasoned about and written by analogy to its documented usage.
+`.github/workflows/ci.yml`'s `test` job keeps a toggle
+(`ENABLE_ANDROID_INTEGRATION_TESTS: 'false'`, renamed from the web-era
+`ENABLE_CHROME_INTEGRATION_TESTS`), and the step in
+`.github/actions/test/action.yml` only runs when it's `'true'`, so a
+misconfigured CI-only detail (emulator boot flags, API level availability
+on the runner, etc.) can't block merges before anyone's watched it run.
+Recommend flipping it on after the first real CI run succeeds.
+**Alternative considered**: turn it on immediately, given the much higher
+confidence than the web path ever reached — rejected as still one
+unverified step (the CI YAML itself) away from a real confirmation; the
+cost of one gated-off run is low.
 
 ### New real-prefs seeding helper, separate from `TestRepositories`
 
@@ -191,40 +298,44 @@ suite.
 
 ## Risks / Trade-offs
 
-- **"Restart" is same-process, not a true cold start** → Accepted
-  approximation (see Non-Goals). A genuine app-kill test would need
-  `flutter drive` against a real/emulated device; revisit only if a bug
-  class specific to true process death (e.g. a plugin failing to
-  re-register) is ever suspected.
+- **"Restart" is same-process, not a true cold start, and this has now
+  demonstrably leaked old-session state twice** → No longer a purely
+  theoretical approximation. It caused one real crash (`FastScrollBar`,
+  fixed) and one benign-but-confirmed leftover widget (a stale
+  `TextEditingController` in the Convert-from field, worked around in the
+  test's finder). Both were specific to *widget/controller-tree* state
+  surviving a root-widget replacement, not to the repository-level
+  persistence these tests actually verify (`SharedPreferences` reads/writes
+  are unaffected — those pass through the real plugin regardless of what
+  the widget tree does). A genuine app-kill test would need `flutter drive`
+  against a real/emulated device; revisit only if a bug class specific to
+  true process death, or a *third* instance of leaked widget state, is ever
+  suspected.
 - **Prefs-seeding trick is implicit coupling to `maybeRefresh()`'s 24h
   threshold** → If that threshold ever changes, the seeded `updatedAt`
   timestamp (`DateTime.now()`, always fresh) stays correct by construction;
   no risk in practice.
-- **`chrome`-only coverage misses the one real platform branch**
-  (`freeform_screen.dart`'s mobile-vs-desktop panel visibility) → Accepted;
-  that branch already has non-integration test coverage
-  (grep confirms `kIsWeb`/`defaultTargetPlatform` branch is exercised by
-  existing widget tests using `debugDefaultTargetPlatformOverride` or
-  similar — verify during implementation and note if a gap is found).
-- **CI runtime growth** — Chrome-driven `integration_test` runs are slower
-  than plain widget tests (real rendering, real async gaps).
-  Mitigation: keep this initial suite to the three scoped groups (not a
-  broad re-test of already-covered UI flows); revisit if runtime becomes a
-  problem.
-- **No confirmed passing local run yet** → Local diagnosis on a real
-  developer desktop (not a clean environment — a NordVPN mesh network
-  interface is present, and chromedriver logged an unexplained `bind()
-  failed: Cannot assign requested address`) got as far as chromedriver
-  establishing a WebDriver session and the DWDS debug service starting, then
-  hung/failed with an `AppConnectionException` before any test result was
-  reported. One incidental, now-fixed problem surfaced along the way: the
-  first attempt (before `--web-run-headless` was identified as necessary)
-  launched a real, visible Chrome window on the developer's screen.
-  Mitigation: the CI step is off by default (see the gating Decision above)
-  until a passing run is confirmed in the clean `ubuntu-latest` environment;
-  the Dart test code itself is written and passes `flutter analyze`, so the
-  remaining risk is scoped to the web-driver tooling path, not test-logic
-  correctness.
+- **Android-only coverage misses iOS-specific behavior** → Accepted; iOS is
+  this project's secondary platform (per the README) and wasn't evaluated
+  for this change. Unlike the original web-only plan, Android coverage does
+  exercise the one real platform branch in the app
+  (`freeform_screen.dart`'s mobile-vs-desktop key panel visibility, via
+  `defaultTargetPlatform == TargetPlatform.android`) — a incidental bonus
+  over the web path, which couldn't have reached it at all.
+- **CI runtime growth** — an Android emulator boot (even from a cached
+  AVD/snapshot) adds real time on top of the tests themselves, more than
+  the web path would have. Mitigation: keep this initial suite to the three
+  scoped groups (not a broad re-test of already-covered UI flows); revisit
+  if runtime becomes a problem.
+- **The CI YAML itself is unverified** → Every test file passes repeatedly
+  against a real local Android emulator, and `flutter analyze` /
+  `flutter test --reporter failures-only` (2043 tests) are both clean. What
+  hasn't been confirmed is the specific `reactivecircus/android-emulator-runner`
+  GitHub Actions configuration — API level availability, boot flags, and
+  general behavior on a `ubuntu-latest` runner — since that requires an
+  actual CI run to observe. Mitigation: the step stays gated off by
+  `ENABLE_ANDROID_INTEGRATION_TESTS: 'false'` until someone watches it pass
+  once in real CI, at which point flipping it on is a one-line change.
 
 ## Open Questions
 

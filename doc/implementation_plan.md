@@ -504,12 +504,19 @@ Implementation Phases
      (worksheet/settings/history persistence across a simulated restart,
      against the real `SharedPreferences` plugin), `currency_refresh_test.dart`
      (manual refresh flow against a mocked HTTP client, never the real
-     Frankfurter API) — runs against `chrome`, no emulator needed. **Not yet
-     enabled in CI**: `flutter drive`'s web-driver path (the only mechanism
-     that supports `integration_test` on web) didn't reach a passing run in
-     local diagnosis; the CI step exists but is gated off by
-     `ENABLE_CHROME_INTEGRATION_TESTS: 'false'` in `ci.yml` until a clean-
-     runner pass is confirmed. Android/iOS-emulator coverage remains
+     Frankfurter API) — all 8 scenarios pass repeatedly against a real
+     local Android emulator. A web/Chrome path was tried first and
+     abandoned as an unresolved upstream Flutter/DWDS bug (not fixable in
+     this project); Android needed none of that path's machinery
+     (`flutter drive`, chromedriver) and was already fully set up on the
+     dev machine used. Along the way, found and fixed a real production
+     bug (`FastScrollBar` crash on a degenerate zero-height layout pass,
+     confirmed unreachable via real single-launch usage). **Not yet
+     enabled in CI**: the `reactivecircus/android-emulator-runner`
+     configuration is written but gated off by
+     `ENABLE_ANDROID_INTEGRATION_TESTS: 'false'` in `ci.yml` until a real
+     CI run is observed to pass — the Dart test logic itself is fully
+     verified, only the CI YAML isn't yet. iOS-emulator coverage remains
      deferred (not needed for this scope — see
      `openspec/changes/integration-tests/design.md`). See [Design
      Progress](design_progress.md) for the full account.

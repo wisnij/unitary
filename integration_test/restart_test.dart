@@ -96,6 +96,12 @@ void main() {
         await tester.tap(find.text('Dark mode'));
         await tester.pumpAndSettle();
 
+        // Return to the base app (Settings is a pushed route) before
+        // restarting, so the app is on the same tabbed-page footing every
+        // other restart scenario restarts from.
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+
         await restart(tester);
         expect(tester.takeException(), isNull);
 
@@ -135,7 +141,17 @@ void main() {
         await tester.tap(find.byIcon(Icons.history));
         await tester.pumpAndSettle();
 
-        expect(find.textContaining('5 miles'), findsOneWidget);
+        // Scope to the history modal's own content: the Convert-from field
+        // is a different (real, if surprising) survivor of the app.main()
+        // restart technique — see design.md's "restart" Non-Goal — and also
+        // matches a broad "5 miles" substring search.
+        expect(
+          find.descendant(
+            of: find.byType(DraggableScrollableSheet),
+            matching: find.textContaining('5 miles'),
+          ),
+          findsOneWidget,
+        );
       },
     );
   });

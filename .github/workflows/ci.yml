@@ -17,10 +17,11 @@ jobs:
     needs: lint
     runs-on: ubuntu-latest
     env:
-      # Chrome/chromedriver-driven integration_test suite (integration_test/)
-      # is new and not yet proven stable in CI — flip to 'true' once it has
-      # a track record of passing reliably here.
-      ENABLE_CHROME_INTEGRATION_TESTS: 'false'
+      # The integration_test/ suite (Android-emulator-driven) passes
+      # repeatedly locally, but this specific CI configuration hasn't run
+      # yet — flip to 'true' once it has a track record of passing
+      # reliably here.
+      ENABLE_ANDROID_INTEGRATION_TESTS: 'false'
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/test

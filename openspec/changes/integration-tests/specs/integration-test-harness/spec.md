@@ -71,25 +71,36 @@ test in the suite.
 - **THEN** an error is surfaced to the user and previously stored rates are
   unchanged
 
-### Requirement: Integration suite runs in CI against the `chrome` target
+### Requirement: Integration suite runs in CI against an Android emulator, gated behind an opt-in toggle
 
-The `integration_test` suite SHALL run in CI headlessly against the
-`chrome` target (`flutter test integration_test/ -d chrome`), requiring no
-Android or iOS emulator.
+The `integration_test` suite SHALL run in CI against an Android emulator
+(via `reactivecircus/android-emulator-runner`, `flutter test
+integration_test/<file>.dart -d <device>` — no `flutter drive`, no
+WebDriver server), only when the `ENABLE_ANDROID_INTEGRATION_TESTS`
+environment variable is `'true'` on the calling job.
 
-#### Scenario: CI executes the integration suite
+#### Scenario: CI executes the integration suite when enabled
 
-- **WHEN** the CI test workflow runs
-- **THEN** it includes a step that runs the `integration_test/` suite
-  against `chrome`, and a failure in that step fails the workflow
+- **WHEN** the CI test workflow runs with `ENABLE_ANDROID_INTEGRATION_TESTS`
+  set to `'true'`
+- **THEN** it includes a step that boots an Android emulator and runs the
+  `integration_test/` suite against it, and a failure in that step fails
+  the workflow
+
+#### Scenario: CI skips the integration suite when not enabled
+
+- **WHEN** the CI test workflow runs with `ENABLE_ANDROID_INTEGRATION_TESTS`
+  unset or not `'true'` (the default)
+- **THEN** the Android-emulator integration-test step does not run, and
+  does not affect the workflow's pass/fail outcome
 
 ### Requirement: Real-`SharedPreferences` seeding helper for integration tests
 
-A helper distinct from the widget-test harness's `TestRepositories` (which
-relies on the mocked `SharedPreferences` plugin) SHALL be provided for
-integration tests to seed and clear values in the real,
-platform-channel-backed `SharedPreferences` instance before calling
-`app.main()`.
+A helper for integration tests SHALL be provided to seed and clear values
+in the real, platform-channel-backed `SharedPreferences` instance before
+calling `app.main()` — distinct from the widget-test harness's
+`TestRepositories`, which relies on the mocked `SharedPreferences` plugin
+and doesn't apply here.
 
 #### Scenario: Helper seeds real preferences before boot
 

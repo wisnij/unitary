@@ -498,12 +498,22 @@ Implementation Phases
      path
 
 4. Comprehensive testing
-   - Integration tests — none exist yet (no `integration_test/` directory). Add
-     end-to-end flows:
-     - Type an expression → see the converted result
-     - Switch worksheet template → per-template source values persist and restore
-     - Trigger a currency refresh → conversions reflect updated rates
-   - Widget tests — audit coverage gaps; the existing ~1838 tests are largely
+   - [x] Integration tests — `integration_test/` added (code review finding
+     F9): `boot_test.dart` (the real `main()` entry point, including
+     pre-first-frame currency-rate rehydration), `restart_test.dart`
+     (worksheet/settings/history persistence across a simulated restart,
+     against the real `SharedPreferences` plugin), `currency_refresh_test.dart`
+     (manual refresh flow against a mocked HTTP client, never the real
+     Frankfurter API) — runs against `chrome`, no emulator needed. **Not yet
+     enabled in CI**: `flutter drive`'s web-driver path (the only mechanism
+     that supports `integration_test` on web) didn't reach a passing run in
+     local diagnosis; the CI step exists but is gated off by
+     `ENABLE_CHROME_INTEGRATION_TESTS: 'false'` in `ci.yml` until a clean-
+     runner pass is confirmed. Android/iOS-emulator coverage remains
+     deferred (not needed for this scope — see
+     `openspec/changes/integration-tests/design.md`). See [Design
+     Progress](design_progress.md) for the full account.
+   - Widget tests — audit coverage gaps; the existing ~2043 tests are largely
      unit-level
    - Manual testing on real devices — documented checklist; at least one real
      Android device pass

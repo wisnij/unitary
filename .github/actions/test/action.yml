@@ -13,6 +13,27 @@ runs:
       shell: bash
     - run: flutter test --coverage
       shell: bash
+    - name: Run web integration tests (Chrome)
+      # Off by default until proven stable in CI — flip by setting the
+      # ENABLE_CHROME_INTEGRATION_TESTS env var to 'true' on the calling
+      # workflow/job (see .github/workflows/ci.yml). `flutter test` does not
+      # support the web target for integration_test, so this uses the older
+      # `flutter drive` mechanism instead, which needs its own chromedriver
+      # WebDriver server. `--web-run-headless` is required — without it,
+      # `flutter drive -d chrome` launches a visible browser window.
+      if: ${{ env.ENABLE_CHROME_INTEGRATION_TESTS == 'true' }}
+      shell: bash
+      run: |
+        sudo apt-get update && sudo apt-get install -y chromium-driver
+        chromedriver --port=4444 &
+        sleep 2
+        for f in integration_test/*.dart; do
+          flutter drive \
+            --driver=test_driver/integration_test.dart \
+            --target="$f" \
+            -d chrome \
+            --web-run-headless
+        done
     - run: dart run cobertura convert --input coverage/lcov.info --output coverage/cobertura.xml
       shell: bash
     - uses: actions/upload-artifact@v7

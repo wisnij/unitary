@@ -19,11 +19,17 @@ a class of bugs that only exist when the whole app process boots for real:
 A prior exploration (see conversation leading to this proposal) ruled out
 needing an Android/iOS emulator for most of this: `main.dart` has no
 platform branches, and the `web` target already builds in CI
-(`deploy-web` job), so `flutter test integration_test/ -d chrome` reaches
-the same code paths without new device infrastructure. The one genuine gap
-that needs a real device — frame-timing/rendering fidelity — is already
-scoped in `doc/performance.md` as a manual, on-device procedure and stays
-out of this change.
+(`deploy-web` job), so running against Chrome reaches the same code paths
+without new device infrastructure. The one genuine gap that needs a real
+device — frame-timing/rendering fidelity — is already scoped in
+`doc/performance.md` as a manual, on-device procedure and stays out of this
+change.
+
+**Correction found during implementation**: the exploration assumed `flutter
+test integration_test/ -d chrome` would run the suite; it does not exist as
+a supported combination in Flutter 3.44 ("Web devices are not supported for
+integration tests yet"). Web integration tests require the older `flutter
+drive` mechanism instead — see the new Decision below.
 
 ## Goals / Non-Goals
 
@@ -124,6 +130,52 @@ prefs-seeding trick here as well while adding no coverage the isolated
 `ProviderScope` approach doesn't already give, since the refresh flow is a
 single-screen concern.
 
+### Web execution requires `flutter drive`, `chromedriver`, and `--web-run-headless`
+
+Discovered during implementation, correcting the original plan: `flutter
+test integration_test/*.dart -d chrome` is rejected outright ("Web devices
+are not supported for integration tests yet"). The actual mechanism is
+`flutter drive --driver=test_driver/integration_test.dart --target=<file> -d
+chrome`, which requires two things `flutter test` doesn't: a
+`test_driver/integration_test.dart` entrypoint (`integrationDriver()` from
+`package:integration_test/integration_test_driver.dart`), and a separately
+running `chromedriver` WebDriver server (not bundled; installed via
+`apt-get install chromium-driver` in CI, matching the runner's preinstalled
+Chrome version).
+
+A further correction: `flutter drive -d chrome` launches a **visible**
+Chrome window by default — `--[no-]headless` (default on) only governs the
+WebDriver-side "driver" browser chromedriver controls; the separate
+app-hosting browser (via `chrome_launcher`, the same mechanism `flutter run
+-d chrome` uses) defaults to visible. The fix is the `--web-run-headless`
+flag, which specifically targets that second browser. This was found the
+hard way during local diagnosis — see Risks.
+**Alternative considered**: none seriously — this is simply how Flutter's
+web integration-test tooling works in this version; there is no alternative
+invocation that avoids `flutter drive`.
+
+### Gate the whole suite behind an opt-in CI toggle, off by default
+
+Local diagnosis (see Risks) could not get a full pass: after chromedriver
+established a session and the DWDS debug service started, the run hung/
+failed with an unresolved `AppConnectionException` before reporting a test
+result. Root cause wasn't isolated in the time available, and it's unclear
+whether it's specific to the local dev machine's networking or a more
+general fragility in this Flutter version's web-driver path. Rather than
+wire the CI step to run unconditionally (risking either a permanently red
+step or, worse, a step that silently never passes and gets ignored),
+`.github/workflows/ci.yml`'s `test` job sets
+`ENABLE_CHROME_INTEGRATION_TESTS: 'false'`, and the new step in
+`.github/actions/test/action.yml` only runs when that's `'true'`. This is a
+one-line flip once someone confirms the suite passes reliably against the
+clean `ubuntu-latest` runner (which lacks the local machine's VPN/mesh
+networking, so may well not reproduce the hang at all).
+**Alternative considered**: an in-app, Dart-level skip gate (e.g. reading an
+environment variable inside the test files) — rejected: `dart:io`'s
+`Platform.environment` isn't available on the `web` compile target at all,
+so gating has to happen at the shell/CI level (whether the step runs),
+not inside the Dart test code.
+
 ### New real-prefs seeding helper, separate from `TestRepositories`
 
 `test/helpers/repository_overrides.dart`'s `TestRepositories` is built on
@@ -159,6 +211,20 @@ suite.
   Mitigation: keep this initial suite to the three scoped groups (not a
   broad re-test of already-covered UI flows); revisit if runtime becomes a
   problem.
+- **No confirmed passing local run yet** → Local diagnosis on a real
+  developer desktop (not a clean environment — a NordVPN mesh network
+  interface is present, and chromedriver logged an unexplained `bind()
+  failed: Cannot assign requested address`) got as far as chromedriver
+  establishing a WebDriver session and the DWDS debug service starting, then
+  hung/failed with an `AppConnectionException` before any test result was
+  reported. One incidental, now-fixed problem surfaced along the way: the
+  first attempt (before `--web-run-headless` was identified as necessary)
+  launched a real, visible Chrome window on the developer's screen.
+  Mitigation: the CI step is off by default (see the gating Decision above)
+  until a passing run is confirmed in the clean `ubuntu-latest` environment;
+  the Dart test code itself is written and passes `flutter analyze`, so the
+  remaining risk is scoped to the web-driver tooling path, not test-logic
+  correctness.
 
 ## Open Questions
 

@@ -18,10 +18,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # The integration_test/ suite (Android-emulator-driven) passes
-      # repeatedly locally, but this specific CI configuration hasn't run
-      # yet — flip to 'true' once it has a track record of passing
-      # reliably here.
-      ENABLE_ANDROID_INTEGRATION_TESTS: 'false'
+      # repeatedly locally; enabled here to verify the CI configuration
+      # itself before treating it as proven.
+      ENABLE_ANDROID_INTEGRATION_TESTS: 'true'
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/test

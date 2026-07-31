@@ -35,10 +35,10 @@ runs:
         target: default
         arch: x86_64
         profile: pixel_6_pro
-        script: |
-          for f in integration_test/*.dart; do
-            flutter test "$f" -d emulator-5554
-          done
+        # reactivecircus/android-emulator-runner runs each line of `script`
+        # as its own separate `sh -c` invocation (for per-line logging), so
+        # a multi-line for-loop gets split apart and fails — must be one line.
+        script: for f in integration_test/*.dart; do flutter test "$f" -d emulator-5554; done
     - run: dart run cobertura convert --input coverage/lcov.info --output coverage/cobertura.xml
       shell: bash
     - uses: actions/upload-artifact@v7

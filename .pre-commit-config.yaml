@@ -5,6 +5,7 @@ repos:
         name: Import GNU units database
         language: system
         entry: bash -c 'dart run tool/import_gnu_units.dart && dart run tool/generate_predefined_units.dart'
+        pass_filenames: false
         files: |
           (?x)^(
             assets/units/ |
@@ -14,6 +15,7 @@ repos:
         name: Regenerate predefined units
         language: system
         entry: dart run tool/generate_predefined_units.dart
+        pass_filenames: false
         files: |
           (?x)^(
             assets/units/units-supplementary\.json |

@@ -79,12 +79,14 @@ theoretical — see `design.md`'s "FastScrollBar clamp crash" and
       path).
 - [x] 5.2 Confirm the suite runs and passes. **Locally: yes, repeatedly**
       (all 8 scenarios across the 3 files, against a real emulator).
-      **In CI: not yet observed** — the specific
-      `reactivecircus/android-emulator-runner` GitHub Actions configuration
-      has been written by analogy to its documented usage but never
-      executed; the step is gated off
-      (`ENABLE_ANDROID_INTEGRATION_TESTS: 'false'`) until someone watches a
-      real CI run pass.
+      **In CI: confirmed** — `ENABLE_ANDROID_INTEGRATION_TESTS` flipped to
+      `'true'` on PR #1 and observed passing on a real GitHub Actions run.
+      Found and fixed one CI-only bug along the way:
+      `reactivecircus/android-emulator-runner` runs each line of its
+      `script:` input as a separate `sh -c` invocation (for per-line
+      logging), so the original multi-line `for...do...done` loop split
+      apart and failed with a shell syntax error; collapsed to a single
+      line in `.github/actions/test/action.yml`.
 - [ ] 5.3 Confirm a deliberately-introduced failure in the integration
       suite fails the CI workflow, then revert the deliberate failure.
       **Not done** — requires pushing to trigger a CI run, which needs

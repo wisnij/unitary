@@ -13,6 +13,14 @@ runs:
       shell: bash
     - run: flutter test --coverage
       shell: bash
+    - run: dart run cobertura convert --input coverage/lcov.info --output coverage/cobertura.xml
+      shell: bash
+    - uses: actions/upload-artifact@v7
+      with:
+        name: coverage-report
+        path: coverage/cobertura.xml
+    - run: dart run cobertura show
+      shell: bash
     - name: Run Android integration tests
       # Off by default — flip by setting the ENABLE_ANDROID_INTEGRATION_TESTS
       # env var to 'true' on the calling workflow/job (see
@@ -21,6 +29,11 @@ runs:
       # is a known source of intermittent CI flakiness (e.g. a boot/render
       # hang) independent of this project's code — tool/run_integration_tests.sh
       # bounds and retries for that; see its comments.
+      #
+      # Placed after the coverage steps (rather than right after the unit
+      # tests) so an Android-only failure never blocks the coverage report
+      # from being generated/uploaded — that only needs `flutter test
+      # --coverage` to have passed.
       #
       # (A web/Chrome path was tried first and abandoned: it hits a
       # long-standing, currently-unresolved upstream Flutter/DWDS bug —
@@ -44,11 +57,3 @@ runs:
         # support the `timeout-minutes` step key) and retries only on an
         # actual timeout (exit 124) — a real test failure is not retried.
         script: bash tool/run_integration_tests.sh
-    - run: dart run cobertura convert --input coverage/lcov.info --output coverage/cobertura.xml
-      shell: bash
-    - uses: actions/upload-artifact@v7
-      with:
-        name: coverage-report
-        path: coverage/cobertura.xml
-    - run: dart run cobertura show
-      shell: bash

@@ -14,12 +14,13 @@ runs:
     - run: flutter test --coverage
       shell: bash
     - name: Run Android integration tests
-      # Off by default until proven stable in CI — flip by setting the
-      # ENABLE_ANDROID_INTEGRATION_TESTS env var to 'true' on the calling
-      # workflow/job (see .github/workflows/ci.yml). All three files in
-      # integration_test/ pass repeatedly against a real local Android
-      # emulator (verified during implementation); this specific CI
-      # configuration hasn't itself been run yet, hence the gate.
+      # Off by default — flip by setting the ENABLE_ANDROID_INTEGRATION_TESTS
+      # env var to 'true' on the calling workflow/job (see
+      # .github/workflows/ci.yml). Confirmed passing both locally
+      # (repeatedly, against a real emulator) and in CI. The emulator itself
+      # is a known source of intermittent CI flakiness (e.g. a boot/render
+      # hang) independent of this project's code — tool/run_integration_tests.sh
+      # bounds and retries for that; see its comments.
       #
       # (A web/Chrome path was tried first and abandoned: it hits a
       # long-standing, currently-unresolved upstream Flutter/DWDS bug —
@@ -35,10 +36,14 @@ runs:
         target: default
         arch: x86_64
         profile: pixel_6_pro
-        # reactivecircus/android-emulator-runner runs each line of `script`
-        # as its own separate `sh -c` invocation (for per-line logging), so
-        # a multi-line for-loop gets split apart and fails — must be one line.
-        script: for f in integration_test/*.dart; do flutter test "$f" -d emulator-5554; done
+        # A script file (not an inline multi-line block) because
+        # reactivecircus/android-emulator-runner runs each line of an inline
+        # `script:` as its own separate `sh -c` invocation (for per-line
+        # logging), which breaks multi-line control flow. This script also
+        # bounds each attempt with `timeout` (composite actions don't
+        # support the `timeout-minutes` step key) and retries only on an
+        # actual timeout (exit 124) — a real test failure is not retried.
+        script: bash tool/run_integration_tests.sh
     - run: dart run cobertura convert --input coverage/lcov.info --output coverage/cobertura.xml
       shell: bash
     - uses: actions/upload-artifact@v7

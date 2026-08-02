@@ -511,13 +511,18 @@ Implementation Phases
      (`flutter drive`, chromedriver) and was already fully set up on the
      dev machine used. Along the way, found and fixed a real production
      bug (`FastScrollBar` crash on a degenerate zero-height layout pass,
-     confirmed unreachable via real single-launch usage). **Not yet
-     enabled in CI**: the `reactivecircus/android-emulator-runner`
-     configuration is written but gated off by
-     `ENABLE_ANDROID_INTEGRATION_TESTS: 'false'` in `ci.yml` until a real
-     CI run is observed to pass — the Dart test logic itself is fully
-     verified, only the CI YAML isn't yet. iOS-emulator coverage remains
-     deferred (not needed for this scope — see
+     confirmed unreachable via real single-launch usage). **Enabled and
+     confirmed passing in CI**: `ENABLE_ANDROID_INTEGRATION_TESTS: 'true'`
+     in `ci.yml`, observed passing on a real GitHub Actions run (PR #1).
+     Two CI-only issues surfaced only by watching real runs, both fixed:
+     `reactivecircus/android-emulator-runner` splits a multi-line
+     `script:` into separate `sh -c` invocations per line (fixed by moving
+     the test loop into `tool/run_integration_tests.sh`), and the emulator
+     itself is prone to intermittent boot/render hangs on GitHub-hosted
+     runners (bounded with a `timeout`-and-retry-only-on-timeout wrapper in
+     that same script, verified in both directions — a deliberately-broken
+     test failed the workflow without being retried). iOS-emulator coverage
+     remains deferred (not needed for this scope — see
      `openspec/changes/integration-tests/design.md`). See [Design
      Progress](design_progress.md) for the full account.
    - Widget tests — audit coverage gaps; the existing ~2043 tests are largely

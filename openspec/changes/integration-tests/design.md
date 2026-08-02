@@ -269,19 +269,75 @@ test-code issues, not app bugs:
 The web-path version of this gate existed because zero runs ever passed
 locally. That's no longer true — all three files now pass repeatedly
 against a real Android emulator — but the specific CI YAML
-(`reactivecircus/android-emulator-runner`) has never itself been executed;
+(`reactivecircus/android-emulator-runner`) had never itself been executed;
 only reasoned about and written by analogy to its documented usage.
 `.github/workflows/ci.yml`'s `test` job keeps a toggle
-(`ENABLE_ANDROID_INTEGRATION_TESTS: 'false'`, renamed from the web-era
+(`ENABLE_ANDROID_INTEGRATION_TESTS`, renamed from the web-era
 `ENABLE_CHROME_INTEGRATION_TESTS`), and the step in
 `.github/actions/test/action.yml` only runs when it's `'true'`, so a
 misconfigured CI-only detail (emulator boot flags, API level availability
 on the runner, etc.) can't block merges before anyone's watched it run.
-Recommend flipping it on after the first real CI run succeeds.
+**Update**: flipped to `'true'` on PR #1 and confirmed passing on a real
+GitHub Actions run — found and fixed two CI-only bugs in the process (see
+below). Left `'true'` going forward now that it's been observed passing.
 **Alternative considered**: turn it on immediately, given the much higher
 confidence than the web path ever reached — rejected as still one
 unverified step (the CI YAML itself) away from a real confirmation; the
 cost of one gated-off run is low.
+
+### `script:` runs each line as a separate `sh -c` — found and fixed
+
+The first real CI run failed before ever reaching the emulator boot:
+`reactivecircus/android-emulator-runner`'s `script:` input runs *each line*
+of a multi-line block as its own independent `sh -c` invocation (for
+per-line log grouping in the Actions UI), rather than executing the block
+as one script. The original inline `for f in ...; do\n  flutter test ...\n
+done` therefore split across invocations, and the `for` line alone is
+incomplete shell — `sh: 1: Syntax error: end of file unexpected (expecting
+"done")`. Confirmed by reproducing the exact log shape (each line prefixed
+with its own `/usr/bin/sh -c ...`). Fixed by moving the loop into a real
+script file (`tool/run_integration_tests.sh`) and pointing `script:` at
+`bash tool/run_integration_tests.sh` — a single line, so it isn't split,
+and ordinary bash control flow inside the file behaves normally.
+
+### Android emulator boot/render hangs in CI — bounded with `timeout`, retried only on timeout
+
+A subsequent real CI run (after the fix above) hung for 50+ minutes with
+`ERROR | bad window surface handle 0x78` repeating in the emulator log and
+no further test progress, vs. a normal run of ~15–29 minutes total. This
+is a known, intermittent flakiness mode of
+`reactivecircus/android-emulator-runner` on GitHub-hosted runners (no
+hardware KVM acceleration there, unlike the local dev machine — the runner
+falls back to software-accelerated emulation, which is more prone to
+boot/render wedges), not something specific to this project's tests or
+code. `.github/workflows/ci.yml`'s `test` job had no `timeout-minutes`, so
+an unlucky hang would have run for GitHub's default 360-minute job ceiling
+before anyone noticed.
+
+The natural fix — `timeout-minutes` on the Android step — isn't available:
+composite-action steps don't support that key (confirmed via GitHub's own
+runner ADRs and multiple long-open community feature requests; only
+job-level or calling-workflow-step-level `timeout-minutes` works, and the
+latter would bound the *entire* composite `test` action — pub get, the
+full unit-test suite, cobertura — not just the Android portion).
+
+Instead, `tool/run_integration_tests.sh` wraps the test loop in the
+`timeout` shell command directly: 25 minutes per attempt
+(`--kill-after=30s` as a safety net if `SIGTERM` alone doesn't stop it),
+retried up to 2 attempts — but **only** when `timeout` itself reports a
+timeout (its own distinctive exit code, 124). Any other nonzero exit (an
+actual `flutter test` failure) is returned immediately with no retry, so a
+real regression can never be masked as "just a flaky emulator." Verified
+both directions: a deliberately-broken assertion in `boot_test.dart` was
+pushed and observed failing the CI workflow on the first attempt with no
+retry (task 5.3); a standalone shell reproduction confirmed `timeout`
+yields exit 124 on an actual timeout and passes through a function's real
+exit code otherwise.
+**Alternative considered**: a GitHub Marketplace retry-wrapper action
+(e.g. `nick-fields/retry`) around the whole Android step — rejected because
+it retries on *any* nonzero exit by default, which would retry genuine test
+failures unless further configured, and pulls in another third-party
+action for a small amount of shell logic.
 
 ### New real-prefs seeding helper, separate from `TestRepositories`
 
@@ -327,15 +383,15 @@ suite.
   the web path would have. Mitigation: keep this initial suite to the three
   scoped groups (not a broad re-test of already-covered UI flows); revisit
   if runtime becomes a problem.
-- **The CI YAML itself is unverified** → Every test file passes repeatedly
-  against a real local Android emulator, and `flutter analyze` /
-  `flutter test --reporter failures-only` (2043 tests) are both clean. What
-  hasn't been confirmed is the specific `reactivecircus/android-emulator-runner`
-  GitHub Actions configuration — API level availability, boot flags, and
-  general behavior on a `ubuntu-latest` runner — since that requires an
-  actual CI run to observe. Mitigation: the step stays gated off by
-  `ENABLE_ANDROID_INTEGRATION_TESTS: 'false'` until someone watches it pass
-  once in real CI, at which point flipping it on is a one-line change.
+- **~~The CI YAML itself is unverified~~ — Resolved**: confirmed passing on a
+  real GitHub Actions run (PR #1), with `ENABLE_ANDROID_INTEGRATION_TESTS`
+  left `'true'` going forward. Two real CI-only issues surfaced and were
+  fixed in the process — see the "`script:` runs each line as a separate
+  `sh -c`" and "Android emulator boot/render hangs in CI" Decisions above —
+  neither reproducible locally, both only observable by actually watching a
+  CI run. A deliberately-broken assertion was also pushed and confirmed to
+  fail the workflow without being masked by the timeout/retry logic (task
+  5.3), closing the loop on this risk in both directions.
 
 ## Open Questions
 

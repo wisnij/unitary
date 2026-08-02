@@ -30,9 +30,17 @@ automated coverage today.
     rate) against a mocked HTTP client (`package:http/testing.dart`), never
     the real Frankfurter API.
 - Wire the suite into CI via `reactivecircus/android-emulator-runner`,
-  gated off by default (`ENABLE_ANDROID_INTEGRATION_TESTS: 'false'`) until a
-  real CI run is observed to pass — see `design.md` for why a web/Chrome
-  target was tried first and abandoned as an unresolved upstream Flutter bug.
+  behind an opt-in toggle (`ENABLE_ANDROID_INTEGRATION_TESTS`) — confirmed
+  passing on a real GitHub Actions run (PR #1) and left `'true'` going
+  forward. See `design.md` for why a web/Chrome target was tried first and
+  abandoned as an unresolved upstream Flutter bug, and for two CI-only
+  issues found and fixed via real CI runs: `reactivecircus/android-emulator-runner`
+  splits a multi-line `script:` into separate `sh -c` invocations per line
+  (fixed by moving the test loop into `tool/run_integration_tests.sh`), and
+  the emulator itself is prone to intermittent boot/render hangs on
+  GitHub-hosted runners (that same script bounds each attempt with
+  `timeout` and retries only on an actual timeout, never on a genuine test
+  failure).
 - Add a small helper for seeding/clearing the *real* `SharedPreferences`
   plugin from within an integration test (distinct from the existing
   `TestRepositories`/`pumpApp` widget-test harness, which relies on the
@@ -71,7 +79,17 @@ requirement changes)
 - **CI**: `.github/actions/test/action.yml` gains an Android-emulator
   integration-test step (`.github/workflows/ci.yml` carries the opt-in
   gate); `test_driver/` was not needed (that mechanism only exists for the
-  abandoned web/`flutter drive` path).
+  abandoned web/`flutter drive` path). New `tool/run_integration_tests.sh`
+  runs the suite with a bounded, timeout-only retry (see `design.md`) —
+  needed because composite-action steps don't support GitHub's
+  `timeout-minutes` key.
+- **Unrelated fix bundled into the same PR**: `.pre-commit-config.yaml`'s
+  `import-gnu-units` and `generate-predefined-units` hooks gained
+  `pass_filenames: false`, fixing a pre-existing race condition where
+  pre-commit split matched files across parallel invocations of the same
+  hook, which then raced on the shared generated output files
+  (`units.json`, `predefined_units.dart`) — found while getting this PR's
+  own lint job green in CI, not part of this change's original scope.
 - **`lib/` changes are otherwise avoided by design** — the boot-sequence and
   restart tests rely on seeding a fresh `updatedAt` in stored currency rates
   before boot so `maybeRefresh()`'s staleness check short-circuits, avoiding

@@ -87,11 +87,26 @@ theoretical — see `design.md`'s "FastScrollBar clamp crash" and
       logging), so the original multi-line `for...do...done` loop split
       apart and failed with a shell syntax error; collapsed to a single
       line in `.github/actions/test/action.yml`.
-- [ ] 5.3 Confirm a deliberately-introduced failure in the integration
+- [x] 5.3 Confirm a deliberately-introduced failure in the integration
       suite fails the CI workflow, then revert the deliberate failure.
-      **Not done** — requires pushing to trigger a CI run, which needs
-      separate user go-ahead; can be combined with the first real
-      (non-deliberately-broken) CI run.
+      **Confirmed**: `integration_test/boot_test.dart`'s currency-rate
+      assertion was changed to an impossible expected value, pushed, and
+      observed failing the CI workflow (and correctly *not* retried, since
+      `tool/run_integration_tests.sh` only retries on an actual timeout,
+      exit 124 — an ordinary test failure exits immediately). Reverted
+      afterward.
+- [x] 5.4 (discovered during 5.2/5.3) Bound the Android step so a hung
+      emulator can't run for GitHub's default 360-minute job timeout
+      unnoticed. `reactivecircus/android-emulator-runner` was observed
+      hanging in a real CI run (`bad window surface handle` looping,
+      >50 min vs. a normal ~15 min run) — a known source of intermittent
+      flakiness for that action, unrelated to this project's code.
+      Composite-action steps don't support the `timeout-minutes` key (a
+      confirmed, still-open GitHub Actions limitation), so
+      `tool/run_integration_tests.sh` wraps the test loop in `timeout`
+      instead: bounded to 25 minutes per attempt, retried once only on an
+      actual timeout (exit 124) — a genuine test failure is never retried,
+      confirmed by 5.3 above.
 
 ## 6. Verification
 

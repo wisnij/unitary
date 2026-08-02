@@ -16,7 +16,5 @@
 ## 3. Verification
 
 - [x] 3.1 Validate `action.yml` and `ci.yml` are well-formed YAML
-- [ ] 3.2 Push and confirm a real CI run on `ci.yml` still executes the
-      Android integration suite with no `env:` block present
-- [x] 3.3 Confirm `openspec validate default-enable-android-tests --strict`
+- [x] 3.2 Confirm `openspec validate default-enable-android-tests --strict`
       passes

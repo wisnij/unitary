@@ -322,7 +322,7 @@ latter would bound the *entire* composite `test` action — pub get, the
 full unit-test suite, cobertura — not just the Android portion).
 
 Instead, `tool/run_integration_tests.sh` wraps the test loop in the
-`timeout` shell command directly: 25 minutes per attempt
+`timeout` shell command directly: 30 minutes per attempt
 (`--kill-after=30s` as a safety net if `SIGTERM` alone doesn't stop it),
 retried up to 2 attempts — but **only** when `timeout` itself reports a
 timeout (its own distinctive exit code, 124). Any other nonzero exit (an

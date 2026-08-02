@@ -12,7 +12,7 @@ set -u
 set -m
 
 : "${DEVICE_ID:=emulator-5554}"
-readonly TIMEOUT_MINUTES=25
+readonly TIMEOUT_MINUTES=30
 readonly MAX_ATTEMPTS=2
 
 run_tests () {

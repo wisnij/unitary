@@ -104,7 +104,7 @@ theoretical — see `design.md`'s "FastScrollBar clamp crash" and
       Composite-action steps don't support the `timeout-minutes` key (a
       confirmed, still-open GitHub Actions limitation), so
       `tool/run_integration_tests.sh` wraps the test loop in `timeout`
-      instead: bounded to 25 minutes per attempt, retried once only on an
+      instead: bounded to 30 minutes per attempt, retried once only on an
       actual timeout (exit 124) — a genuine test failure is never retried,
       confirmed by 5.3 above.
 

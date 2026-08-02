@@ -1,6 +1,7 @@
 #!/bin/bash
 # Run all linting steps and tests, and report on test coverage
 set -eu
+set -o pipefail
 
 (
     set -x

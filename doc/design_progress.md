@@ -566,7 +566,7 @@ Questions that arose during design but haven't been resolved:
   - **Unrelated fix bundled into the same PR**: `.pre-commit-config.yaml`'s `import-gnu-units` and `generate-predefined-units` hooks gained `pass_filenames: false`, fixing a pre-existing race condition where pre-commit split matched files across parallel invocations of the same hook, racing on the shared generated output files (`units.json`, `predefined_units.dart`) — found while getting this PR's own lint job green in CI
   - Full existing suite unaffected throughout: 2043 tests passing, `flutter analyze` clean
   - Design artifacts: `openspec/changes/archive/2026-08-02-integration-tests/`
-- *Remove the Android integration-test opt-in toggle (August 2, 2026)* — follow-up to the entry above; see `openspec/changes/default-enable-android-tests/`
+- *Remove the Android integration-test opt-in toggle (August 2, 2026)* — follow-up to the entry above; see `openspec/changes/archive/2026-08-02-default-enable-android-tests/`
   - The `ENABLE_ANDROID_INTEGRATION_TESTS` gate on `.github/actions/test/action.yml`'s Android step is removed entirely, not replaced with a different toggle — the step now runs unconditionally for every workflow that uses `./.github/actions/test`
   - Motivation: `ci.yml`'s `test` job set the toggle to `'true'`, but `release.yml`'s `test` job (which also uses the same composite action) never set it, so the release pipeline was silently skipping integration coverage; an unconditional step guarantees every current *and future* caller gets coverage without needing to remember to opt in
   - `ci.yml`'s now-unused `env: ENABLE_ANDROID_INTEGRATION_TESTS` block is removed; `release.yml` needed no changes at all — it automatically picked up the Android step the next time it ran

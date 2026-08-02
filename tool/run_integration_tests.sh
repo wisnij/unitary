@@ -5,6 +5,11 @@
 # shouldn't need a human to notice and re-run the job, but a real failure
 # should surface immediately rather than be retried away.
 set -u
+# Job control: a backgrounded job gets its own process group (pgid == the
+# job's leader pid), which sweep_process_group below relies on to reach
+# flutter test's dart/gradle/adb descendants — a plain `timeout` only
+# signals its immediate child, not further descendants.
+set -m
 
 : "${DEVICE_ID:=emulator-5554}"
 readonly TIMEOUT_MINUTES=25
@@ -18,10 +23,22 @@ run_tests () {
 export -f run_tests
 export DEVICE_ID
 
+# Terminates every process in the given job's process group. Safe to call
+# even when nothing survives (kill's failure is silenced).
+sweep_process_group () {
+  local pgid=$1
+  kill -TERM -- "-$pgid" 2>/dev/null || true
+  sleep 2
+  kill -KILL -- "-$pgid" 2>/dev/null || true
+}
+
 attempt=1
 while true; do
-  timeout --kill-after=30s "${TIMEOUT_MINUTES}m" bash -c run_tests
+  timeout --kill-after=30s "${TIMEOUT_MINUTES}m" bash -c run_tests &
+  pid=$!
+  wait "$pid"
   status=$?
+  sweep_process_group "$pid"
 
   if [[ $status -eq 0 ]]; then
     exit 0

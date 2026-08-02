@@ -7,10 +7,9 @@ Defines the `integration_test/` suite: end-to-end tests that drive the real
 application entry point against real (non-mocked) `SharedPreferences` and a
 real widget tree, covering boot sequencing, cross-restart persistence, and
 the currency-refresh flow (against a mocked HTTP client, never the live
-Frankfurter API). Also defines the CI wiring that runs this suite on an
-Android emulator, gated behind an opt-in environment variable, and the
-seeding helper the suite uses to prepare real `SharedPreferences` state
-before boot.
+Frankfurter API). Also defines the CI wiring that runs this suite
+unconditionally on an Android emulator, and the seeding helper the suite
+uses to prepare real `SharedPreferences` state before boot.
 
 
 ## Requirements
@@ -86,28 +85,20 @@ test in the suite.
 - **THEN** an error is surfaced to the user and previously stored rates are
   unchanged
 
-### Requirement: Integration suite runs in CI against an Android emulator, gated behind an opt-in toggle
+### Requirement: Integration suite runs in CI against an Android emulator
 
 The `integration_test` suite SHALL run in CI against an Android emulator
 (via `reactivecircus/android-emulator-runner`, `flutter test
 integration_test/<file>.dart -d <device>` — no `flutter drive`, no
-WebDriver server), only when the `ENABLE_ANDROID_INTEGRATION_TESTS`
-environment variable is `'true'` on the calling job.
+WebDriver server) unconditionally for every workflow that uses
+`./.github/actions/test`.
 
-#### Scenario: CI executes the integration suite when enabled
+#### Scenario: CI executes the integration suite
 
-- **WHEN** the CI test workflow runs with `ENABLE_ANDROID_INTEGRATION_TESTS`
-  set to `'true'`
+- **WHEN** a workflow uses `./.github/actions/test`
 - **THEN** it includes a step that boots an Android emulator and runs the
   `integration_test/` suite against it, and a failure in that step fails
   the workflow
-
-#### Scenario: CI skips the integration suite when not enabled
-
-- **WHEN** the CI test workflow runs with `ENABLE_ANDROID_INTEGRATION_TESTS`
-  unset or not `'true'` (the default)
-- **THEN** the Android-emulator integration-test step does not run, and
-  does not affect the workflow's pass/fail outcome
 
 ### Requirement: Real-`SharedPreferences` seeding helper for integration tests
 

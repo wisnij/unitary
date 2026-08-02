@@ -16,11 +16,6 @@ jobs:
   test:
     needs: lint
     runs-on: ubuntu-latest
-    env:
-      # The integration_test/ suite (Android-emulator-driven) passes
-      # repeatedly locally; enabled here to verify the CI configuration
-      # itself before treating it as proven.
-      ENABLE_ANDROID_INTEGRATION_TESTS: 'true'
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/test

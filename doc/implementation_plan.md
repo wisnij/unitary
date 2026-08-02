@@ -512,8 +512,12 @@ Implementation Phases
      dev machine used. Along the way, found and fixed a real production
      bug (`FastScrollBar` crash on a degenerate zero-height layout pass,
      confirmed unreachable via real single-launch usage). **Enabled and
-     confirmed passing in CI**: `ENABLE_ANDROID_INTEGRATION_TESTS: 'true'`
-     in `ci.yml`, observed passing on a real GitHub Actions run (PR #1).
+     confirmed passing in CI**, observed passing on a real GitHub Actions
+     run (PR #1); the opt-in `ENABLE_ANDROID_INTEGRATION_TESTS` toggle was
+     later removed entirely once proven — the step now runs
+     unconditionally for every workflow that uses
+     `./.github/actions/test`, so `release.yml` (which never set the
+     toggle) picked up coverage it had silently been missing.
      Two CI-only issues surfaced only by watching real runs, both fixed:
      `reactivecircus/android-emulator-runner` splits a multi-line
      `script:` into separate `sh -c` invocations per line (fixed by moving
@@ -523,8 +527,8 @@ Implementation Phases
      that same script, verified in both directions — a deliberately-broken
      test failed the workflow without being retried). iOS-emulator coverage
      remains deferred (not needed for this scope — see
-     `openspec/changes/integration-tests/design.md`). See [Design
-     Progress](design_progress.md) for the full account.
+     `openspec/changes/archive/2026-08-02-integration-tests/design.md`). See
+     [Design Progress](design_progress.md) for the full account.
    - Widget tests — audit coverage gaps; the existing ~2043 tests are largely
      unit-level
    - Manual testing on real devices — documented checklist; at least one real

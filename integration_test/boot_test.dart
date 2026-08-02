@@ -57,10 +57,10 @@ void main() {
         await tester.testTextInput.receiveAction(TextInputAction.done);
         await tester.pumpAndSettle();
 
-        // DELIBERATE FAILURE (task 5.3): confirming CI actually fails the
-        // workflow on a real integration-test failure. Revert this line
-        // once observed.
-        expect(find.textContaining('= 999'), findsOneWidget);
+        // 1 euro at a seeded rate of 2.0 (EUR per USD) is 0.5 USD — only
+        // possible if main.dart applied the stored rate before this
+        // evaluation ran, since the compiled-in default rate is ~0.86.
+        expect(find.textContaining('= 0.5'), findsOneWidget);
       },
     );
   });

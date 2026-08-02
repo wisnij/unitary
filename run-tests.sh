@@ -40,7 +40,20 @@ if [[ ${ENABLE_ANDROID_INTEGRATION_TESTS:-} == "true" ]]; then
     export -f is_booted wait_for_boot
     export adb DEVICE_ID
 
+    # Only tear down an emulator this script itself started — leave one the
+    # developer already had running (e.g. from Android Studio) alone.
+    # Registered before anything that could start the emulator, so a Ctrl-C
+    # or early exit during the boot-wait still runs it (a no-op until
+    # started_emulator is actually set below).
     started_emulator=0
+    cleanup_emulator () {
+        if [[ $started_emulator -eq 1 ]]; then
+            echo "Shutting down Android emulator..."
+            (set -x; "$adb" -s "$DEVICE_ID" emu kill || true)
+        fi
+    }
+    trap cleanup_emulator EXIT
+
     if "$adb" devices | grep -qE "^${DEVICE_ID}[[:space:]]+device" && is_booted; then
         echo "Android emulator already running at $DEVICE_ID"
     else
@@ -66,16 +79,6 @@ if [[ ${ENABLE_ANDROID_INTEGRATION_TESTS:-} == "true" ]]; then
             exit 1
         fi
     fi
-
-    # Only tear down an emulator this script itself started — leave one the
-    # developer already had running (e.g. from Android Studio) alone.
-    cleanup_emulator () {
-        if [[ $started_emulator -eq 1 ]]; then
-            echo "Shutting down Android emulator..."
-            (set -x; "$adb" -s "$DEVICE_ID" emu kill || true)
-        fi
-    }
-    trap cleanup_emulator EXIT
 
     for f in integration_test/*.dart; do
         (set -x; flutter test "$f" -d "$DEVICE_ID")

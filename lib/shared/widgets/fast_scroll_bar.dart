@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
@@ -287,7 +288,10 @@ class _FastScrollBarState extends State<FastScrollBar>
         _panelTopPadding +
         neighboursAbove * _approxNeighbourRowHeight +
         _approxCurrentRowHalfHeight;
-    return (thumbCenter - offsetToCurrentCenter).clamp(0.0, _listHeight - 20.0);
+    return (thumbCenter - offsetToCurrentCenter).clamp(
+      0.0,
+      math.max(0.0, _listHeight - 20.0),
+    );
   }
 
   // ---------------------------------------------------------------------------
@@ -314,9 +318,14 @@ class _FastScrollBarState extends State<FastScrollBar>
           return child;
         }
 
+        // _listHeight can be transiently smaller than _thumbHeight (e.g. a
+        // zero-height layout pass while this offstage page is still
+        // attaching within AppShell's IndexedStack) — floor the upper bound
+        // at 0 so the clamp range stays valid instead of throwing.
+        final maxThumbTop = math.max(0.0, _listHeight - _thumbHeight);
         final thumbTop = (_thumbFraction * (_listHeight - _thumbHeight)).clamp(
           0.0,
-          _listHeight - _thumbHeight,
+          maxThumbTop,
         );
 
         final currentGroupIndex = FastScrollBar.groupIndexForFraction(

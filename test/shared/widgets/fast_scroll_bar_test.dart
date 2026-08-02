@@ -193,6 +193,61 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
+  // Widget tests — degenerate zero-height layout pass
+  // ---------------------------------------------------------------------------
+
+  group('FastScrollBar — degenerate zero-height layout pass', () {
+    testWidgets(
+      'does not throw when the viewport height shrinks to zero while '
+      'content is still marked scrollable',
+      (tester) async {
+        final controller = ScrollController();
+
+        Widget buildAtHeight(double height) {
+          return MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                height: height,
+                child: FastScrollBar(
+                  controller: controller,
+                  itemCount: 10,
+                  groupAnchors: const [(0, 'A')],
+                  child: ListView(
+                    controller: controller,
+                    children: const [SizedBox(height: 2000.0)],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+
+        // Establish scrollable content at a normal viewport height first, so
+        // _hasScrollableContent becomes true.
+        await tester.pumpWidget(buildAtHeight(600));
+        await tester.pump();
+        controller.jumpTo(500);
+        await tester.pump();
+        expect(find.byKey(FastScrollBar.thumbKey), findsOneWidget);
+
+        // Relayout with a tight zero-height constraint while
+        // _hasScrollableContent is still true — this mirrors the transient
+        // zero-height LayoutBuilder pass observed via AppShell's
+        // IndexedStack during a simulated app restart (see
+        // lib/shared/widgets/fast_scroll_bar.dart's maxThumbTop /
+        // _peekPanelTop comments and design.md's "FastScrollBar clamp
+        // crash" decision). Before the math.max floor was added, this threw
+        // ArgumentError from num.clamp because _listHeight - _thumbHeight
+        // went negative.
+        await tester.pumpWidget(buildAtHeight(0));
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+      },
+    );
+  });
+
+  // ---------------------------------------------------------------------------
   // Widget tests — thumb hit area
   // ---------------------------------------------------------------------------
 

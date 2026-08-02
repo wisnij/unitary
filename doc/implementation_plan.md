@@ -498,12 +498,34 @@ Implementation Phases
      path
 
 4. Comprehensive testing
-   - Integration tests — none exist yet (no `integration_test/` directory). Add
-     end-to-end flows:
-     - Type an expression → see the converted result
-     - Switch worksheet template → per-template source values persist and restore
-     - Trigger a currency refresh → conversions reflect updated rates
-   - Widget tests — audit coverage gaps; the existing ~1838 tests are largely
+   - [x] Integration tests — `integration_test/` added (code review finding
+     F9): `boot_test.dart` (the real `main()` entry point, including
+     pre-first-frame currency-rate rehydration), `restart_test.dart`
+     (worksheet/settings/history persistence across a simulated restart,
+     against the real `SharedPreferences` plugin), `currency_refresh_test.dart`
+     (manual refresh flow against a mocked HTTP client, never the real
+     Frankfurter API) — all 8 scenarios pass repeatedly against a real
+     local Android emulator. A web/Chrome path was tried first and
+     abandoned as an unresolved upstream Flutter/DWDS bug (not fixable in
+     this project); Android needed none of that path's machinery
+     (`flutter drive`, chromedriver) and was already fully set up on the
+     dev machine used. Along the way, found and fixed a real production
+     bug (`FastScrollBar` crash on a degenerate zero-height layout pass,
+     confirmed unreachable via real single-launch usage). **Enabled and
+     confirmed passing in CI**: `ENABLE_ANDROID_INTEGRATION_TESTS: 'true'`
+     in `ci.yml`, observed passing on a real GitHub Actions run (PR #1).
+     Two CI-only issues surfaced only by watching real runs, both fixed:
+     `reactivecircus/android-emulator-runner` splits a multi-line
+     `script:` into separate `sh -c` invocations per line (fixed by moving
+     the test loop into `tool/run_integration_tests.sh`), and the emulator
+     itself is prone to intermittent boot/render hangs on GitHub-hosted
+     runners (bounded with a `timeout`-and-retry-only-on-timeout wrapper in
+     that same script, verified in both directions — a deliberately-broken
+     test failed the workflow without being retried). iOS-emulator coverage
+     remains deferred (not needed for this scope — see
+     `openspec/changes/integration-tests/design.md`). See [Design
+     Progress](design_progress.md) for the full account.
+   - Widget tests — audit coverage gaps; the existing ~2043 tests are largely
      unit-level
    - Manual testing on real devices — documented checklist; at least one real
      Android device pass

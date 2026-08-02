@@ -21,3 +21,39 @@ runs:
         path: coverage/cobertura.xml
     - run: dart run cobertura show
       shell: bash
+    - name: Run Android integration tests
+      # Off by default — flip by setting the ENABLE_ANDROID_INTEGRATION_TESTS
+      # env var to 'true' on the calling workflow/job (see
+      # .github/workflows/ci.yml). Confirmed passing both locally
+      # (repeatedly, against a real emulator) and in CI. The emulator itself
+      # is a known source of intermittent CI flakiness (e.g. a boot/render
+      # hang) independent of this project's code — tool/run_integration_tests.sh
+      # bounds and retries for that; see its comments.
+      #
+      # Placed after the coverage steps (rather than right after the unit
+      # tests) so an Android-only failure never blocks the coverage report
+      # from being generated/uploaded — that only needs `flutter test
+      # --coverage` to have passed.
+      #
+      # (A web/Chrome path was tried first and abandoned: it hits a
+      # long-standing, currently-unresolved upstream Flutter/DWDS bug —
+      # see openspec/changes/integration-tests/design.md. Native Android
+      # integration_test doesn't route through DWDS/web-driver at all, so
+      # none of that applies here — this is the plain
+      # `flutter test -d <device>` command, no separate driver/webdriver
+      # server needed.)
+      if: ${{ env.ENABLE_ANDROID_INTEGRATION_TESTS == 'true' }}
+      uses: reactivecircus/android-emulator-runner@v2
+      with:
+        api-level: 33
+        target: default
+        arch: x86_64
+        profile: pixel_6_pro
+        # A script file (not an inline multi-line block) because
+        # reactivecircus/android-emulator-runner runs each line of an inline
+        # `script:` as its own separate `sh -c` invocation (for per-line
+        # logging), which breaks multi-line control flow. This script also
+        # bounds each attempt with `timeout` (composite actions don't
+        # support the `timeout-minutes` step key) and retries only on an
+        # actual timeout (exit 124) — a real test failure is not retried.
+        script: bash tool/run_integration_tests.sh

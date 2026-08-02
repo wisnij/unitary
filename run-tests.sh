@@ -50,7 +50,16 @@ if [[ ${ENABLE_ANDROID_INTEGRATION_TESTS:-} == "true" ]]; then
             exit 1
         fi
         echo "Starting Android emulator ($avd_name)..."
-        (set -x; "$emulator" -avd "$avd_name" -no-window -no-audio -no-boot-anim &)
+        # `exec` inside the backgrounded subshell replaces the subshell's own
+        # process with the emulator, so $! below is the emulator's real pid
+        # (not a subshell that immediately exits after forking it).
+        (set -x; exec "$emulator" -avd "$avd_name" -no-window -no-audio -no-boot-anim) &
+        emulator_pid=$!
+        sleep 1
+        if ! kill -0 "$emulator_pid" 2>/dev/null; then
+            echo "Android emulator process failed to start" >&2
+            exit 1
+        fi
         started_emulator=1
         if ! timeout "${BOOT_TIMEOUT_SECONDS}s" bash -c wait_for_boot; then
             echo "Android emulator did not finish booting within ${BOOT_TIMEOUT_SECONDS}s" >&2

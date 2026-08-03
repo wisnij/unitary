@@ -59,6 +59,26 @@ void main() {
       expect(find.byType(TextField), findsOneWidget);
     });
 
+    testWidgets(
+      'inner TextField uses a plain-text keyboard with no autocorrect or '
+      'IME suggestions',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(_buildField(controller: controller, focusNode: focusNode)),
+        );
+
+        final field = tester.widget<TextField>(find.byType(TextField));
+        // The explicit text keyboard type is load-bearing: with maxLines: null
+        // and no explicit type, Flutter infers TextInputType.multiline, which
+        // Android IMEs treat as prose input and auto-capitalize.
+        expect(field.keyboardType, TextInputType.text);
+        expect(field.autocorrect, isFalse);
+        expect(field.enableSuggestions, isFalse);
+        // Soft-wrap must survive the explicit keyboard type.
+        expect(field.maxLines, isNull);
+      },
+    );
+
     testWidgets('overlay not shown initially (no text)', (tester) async {
       await tester.pumpWidget(
         _wrap(_buildField(controller: controller, focusNode: focusNode)),

@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Decouple UserSettings from Flutter
 
+### Fixed
+
+- Hint freeform input fields properly
+
 ### Documentation
 
 - Add code review findings

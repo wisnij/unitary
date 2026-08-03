@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: July 26, 2026*
+*Last Updated: August 3, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -572,3 +572,10 @@ Questions that arose during design but haven't been resolved:
   - `ci.yml`'s now-unused `env: ENABLE_ANDROID_INTEGRATION_TESTS` block is removed; `release.yml` needed no changes at all — it automatically picked up the Android step the next time it ran
   - `run-tests.sh`'s own `ENABLE_ANDROID_INTEGRATION_TESTS` check (a local shell variable gating whether the *local* script boots an emulator) is untouched — confirmed to be an independent mechanism that only shared a variable name with the removed CI toggle by convention, not a real coupling
   - Considered and rejected converting the toggle into a formal composite-action `input` with `default: 'true'` (keeping an opt-out available via `with:`) — no current or anticipated caller wants to opt out, so that would have been speculative complexity; a future genuine need for one is a small, well-motivated change to add back
+- *Freeform keyboard/IME configuration (August 3, 2026)* — Phase 9 bug fix from on-device use
+  - 2045 tests passing (1 new)
+  - On Android, tapping a freeform expression field opened the keyboard with auto-capitalization engaged — and unit lookup is case-sensitive, so an auto-capitalized `Ft` is an unknown-unit error.  Root cause (confirmed by a two-round on-device diagnostic): the long-expressions change's `maxLines: null` made Flutter infer `TextInputType.multiline`, which Android IMEs treat as prose and auto-capitalize even though `TextCapitalization.none` (the default) was already being sent
+  - Fix in `CompletionField`'s inner `TextField`: explicit `keyboardType: TextInputType.text` (overrides the `maxLines`-derived multiline type; wrapping is purely a rendering concern, so soft-wrap and Enter-to-submit are unaffected — verified on-device), plus `autocorrect: false` and `enableSuggestions: false` (unit identifiers like `kWh`/`tempF`/`mmHg` aren't dictionary words; the app's completion overlay is the domain-aware replacement).  Trade-off accepted: no swipe-typing in these fields on most IMEs
+  - Rejected alternatives: explicit `TextCapitalization.none` (already the default and already ignored in multiline mode) and `TextInputType.visiblePassword` (reliable but semantically a lie; the polite hint proved sufficient)
+  - New widget test pins all three properties (plus `maxLines: null`) on the inner `TextField`; existing `freeform-field-wrapping` scenarios guard the soft-wrap/Enter behavior
+  - Design artifacts: `openspec/changes/freeform-keyboard-type/`

@@ -351,6 +351,17 @@ class _CompletionFieldState extends ConsumerState<CompletionField> {
           // The explicit textInputAction passed by callers keeps Enter as
           // submit rather than the multiline default of inserting a newline.
           maxLines: null,
+          // Load-bearing: with maxLines != 1 and no explicit keyboardType,
+          // Flutter infers TextInputType.multiline, which Android IMEs treat
+          // as prose input and auto-capitalize (breaking case-sensitive unit
+          // lookup) even though TextCapitalization.none is sent.  Wrapping is
+          // purely a rendering concern, so a plain-text keyboard is safe here.
+          keyboardType: TextInputType.text,
+          // Expression content is unit identifiers and operators, not
+          // dictionary words; the completion overlay is the domain-aware
+          // replacement for IME suggestions.
+          autocorrect: false,
+          enableSuggestions: false,
           textInputAction: widget.textInputAction,
           onChanged: widget.onChanged,
           onSubmitted: widget.onSubmitted,

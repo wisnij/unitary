@@ -18,9 +18,9 @@ Project Status
 --------------
 
 **Current Phase:** Polish & Testing\
-**Last Updated:** July 13, 2026
+**Last Updated:** August 3, 2026
 
-Phases 0-8 are complete with 2034 passing tests.  The expression parser,
+Phases 0-8 are complete with 2045 passing tests.  The expression parser,
 evaluator, unit system foundation, advanced unit features, basic UI, complete
 unit database, worksheet mode, unit browser, cross-session data persistence,
 freeform conversion history, predictive completion, and currency support are
@@ -32,7 +32,9 @@ a WCAG contrast audit (a perceivable worksheet source-row border, compliant
 fast-scroll colors, and a regression test pinning every custom color pairing's
 contrast ratio in both themes), and soft-wrapping freeform input fields (long
 expressions wrap and grow the field vertically instead of scrolling out of
-sight; Enter still submits), and a measurement-first performance pass
+sight; Enter still submits — and the fields request a plain-text keyboard with
+autocorrect and IME suggestions disabled, so Android no longer auto-capitalizes
+the first character of case-sensitive unit names), and a measurement-first performance pass
 (checked-in benchmark and memory-report tools, rebuild-scope widget tests,
 on-device startup and frame profiling; no optimization crossed the action
 thresholds — see [doc/performance.md](doc/performance.md)) are done.  Currency exchange rates are fetched automatically on launch

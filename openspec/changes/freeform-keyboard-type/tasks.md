@@ -13,5 +13,5 @@
 ## 3. Verification and docs
 
 - [x] 3.1 Full test suite passes (`flutter test --reporter failures-only`) and `flutter analyze` is clean
-- [ ] 3.2 On-device check on Android: keyboard opens lowercase, no autocorrect/suggestion strip in the freeform fields, soft-wrap and Enter-to-submit still work
+- [x] 3.2 On-device check on Android: keyboard opens lowercase, no autocorrect/suggestion strip in the freeform fields, soft-wrap and Enter-to-submit still work
 - [x] 3.3 Update `doc/design_progress.md` (and the README status paragraph if warranted) with a dated entry for this fix

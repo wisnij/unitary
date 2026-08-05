@@ -276,11 +276,11 @@ Version Control
 
 - Use conventional commits format
 - Examples:
-  - `feat: add trigonometric functions to parser`
-  - `fix: correct dimension calculation for derived units`
-  - `docs: update README with installation instructions`
-  - `refactor: simplify lexer token generation`
-  - `test: add unit tests for quantity arithmetic`
+  - `feat: Add trigonometric functions to parser`
+  - `fix: Correct dimension calculation for derived units`
+  - `docs: Update README with installation instructions`
+  - `refactor: Simplify lexer token generation`
+  - `test: Add unit tests for quantity arithmetic`
 
 ### Pull Request Guidelines
 

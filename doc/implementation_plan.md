@@ -122,7 +122,7 @@ Implementation Phases
 
 **Completed:** February 7, 2026
 
-**Detailed Plan:** See [Phase 2 Plan](phase2_plan.md)
+**Detailed Plan:** See [Phase 2 Plan](archive/phase2_plan.md)
 
 ---
 
@@ -195,7 +195,7 @@ Implementation Phases
 
 **Completed:** February 16, 2026
 
-**Detailed Plan:** See [Phase 4 Plan](phase4_plan.md)
+**Detailed Plan:** See [Phase 4 Plan](archive/phase4_plan.md)
 
 ---
 
@@ -237,7 +237,7 @@ Implementation Phases
 
 2. Create worksheet UI components
    - [x] Multi-row input grid with label, expression, and numeric value fields
-   - [x] Real-time cross-row updates with 500ms debounce
+   - [x] Real-time cross-row updates (synchronous per-keystroke recompute; no debounce)
    - [x] Per-row error display on dimension mismatch
 
 3. Build worksheet management
@@ -540,13 +540,26 @@ Implementation Phases
 6. Documentation
    - Code documentation — dartdoc pass on public APIs of the core domain and
      feature providers
-   - Audit the design documents under `doc/` and decide which to keep, update, or
-     archive (many predate the implementation and may be stale)
-   - Rewrite the README to reflect the shipped app rather than the pre-implementation
-     design phase (the current "Project Structure" still says `lib/` is "not yet
-     created"; the structure, status, and feature list need to describe the
-     working app)
-   - Contributing guidelines — add a `CONTRIBUTING.md` (does not exist yet)
+   - [x] Audit the design documents under `doc/` and decide which to keep,
+     update, or archive — done August 5, 2026 (code review F13): completed
+     phase plans (`phase1_plan`, `phase2_plan`, `phase4_plan`,
+     `quantity_implementation_plan`) moved to `doc/archive/`;
+     `architecture.md` rewritten against the shipped code (real dependency
+     list, shipped subsystem descriptions, actual source tree, duplicated
+     stale phase list removed); `best_practices.md` updated to match actual
+     practice (Riverpod 3 patterns, shared test harness, real branch
+     strategy); `evaluation_pipeline.md` verified accurate and kept
+   - [x] Rewrite the README to reflect the shipped app — done August 5, 2026
+     (code review F12, expanded scope): full user-first rewrite — install
+     options (release APK, hosted web app, source), feature tour with
+     engine-verified example conversions, development/build/test
+     instructions, curated doc links, brief status section; design-phase
+     framing and duplicated roadmap dropped; intro paragraphs and License
+     section preserved verbatim
+   - [x] Contributing guidelines — `CONTRIBUTING.md` added August 5, 2026
+     (code review F15): bug-report guidance, dev setup incl. pre-commit
+     hooks, change workflow (tests first, full suite + analyze), PR
+     guidelines, license terms; distilled from `best_practices.md`
 
 **Deliverable:** MVP ready for release
 

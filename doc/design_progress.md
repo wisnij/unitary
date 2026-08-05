@@ -66,7 +66,7 @@ The following areas have been thoroughly designed and documented:
 - **Result formatting**: Value + canonical unit string; decimal/scientific/engineering notation
 - **Dark mode**: Three-state (system/dark/light) mapping to Flutter ThemeMode
 - **Settings model**: precision (2-10, default 6), notation, darkMode, evaluationMode
-- **Document**: [phase4_plan.md](phase4_plan.md)
+- **Document**: [phase4_plan.md](archive/phase4_plan.md)
 
 ### Phase 6: Worksheet Mode
 
@@ -134,7 +134,7 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
 
 ### 4. User Preferences & State Management
 
-**Current State**: Basic settings model designed for Phase 4 (precision, notation, darkMode, evaluationMode).  Riverpod chosen for state management; SharedPreferences for persistence.  See [phase4_plan.md](phase4_plan.md).
+**Current State**: Basic settings model designed for Phase 4 (precision, notation, darkMode, evaluationMode).  Riverpod chosen for state management; SharedPreferences for persistence.  See [phase4_plan.md](archive/phase4_plan.md).
 
 **Needs Detail On** (for later phases):
 
@@ -149,7 +149,7 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
 
 ### 5. UI/UX Design
 
-**Current State**: Freeform mode UI fully designed for Phase 4 (screen layouts, navigation, input/output fields, result display, settings screen).  See [phase4_plan.md](phase4_plan.md).
+**Current State**: Freeform mode UI fully designed for Phase 4 (screen layouts, navigation, input/output fields, result display, settings screen).  See [phase4_plan.md](archive/phase4_plan.md).
 
 **Needs Detail On**:
 
@@ -227,15 +227,15 @@ Next Steps
 When resuming design work, recommended order of priority:
 
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
-2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
+2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see archive/phase2_plan.md) — design and implementation done
 3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
-4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see phase4_plan.md) — design and implementation done
+4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see archive/phase4_plan.md) — design and implementation done
 5. ✅ ~~**GNU Units Database Import**~~ - **COMPLETE** — Phase 5, full pipeline implemented
 6. ✅ ~~**Worksheet System**~~ - **COMPLETE** — Phase 6, see openspec/changes/worksheet-mode/
 7. ✅ ~~**Browse Mode**~~ - **COMPLETE** — Phase 7, see openspec/changes/browse-units/
 8. ✅ ~~**User Data Persistence**~~ - **COMPLETE** — Phase 7 (persistence), see openspec/changes/user-data-persistence/
 9. ✅ ~~**Currency Rate Management**~~ - **COMPLETE** — Phase 8, see openspec/changes/currency-support/
-10. **Phase 9: Polish & Testing** - **IN PROGRESS** — application icon done (see openspec/changes/archive/2026-06-18-app-icon/); remaining: UI/UX refinement, performance, comprehensive testing, and documentation cleanup (audit/keep-vs-archive the `doc/` design documents, rewrite the README)
+10. **Phase 9: Polish & Testing** - **IN PROGRESS** — application icon, UI/UX refinement, performance measurement, integration tests, and documentation cleanup (doc audit, README rewrite, CONTRIBUTING.md — August 5, 2026) done; remaining: widget-test coverage audit, manual device-testing checklist, coverage verification, dartdoc pass
 11. **Testing Strategy** - Define before/during implementation
 12. **Error Handling Details** - Refine during implementation
 
@@ -258,7 +258,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: August 3, 2026*
+*Last Updated: August 5, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -339,7 +339,7 @@ Questions that arose during design but haven't been resolved:
 - *Circular unit definition detection (February 26, 2026)*
   - 848 tests passing (3 new)
   - `resolveUnit` in `unit_resolver.dart` now accepts optional `Set<String>? visited` parameter (the active resolution stack); throws `EvalException` immediately on re-entry for the same unit instead of stack-overflowing
-  - Keys are namespace-qualified (`"prefix:<id>"` vs `"<id>"`) so a `PrefixUnit` and a same-named `DerivedUnit` (e.g. prefix `US` and unit `US`) are tracked independently
+  - Keys are namespace-qualified (`"<id>-"` for a `PrefixUnit` vs `"<id>"` for a unit; see `_cacheKey` in `unit_repository.dart`) so a `PrefixUnit` and a same-named `DerivedUnit` (e.g. prefix `US` and unit `US`) are tracked independently
   - `EvalContext` gains an optional `visited` field (defaults to `const <String>{}` for backward compat with `const EvalContext()`); `UnitNode.evaluate` threads `context.visited` into both `resolveUnit` calls
   - `ExpressionParser` gains an optional `visited` field, forwarded to `EvalContext`, so the resolution stack is shared across the full `resolveUnit` → `ExpressionParser` → `UnitNode` → `resolveUnit` call chain
   - `EvalException` propagates through `ExpressionParser.evaluate` → `freeform_provider` `on UnitaryException` handler — no UI changes required
@@ -376,7 +376,7 @@ Questions that arose during design but haven't been resolved:
   - `WorksheetRowKind` sealed class (`UnitRow` | `FunctionRow`); `WorksheetRow` and `WorksheetTemplate` models
   - 10 predefined templates: Length (9), Mass (6), Time (6), Temperature (4), Volume (9), Area (8), Speed (5), Pressure (6), Energy (7), Digital Storage (6)
   - `computeWorksheet()` engine in `worksheet_engine.dart`: ratio-based for `UnitRow`, `func.call()`/`callInverse()` for `FunctionRow`, per-row error strings on dimension mismatch
-  - `WorksheetNotifier` (non-`autoDispose`): 500 ms debounce, "last keystroke wins" source, per-template in-session value maps
+  - `WorksheetNotifier` (non-`autoDispose`): synchronous per-keystroke recompute (no debounce — the engine runs in ~150–190 µs), "last keystroke wins" source, per-template in-session value maps
   - `WorksheetScreen` with `WorksheetRowWidget` (label + expression + numeric `TextField`) and AppBar `DropdownButton` for template selection
   - Drawer "Worksheet" tile enabled; navigates to `WorksheetScreen`
   - Design artifacts: `openspec/changes/worksheet-mode/`
@@ -579,3 +579,11 @@ Questions that arose during design but haven't been resolved:
   - Rejected alternatives: explicit `TextCapitalization.none` (already the default and already ignored in multiline mode) and `TextInputType.visiblePassword` (reliable but semantically a lie; the polite hint proved sufficient)
   - New widget test pins all three properties (plus `maxLines: null`) on the inner `TextField`; existing `freeform-field-wrapping` scenarios guard the soft-wrap/Enter behavior
   - Design artifacts: `openspec/changes/freeform-keyboard-type/`
+- *Documentation cleanup (August 5, 2026)* — code review findings F12/F13/F14/F15 done as one direct-edit documentation change (no OpenSpec artifacts); most of the Phase 9 "Documentation" task
+  - No code changes; test count unchanged (2045)
+  - **F13 (doc audit)**: completed phase plans (`phase1_plan.md`, `phase2_plan.md`, `phase4_plan.md`, `quantity_implementation_plan.md`) moved to `doc/archive/`, live links updated (`openspec/` archives left as historical records); `architecture.md` rewritten against the shipped code — real dependency list, grammar/token/AST descriptions matching the parser source, shipped descriptions of the unit-database pipeline, functions, worksheets, currency, and UI shell, actual source tree, and removal of its duplicated pre-implementation phase list (which contradicted the maintained `implementation_plan.md` numbering); `best_practices.md` updated in place (structure pointer instead of a stale tree, Riverpod 3 `NotifierProvider`/must-override patterns, actual persistence repositories, shared test harness + integration suite, real `<user>/<yyyymmdd>-<topic>` branch naming, `performance.md` pointer); `evaluation_pipeline.md` verified against the code (lookup order incl. plural-stripping minimum-length guards, prefix splitting, the `week` → `day` → `hour` → `minute` → `s` chain) and kept unchanged
+  - **F12 (README, expanded scope)**: rewritten from scratch, user-first — install options (release APK, hosted web app at wisnij.github.io/unitary, source), feature tour with example conversions verified against the real engine via a throwaway `dart run` script (`110.95914 mph`, `4.0776307 m`), then developer material (build/test instructions, curated `doc/` links, icon regeneration) and a brief prose status section; all design-phase framing (roadmap, "planned" features/dependencies, duplicated status) dropped; per explicit requirement, the two intro paragraphs and the License section (incl. Contributors) preserved verbatim
+  - **F14 (stale statements)**: worksheet "500 ms debounce" corrected to synchronous per-keystroke recompute in both tracking docs; circular-definition visited-key description corrected from `"prefix:<id>"` to the actual trailing-`-` convention (`_cacheKey`, `unit_repository.dart`)
+  - **F15**: new `CONTRIBUTING.md` distilled from `best_practices.md` — bug-report guidance, dev setup incl. pre-commit hooks, change workflow (tests first; `flutter test --reporter failures-only` + `flutter analyze` before a PR), PR guidelines (focused PRs, conventional commits, no new dependencies without discussion, never hand-edit generated files), AGPL terms for contributions
+  - Noticed while fact-checking: `findUnitWithPrefix`'s doc comment in `unit_repository.dart` lists plural stripping as a separate step *after* standalone-prefix matching, but the implementation runs it inside `findUnit()` (exact → plural) *before* prefix splitting; behavior is correct (`_findPluralIn`'s minimum-length guards keep `"ms"` resolving as milli+second), only the comment's ordering is off — not fixed here (docs-only change)
+  - Remaining from the Phase 9 Documentation task: the dartdoc pass on public APIs

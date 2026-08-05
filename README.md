@@ -6,8 +6,7 @@ Unitary
 
 A powerful, flexible unit conversion mobile application targeting scientific and
 technically-minded users.  Features both freeform calculator-style expression
-evaluation and worksheet-based conversion modes, with support for custom
-user-defined units and dimensions.
+evaluation and worksheet-based conversion modes.
 
 Unitary is [free software](https://www.gnu.org/philosophy/free-sw.html), both libre and
 gratis.  It does not and will never contain ads, paywalls, subscriptions, in-app

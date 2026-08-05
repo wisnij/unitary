@@ -14,10 +14,10 @@ Code Organization
 See [Code Organization in architecture.md](architecture.md#code-organization)
 for the current source tree.  The essentials:
 
-- `lib/core/domain/` — pure Dart (no Flutter): models, parser, unit system
-- `lib/features/<feature>/` — one directory per feature, subdivided into
+- `lib/core/domain/` – pure Dart (no Flutter): models, parser, unit system
+- `lib/features/<feature>/` – one directory per feature, subdivided into
   `data/`, `models/`, `presentation/`, `services/`, and `state/` as needed
-- `lib/shared/` — app shell, responsive layout, and cross-feature widgets
+- `lib/shared/` – app shell, responsive layout, and cross-feature widgets
   and utilities
 - `test/` mirrors `lib/` directory-for-directory; `tool/` executables each
   pair with a testable `*_lib.dart`
@@ -90,7 +90,7 @@ SharedPreferences (`SettingsRepository`, `WorksheetRepository`,
 - Handle serialization and tolerate missing/malformed stored data by
   falling back to defaults
 
-(`UnitRepository`, despite the name, is not a persistence repository — it is
+(`UnitRepository`, despite the name, is not a persistence repository – it is
 the in-memory registry of units, prefixes, and functions in the core domain
 layer.)
 
@@ -164,11 +164,11 @@ test file.
 The `integration_test/` suite runs against a real Android emulator (locally
 via `tool/run_integration_tests.sh`, and unconditionally in CI):
 
-- `boot_test.dart` — the real `main()` entry point, including pre-first-frame
+- `boot_test.dart` – the real `main()` entry point, including pre-first-frame
   currency-rate rehydration
-- `restart_test.dart` — persistence across a simulated restart, against the
+- `restart_test.dart` – persistence across a simulated restart, against the
   real `SharedPreferences` plugin
-- `currency_refresh_test.dart` — manual refresh flow against a mocked HTTP
+- `currency_refresh_test.dart` – manual refresh flow against a mocked HTTP
   client (never the real rates API)
 
 ### Test Organization

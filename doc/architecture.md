@@ -71,7 +71,7 @@ Architecture Overview
 ┌─────────────────────────────────────────┐
 │           Core Domain Layer             │
 │  (Models, parser/evaluator, unit        │
-│   system — pure Dart, no Flutter)       │
+│   system – pure Dart, no Flutter)       │
 └─────────────────────────────────────────┘
               ↕
 ┌─────────────────────────────────────────┐
@@ -159,17 +159,17 @@ Notable properties:
 
 **AST Node Types** (`ast.dart`):
 
-- `NumberNode` — numeric literal
-- `UnitNode` — unit identifier (resolved via `UnitRepository` at evaluation
+- `NumberNode` – numeric literal
+- `UnitNode` – unit identifier (resolved via `UnitRepository` at evaluation
   time; unknown names throw `EvalException`)
-- `BinaryOpNode` — binary operators (+, -, *, /, ^, |) including implicit
+- `BinaryOpNode` – binary operators (+, -, *, /, ^, |) including implicit
   multiplication
-- `UnaryOpNode` — unary minus/plus
-- `FunctionCallNode` — builtin and defined function calls, including inverse
+- `UnaryOpNode` – unary minus/plus
+- `FunctionCallNode` – builtin and defined function calls, including inverse
   application via `~`
-- `FunctionNameNode` — a bare function name used as a query or conversion
+- `FunctionNameNode` – a bare function name used as a query or conversion
   target (not an expression)
-- `DefinitionRequestNode` — a definition lookup query
+- `DefinitionRequestNode` – a definition lookup query
 
 **Evaluator:**
 
@@ -201,12 +201,12 @@ integer exponents.  For example, velocity is `{m: 1, s: -1}` and force is
 
 Operations:
 
-- `multiply(other)` — adds exponents (for multiplication)
-- `divide(other)` — subtracts exponents (for division)
-- `power(n)` — multiplies all exponents by n
-- `powerRational(r)` — multiplies by rational exponent, validates divisibility
-- `isConformableWith(other)` — checks dimensional equality
-- `canonicalRepresentation()` — human-readable string like `kg m / s^2`
+- `multiply(other)` – adds exponents (for multiplication)
+- `divide(other)` – subtracts exponents (for division)
+- `power(n)` – multiplies all exponents by n
+- `powerRational(r)` – multiplies by rational exponent, validates divisibility
+- `isConformableWith(other)` – checks dimensional equality
+- `canonicalRepresentation()` – human-readable string like `kg m / s^2`
 
 Zero exponents are stripped automatically.  Two dimensions are equal iff they
 have the same unit-exponent pairs.
@@ -226,7 +226,7 @@ stored separately in `UnitRepository` via `registerPrefix()`, so prefix symbols
 The `findUnitWithPrefix(name)` method resolves names using this priority order:
 
 1. Exact match in regular units (including plural stripping)
-2. Prefix splitting — longest prefix first, remainder looked up as a regular
+2. Prefix splitting – longest prefix first, remainder looked up as a regular
    unit (with plural stripping)
 3. Standalone prefix match (prefix name with no remainder)
 4. No match → returns empty `UnitMatch`
@@ -245,13 +245,13 @@ irregular plurals (like "feet" for "foot") need to be listed as explicit aliases
 
 Unit subclasses define how units convert to primitive base units:
 
-- **`PrimitiveUnit`** — fundamental units that define their own dimension
+- **`PrimitiveUnit`** – fundamental units that define their own dimension
   (e.g., meter → `{m: 1}`).  Optionally `isDimensionless` for units like
   radian and steradian.
-- **`DerivedUnit`** — units defined by an expression string that is parsed
+- **`DerivedUnit`** – units defined by an expression string that is parsed
   and evaluated through the full pipeline (e.g., newton: `"kg m/s^2"`,
   mile: `"5280 ft"`).
-- **`PrefixUnit`** — a `DerivedUnit` subclass for SI prefixes
+- **`PrefixUnit`** – a `DerivedUnit` subclass for SI prefixes
   (e.g., kilo: `"1000"`, milli: `"0.001"`).
 
 Unit resolution is handled by `UnitRepository.resolveUnit(unit)`, which
@@ -283,12 +283,12 @@ through this layer.
 `Quantity` represents a physical quantity: a numeric `value` (double) combined
 with a `Dimension`.  All arithmetic operations maintain dimensional consistency:
 
-- `add`/`subtract` — requires conformable dimensions, throws `DimensionException` if not
-- `multiply`/`divide` — combines dimensions (adds/subtracts exponents)
-- `power(exponent)` — for dimensioned quantities, requires rational exponent with
+- `add`/`subtract` – requires conformable dimensions, throws `DimensionException` if not
+- `multiply`/`divide` – combines dimensions (adds/subtracts exponents)
+- `power(exponent)` – for dimensioned quantities, requires rational exponent with
   integer-valued result dimensions; uses continued fractions to recover rational
   approximation from double exponents
-- `negate`/`abs` — preserves dimension
+- `negate`/`abs` – preserves dimension
 
 NaN values are rejected at construction time (fail-fast).  Division by zero
 throws `EvalException`.
@@ -302,10 +302,10 @@ whose dimension mentions non-primitive units into primitive base units.
 functions: id, aliases, arity, domain/range specs (`QuantitySpec`, with
 dimension and bounds checking), `call()`, and optional `callInverse()`.
 
-- **`BuiltinFunction`** — wraps a Dart implementation; the trigonometric,
+- **`BuiltinFunction`** – wraps a Dart implementation; the trigonometric,
   logarithmic, and root functions (sin, cos, tan, asin, acos, atan, ln, log,
   exp, sqrt, cbrt, abs) are registered this way.
-- **`DefinedFunction`** (`defined_function.dart`) — evaluates a forward
+- **`DefinedFunction`** (`defined_function.dart`) – evaluates a forward
   expression string with parameter bindings, imported from the GNU Units
   database (e.g. `tempF`, `wiregauge`); single-parameter functions with an
   inverse expression support inverse application (`~tempF`).  Direct and
@@ -349,8 +349,8 @@ lib/core/domain/data/predefined_units.dart  (generated Dart)
   temperature scales).
 - **Engine** (`worksheet_engine.dart`): `computeWorksheet()` takes the
   template, source row, and source value, and computes every other row's
-  display value — unit-ratio math for `UnitRow`s, `call()`/`callInverse()`
-  for `FunctionRow`s — returning per-row error strings on dimension mismatch.
+  display value – unit-ratio math for `UnitRow`s, `call()`/`callInverse()`
+  for `FunctionRow`s – returning per-row error strings on dimension mismatch.
   The engine is pure Dart and synchronous (~150–190 µs per full recompute).
 - **Templates**: 12 predefined worksheets (Angle, Area, Currency, Digital
   Storage, Energy, Length, Mass, Pressure, Speed, Temperature, Time, Volume)
@@ -395,16 +395,16 @@ State Management
 
 Riverpod throughout:
 
-- `settingsProvider` (`SettingsNotifier`) — user settings, persisted via
+- `settingsProvider` (`SettingsNotifier`) – user settings, persisted via
   `SettingsRepository`
-- `freeformProvider` / `freeformHistoryProvider` — freeform evaluation state
+- `freeformProvider` / `freeformHistoryProvider` – freeform evaluation state
   and the persistent history of successful conversions
-- `worksheetProvider` (`WorksheetNotifier`) — active template, per-template
+- `worksheetProvider` (`WorksheetNotifier`) – active template, per-template
   values, persisted source cells
-- `browserProvider` (`BrowserNotifier`) — browse catalog, view mode, search,
+- `browserProvider` (`BrowserNotifier`) – browse catalog, view mode, search,
   selection
-- `currencyStatusProvider` — rate freshness, refresh in-flight/cooldown state
-- `unitRepositoryProvider` — the shared `UnitRepository` singleton, with a
+- `currencyStatusProvider` – rate freshness, refresh in-flight/cooldown state
+- `unitRepositoryProvider` – the shared `UnitRepository` singleton, with a
   version counter provider that dependents watch to react to dynamic-layer
   changes (e.g. recomputing worksheets after a rate refresh)
 

@@ -44,8 +44,8 @@ Making Changes
 --------------
 
 1. Create a branch off `main`.
-2. Write tests for the new behavior — including edge cases and failure modes
-   — ideally before the implementation code.
+2. Write tests for the new behavior – including edge cases and failure modes
+   – ideally before the implementation code.
 3. Make your change.  Follow the existing code conventions; see
    [Development Best Practices](doc/best_practices.md) for structure,
    patterns, and style, and [Core Architecture](doc/architecture.md) for how
@@ -61,7 +61,7 @@ Making Changes
 
 ### Guidelines
 
-- **One feature or fix per pull request** — keep PRs focused and reasonably
+- **One feature or fix per pull request** – keep PRs focused and reasonably
   sized
 - **Tests are required** for new functionality; widget tests should use the
   shared harness in `test/helpers/` rather than hand-rolling provider
@@ -69,7 +69,7 @@ Making Changes
 - **Commit messages** use the
   [conventional commits](https://www.conventionalcommits.org/) format:
   `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`, etc.
-- **No new dependencies** without discussion first — the dependency list is
+- **No new dependencies** without discussion first – the dependency list is
   deliberately lean
 - **Don't edit generated files** (`lib/core/domain/data/predefined_units.dart`)
   by hand; change the sources under `assets/units/` and let the pre-commit

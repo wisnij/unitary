@@ -182,7 +182,7 @@ re-ranked alongside new findings.
   give it `overflow: TextOverflow.ellipsis` inside a `Flexible`; add a
   narrow-width widget test.
 
-### F9: No integration tests
+### F9: No integration tests — DONE (August 2, 2026)
 
 - **Category:** testing · **Effort:** M · **Already a Phase 9 task**
 - **Evidence:** no `integration_test/` directory exists; the 82 test files
@@ -193,6 +193,21 @@ re-ranked alongside new findings.
   and restore; (3) trigger a currency refresh (against a faked HTTP layer) →
   conversions reflect updated rates.  Build the frame-timing harness here as
   part of the F7 fix rather than as a separate effort.
+- **Resolution:** `integration_test/` added with `boot_test.dart` (the real
+  `main()` entry point, including pre-first-frame currency-rate
+  rehydration), `restart_test.dart` (worksheet/settings/history persistence
+  across a simulated restart against the real `SharedPreferences` plugin),
+  and `currency_refresh_test.dart` (manual refresh flow against a mocked
+  HTTP client) — 8 scenarios, all passing repeatedly on a real Android
+  emulator and running unconditionally in CI for every workflow using
+  `./.github/actions/test`.  A web/Chrome path was tried first and abandoned
+  as an unresolved upstream Flutter/DWDS bug.  Along the way a real
+  production bug was found and fixed (`FastScrollBar` crash on a degenerate
+  zero-height layout pass).  The frame-timing harness (`traceAction`) was
+  *not* built here — it stays with the F7 fix as originally planned, and
+  now has a suite to live in.  See
+  `openspec/changes/archive/2026-08-02-integration-tests/` for the full
+  design record.
 
 ### F10: Widget-test harness boilerplate is repeated across ~28 files — DONE (July 26, 2026)
 
@@ -361,13 +376,16 @@ Suggested sequencing
   where it belongs.~~ **Done** (July 22, 2026,
   `decouple-usersettings-flutter`).
 - ~~F10 (shared widget-test harness)~~ **Done** (July 26, 2026,
-  `test-harness-cleanup`) — done standalone rather than bundled with F9;
-  F9 (`integration_test/`) remains open and can now build on the harness.
+  `test-harness-cleanup`) — done standalone rather than bundled with F9.
+- ~~F9 (`integration_test/`)~~ **Done** (August 2, 2026,
+  `integration-tests`) — Android-emulator suite, enabled unconditionally
+  in CI; the frame-timing harness stays with F7.
 
 **Do with its natural trigger, not standalone:**
 
 - F7 (fast-scroll rebuild scoping) — when performance polish is next on the
-  agenda; build the frame-timing harness into F9's integration tests.
+  agenda; build the frame-timing harness into the now-existing
+  `integration_test/` suite (F9).
 - F4 (dynamic-layer consistency) — before or at the start of Phase 11
   (custom units); cheap enough to do sooner if touching `UnitRepository`.
 - F3 (UnitRepository split/rename) — bundle with Phase 11 registration work.

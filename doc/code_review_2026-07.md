@@ -28,8 +28,9 @@ urgent; the highest-value items are small.
 3. **F10** — ~~Consolidate the widget-test harness boilerplate; it is the
    single biggest friction multiplier for future work.~~ **Done**
    (July 26, 2026).
-4. **F12/F13** — Do the README rewrite and doc audit now (both already
-   Phase 9 tasks); the README has outright broken links.
+4. **F12/F13** — ~~Do the README rewrite and doc audit now (both already
+   Phase 9 tasks); the README has outright broken links.~~ **Done**
+   (August 5, 2026, together with F14/F15).
 5. **F6** — ~~Delete the leftover `findConformable` debug instrumentation
    (two-minute fix).~~ **Done** (July 19, 2026).
 
@@ -257,7 +258,7 @@ re-ranked alongside new findings.
   or `lcov --summary`).  Scoping matters: a repo-wide threshold would be
   dominated by UI files and the generated units file.
 
-### F12: README describes the pre-implementation project and has broken links
+### F12: README describes the pre-implementation project and has broken links — DONE (August 5, 2026)
 
 - **Category:** docs · **Effort:** M · **Already a Phase 9 task**
 - **Evidence:** `README.md:268` links `design_progress.md` and
@@ -268,10 +269,31 @@ re-ranked alongside new findings.
   sections partially duplicate `implementation_plan.md`.
 - **Fix:** the planned Phase 9 rewrite; fold in the two link fixes, describe
   the shipped app, and link out to `doc/` rather than duplicating status.
+- **Resolution:** rewritten from scratch with a larger scope than the fix
+  above: user-facing first (install options — release APK, hosted web app,
+  build from source — then a feature tour with example conversions verified
+  against the real engine), developers second (build/test instructions,
+  curated `doc/` links).  All design-phase framing (roadmap, "planned"
+  features, design-session history) dropped in favor of links to
+  `implementation_plan.md`; the intro paragraphs and License section were
+  preserved verbatim.
 
-### F13: Design-doc audit — keep / update / archive classification
+### F13: Design-doc audit — keep / update / archive classification — DONE (August 5, 2026)
 
 - **Category:** docs · **Effort:** S–M · **Executes the Phase 9 audit task**
+- **Resolution:** executed as classified below.  The four completed phase
+  plans moved to `doc/archive/` with all live links updated
+  (`implementation_plan.md`, `design_progress.md`; `openspec/` archives left
+  as historical records).  `architecture.md` got a full pass against the
+  shipped code: real dependency list, grammar/token/AST descriptions matching
+  the parser, shipped descriptions for the unit database pipeline, functions,
+  worksheets, currency, and UI shell, the actual source tree, and removal of
+  its duplicated (and by now contradictory) copy of the phase plan.
+  `best_practices.md` was updated in place (structure pointer, Riverpod 3
+  patterns, actual persistence repositories, shared test harness +
+  integration suite, real branch naming, `performance.md` pointer).
+  `evaluation_pipeline.md` was verified against the code (lookup order,
+  prefix splitting, the `week` definition chain) and kept unchanged.
 
   | Document                                                                                | Verdict            | Notes                                                                                                                                                         |
   |-----------------------------------------------------------------------------------------|--------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -285,7 +307,7 @@ re-ranked alongside new findings.
   | `evaluation_pipeline.md`                                                                | **verify**         | pipeline unchanged since February, likely still accurate; confirm and keep                                                                                    |
   | `phase1_plan.md`, `phase2_plan.md`, `phase4_plan.md`, `quantity_implementation_plan.md` | **archive**        | completed phase plans with status banners; move to `doc/archive/` (README/design_progress links need updating to match)                                       |
 
-### F14: Stale statements in tracking docs
+### F14: Stale statements in tracking docs — DONE (August 5, 2026)
 
 - **Category:** docs · **Effort:** S
 - **Evidence:** two known inaccuracies worth fixing while editing anyway:
@@ -295,9 +317,12 @@ re-ranked alongside new findings.
   describes the circular-definition visited keys as `"prefix:<id>"` while
   the code uses a `'-'` suffix (`unit_repository.dart:353`,
   `_cacheKey`).
-- **Fix:** correct both while doing the F13 doc pass.
+- **Resolution:** both corrected at source: the Phase 6 notes in
+  `implementation_plan.md` and `design_progress.md` now describe the
+  synchronous per-keystroke recompute, and the visited-key description now
+  matches `_cacheKey`'s trailing-`-` convention.
 
-### F15: No `CONTRIBUTING.md`
+### F15: No `CONTRIBUTING.md` — DONE (August 5, 2026)
 
 - **Category:** docs · **Effort:** S · **Already a Phase 9 task**
 - **Evidence:** the README's "Contributing" section promises guidelines that
@@ -306,6 +331,13 @@ re-ranked alongside new findings.
 - **Fix:** as planned; the content largely exists already in
   `best_practices.md` and `CLAUDE.local.md`-style workflow rules — distill
   rather than write from scratch.
+- **Resolution:** `CONTRIBUTING.md` added, distilled from
+  `best_practices.md`: bug-report guidance, development setup (including the
+  pre-commit hooks), the change workflow (tests first, full suite +
+  `flutter analyze` before a PR), PR guidelines (focused PRs, conventional
+  commits, no new dependencies without discussion, never hand-edit generated
+  files), and AGPL licensing terms for contributions.  The rewritten README
+  links to it.
 
 ### F16: Minor code-level cleanups (optional, batch opportunistically)
 
@@ -368,8 +400,10 @@ Suggested sequencing
 **Fold into remaining Phase 9 work** (all small, most already planned):
 
 - ~~F6 (delete debug instrumentation) — immediately.~~ **Done** (July 19, 2026).
-- F12 + F13 + F14 + F15 — one documentation change (the planned Phase 9 doc
-  cleanup, now with a concrete worklist).
+- ~~F12 + F13 + F14 + F15 — one documentation change (the planned Phase 9
+  doc cleanup, now with a concrete worklist).~~ **Done** (August 5, 2026, as
+  one documentation change; the README rewrite ran wider than F12's fix —
+  full user-first rewrite from scratch).
 - F8 (dropdown overflow) — small UI fix.
 - F11 (coverage threshold) — small CI change.
 - ~~F1 (UserSettings decoupling) — small, and moves the worksheet benchmark

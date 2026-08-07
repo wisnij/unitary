@@ -66,7 +66,7 @@ The following areas have been thoroughly designed and documented:
 - **Result formatting**: Value + canonical unit string; decimal/scientific/engineering notation
 - **Dark mode**: Three-state (system/dark/light) mapping to Flutter ThemeMode
 - **Settings model**: precision (2-10, default 6), notation, darkMode, evaluationMode
-- **Document**: [phase4_plan.md](phase4_plan.md)
+- **Document**: [phase4_plan.md](archive/phase4_plan.md)
 
 ### Phase 6: Worksheet Mode
 
@@ -85,7 +85,9 @@ The following areas have been thoroughly designed and documented:
 Areas That Need More Detail
 ---------------------------
 
-The following areas have been identified but need deeper design work:
+Status of the areas originally flagged as needing deeper design work.  Most
+are now implemented; each entry notes what (if anything) still needs design
+for later phases:
 
 ### 1. Worksheet System — **COMPLETE (Phase 6)**
 
@@ -97,30 +99,14 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
 - Sidebar pinning of worksheets (future)
 - Unit list rows (`ft;in` multi-field display, future)
 
-### 2. GNU Units Database Import
+### 2. GNU Units Database Import — **COMPLETE (Phase 5 + Defined Functions)**
 
-**Current State**: Identified as data source for units
-
-**Needs Detail On**:
-
-- GNU Units file format
-  - Structure and syntax of the definitions file
-  - How units, prefixes, and constants are represented
-- Parsing strategy
-  - Parser implementation approach
-  - Handling of different definition types
-  - Mapping GNU Units syntax to our internal format
-- Data transformation
-  - Converting to our Unit/UnitDefinition structure
-  - Handling of special cases or GNU-specific features
-  - Validation of imported data
-- Import process
-  - One-time import vs. periodic updates
-  - How to bundle with app
-  - Versioning of unit database
-- Incompatibilities and special cases
-  - GNU Units features we won't support
-  - Workarounds for differences in architecture
+- **Import pipeline**: `tool/import_gnu_units.dart` (+ testable `_lib`) parses `assets/units/definitions.units` with a two-pass parser (conditional directive evaluation, alias detection via known-ID membership) and merges project-owned overrides from `assets/units/units-supplementary.json` into `assets/units/units.json` (7471 units, 125 prefixes, 88 dimension labels)
+- **Codegen**: `tool/generate_predefined_units.dart` (+ `_lib`) emits `lib/core/domain/data/predefined_units.dart` — registration is plain generated Dart, so app startup involves no JSON parsing or asset I/O for units
+- **Definition types**: primitive, derived, prefix, alias, and defined functions (GNU `name(x)` nonlinear definitions with domain/range and inverses; 101 functions + 46 aliases)
+- **Import process**: development-time, not runtime; `import-gnu-units` and `generate-predefined-units` pre-commit hooks keep the generated files in sync with the sources
+- **Incompatibilities**: tracked explicitly in the importer's "unsupported" output section — now empty (early Phase 5 had 177 unsupported entries; defined-function support and supplementary-file fixes cleared them)
+- **Documentation**: architecture.md "Unit Database"; 164 tool tests under `test/tool/`
 
 ### 3. Currency Rate Management — **COMPLETE (Phase 8)**
 
@@ -134,89 +120,48 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
 
 ### 4. User Preferences & State Management
 
-**Current State**: Basic settings model designed for Phase 4 (precision, notation, darkMode, evaluationMode).  Riverpod chosen for state management; SharedPreferences for persistence.  See [phase4_plan.md](phase4_plan.md).
+**Current State**: All shipped user data persists through small repository classes over SharedPreferences (`SettingsRepository`, `WorksheetRepository`, `FreeformHistoryRepository`, `CurrencyRateRepository`), each behind a must-override Riverpod provider wired in `main.dart` (and supplied by the shared `test/helpers/` harness in tests).  Repositories tolerate missing or malformed stored data by falling back to defaults, which covers the "corrupted preferences" concern in practice.  Settings model: precision (2-10, default 8), notation (automatic/scientific/engineering), theme (project-owned `ThemePreference`), evaluation mode (real-time/on-submit).
 
 **Needs Detail On** (for later phases):
 
 - Data migration
-  - Strategy for schema changes between versions
-  - Backwards compatibility
-  - Migration testing approach
-- State restoration
-  - Handling corrupted preferences
-  - Reset to defaults functionality
-- Additional preferences for worksheet mode, currency, custom units
+  - Strategy for schema changes between versions (so far all changes have been additive, plus one-off orphaned-key cleanup as in the freeform-persistence removal; no versioned migration mechanism exists)
+  - Backwards compatibility and migration testing approach
+- Explicit "reset to defaults" functionality
+- Custom-unit persistence (Phase 11) and the sqflite migration planned alongside custom worksheets (Phase 12)
 
-### 5. UI/UX Design
+### 5. UI/UX Design — **mostly complete (Phases 4-9)**
 
-**Current State**: Freeform mode UI fully designed for Phase 4 (screen layouts, navigation, input/output fields, result display, settings screen).  See [phase4_plan.md](phase4_plan.md).
+**Current State**: All the majors are shipped.  Freeform UI (Phase 4, plus completion, history, soft-wrap, keyboard hints); worksheet UI with multi-row layout, source-row indication, template switcher, and no-default picker (Phase 6 + Phase 9 refinements); the unit browser fills the "unit picker" role with dimension/alphabetical grouping, search, and detail pages (Phase 7); Settings organized into Display/Appearance/Freeform behavior/Currency rates/About sections; responsive design with three width tiers, safe areas, and tablet spacing (Phase 9); accessibility with screen-reader support, a WCAG contrast audit pinned by regression test, and 48 dp touch targets (Phase 9).
 
-**Needs Detail On**:
+**Still needs design for later phases**:
 
-- Worksheet UI
-  - Multi-field layout
-  - Unit selector per field
-  - Active field indication
-  - Worksheet switcher
-  - Add/remove fields UI
-- Unit picker design
-  - Category organization
-  - Search/filter functionality
-  - Favorites display
-  - Recent units
-  - Preview/description display
-- Settings screen
-  - Organization of settings
-  - Precision controls
-  - Notation selector
-  - Theme controls
-  - About/help sections
-- Responsive design
-  - Phone layouts
-  - Tablet layouts
-  - Landscape mode
-- Accessibility
-  - Screen reader support
-  - Contrast requirements
-  - Touch target sizes
+- Worksheet customization UI (Phase 12): add/remove/reorder rows, per-row unit selection, editing existing templates
+- Favorites and recent units in the browser (deferred with favorite-unit persistence, Phase 12)
+- First-run onboarding/tutorial (deferred as nice-to-have, Phase 14; the idle-state tappable example covers lightweight onboarding)
 
-### 6. Testing Strategy (Not Yet Discussed)
+### 6. Testing Strategy — **established in practice**
 
-**Needs Detail On**:
+**Current State** (documented in best_practices.md "Testing Strategy"):
 
-- Unit test approach
-  - What to test at unit level
-  - Coverage targets
-  - Mock strategies
-- Integration test approach
-  - Key integration points
-  - Test scenarios
-- Widget/UI test approach
-  - Which UI flows to test
-  - Testing tools and frameworks
-- Performance testing
-  - Benchmarks for parser/evaluator
-  - UI responsiveness targets
+- Unit tests: 2045 passing across parser, core domain, tools, and features; the `test/` tree mirrors `lib/` directory-for-directory; MVP criterion is >80% coverage for parser/core domain (measured in CI; failing the build below the threshold is code review finding F11, still open)
+- Widget tests: shared harness in `test/helpers/` (`TestRepositories` + `pumpApp`) supplies all must-override repository providers; rebuild-scope tests use the `RebuildCounter` probe to pin per-keystroke rebuild bounds
+- Integration tests: `integration_test/` suite (boot, simulated restart, mocked currency refresh) against a real Android emulator, run unconditionally in CI with a timeout-and-retry-only-on-timeout wrapper
+- Performance testing: `tool/benchmark.dart` (with `--baseline` diffing) and `tool/memory_report.dart`; baselines, on-device procedures, and action thresholds (interaction >100 ms, memory >~50 MB) recorded in performance.md
 
-### 7. Error Handling & User Feedback (Partially Discussed)
+**Remaining** (Phase 9 tasks): widget-test coverage-gap audit, manual device-testing checklist, coverage-threshold enforcement (F11).
 
-**Current State**: Error types defined for parser/evaluator
+### 7. Error Handling & User Feedback — **largely settled in implementation**
 
-**Needs Detail On**:
+**Current State**:
 
-- User-facing error messages
-  - Exact wording for common errors
-  - Helpful suggestions for fixes
-  - When to show errors vs. warnings
-- Error recovery
-  - How to handle partial input
-  - Graceful degradation strategies
-- Loading states and feedback
-  - Indicators for background operations
-  - Progress for long operations
-- Success feedback
-  - Confirmation for user actions
-  - Subtle vs. prominent feedback
+- Exception hierarchy: all domain errors are `UnitaryException` subclasses (lex/parse/eval/dimension/bounds) with line/column positions on lex/parse errors; fail-fast with no partial-result recovery, and NaN-producing operations throw immediately — the "warnings" concept was never needed
+- Freeform: errors render in the result display and are announced via a polite live region with an "Error: " prefix; unknown units, circular definitions, and dimension mismatches have specific messages
+- Worksheets: per-cell red error text with an `error_outline` icon (non-color indicator) and native invalid-field semantics; worksheet-specific dimension-mismatch phrasing
+- Background operations: currency refresh shows a spinner, enforces a 60-second cooldown, and surfaces failures in a dialog without disturbing stored rates
+- Success feedback: copy actions confirm via SnackBar; evaluation results are announced to screen readers
+
+**Remaining**: no systematic pass over error-message *wording* (exact phrasing, actionable fix suggestions) has been done; treat as release-polish if user testing surfaces confusing messages.
 
 ---
 
@@ -227,15 +172,15 @@ Next Steps
 When resuming design work, recommended order of priority:
 
 1. ✅ ~~**Quantity Class & Arithmetic**~~ - **COMPLETED** (see quantity_arithmetic_design.md)
-2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see phase2_plan.md) — design and implementation done
+2. ✅ ~~**Unit System Foundation**~~ - **COMPLETE** (see archive/phase2_plan.md) — design and implementation done
 3. ✅ ~~**Advanced Unit Features**~~ - **COMPLETE** — Temperature, constants, derived units implemented (Phase 3)
-4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see phase4_plan.md) — design and implementation done
+4. ✅ ~~**Basic UI - Freeform Mode**~~ - **COMPLETE** (see archive/phase4_plan.md) — design and implementation done
 5. ✅ ~~**GNU Units Database Import**~~ - **COMPLETE** — Phase 5, full pipeline implemented
 6. ✅ ~~**Worksheet System**~~ - **COMPLETE** — Phase 6, see openspec/changes/worksheet-mode/
 7. ✅ ~~**Browse Mode**~~ - **COMPLETE** — Phase 7, see openspec/changes/browse-units/
 8. ✅ ~~**User Data Persistence**~~ - **COMPLETE** — Phase 7 (persistence), see openspec/changes/user-data-persistence/
 9. ✅ ~~**Currency Rate Management**~~ - **COMPLETE** — Phase 8, see openspec/changes/currency-support/
-10. **Phase 9: Polish & Testing** - **IN PROGRESS** — application icon done (see openspec/changes/archive/2026-06-18-app-icon/); remaining: UI/UX refinement, performance, comprehensive testing, and documentation cleanup (audit/keep-vs-archive the `doc/` design documents, rewrite the README)
+10. **Phase 9: Polish & Testing** - **IN PROGRESS** — application icon, UI/UX refinement, performance measurement, integration tests, and documentation cleanup (doc audit, README rewrite, CONTRIBUTING.md — August 5, 2026) done; remaining: widget-test coverage audit, manual device-testing checklist, coverage verification, dartdoc pass
 11. **Testing Strategy** - Define before/during implementation
 12. **Error Handling Details** - Refine during implementation
 
@@ -258,7 +203,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: August 3, 2026*
+*Last Updated: August 7, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -339,7 +284,7 @@ Questions that arose during design but haven't been resolved:
 - *Circular unit definition detection (February 26, 2026)*
   - 848 tests passing (3 new)
   - `resolveUnit` in `unit_resolver.dart` now accepts optional `Set<String>? visited` parameter (the active resolution stack); throws `EvalException` immediately on re-entry for the same unit instead of stack-overflowing
-  - Keys are namespace-qualified (`"prefix:<id>"` vs `"<id>"`) so a `PrefixUnit` and a same-named `DerivedUnit` (e.g. prefix `US` and unit `US`) are tracked independently
+  - Keys are namespace-qualified (`"<id>-"` for a `PrefixUnit` vs `"<id>"` for a unit; see `_cacheKey` in `unit_repository.dart`) so a `PrefixUnit` and a same-named `DerivedUnit` (e.g. prefix `US` and unit `US`) are tracked independently
   - `EvalContext` gains an optional `visited` field (defaults to `const <String>{}` for backward compat with `const EvalContext()`); `UnitNode.evaluate` threads `context.visited` into both `resolveUnit` calls
   - `ExpressionParser` gains an optional `visited` field, forwarded to `EvalContext`, so the resolution stack is shared across the full `resolveUnit` → `ExpressionParser` → `UnitNode` → `resolveUnit` call chain
   - `EvalException` propagates through `ExpressionParser.evaluate` → `freeform_provider` `on UnitaryException` handler — no UI changes required
@@ -376,7 +321,7 @@ Questions that arose during design but haven't been resolved:
   - `WorksheetRowKind` sealed class (`UnitRow` | `FunctionRow`); `WorksheetRow` and `WorksheetTemplate` models
   - 10 predefined templates: Length (9), Mass (6), Time (6), Temperature (4), Volume (9), Area (8), Speed (5), Pressure (6), Energy (7), Digital Storage (6)
   - `computeWorksheet()` engine in `worksheet_engine.dart`: ratio-based for `UnitRow`, `func.call()`/`callInverse()` for `FunctionRow`, per-row error strings on dimension mismatch
-  - `WorksheetNotifier` (non-`autoDispose`): 500 ms debounce, "last keystroke wins" source, per-template in-session value maps
+  - `WorksheetNotifier` (non-`autoDispose`): synchronous per-keystroke recompute (no debounce — the engine runs in ~150–190 µs), "last keystroke wins" source, per-template in-session value maps
   - `WorksheetScreen` with `WorksheetRowWidget` (label + expression + numeric `TextField`) and AppBar `DropdownButton` for template selection
   - Drawer "Worksheet" tile enabled; navigates to `WorksheetScreen`
   - Design artifacts: `openspec/changes/worksheet-mode/`
@@ -579,3 +524,17 @@ Questions that arose during design but haven't been resolved:
   - Rejected alternatives: explicit `TextCapitalization.none` (already the default and already ignored in multiline mode) and `TextInputType.visiblePassword` (reliable but semantically a lie; the polite hint proved sufficient)
   - New widget test pins all three properties (plus `maxLines: null`) on the inner `TextField`; existing `freeform-field-wrapping` scenarios guard the soft-wrap/Enter behavior
   - Design artifacts: `openspec/changes/freeform-keyboard-type/`
+- *Documentation cleanup (August 5, 2026)* — code review findings F12/F13/F14/F15 done as one direct-edit documentation change (no OpenSpec artifacts); most of the Phase 9 "Documentation" task
+  - No code changes; test count unchanged (2045)
+  - **F13 (doc audit)**: completed phase plans (`phase1_plan.md`, `phase2_plan.md`, `phase4_plan.md`, `quantity_implementation_plan.md`) moved to `doc/archive/`, live links updated (`openspec/` archives left as historical records); `architecture.md` rewritten against the shipped code — real dependency list, grammar/token/AST descriptions matching the parser source, shipped descriptions of the unit-database pipeline, functions, worksheets, currency, and UI shell, actual source tree, and removal of its duplicated pre-implementation phase list (which contradicted the maintained `implementation_plan.md` numbering); `best_practices.md` updated in place (structure pointer instead of a stale tree, Riverpod 3 `NotifierProvider`/must-override patterns, actual persistence repositories, shared test harness + integration suite, real `<user>/<yyyymmdd>-<topic>` branch naming, `performance.md` pointer); `evaluation_pipeline.md` verified against the code (lookup order incl. plural-stripping minimum-length guards, prefix splitting, the `week` → `day` → `hour` → `minute` → `s` chain) and kept unchanged
+  - **F12 (README, expanded scope)**: rewritten from scratch, user-first — install options (release APK, hosted web app at wisnij.github.io/unitary, source), feature tour with example conversions verified against the real engine via a throwaway `dart run` script (`110.95914 mph`, `4.0776307 m`), then developer material (build/test instructions, curated `doc/` links, icon regeneration) and a brief prose status section; all design-phase framing (roadmap, "planned" features/dependencies, duplicated status) dropped; per explicit requirement, the two intro paragraphs and the License section (incl. Contributors) preserved verbatim
+  - **F14 (stale statements)**: worksheet "500 ms debounce" corrected to synchronous per-keystroke recompute in both tracking docs; circular-definition visited-key description corrected from `"prefix:<id>"` to the actual trailing-`-` convention (`_cacheKey`, `unit_repository.dart`)
+  - **F15**: new `CONTRIBUTING.md` distilled from `best_practices.md` — bug-report guidance, dev setup incl. pre-commit hooks, change workflow (tests first; `flutter test --reporter failures-only` + `flutter analyze` before a PR), PR guidelines (focused PRs, conventional commits, no new dependencies without discussion, never hand-edit generated files), AGPL terms for contributions
+  - Noticed while fact-checking: `findUnitWithPrefix`'s doc comment in `unit_repository.dart` lists plural stripping as a separate step *after* standalone-prefix matching, but the implementation runs it inside `findUnit()` (exact → plural) *before* prefix splitting; behavior is correct (`_findPluralIn`'s minimum-length guards keep `"ms"` resolving as milli+second), only the comment's ordering is off — not fixed here (docs-only change)
+  - Remaining from the Phase 9 Documentation task: the dartdoc pass on public APIs
+- *README screenshots (August 7, 2026)* — follow-up to the README rewrite
+  - The "What It Does" section now embeds one screenshot per major page (freeform, worksheet, currency worksheet, browse, settings), captured on the Pixel 6 Pro emulator in profile mode (no debug banner) and downscaled to 480 px wide so plain markdown image syntax renders at a sane size (the repo's markdownlint config forbids inline HTML sizing)
+  - New reusable capture harness: `test_driver/screenshots_driver.dart` (a `flutter drive` driver whose `onScreenshot` callback writes `doc/screenshots/<name>.png`; kept in the standard `test_driver/` location that `flutter drive` conventions expect, but named for its single purpose so it isn't mistaken for part of the real integration-test suite, which runs driverless via `flutter test`) + `integration_test/screenshots/take_screenshots.dart` (boots the real `app.main()`, drives all five pages, captures each; no `_test` suffix, to make clear it's a capture tool rather than a correctness test); the capture lives in a subdirectory deliberately so `tool/run_integration_tests.sh`/CI's `integration_test/*.dart` glob never runs it — it's a manual tool, invocation documented in its header comment
+  - Two capture gotchas solved, both worth remembering: (1) `IntegrationTestWidgetsFlutterBinding` does not install the synthetic test keyboard, so `enterText()` silently entered nothing while focus popped the device's real IME (empty fields + a stale keyboard-inset gap in the captures) — fixed with `tester.testTextInput.register()`, which intercepts the platform channel so text lands and no real keyboard appears; (2) `AppShell`'s `IndexedStack` keeps every page's widgets alive, so unscoped finders (`find.byType(TextField).first`, `find.byType(Scrollable)`) match offstage pages — field finders must be scoped via `find.descendant(of: find.byType(WorksheetScreen), ...)`
+  - Also: the freeform completion overlay opens over the result display when the target field's text is a valid completion prefix (`cm`) — dismissed via `FocusManager.instance.primaryFocus?.unfocus()` before capturing
+  - Follow-up (August 7): the Browse capture now expands the "Area" group in place (seventh alphabetically), showing five collapsed headers above an expanded one; a sixth screenshot (`unit-detail.png`) opens the `newton` detail page via the search flow; and Settings is captured twice — `settings-dark.png` (emulator's dark system theme) and `settings-light.png` (after tapping the "Light mode" radio in-app) — embedded side by side in the README at 400 px so the pair fits GitHub's content width.  The whole procedure is wrapped in `tool/take_screenshots.sh`: boots the emulator if no device is connected (AVD/device overridable via `AVD_NAME`/`DEVICE_ID`), runs the capture via `flutter drive`, downscales the PNGs (requires ImageMagick), and shuts the emulator down again only if the script started it (EXIT trap, so cleanup also runs on failure).  Two more capture gotchas: `tester.drag` steps large enough to page a list exceed the fling velocity threshold and ballistic-scroll far past the target (use `timedDrag`, or avoid scrolling entirely — the search flow won here); and browse entries for alias units render as `"<name> = <primary>"` (e.g. `acre = intacre`), so exact-text finders for a plain unit name only work on non-alias entries like `newton`

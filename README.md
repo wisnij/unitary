@@ -6,346 +6,168 @@ Unitary
 
 A powerful, flexible unit conversion mobile application targeting scientific and
 technically-minded users.  Features both freeform calculator-style expression
-evaluation and worksheet-based conversion modes, with support for custom
-user-defined units and dimensions.
+evaluation and worksheet-based conversion modes.
 
 Unitary is [free software](https://www.gnu.org/philosophy/free-sw.html), both libre and
 gratis.  It does not and will never contain ads, paywalls, subscriptions, in-app
 purchases, tracking, data harvesting, or any other monetization scheme.
 
 
-Project Status
---------------
-
-**Current Phase:** Polish & Testing\
-**Last Updated:** August 3, 2026
-
-Phases 0-8 are complete with 2045 passing tests.  The expression parser,
-evaluator, unit system foundation, advanced unit features, basic UI, complete
-unit database, worksheet mode, unit browser, cross-session data persistence,
-freeform conversion history, predictive completion, and currency support are
-fully implemented.  Phase 9 (Polish & Testing) is in progress: the application
-icon, responsive phone/tablet layouts, display safe areas, screen-reader
-support (semantic labels on custom controls, live-region announcement of
-evaluation results, accessible worksheet errors, and discoverable copy actions),
-a WCAG contrast audit (a perceivable worksheet source-row border, compliant
-fast-scroll colors, and a regression test pinning every custom color pairing's
-contrast ratio in both themes), and soft-wrapping freeform input fields (long
-expressions wrap and grow the field vertically instead of scrolling out of
-sight; Enter still submits — and the fields request a plain-text keyboard with
-autocorrect and IME suggestions disabled, so Android no longer auto-capitalizes
-the first character of case-sensitive unit names), and a measurement-first performance pass
-(checked-in benchmark and memory-report tools, rebuild-scope widget tests,
-on-device startup and frame profiling; no optimization crossed the action
-thresholds — see [doc/performance.md](doc/performance.md)) are done.  Currency exchange rates are fetched automatically on launch
-(24-hour staleness check) from the Frankfurter v2 API, including precious metals
-(XAU, XAG, XPT).  Stored rates are applied to the unit repository at startup so
-currency conversions are live from the first frame.  A "Currency rates" section
-in Settings shows the last-updated timestamp and provides a manual refresh
-button with a 60-second cooldown.  Worksheets can declare a small, unobtrusive
-contextual banner; the Currency worksheet uses this to show the last rate-sync
-time above its rows and offers the same manual refresh control in its AppBar.
-
----
-
-
-Features (Planned)
-------------------
-
-### Core Functionality
-
-- **Freeform Expression Mode**: GNU Units-style calculator supporting complex mathematical expressions with full dimensional analysis
-- **Worksheet Mode**: Multi-unit conversion interface with real-time updates across all fields
-- **Comprehensive Unit Support**: Length, mass, temperature, volume, area, speed, time, pressure, energy, digital storage, and currency
-- **Custom Units**: Define your own units and dimensions
-- **Offline-First**: All conversions work offline, with automatic currency rate updates when online
-- **Dark Mode**: System-aware dark mode support
-
-### Advanced Features
-
-- Expression parsing with dimensional analysis
-- Support for prefixes (kilo, mega, milli, etc.)
-- Mathematical and trigonometric functions
-- Physical constants (speed of light, pi, e, etc.)
-- Rational number arithmetic (planned) for precision
-- User preferences persistence
-- Configurable precision and notation (decimal, scientific, engineering)
-
----
-
-
-Documentation
--------------
-
-### Design Documents
-
-- **[Requirements](doc/requirements.md)** - Complete feature specifications and user requirements
-- **[Terminology](doc/terminology.md)** - Definitions of key terms used throughout the project
-- **[Core Architecture](doc/architecture.md)** - Technical design of data models, parser, and core systems
-- **[Quantity Arithmetic Design](doc/quantity_arithmetic_design.md)** - Detailed design for Quantity class, arithmetic operations, and conversion algorithms
-- **[Implementation Plan](doc/implementation_plan.md)** - Phased development roadmap, risks, and success metrics
-- **[Development Best Practices](doc/best_practices.md)** - Coding standards and workflow guidelines
-- **[Dimensionless Units Design](doc/dimensionless_units_design.md)** - Design for radian/steradian handling in conversions
-- **[Design Progress](doc/design_progress.md)** - Tracker for completed and in-progress design work
-
-### Quick Links
-
-- [Technology Stack](#technology-stack)
-- [Project Structure](#project-structure)
-- [Getting Started](#getting-started)
-- [Contributing](#contributing)
-
----
-
-
-Technology Stack
-----------------
-
-**Framework:** Flutter (Dart)
-
-- Chosen for cross-platform support (Android primary, iOS secondary)
-- Native performance and UI
-- Single codebase for both platforms
-
-**Key Dependencies:**
-
-- `flutter_riverpod` - State management
-- `shared_preferences` - Simple key-value storage for user settings
-
-**Planned Dependencies:**
-
-- `sqflite` or `hive` - Local database for persistence (Phase 6)
-- `http` or `dio` - HTTP client for currency rates (Phase 7)
-
-**Data Source:**
-
-- GNU Units database for comprehensive unit definitions
-
----
-
-
-Project Structure
------------------
-
-~~~~
-unitary/
-├── doc/                           # All design documentation
-│   ├── requirements.md
-│   ├── terminology.md
-│   ├── architecture.md
-│   ├── quantity_arithmetic_design.md
-│   ├── implementation_plan.md
-│   ├── best_practices.md
-│   └── design_progress.md
-├── lib/                           # Flutter application code (not yet created)
-│   ├── core/                      # Core domain logic
-│   │   ├── domain/                # Models, parser, services
-│   │   └── data/                  # Repositories, data sources
-│   ├── features/                  # Feature-specific code
-│   │   ├── freeform/
-│   │   ├── worksheet/
-│   │   └── settings/
-│   └── shared/                    # Shared widgets and utilities
-├── test/                          # Tests (not yet created)
-├── assets/                        # Static assets (not yet created)
-│   ├── units/
-│   └── currency/
-└── README.md                      # This file
-~~~~
-
----
-
-
-Architecture Highlights
------------------------
-
-### Expression Parser & Evaluator
-
-- Lexer → Parser → AST → Evaluator pipeline
-- Full dimensional analysis during evaluation
-- Support for complex expressions: `sqrt(9 m^2) + sin(45 degrees) * 5 ft`
-
-### Unit System
-
-- **Primitive units**: Cannot be reduced further (e.g., meter, kilogram)
-- **Derived units**: Defined in terms of other units (e.g., newton = kg⋅m/s²)
-- **Dimensions**: Represented as maps of primitive units to exponents
-- **Conformability**: Units are convertible if they share the same dimension
-
-### Worksheet System
-
-- Pre-defined templates for common conversions
-- User-customizable worksheets
-- Real-time updates across all fields
-- Persistent state across sessions
-
----
-
-
-Getting Started
+Getting Unitary
 ---------------
 
-### Prerequisites
+- **Android**: download the APK from the
+  [latest release](https://github.com/wisnij/unitary/releases/latest) and
+  install it.  (You may need to allow installation from unknown sources.)
+- **Web**: try it in your browser at <https://wisnij.github.io/unitary/> —
+  the same app, deployed automatically from the latest code.
+- **From source**: see [Development](#development) below.
 
-- Flutter SDK (latest stable)
-- Android Studio or VS Code
-- Git
+Everything works offline.  The only network access Unitary ever performs is
+fetching currency exchange rates, and built-in rates are bundled so currency
+conversion works without a connection too.
 
-### Setup (When Implementation Begins)
+
+What it does
+------------
+
+### Freeform mode
+
+A calculator that understands units.  Type any expression into the "Convert
+from" field, and optionally a target expression into "Convert to":
+
+| Convert from                           | Convert to | Result                |
+|----------------------------------------|------------|-----------------------|
+| `5 ft + 3 in`                          | `cm`       | `160.02 cm`           |
+| `3e4 kilometers/week`                  | `mph`      | `110.95914 mph`       |
+| `sqrt(9 m^2) + sin(45 degrees) * 5 ft` | `m`        | `4.0776307 m`         |
+| `tempF(212)`                           | `tempC`    | `tempC(100)`          |
+| `100 USD`                              | `EUR`      | (at the current rate) |
+
+Full dimensional analysis runs through every calculation: adding meters to
+seconds is an error, converting joules to kilowatt-hours just works, and
+exponents, functions, and SI prefixes all carry their dimensions correctly.
+
+- **Expression language**: arithmetic (`+`, `-`, `*`, `/`, `^`), numeric
+  fractions (`2|3`), implicit multiplication (`5 m`), parentheses,
+  mathematical and trigonometric functions, physical constants (`c`, `pi`,
+  `h`, ...), and inverse function application (`~tempF`) – the syntax is
+  compatible with [GNU Units](https://www.gnu.org/software/units/), so
+  expressions you'd type there work here too
+- **Predictive completion**: inline suggestions for unit, prefix, and
+  function names as you type
+- **History**: successful conversions are saved and can be recalled with a
+  tap
+- **Definition lookup**: enter a bare unit name to see how it is defined
+
+![Freeform mode converting 5 ft + 3 in to centimeters](doc/screenshots/freeform.png)
+
+### Worksheet mode
+
+Convert one value across many units at once.  Pick a worksheet, type a value
+into any row, and every other row updates in real time.  Twelve worksheets
+are built in: Angle, Area, Currency, Digital Storage, Energy, Length, Mass,
+Pressure, Speed, Temperature, Time, and Volume.  Your entries persist across
+sessions.
+
+![Length worksheet converting 100 meters across nine other units](doc/screenshots/worksheet.png)
+
+### Unit browser
+
+Browse the entire unit catalog – over 7,000 units, 125 prefixes, and 100+
+functions imported from the [GNU Units](https://www.gnu.org/software/units/)
+database – alphabetically or grouped by physical dimension, with search and
+per-unit detail pages showing definitions, aliases, and resolved values.
+
+![Unit browser showing collapsed dimension groups above the expanded Area group](doc/screenshots/browser.png)
+![Detail page for the newton, showing its aliases, definition, and value](doc/screenshots/unit-detail.png)
+
+### Currency conversion
+
+Live exchange rates (including precious metals XAU/XAG/XPT) are fetched
+automatically from the [Frankfurter](https://frankfurter.dev) API when the
+stored rates are more than a day old, and can be refreshed manually from
+Settings or the Currency worksheet.  Rates are stored on the device, so
+currency conversion keeps working offline.
+
+![Currency worksheet converting 100 Australian dollars, with the rate-freshness banner](doc/screenshots/currency.png)
+
+### Designed for daily use
+
+- **Dark mode**: follows the system theme, or set light/dark explicitly
+- **Responsive**: phone and tablet layouts, portrait and landscape, with
+  two-pane views on larger screens
+- **Accessible**: screen-reader support (TalkBack/VoiceOver), WCAG-compliant
+  contrast, 48 dp touch targets
+- **Configurable**: precision (2-10 significant figures),
+  automatic/scientific/engineering notation, real-time or on-submit
+  evaluation
+
+![Settings screen in dark mode](doc/screenshots/settings-dark.png)
+![Settings screen in light mode](doc/screenshots/settings-light.png)
+
+
+Development
+-----------
+
+Unitary is built with [Flutter](https://flutter.dev) (Dart).  The expression
+engine and unit system are pure Dart with no Flutter dependency; state
+management uses `flutter_riverpod`, and persistence uses
+`shared_preferences`.
+
+### Building from source
 
 ~~~~ bash
-# Clone the repository
 git clone https://github.com/wisnij/unitary.git
 cd unitary
-
-# Install dependencies
 flutter pub get
-
-# Run the app
 flutter run
 ~~~~
 
-### Development Workflow
-
-1. Read the design documentation thoroughly
-2. Follow the phased implementation plan
-3. Adhere to development best practices
-4. Write tests for all new functionality
-5. Submit pull requests for review
-
-### Application Icon
-
-The launcher/favicon icon is generated from `assets/icon/unitary.svg` (the single
-source of truth, which embeds DejaVu Sans Mono Bold).  After editing the SVG,
-regenerate all platform assets with:
+### Running tests
 
 ~~~~ bash
-tool/generate_icons.sh
+flutter test --reporter failures-only   # full unit/widget suite
+flutter analyze                         # lint check
+tool/run_integration_tests.sh           # on-device tests (Android emulator)
 ~~~~
 
-This rasterizes the SVG to `assets/icon/unitary.png` (via `inkscape`) and runs
-`flutter_launcher_icons` to produce the Android, iOS, and web icons.  The
-generated assets are committed, so a normal build does **not** require Inkscape —
-only regenerating the icon does.
+### Documentation
 
-A `generate-icons` pre-commit hook runs this script automatically whenever the
-SVG (or its font, or the script) is committed, keeping the generated assets in
-sync with the source.
+- **[Core Architecture](doc/architecture.md)** – data models,
+  parser/evaluator, and subsystem design as implemented
+- **[Evaluation Pipeline](doc/evaluation_pipeline.md)** – a worked example of
+  how an expression is lexed, parsed, and evaluated
+- **[Terminology](doc/terminology.md)** – definitions of key terms (unit,
+  dimension, quantity, conformability, ...)
+- **[Requirements](doc/requirements.md)** – feature specifications
+- **[Implementation Plan](doc/implementation_plan.md)** – phased roadmap and
+  progress; see also the [design progress tracker](doc/design_progress.md)
+- **[Development Best Practices](doc/best_practices.md)** – coding standards
+  and workflow
+- **[Performance](doc/performance.md)** – benchmark tooling, baselines, and
+  measurement procedures
 
----
 
+Project status
+--------------
 
-Current Progress
-----------------
-
-### Implementation
-
-- ✅ **Phase 0: Project Setup** — Flutter project scaffolded, linting configured, directory structure in place
-- ✅ **Phase 1: Core Domain** — Expression parser and evaluator with dimensional analysis (373 tests)
-- ✅ **Phase 2: Unit System Foundation** — Unit definitions, repository, conversions, evaluator integration (492 tests)
-- ✅ **Phase 3: Advanced Unit Features** — Temperature, constants, derived units, affine syntax, dimensionless units, SI prefixes (703 tests)
-- ✅ **Phase 4: Basic UI - Freeform Mode** — Freeform evaluation UI, settings, drawer navigation, Riverpod state management (847 tests)
-- ✅ **Phase 5: Complete Unit Database** — GNU Units import pipeline, JSON unit database, 26 new units (volume, area, speed, pressure, energy, digital storage) (852 tests)
-- ✅ **Defined Functions** — First-class builtin functions, GNU Units-defined functions (101 registered + 46 aliases), circular definition detection (1146 tests)
-- ✅ **Phase 6: Worksheet Mode** — 10 predefined templates, real-time cross-row conversion engine (unit-ratio + function-inverse), AppBar dropdown navigation, in-session state retention (1309 tests)
-- ✅ **Phase 7: Browse Mode** — full-catalog browser with alphabetical and dimension-grouped views, collapsible groups, search bar, human-readable dimension labels, and detail pages (1436 tests)
-- ✅ **User Data Persistence** — worksheet state (active template + per-template source values) persisted via SharedPreferences and restored on launch; freeform fields always start blank (1583 tests)
-- ✅ **Freeform History** — persistent history of successful freeform conversions; deduplicated, capped at 100 entries; tapping an entry restores both fields and re-evaluates (1619 tests)
-- ✅ **Predictive Completion** — inline unit/function/prefix suggestions in both freeform expression fields; lexer-based token detection; four-tier ranking (prefix-primary, prefix-alias, infix-primary, infix-alias); tap-to-insert replaces the partial token; kind-specific display and insertion (unit +space, prefix +dash display only, function +open-paren); overlay scrollable up to 50 entries with 8 rows visible; shrinks to content width; web-safe tap handling (1692 tests)
-- ✅ **Phase 8: Currency Support** — live exchange rates from Frankfurter v2 API; dynamic unit layer in UnitRepository shadows compiled rates at runtime; 24-hour background staleness check; precious metals (XAU/XAG/XPT) via intermediate price units; per-currency date stored alongside rate; Settings UI with last-updated timestamp and 60-second-cooldown manual refresh (1760 tests)
-
-### Design (ready for implementation)
-
-- ✅ Core domain models (Dimension, Unit, Quantity, Prefix)
-- ✅ Expression parser and evaluator architecture
-- ✅ Terminology and conventions
-- ✅ **Quantity arithmetic and conversion algorithms** (see quantity_arithmetic_design.md)
-- ✅ **Basic UI - Freeform Mode** (see phase4_plan.md)
-
-### Design (still needs detail)
-
-- ⏳ Worksheet system details
-- ⏳ GNU Units database import strategy
-
-See [Design Progress](design_progress.md) for full details.
-
----
+Unitary is feature-complete for its MVP and currently in the final polish and
+testing phase before its first public release.  Over 2,000 automated tests
+cover the expression engine, unit system, and UI, plus an on-device
+integration test suite run in CI.  See the
+[Implementation Plan](doc/implementation_plan.md) for the detailed roadmap,
+including planned post-MVP features such as custom unit definitions,
+worksheet customization, and iOS support.
 
 
 Contributing
 ------------
 
-This is currently a personal project in the design phase.  Once implementation
-begins, contributions will be welcome!
-
-**Future Contribution Areas:**
-
-- Bug reports and fixes
-- Feature requests and implementations
-- Documentation improvements
-- Unit database enhancements
-- Translations (future)
-
-**Before Contributing:**
-
-1. Review all design documentation
-2. Check existing issues and pull requests
-3. Follow the development best practices
-4. Write tests for new features
-5. Update documentation as needed
-
----
-
-
-Roadmap
--------
-
-### Phase 1: MVP (Weeks 1-25)
-
-- Core expression parser and evaluator
-- Basic unit system with major categories
-- Freeform and worksheet modes
-- Settings and persistence
-- ✅ Currency support
-- Polish and release
-
-### Phase 2: Enhancements
-
-- Custom unit definitions
-- Worksheet customization
-- iOS support
-- Advanced mathematical functions
-
-### Phase 3: Advanced Features
-
-- Rational number arithmetic
-- Equation solver
-- Graphing capabilities
-- Additional constants and functions
-
-See [Implementation Plan](implementation_plan.md) for detailed timeline.
-
----
-
-
-Design Philosophy
------------------
-
-### For Users
-
-- **Utility over simplicity**: Powerful features for technical users
-- **Flexibility**: Support for complex expressions and custom units
-- **Precision**: Accurate conversions with configurable precision
-- **Offline-first**: Core features work without internet
-
-### For Developers
-
-- **Clean architecture**: Clear separation of concerns
-- **Testability**: High test coverage for core logic
-- **Maintainability**: Well-documented, follows best practices
-- **Extensibility**: Easy to add new units, functions, and features
-
----
+Bug reports, feature requests, and pull requests are welcome – see
+[CONTRIBUTING.md](CONTRIBUTING.md) for guidelines, and the
+[documentation](#documentation) links above for how the codebase fits
+together.
 
 
 License
@@ -372,8 +194,3 @@ This program includes data files that are part of [GNU
 Units](https://www.gnu.org/software/units/).
 GNU Units is copyright © 1996-2002, 2004-2020, 2022, 2024, 2026 Free Software
 Foundation, Inc.
-
-
----
-
-*This project is in active design phase. Star and watch for updates!*

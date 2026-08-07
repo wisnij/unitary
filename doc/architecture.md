@@ -1,23 +1,27 @@
 Unitary - Core Architecture
 ===========================
 
-This document describes the core technical architecture of Unitary, including data models, the expression parser/evaluator, and key subsystems.
+This document describes the core technical architecture of Unitary as
+implemented: data models, the expression parser/evaluator, and the key
+subsystems built on them.
 
 For terminology definitions, see [Terminology](terminology.md).
-For implementation planning, see [Implementation Plan](implementation_plan.md).
-For development practices, see [Development Best Practices](dev_best_practices.md).
+For implementation planning and phase history, see the
+[Implementation Plan](implementation_plan.md).
+For development practices, see
+[Development Best Practices](best_practices.md).
 
 ---
 
 
-Technology Stack Recommendation
--------------------------------
+Technology Stack
+----------------
 
 ### Framework: Flutter
 
 **Rationale:**
 
-- Single codebase for Android and iOS
+- Single codebase for Android and iOS (plus a web build used for CI deploys)
 - Dart language similar to Kotlin (easier learning curve)
 - Excellent performance (compiled to native code)
 - Material Design built-in with regular updates
@@ -31,14 +35,19 @@ Technology Stack Recommendation
 - React Native - ruled out per preference to avoid JS/TS
 - Kotlin Multiplatform Mobile - still maturing, more complex setup
 
-### Core Dependencies
+### Runtime Dependencies
 
-- **Flutter SDK** (latest stable)
-- **sqflite** or **hive** - local database for persistence
-- **shared_preferences** - simple key-value storage
-- **http** or **dio** - HTTP client for currency rates
-- **intl** - internationalization and number formatting
-- **provider** or **riverpod** - state management
+- **flutter_riverpod** - state management
+- **shared_preferences** - key-value persistence for all user data (settings,
+  worksheet state, freeform history, currency rates)
+- **http** - currency rate fetching (Frankfurter v2 API)
+- **package_info_plus** - runtime version display in Settings
+- **flutter_markdown_plus** - rendering the bundled license text
+- **url_launcher** - opening external links from the About screen
+
+`sqflite` (or similar) is deliberately deferred until a feature needs it
+(custom worksheets, Phase 12); SharedPreferences has been sufficient for all
+data shipped so far.
 
 
 Architecture Overview
@@ -49,103 +58,138 @@ Architecture Overview
 ~~~~
 ┌─────────────────────────────────────────┐
 │         Presentation Layer              │
-│  (UI Widgets, Screens, View Models)     │
+│  (Screens & widgets, features/*/        │
+│   presentation/, shared/ UI shell)      │
 └─────────────────────────────────────────┘
               ↕
 ┌─────────────────────────────────────────┐
-│        Business Logic Layer             │
-│  (Services, Use Cases, Validators)      │
+│           State Layer                   │
+│  (Riverpod providers & notifiers,       │
+│   features/*/state/)                    │
 └─────────────────────────────────────────┘
               ↕
 ┌─────────────────────────────────────────┐
 │           Core Domain Layer             │
-│  (Models, Expression Parser, Calculator)│
+│  (Models, parser/evaluator, unit        │
+│   system – pure Dart, no Flutter)       │
 └─────────────────────────────────────────┘
               ↕
 ┌─────────────────────────────────────────┐
 │           Data Layer                    │
-│  (Repositories, Local DB, Preferences)  │
+│  (Repositories over SharedPreferences,  │
+│   features/*/data/)                     │
 └─────────────────────────────────────────┘
 ~~~~
 
+The core domain layer is pure Dart: it has no Flutter dependency, which keeps
+it runnable (and benchmarkable) under plain `dart` (see
+[performance.md](performance.md)).  The one deliberate exception is
+`unit_repository_provider.dart`, a small Riverpod provider colocated with the
+repository it provides.
 
-Core Components Design
-----------------------
+
+Core Components
+---------------
 
 ### 1. Expression Parser & Evaluator
 
 **Component Structure:**
 
 ~~~~
-Lexer → Parser → AST Builder → Evaluator
-  ↓       ↓          ↓            ↓
-Token   AST      Validated     Result
-Stream  Nodes    Expression   + Units
+Lexer → Parser → AST → Evaluator
+  ↓       ↓       ↓        ↓
+Token   AST    Expression  Quantity
+Stream  Nodes    Tree     (value + dimension)
 ~~~~
 
-**Token Types:**
+**Token Types** (`token.dart`):
 
-Token types include: `number` (3.14, 1.5e-10, .5), `identifier` (unit names
-and constants), operators (`plus`, `minus`, `times`, `divide`, `divideNum`,
-`exponent`), grouping (`leftParen`, `rightParen`, `comma`), and `eof`.  Each
-token carries its type, lexeme text, optional parsed literal value, and
-line/column for error reporting.
+`number` (3.14, 1.5e-10, .5), `identifier` (unit and function names),
+operators (`plus`, `minus`, `times` for `*`/`×`/`·`, `divide` for `/`/`÷`/
+`per`, `divideNum` for `|`/`⁄`, `exponent` for `^`/`**`), grouping
+(`leftParen`, `rightParen`, `comma`), `inverse` (`~`, for inverse function
+application), and `eof`.  Each token carries its type, lexeme text, optional
+parsed literal value, and line/column for error reporting.
 
-**Lexer (Tokenizer):**
+**Lexer** (`lexer.dart`):
 
-- Converts input string into token stream
-- Recognizes: numbers, units, operators, functions, parentheses
-- Handles various multiplication/division symbols
+- Converts the input string into a token stream
+- Recognizes numbers (integers, decimals, leading decimal point, scientific
+  notation), identifiers, operator symbols in their several spellings, and
+  parentheses
+- Treats all whitespace (including newlines) as token separators
 - Tracks line and column numbers for detailed error reporting
-- Support for unit aliases with automatic plural handling:
-  - Try exact match with unit id and aliases first
-  - If no match, try removing common plural suffixes ("s", "es") and check again
-  - This allows "meter", "meters", "metre", "metres" to all match without storing each variant
-- Support for unit prefixes:
-  - When parsing a potential unit name, try to split it into prefix + unit name
-  - Check all possible prefix positions (e.g., "km" → "k" + "m", "mega" + "meter")
-  - Prefixes can be attached with no space: "km", "megameter", "MHz"
-  - Examples: "km" → kilo *meter, "MW" → mega* watt, "ns" → nano * second
-- Implicit multiplication handling:
-  - "5m" (no space) treated as "5 * m"
-  - Space between number/unit and number/unit also implies multiplication
-  - After closing paren before opening paren: ")()" implies multiplication
-- Number parsing:
-  - Supports integers: 5, 42
-  - Supports decimals: 3.14, 0.5
-  - Supports leading decimal point: .5, .25
-  - Supports scientific notation: 1.5e-10, 3e8
-- Physical constants are just defined units (e.g., "c" = 299792458 m/s)
+- Does *not* interpret identifiers: whether an identifier is a unit, prefixed
+  unit, function, or unknown is decided at parse/evaluation time via the
+  `UnitRepository` (see prefix and plural handling under the unit system
+  below)
 
-**Parser:**
+**Parser** (`parser.dart`):
 
-- Builds Abstract Syntax Tree (AST) from tokens
-- Implements operator precedence (lowest to highest):
-  1. Addition/Subtraction (+, -)
-  2. Low-precedence multiplication and division (*, ×, ⋅, /, ÷)
-  3. High-precedence multiplication (space, or implicit multiplication with no space)
-  4. Exponentiation (^) - right-associative
-  5. High-precedence division (|) - operands are numeric literals only, no units allowed
-  6. Unary (+, -)
-  7. Function calls
-  8. Primary (numbers, units, parentheses)
-- Handles implicit multiplication
-- Error recovery and reporting with line/column information
-- Unit tests for parsing
+Recursive descent, building an AST from the token list.  Grammar, lowest to
+highest precedence:
 
-**AST Node Types:**
+~~~~
+expression  = sum / DIVIDE listProduct
+sum         = opProduct ( (PLUS / MINUS) opProduct )*
+opProduct   = listProduct ( (TIMES / DIVIDE) listProduct )*
+listProduct = unary power*
+unary       = ( PLUS / MINUS )? power
+power       = primary ( EXPONENT unary )*  [folded right-to-left]
+primary     = numexpr / LPAR expression RPAR / function / unit
+numexpr     = NUMBER ( DIVIDENUM NUMBER )*
+function    = INVERSE? IDENTIFIER LPAR arguments RPAR  [if known function]
+unit        = IDENTIFIER                               [fallback]
+arguments   = expression ( COMMA expression )*
+~~~~
 
-- `NumberNode` — numeric literal
-- `UnitNode` — unit identifier (resolved via UnitRepository at evaluation time)
-- `BinaryOpNode` — binary operators (+, -, *, /, ^) including implicit multiplication
-- `UnaryOpNode` — unary minus
-- `FunctionNode` — builtin and defined functions (sin, cos, sqrt, tempF, tempC, etc.)
+Notable properties:
+
+- Implicit multiplication is handled at the `listProduct` level, giving it
+  higher precedence than explicit `*` and `/`: `5 m / 2 s` parses as
+  `(5*m) / (2*s)`
+- A leading `/` forms a reciprocal (`/x` = `1/x`)
+- `|` (numeric division) binds tighter than `^` and accepts only numeric
+  literals as operands, so `2|3 kg` is two-thirds of a kilogram
+- An identifier followed by `(` is parsed as a function call only if the
+  repository knows a function by that name; otherwise it falls back to a unit
+- `parseQuery()` additionally recognizes a *bare* function name (optionally
+  with `~` or a trailing `(`) as a `FunctionNameNode`, used for definition
+  lookup and as a conversion target (e.g. converting to `tempF`)
+
+**AST Node Types** (`ast.dart`):
+
+- `NumberNode` – numeric literal
+- `UnitNode` – unit identifier (resolved via `UnitRepository` at evaluation
+  time; unknown names throw `EvalException`)
+- `BinaryOpNode` – binary operators (+, -, *, /, ^, |) including implicit
+  multiplication
+- `UnaryOpNode` – unary minus/plus
+- `FunctionCallNode` – builtin and defined function calls, including inverse
+  application via `~`
+- `FunctionNameNode` – a bare function name used as a query or conversion
+  target (not an expression)
+- `DefinitionRequestNode` – a definition lookup query
 
 **Evaluator:**
 
-- Traverses AST and computes result
-- Performs dimensional analysis
-- Returns `Quantity` objects with value and dimension
+Each `ExpressionNode` evaluates itself against an `EvalContext` carrying the
+`UnitRepository`, optional variable bindings (used by defined functions to
+shadow unit names with parameter values), and the active unit-resolution
+stack (`visited`, used for circular-definition detection).  Evaluation
+performs full dimensional analysis and returns a `Quantity`.
+
+The public entry point is `ExpressionParser` (`expression_parser.dart`),
+which bundles lex → parse → evaluate behind `evaluate()`, `parseExpression()`,
+and `parseQuery()`.
+
+**Error Handling:**
+
+All failures throw subclasses of `UnitaryException` (`errors.dart`):
+`LexException`, `ParseException`, `EvalException`, `DimensionException`
+(non-conformable operands), and `BoundsException` (function argument outside
+its domain).  Lex and parse errors carry line/column positions.  NaN-producing
+operations fail fast with clear messages rather than propagating NaN.
 
 ### 2. Unit System & Dimensional Analysis
 
@@ -157,18 +201,20 @@ integer exponents.  For example, velocity is `{m: 1, s: -1}` and force is
 
 Operations:
 
-- `multiply(other)` — adds exponents (for multiplication)
-- `divide(other)` — subtracts exponents (for division)
-- `power(n)` — multiplies all exponents by n
-- `powerRational(r)` — multiplies by rational exponent, validates divisibility
-- `isConformableWith(other)` — checks dimensional equality
-- `canonicalRepresentation()` — human-readable string like `kg m / s^2`
+- `multiply(other)` – adds exponents (for multiplication)
+- `divide(other)` – subtracts exponents (for division)
+- `power(n)` – multiplies all exponents by n
+- `powerRational(r)` – multiplies by rational exponent, validates divisibility
+- `isConformableWith(other)` – checks dimensional equality
+- `canonicalRepresentation()` – human-readable string like `kg m / s^2`
 
 Zero exponents are stripped automatically.  Two dimensions are equal iff they
 have the same unit-exponent pairs.
 
-**DimensionRegistry** (planned for UI) maps dimensions to human-readable
-category names (e.g., `{m: 1, s: -2}` → "Acceleration").
+**Dimension labels:** the unit database ships a map of canonical dimension
+representations to human-readable category names (e.g. `{m: 1, s: -2}` →
+"Acceleration"), emitted as `predefinedDimensionLabels` and used by the unit
+browser's dimension-grouped view.
 
 **Prefix Support:**
 
@@ -180,14 +226,15 @@ stored separately in `UnitRepository` via `registerPrefix()`, so prefix symbols
 The `findUnitWithPrefix(name)` method resolves names using this priority order:
 
 1. Exact match in regular units (including plural stripping)
-2. Prefix splitting — longest prefix first, remainder looked up as a regular
+2. Prefix splitting – longest prefix first, remainder looked up as a regular
    unit (with plural stripping)
 3. Standalone prefix match (prefix name with no remainder)
 4. No match → returns empty `UnitMatch`
 
 This means standalone `"m"` resolves to meter (step 1), while `"mm"` splits
-into milli + meter (step 2).  All 24 SI prefixes from quecto (10^-30) to
-quetta (10^30) are registered.
+into milli + meter (step 2).  Plural stripping has minimum-length guards, so
+short names like `"ms"` are not mistaken for plurals (it resolves as
+milli + second, not the plural of `"m"`).
 
 **Unit Model:**
 
@@ -198,20 +245,24 @@ irregular plurals (like "feet" for "foot") need to be listed as explicit aliases
 
 Unit subclasses define how units convert to primitive base units:
 
-- **`PrimitiveUnit`** — fundamental units that define their own dimension
+- **`PrimitiveUnit`** – fundamental units that define their own dimension
   (e.g., meter → `{m: 1}`).  Optionally `isDimensionless` for units like
   radian and steradian.
-- **`DerivedUnit`** — units defined by an expression string that is parsed
+- **`DerivedUnit`** – units defined by an expression string that is parsed
   and evaluated through the full pipeline (e.g., newton: `"kg m/s^2"`,
   mile: `"5280 ft"`).
-- **`PrefixUnit`** — a `DerivedUnit` subclass for SI prefixes
+- **`PrefixUnit`** – a `DerivedUnit` subclass for SI prefixes
   (e.g., kilo: `"1000"`, milli: `"0.001"`).
 
-Unit resolution is handled by `resolveUnit(unit, repo)`, which returns a
-`Quantity` representing 1 of that unit in primitive base units.  For derived
-units, resolution evaluates the expression string through the full
+Unit resolution is handled by `UnitRepository.resolveUnit(unit)`, which
+returns a `Quantity` representing 1 of that unit in primitive base units.  For
+derived units, resolution evaluates the expression string through the full
 lexer/parser/evaluator pipeline, which may recurse through other unit
-definitions.
+definitions.  Resolution results are cached (`_resolvedQuantityCache`); the
+cache is invalidated whenever dynamic units are registered or removed.
+Re-entry for a unit already on the resolution stack throws immediately
+(circular-definition detection); the stack keys use a trailing `-` to
+distinguish prefixes from same-named units.
 
 Examples of unit definitions:
 
@@ -222,554 +273,193 @@ Derived:    N (newton)          → "kg m/s^2" → Quantity(1.0, {kg: 1, m: 1, s
 Prefix:     kilo                → "1000" → Quantity(1000.0, dimensionless)
 ~~~~
 
+The repository also has a **dynamic unit layer** (`registerDynamic()` /
+`unregisterDynamic()`): runtime definitions that shadow same-named compiled
+units without mutating the static layer.  Currency rate updates are applied
+through this layer.
+
 **Quantity Model:**
 
 `Quantity` represents a physical quantity: a numeric `value` (double) combined
 with a `Dimension`.  All arithmetic operations maintain dimensional consistency:
 
-- `add`/`subtract` — requires conformable dimensions, throws `DimensionException` if not
-- `multiply`/`divide` — combines dimensions (adds/subtracts exponents)
-- `power(exponent)` — for dimensioned quantities, requires rational exponent with
+- `add`/`subtract` – requires conformable dimensions, throws `DimensionException` if not
+- `multiply`/`divide` – combines dimensions (adds/subtracts exponents)
+- `power(exponent)` – for dimensioned quantities, requires rational exponent with
   integer-valued result dimensions; uses continued fractions to recover rational
   approximation from double exponents
-- `negate`/`abs` — preserves dimension
+- `negate`/`abs` – preserves dimension
 
 NaN values are rejected at construction time (fail-fast).  Division by zero
 throws `EvalException`.
 
-### 3. Unit Database
-
-**Data Source:**
-
-- Import GNU Units database definitions
-- Parse into internal format
-- Store in embedded database (asset bundle)
-
-**Database Schema (planned):**
-
-Currently units are registered via hand-curated Dart code in
-`registerPredefinedUnits()`.  For future persistence, the database would include
-tables for units (with definition type and parameters), unit aliases, prefixes,
-prefix aliases, dimension metadata (for UI category names), constants, and
-custom user-defined units.  Plurals are handled automatically at parse time and
-not stored.
-
-### 4. Worksheet System
-
-**Worksheet Model (planned):**
-
-A `Worksheet` has a name, category, and list of `WorksheetField`s.  Each field
-references a unit and stores the last entered value.  Worksheets can be built-in
-or user-customized.
-
-**Worksheet State Management:**
-
-- Use reactive state management (Provider/Riverpod)
-- When any field changes, recalculate all others
-- Persist last values to local storage
-- Load on app startup
-
-### 5. Currency Rate Management
-
-**Currency Service (planned):**
-
-A `CurrencyService` will handle fetching exchange rates, storing them locally,
-and providing rate lookups.  It tracks last update time and auto-refreshes when
-stale.
-
-**Rate Storage:**
-
-- Store in local database with timestamp
-- Ship with initial rates in assets
-- Background refresh on app launch
-- Manual refresh trigger in UI
-
-**API Integration:**
-
-- Configurable endpoint (future)
-- Retry logic with exponential backoff
-- Graceful failure handling
-- Rate limiting respect
-
-
-State Management Strategy
--------------------------
-
-### Global State (Provider/Riverpod)
-
-- User preferences (precision, notation, theme)
-- Current conversion mode (freeform/worksheet)
-- Active worksheet
-- Currency rates
-- Custom unit definitions
-
-### Local State
-
-- Individual field values
-- Input validation errors
-- UI ephemeral state (dropdowns, dialogs)
-
-### Persistence Layer (planned)
-
-Repositories for preferences (key-value), worksheets (load/save with field
-values), and custom units (user-defined units with persistence).  Currently
-the unit repository is in-memory only.
-
-
-Implementation Phases
----------------------
-
-### Phase 0: Project Setup (Week 1)
-
-**Goals:** Development environment and project scaffolding
-
-**Tasks:**
-
-- Install Flutter SDK and Android Studio
-- Create new Flutter project
-- Set up version control (Git/GitHub)
-- Configure project structure
-- Set up linting and code formatting
-- Create README with project overview
-
-**Deliverable:** Empty Flutter app that runs on Android emulator
-
----
-
-### Phase 1: Core Domain - Expression Parser (Weeks 2-4)
-
-**Goals:** Build the expression parsing and evaluation engine
-
-**Tasks:**
-
-1. Implement Lexer
-   - Token types definition
-   - Character-by-character scanning
-   - Number parsing (decimals, scientific notation)
-   - Operator recognition
-   - Unit name recognition
-   - Test with various inputs
-
-2. Implement Parser
-   - AST node classes
-   - Recursive descent parser
-   - Operator precedence handling
-   - Error recovery and reporting
-   - Unit tests for parsing
-
-3. Implement basic Evaluator
-   - Number arithmetic
-   - Basic operators (+, -, *, /, ^)
-   - Unit tests for evaluation
-
-**Deliverable:** Parser that converts "5 * 3 + 2" → correct result
-
----
-
-### Phase 2: Unit System Foundation (Weeks 5-7)
-
-**Goals:** Dimension system and unit definitions
-
-**Tasks:**
-
-1. Implement Dimension class
-   - Base dimension representation
-   - Dimensional arithmetic
-   - Compatibility checking
-   - Comprehensive unit tests
-
-2. Implement Unit and Quantity classes
-   - Linear conversion definitions
-   - Quantity arithmetic with dimensional analysis
-   - Unit tests for conversions
-
-3. Parse GNU Units database
-   - Write parser for GNU Units format
-   - Extract basic units (length, mass, time)
-   - Convert to internal JSON format
-   - Store as asset
-
-4. Implement UnitRepository
-   - Load units from assets
-   - Unit lookup by name/alias
-   - Category filtering
-
-**Deliverable:** Can convert "5 feet" to meters programmatically
-
----
-
-### Phase 3: Advanced Unit Features (Weeks 8-9)
-
-**Goals:** Complex conversions and functions
-
-**Tasks:**
-
-1. Implement offset conversions (temperature)
-2. Implement derived units (Newton, Pascal, etc.)
-3. Add mathematical functions (sqrt, etc.)
-4. Add trigonometric functions
-5. Add constants (pi, e, c, etc.)
-6. Integrate with parser/evaluator
-7. Comprehensive testing
-
-**Deliverable:** Can evaluate "sqrt(9 m^2) + 5 ft" correctly
-
----
-
-### Phase 4: Basic UI - Freeform Mode (Weeks 10-12)
-
-**Goals:** First working UI for expression evaluation
-
-**Tasks:**
-
-1. Create app structure
-   - Main navigation
-   - Freeform input screen
-   - Material Design theme
-   - Dark mode support
-
-2. Build freeform input UI
-   - Input text field
-   - Output text field (optional)
-   - Result display
-   - Error display
-   - Real-time evaluation
-
-3. Integrate parser with UI
-   - Connect input to parser
-   - Display results
-   - Handle errors gracefully
-
-4. Settings screen (basic)
-   - Precision selector
-   - Notation selector
-   - Dark mode toggle
-
-**Deliverable:** Working app that evaluates expressions in freeform mode
-
----
-
-### Phase 5: Worksheet Mode (Weeks 13-15)
-
-**Goals:** Multi-unit worksheet interface
-
-**Tasks:**
-
-1. Implement Worksheet domain model
-2. Create worksheet UI components
-   - Multi-field input grid
-   - Unit selectors per field
-   - Real-time updates
-
-3. Build worksheet management
-   - Load pre-defined worksheets
-   - Switch between worksheets
-   - Category navigation
-
-4. Implement state management
-   - Reactive updates across fields
-   - Input validation
-   - Error handling
-
-**Deliverable:** Worksheet mode functional with pre-defined worksheets
-
----
-
-### Phase 6: Persistence (Weeks 16-17)
-
-**Goals:** Save user data and preferences
-
-**Tasks:**
-
-1. Set up local database (sqflite)
-2. Implement PreferencesRepository
-3. Implement WorksheetRepository
-4. Add persistence for:
-   - User preferences
-   - Worksheet last values
-   - Favorite units
-
-5. Restore state on app launch
-6. Test save/load cycle
-
-**Deliverable:** App remembers settings and worksheet values between sessions
-
----
-
-### Phase 7: Currency Support (Weeks 18-19)
-
-**Goals:** Currency conversion with live rates
-
-**Tasks:**
-
-1. Choose and integrate currency rate API
-2. Implement CurrencyService
-3. Add currency rate storage
-4. Ship default rates in assets
-5. Auto-update logic (24hr check)
-6. Manual refresh UI
-7. Display last update timestamp
-8. Handle offline gracefully
-
-**Deliverable:** Currency conversions work with auto-updating rates
-
----
-
-### Phase 8: Complete Unit Database (Week 20-21)
-
-**Goals:** Import all unit categories
-
-**Tasks:**
-
-1. Complete GNU Units database import
-   - All categories from requirements
-   - Verify accuracy of conversions
-
-2. Add unit aliases and plurals
-3. Organize into categories
-4. Test coverage for all categories
-
-**Deliverable:** All required unit categories available
-
----
-
-### Phase 9: Polish & Testing (Weeks 22-24)
-
-**Goals:** Production-ready quality
-
-**Tasks:**
-
-1. UI/UX refinement
-   - Responsive layouts
-   - Tablet support
-   - Accessibility improvements
-
-2. Performance optimization
-   - Parser performance tuning
-   - UI rendering optimization
-   - Memory usage analysis
-
-3. Comprehensive testing
-   - Integration tests
-   - Widget tests
-   - Manual testing on real devices
-
-4. Bug fixes
-5. Documentation
-   - Code documentation
-   - User guide (README)
-   - Contributing guidelines
-
-**Deliverable:** MVP ready for release
-
----
-
-### Phase 10: Release (Week 25)
-
-**Goals:** Publish to GitHub and Play Store
-
-**Tasks:**
-
-1. Create app icon and branding
-2. Prepare Play Store assets
-   - Screenshots
-   - Description
-   - Privacy policy
-
-3. Build release APK/AAB
-4. Set up GitHub repository
-   - Clean up code
-   - Add license
-   - Polish README
-
-5. Publish to GitHub
-6. Submit to Play Store (optional)
-
-**Deliverable:** Public MVP release
-
----
-
-
-Future Enhancement Phases
--------------------------
-
-### Phase 11: Custom Units
-
-- UI for defining custom units
-- Custom unit persistence
-- Validation and testing
-
-### Phase 12: Worksheet Customization
-
-- Edit existing worksheets
-- Create new worksheets
-- Worksheet sharing (export/import)
-
-### Phase 13: iOS Support
-
-- Test on iOS simulator
-- iOS-specific UI adjustments
-- Submit to App Store
-
-### Phase 14: Advanced Features
-
-- Equation solver
-- Graphing
-- Additional functions
-- More mathematical constants
-
----
-
-
-Development Best Practices
---------------------------
-
-### Code Organization
+The standalone `reduce()` utility (`unit_service.dart`) rewrites a quantity
+whose dimension mentions non-primitive units into primitive base units.
+
+### 3. Functions
+
+`UnitaryFunction` (`function.dart`) is the abstract base for callable
+functions: id, aliases, arity, domain/range specs (`QuantitySpec`, with
+dimension and bounds checking), `call()`, and optional `callInverse()`.
+
+- **`BuiltinFunction`** – wraps a Dart implementation; the trigonometric,
+  logarithmic, and root functions (sin, cos, tan, asin, acos, atan, ln, log,
+  exp, sqrt, cbrt, abs) are registered this way.
+- **`DefinedFunction`** (`defined_function.dart`) – evaluates a forward
+  expression string with parameter bindings, imported from the GNU Units
+  database (e.g. `tempF`, `wiregauge`); single-parameter functions with an
+  inverse expression support inverse application (`~tempF`).  Direct and
+  mutual recursion are detected via the shared `visited` stack.
+
+Functions are registered in and looked up from the `UnitRepository` alongside
+units and prefixes; name collisions are rejected at registration time.
+
+### 4. Unit Database
+
+The unit catalog is imported from the GNU Units database at development time,
+not parsed at runtime:
+
+~~~~
+definitions.units (GNU Units)
+        │  tool/import_gnu_units.dart
+        ▼
+assets/units/units.json   ←  assets/units/units-supplementary.json
+        │  tool/generate_predefined_units.dart
+        ▼
+lib/core/domain/data/predefined_units.dart  (generated Dart)
+~~~~
+
+- `units.json` holds the full merged database (7471 units, 125 prefixes, 88
+  dimension labels) as data; `units-supplementary.json` holds project-owned
+  additions and overrides.
+- The generated `predefined_units.dart` registers everything into a
+  `UnitRepository` in plain Dart (`registerPredefinedUnits()`,
+  `registerDefinedFunctions()`), so app startup involves no JSON parsing or
+  asset I/O for units.
+- Pre-commit hooks re-run both tools when their inputs change, keeping the
+  generated files in sync with the sources.
+
+### 5. Worksheet System
+
+- **Model** (`worksheet.dart`): `WorksheetTemplate` (id, name, rows, optional
+  banner) with `WorksheetRow`s.  Each row has a label, an expression string
+  (compound expressions like `m/s` or `ft^2` are supported), and a
+  `WorksheetRowKind`: `UnitRow` for ratio-based conversion or `FunctionRow`
+  for function forward/inverse application (used by non-zero-origin
+  temperature scales).
+- **Engine** (`worksheet_engine.dart`): `computeWorksheet()` takes the
+  template, source row, and source value, and computes every other row's
+  display value – unit-ratio math for `UnitRow`s, `call()`/`callInverse()`
+  for `FunctionRow`s – returning per-row error strings on dimension mismatch.
+  The engine is pure Dart and synchronous (~150–190 µs per full recompute).
+- **Templates**: 12 predefined worksheets (Angle, Area, Currency, Digital
+  Storage, Energy, Length, Mass, Pressure, Speed, Temperature, Time, Volume)
+  in `predefined_worksheets.dart`.  The Currency template declares a banner
+  showing rate freshness.
+- **State**: `WorksheetNotifier` applies "last keystroke wins" source
+  semantics (focus alone does not transfer which row drives the conversion)
+  and keeps per-template value maps; the active template and each template's
+  source cell persist across sessions via `WorksheetRepository`.
+
+### 6. Currency Rate Management
+
+- **Fetching** (`currency_service.dart`): Frankfurter v2 API
+  (`https://api.frankfurter.dev/v2/rates?base=USD`, no API key), including
+  precious metals (XAU/XAG/XPT).
+- **Application**: `UnitRepository.buildCurrencyDescriptors()` identifies
+  currency units in the catalog; fetched rates are applied through the
+  repository's dynamic unit layer, shadowing the built-in compiled rates.
+  Precious metals update intermediate price units (e.g. `goldprice`).
+- **Storage** (`currency_rate_repository.dart`): rates persist in
+  SharedPreferences with a per-currency date and a top-level `updatedAt`;
+  stored rates are re-applied synchronously before the first frame, so
+  currency conversions are live from launch even offline.
+- **Refresh policy**: a 24-hour staleness check runs fire-and-forget after
+  the first frame; Settings and the Currency worksheet share a manual
+  refresh button with a 60-second cooldown.  Refresh failures surface in a
+  dialog and never disturb stored rates.
+
+### 7. UI Shell
+
+`AppShell` (`shared/app_shell.dart`) owns top-level navigation and the
+responsive layout decision, driven by a `WindowSizeClass` derived from window
+width: compact (<600 dp, drawer + single pane), medium (600–1040 dp, drawer +
+two panes), expanded (>1040 dp, persistent navigation rail + two panes).
+Pages are kept alive in an `IndexedStack` and use a shared `TwoPaneLayout`
+for their split views (freeform history pane, worksheet template list,
+browser detail pane).
+
+
+State Management
+----------------
+
+Riverpod throughout:
+
+- `settingsProvider` (`SettingsNotifier`) – user settings, persisted via
+  `SettingsRepository`
+- `freeformProvider` / `freeformHistoryProvider` – freeform evaluation state
+  and the persistent history of successful conversions
+- `worksheetProvider` (`WorksheetNotifier`) – active template, per-template
+  values, persisted source cells
+- `browserProvider` (`BrowserNotifier`) – browse catalog, view mode, search,
+  selection
+- `currencyStatusProvider` – rate freshness, refresh in-flight/cooldown state
+- `unitRepositoryProvider` – the shared `UnitRepository` singleton, with a
+  version counter provider that dependents watch to react to dynamic-layer
+  changes (e.g. recomputing worksheets after a rate refresh)
+
+All persistence goes through small repository classes over SharedPreferences
+(`SettingsRepository`, `WorksheetRepository`, `FreeformHistoryRepository`,
+`CurrencyRateRepository`), each provided by a must-override provider wired in
+`main.dart` (and by shared test helpers in `test/helpers/`).
+
+
+Code Organization
+-----------------
 
 ~~~~
 lib/
-├── main.dart
-├── app.dart
+├── main.dart                  # entry point; wires repositories, pre-frame rate load
+├── app.dart                   # MaterialApp, theming
 ├── core/
-│   ├── domain/
-│   │   ├── models/
-│   │   │   ├── dimension.dart
-│   │   │   ├── unit.dart
-│   │   │   ├── quantity.dart
-│   │   │   └── worksheet.dart
-│   │   ├── parser/
-│   │   │   ├── lexer.dart
-│   │   │   ├── parser.dart
-│   │   │   ├── ast.dart
-│   │   │   └── evaluator.dart
-│   │   └── services/
-│   │       ├── currency_service.dart
-│   │       └── unit_service.dart
-│   └── data/
-│       ├── repositories/
-│       ├── data_sources/
-│       └── models/
+│   └── domain/                # pure Dart, no Flutter
+│       ├── models/            # Dimension, Quantity, Rational, Unit,
+│       │                      #   UnitRepository, functions, browse/completion
+│       ├── parser/            # token, lexer, parser, ast, expression_parser
+│       ├── completion/        # token_at_cursor
+│       ├── services/          # reduce()
+│       ├── data/              # generated predefined_units.dart, builtin functions
+│       └── errors.dart        # UnitaryException hierarchy
 ├── features/
-│   ├── freeform/
-│   │   ├── presentation/
-│   │   └── bloc/
-│   ├── worksheet/
-│   │   ├── presentation/
-│   │   └── bloc/
-│   └── settings/
-│       ├── presentation/
-│       └── bloc/
-├── shared/
-│   ├── widgets/
-│   ├── themes/
-│   └── utils/
-└── assets/
-    ├── units/
-    └── currency/
+│   ├── freeform/              # expression evaluation UI, completion, history
+│   ├── worksheet/             # templates, engine, worksheet UI
+│   ├── browser/               # unit catalog browser
+│   ├── currency/              # rate fetching, storage, refresh UI
+│   ├── settings/              # user settings
+│   └── about/                 # about/license screens
+│       (each: data/ · domain/ · models/ · presentation/ · services/ ·
+│        state/ as needed)
+├── shared/                    # app shell, responsive layout, drawer,
+│                              #   formatters, reusable widgets
+assets/
+├── units/                     # units.json + units-supplementary.json (sources
+│                              #   for the generated unit database)
+└── icon/                      # app icon source (SVG) and rasterization
+tool/                          # import/codegen/benchmark/icon tooling
+test/                          # mirrors lib/ structure; test/helpers/ harness
+integration_test/              # on-device/emulator end-to-end tests
 ~~~~
 
-### Testing Strategy
-
-- **Unit tests:** All parser, evaluator, and domain logic (>80% coverage)
-- **Widget tests:** All UI components
-- **Integration tests:** Key user flows
-- **Manual testing:** Real devices, various screen sizes
-
-### Version Control
-
-- Feature branches for each phase
-- Pull requests with code review (self-review)
-- Semantic versioning (0.1.0 for MVP)
-- Changelog maintenance
-
-### Documentation
-
-- Inline code comments for complex logic
-- README with setup instructions
-- Architecture decision records (ADRs)
-- API documentation for public interfaces
-
----
-
-
-Risk Mitigation
----------------
-
-### Technical Risks
-
-1. **Parser complexity too high**
-   - Mitigation: Start simple, iterate, reference existing parsers
-
-2. **Performance issues with real-time updates**
-   - Mitigation: Profile early, optimize hot paths, add debouncing if needed
-
-3. **GNU Units database parsing difficulties**
-   - Mitigation: Start with subset, manual conversion if needed
-
-### Learning Curve Risks
-
-1. **Flutter/Dart unfamiliarity**
-   - Mitigation: Official tutorials, small prototypes first, active community
-
-2. **Mobile development patterns**
-   - Mitigation: Follow official guidelines, study example apps
-
-### Scope Creep Risks
-
-1. **Feature bloat before MVP**
-   - Mitigation: Strict phase adherence, defer enhancements
-
-2. **Perfectionism delays**
-   - Mitigation: "Good enough" for MVP, iterate post-release
-
----
-
-
-Success Metrics
----------------
-
-### MVP Success Criteria
-
-- ✓ Accurate conversions for all categories
-- ✓ Freeform mode handles complex expressions
-- ✓ Worksheet mode supports 5+ worksheets
-- ✓ Dark mode works correctly
-- ✓ Settings persist across sessions
-- ✓ Currency rates update automatically
-- ✓ No critical bugs
-- ✓ Runs smoothly on mid-range Android devices
-- ✓ Published on GitHub with documentation
-
-### Post-MVP Goals
-
-- User feedback incorporation
-- Additional worksheet templates
-- Custom unit feature
-- iOS support
-- Play Store publication (optional)
-
----
+The `test/` tree mirrors `lib/` directory-for-directory.  `tool/` follows a
+lib/exe split: each executable (`import_gnu_units.dart`,
+`generate_predefined_units.dart`, `benchmark.dart`, `memory_report.dart`) has
+a corresponding testable `*_lib.dart`.
 
 
 Resources & References
 ----------------------
 
-### Learning Resources
-
 - Flutter documentation: <https://docs.flutter.dev>
-- Dart language tour: <https://dart.dev/guides/language/language-tour>
 - Material Design: <https://m3.material.io>
 - GNU Units: <https://www.gnu.org/software/units/>
-
-### Tools
-
-- Flutter DevTools for debugging
-- Android Studio / VS Code
-- Git for version control
-- GitHub for hosting
-
-### Community
-
-- Flutter Discord/Reddit for questions
-- Stack Overflow for specific issues
-- GitHub Issues for bug tracking
+- Frankfurter exchange-rate API: <https://frankfurter.dev>

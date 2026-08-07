@@ -11,70 +11,16 @@ Code Organization
 
 ### Project Structure
 
-~~~~
-lib/
-├── main.dart
-├── app.dart
-├── core/
-│   ├── domain/
-│   │   ├── models/
-│   │   │   ├── dimension.dart
-│   │   │   ├── unit.dart
-│   │   │   ├── quantity.dart
-│   │   │   ├── prefix.dart
-│   │   │   └── worksheet.dart
-│   │   ├── parser/
-│   │   │   ├── lexer.dart
-│   │   │   ├── parser.dart
-│   │   │   ├── ast.dart
-│   │   │   └── evaluator.dart
-│   │   └── services/
-│   │       ├── currency_service.dart
-│   │       └── unit_service.dart
-│   └── data/
-│       ├── repositories/
-│       │   ├── unit_repository.dart
-│       │   ├── worksheet_repository.dart
-│       │   └── preferences_repository.dart
-│       ├── data_sources/
-│       │   ├── local_database.dart
-│       │   └── currency_api.dart
-│       └── models/
-│           └── database_models.dart
-├── features/
-│   ├── freeform/
-│   │   ├── presentation/
-│   │   │   ├── freeform_screen.dart
-│   │   │   └── widgets/
-│   │   └── state/
-│   │       └── freeform_provider.dart
-│   ├── worksheet/
-│   │   ├── presentation/
-│   │   │   ├── worksheet_screen.dart
-│   │   │   └── widgets/
-│   │   └── state/
-│   │       └── worksheet_provider.dart
-│   └── settings/
-│       ├── presentation/
-│       │   └── settings_screen.dart
-│       └── state/
-│           └── settings_provider.dart
-├── shared/
-│   ├── widgets/
-│   │   ├── unit_picker.dart
-│   │   └── quantity_display.dart
-│   ├── themes/
-│   │   ├── app_theme.dart
-│   │   └── colors.dart
-│   └── utils/
-│       ├── constants.dart
-│       └── extensions.dart
-└── assets/
-    ├── units/
-    │   └── units_database.json
-    └── currency/
-        └── default_rates.json
-~~~~
+See [Code Organization in architecture.md](architecture.md#code-organization)
+for the current source tree.  The essentials:
+
+- `lib/core/domain/` – pure Dart (no Flutter): models, parser, unit system
+- `lib/features/<feature>/` – one directory per feature, subdivided into
+  `data/`, `models/`, `presentation/`, `services/`, and `state/` as needed
+- `lib/shared/` – app shell, responsive layout, and cross-feature widgets
+  and utilities
+- `test/` mirrors `lib/` directory-for-directory; `tool/` executables each
+  pair with a testable `*_lib.dart`
 
 ### File Naming Conventions
 
@@ -109,42 +55,44 @@ The app follows a layered architecture with clear separation of concerns:
 
 ### State Management
 
-**Provider/Riverpod Patterns:**
+**Riverpod Patterns:**
 
-- Use `Provider` for simple read-only dependencies
-- Use `StateNotifierProvider` for mutable state
+- Use `Provider` for simple read-only dependencies (singletons, derived
+  values)
+- Use `NotifierProvider` for mutable state (Riverpod 3 `Notifier` classes)
 - Use `FutureProvider` for async data loading
-- Use `StreamProvider` for reactive data streams
+- Screen-level state notifiers are non-`autoDispose` so page state survives
+  navigation
+- Repository providers that require a constructed instance are declared as
+  must-override (`throw UnimplementedError()`) and wired in `main.dart`; in
+  tests they are supplied by the shared harness (see Testing Strategy)
 
 **Example:**
 
 ~~~~ dart
-final unitRepositoryProvider = Provider<UnitRepository>((ref) {
-  return UnitRepository();
+final settingsRepositoryProvider = Provider<SettingsRepository>((ref) {
+  throw UnimplementedError('Must be overridden with a constructed instance');
 });
 
-final freeformInputProvider = StateNotifierProvider<FreeformInputNotifier, FreeformState>((ref) {
-  return FreeformInputNotifier(ref.read(unitRepositoryProvider));
-});
+final settingsProvider = NotifierProvider<SettingsNotifier, UserSettings>(
+  SettingsNotifier.new,
+);
 ~~~~
 
 ### Repository Pattern
 
-All data access goes through repositories:
+All persistence goes through small repository classes over
+SharedPreferences (`SettingsRepository`, `WorksheetRepository`,
+`FreeformHistoryRepository`, `CurrencyRateRepository`):
 
-- Repositories abstract data sources
-- Single source of truth for each domain object
-- Handle caching and data transformation
+- Repositories abstract the storage mechanism from notifiers and UI
+- Single source of truth for each persisted domain object
+- Handle serialization and tolerate missing/malformed stored data by
+  falling back to defaults
 
-**Example:**
-
-~~~~ dart
-class UnitRepository {
-  Future<Unit?> getUnit(String id);
-  Future<List<Unit>> getUnitsInDimension(Dimension dimension);
-  Future<void> saveCustomUnit(Unit unit);
-}
-~~~~
+(`UnitRepository`, despite the name, is not a persistence repository – it is
+the in-memory registry of units, prefixes, and functions in the core domain
+layer.)
 
 ---
 
@@ -204,14 +152,24 @@ testWidgets('freeform input should display result', (WidgetTester tester) async 
 });
 ~~~~
 
+**Widget-test harness**: use the shared helpers in `test/helpers/` —
+`pumpApp(tester, child)` pumps a widget inside `ProviderScope` +
+`MaterialApp` with default in-memory instances of all must-override
+repository providers (`TestRepositories`), merging any caller-supplied
+overrides deterministically.  Never hand-roll the override list in a new
+test file.
+
 ### Integration Tests
 
-**Key Flows to Test**:
+The `integration_test/` suite runs against a real Android emulator (locally
+via `tool/run_integration_tests.sh`, and unconditionally in CI):
 
-- Complete conversion workflow
-- Worksheet multi-field updates
-- Currency rate updates
-- Settings persistence
+- `boot_test.dart` – the real `main()` entry point, including pre-first-frame
+  currency-rate rehydration
+- `restart_test.dart` – persistence across a simulated restart, against the
+  real `SharedPreferences` plugin
+- `currency_refresh_test.dart` – manual refresh flow against a mocked HTTP
+  client (never the real rates API)
 
 ### Test Organization
 
@@ -219,6 +177,8 @@ testWidgets('freeform input should display result', (WidgetTester tester) async 
 - Use `setUp` and `tearDown` for test fixtures
 - Group related tests
 - Use descriptive test names
+- Run the full suite with `flutter test --reporter failures-only`, and
+  `flutter analyze` as a final check
 
 ---
 
@@ -228,14 +188,11 @@ Error Handling
 
 ### Exception Types
 
-Define custom exception classes for different error categories:
-
-~~~~ dart
-class LexException extends Exception { }
-class ParseException extends Exception { }
-class DimensionException extends Exception { }
-class EvalException extends Exception { }
-~~~~
+All domain errors are subclasses of the shared `UnitaryException` base class
+(`lib/core/domain/errors.dart`): `LexException`, `ParseException`,
+`EvalException`, `DimensionException`, and `BoundsException`.  UI code
+catches `on UnitaryException` and displays the message; unexpected errors
+are allowed to propagate.
 
 ### Error Reporting
 
@@ -263,8 +220,10 @@ throw LexException("Unexpected character: '$c'", line: 5, column: 12);
 
 ### Error Recovery
 
-- Parser should recover from errors when possible
-- UI should handle errors gracefully without crashing
+- The lexer/parser/evaluator fail fast on the first error with a precise
+  message; there is no partial-result recovery
+- UI handles errors gracefully without crashing (freeform shows the message
+  in the result display; worksheets show per-cell errors)
 - Provide clear feedback to user
 
 ---
@@ -293,6 +252,11 @@ Performance Guidelines
 - Avoid memory leaks in providers
 - Profile memory usage periodically
 
+Measure before optimizing: [performance.md](performance.md) documents the
+checked-in benchmark tools (`tool/benchmark.dart`, `tool/memory_report.dart`),
+on-device profiling procedures, current baselines, and the action thresholds
+that decide whether an optimization is worth doing.
+
 ---
 
 
@@ -304,19 +268,19 @@ Version Control
 **Branch Strategy**:
 
 - `main`: Production-ready code
-- `develop`: Integration branch for features
-- `feature/feature-name`: Individual features
-- `bugfix/issue-number`: Bug fixes
+- Work happens on short-lived branches off `main` (named
+  `<user>/<yyyymmdd>-<topic>`, e.g. `wisnij/20260802-integration-tests`),
+  merged back when green
 
 **Commit Messages**:
 
 - Use conventional commits format
 - Examples:
-  - `feat: add trigonometric functions to parser`
-  - `fix: correct dimension calculation for derived units`
-  - `docs: update README with installation instructions`
-  - `refactor: simplify lexer token generation`
-  - `test: add unit tests for quantity arithmetic`
+  - `feat: Add trigonometric functions to parser`
+  - `fix: Correct dimension calculation for derived units`
+  - `docs: Update README with installation instructions`
+  - `refactor: Simplify lexer token generation`
+  - `test: Add unit tests for quantity arithmetic`
 
 ### Pull Request Guidelines
 

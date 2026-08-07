@@ -85,7 +85,9 @@ The following areas have been thoroughly designed and documented:
 Areas That Need More Detail
 ---------------------------
 
-The following areas have been identified but need deeper design work:
+Status of the areas originally flagged as needing deeper design work.  Most
+are now implemented; each entry notes what (if anything) still needs design
+for later phases:
 
 ### 1. Worksheet System — **COMPLETE (Phase 6)**
 
@@ -97,30 +99,14 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
 - Sidebar pinning of worksheets (future)
 - Unit list rows (`ft;in` multi-field display, future)
 
-### 2. GNU Units Database Import
+### 2. GNU Units Database Import — **COMPLETE (Phase 5 + Defined Functions)**
 
-**Current State**: Identified as data source for units
-
-**Needs Detail On**:
-
-- GNU Units file format
-  - Structure and syntax of the definitions file
-  - How units, prefixes, and constants are represented
-- Parsing strategy
-  - Parser implementation approach
-  - Handling of different definition types
-  - Mapping GNU Units syntax to our internal format
-- Data transformation
-  - Converting to our Unit/UnitDefinition structure
-  - Handling of special cases or GNU-specific features
-  - Validation of imported data
-- Import process
-  - One-time import vs. periodic updates
-  - How to bundle with app
-  - Versioning of unit database
-- Incompatibilities and special cases
-  - GNU Units features we won't support
-  - Workarounds for differences in architecture
+- **Import pipeline**: `tool/import_gnu_units.dart` (+ testable `_lib`) parses `assets/units/definitions.units` with a two-pass parser (conditional directive evaluation, alias detection via known-ID membership) and merges project-owned overrides from `assets/units/units-supplementary.json` into `assets/units/units.json` (7471 units, 125 prefixes, 88 dimension labels)
+- **Codegen**: `tool/generate_predefined_units.dart` (+ `_lib`) emits `lib/core/domain/data/predefined_units.dart` — registration is plain generated Dart, so app startup involves no JSON parsing or asset I/O for units
+- **Definition types**: primitive, derived, prefix, alias, and defined functions (GNU `name(x)` nonlinear definitions with domain/range and inverses; 101 functions + 46 aliases)
+- **Import process**: development-time, not runtime; `import-gnu-units` and `generate-predefined-units` pre-commit hooks keep the generated files in sync with the sources
+- **Incompatibilities**: tracked explicitly in the importer's "unsupported" output section — now empty (early Phase 5 had 177 unsupported entries; defined-function support and supplementary-file fixes cleared them)
+- **Documentation**: architecture.md "Unit Database"; 164 tool tests under `test/tool/`
 
 ### 3. Currency Rate Management — **COMPLETE (Phase 8)**
 
@@ -134,89 +120,48 @@ Core worksheet mode is implemented.  See Phase 6 design notes above.
 
 ### 4. User Preferences & State Management
 
-**Current State**: Basic settings model designed for Phase 4 (precision, notation, darkMode, evaluationMode).  Riverpod chosen for state management; SharedPreferences for persistence.  See [phase4_plan.md](archive/phase4_plan.md).
+**Current State**: All shipped user data persists through small repository classes over SharedPreferences (`SettingsRepository`, `WorksheetRepository`, `FreeformHistoryRepository`, `CurrencyRateRepository`), each behind a must-override Riverpod provider wired in `main.dart` (and supplied by the shared `test/helpers/` harness in tests).  Repositories tolerate missing or malformed stored data by falling back to defaults, which covers the "corrupted preferences" concern in practice.  Settings model: precision (2-10, default 8), notation (automatic/scientific/engineering), theme (project-owned `ThemePreference`), evaluation mode (real-time/on-submit).
 
 **Needs Detail On** (for later phases):
 
 - Data migration
-  - Strategy for schema changes between versions
-  - Backwards compatibility
-  - Migration testing approach
-- State restoration
-  - Handling corrupted preferences
-  - Reset to defaults functionality
-- Additional preferences for worksheet mode, currency, custom units
+  - Strategy for schema changes between versions (so far all changes have been additive, plus one-off orphaned-key cleanup as in the freeform-persistence removal; no versioned migration mechanism exists)
+  - Backwards compatibility and migration testing approach
+- Explicit "reset to defaults" functionality
+- Custom-unit persistence (Phase 11) and the sqflite migration planned alongside custom worksheets (Phase 12)
 
-### 5. UI/UX Design
+### 5. UI/UX Design — **mostly complete (Phases 4-9)**
 
-**Current State**: Freeform mode UI fully designed for Phase 4 (screen layouts, navigation, input/output fields, result display, settings screen).  See [phase4_plan.md](archive/phase4_plan.md).
+**Current State**: All the majors are shipped.  Freeform UI (Phase 4, plus completion, history, soft-wrap, keyboard hints); worksheet UI with multi-row layout, source-row indication, template switcher, and no-default picker (Phase 6 + Phase 9 refinements); the unit browser fills the "unit picker" role with dimension/alphabetical grouping, search, and detail pages (Phase 7); Settings organized into Display/Appearance/Freeform behavior/Currency rates/About sections; responsive design with three width tiers, safe areas, and tablet spacing (Phase 9); accessibility with screen-reader support, a WCAG contrast audit pinned by regression test, and 48 dp touch targets (Phase 9).
 
-**Needs Detail On**:
+**Still needs design for later phases**:
 
-- Worksheet UI
-  - Multi-field layout
-  - Unit selector per field
-  - Active field indication
-  - Worksheet switcher
-  - Add/remove fields UI
-- Unit picker design
-  - Category organization
-  - Search/filter functionality
-  - Favorites display
-  - Recent units
-  - Preview/description display
-- Settings screen
-  - Organization of settings
-  - Precision controls
-  - Notation selector
-  - Theme controls
-  - About/help sections
-- Responsive design
-  - Phone layouts
-  - Tablet layouts
-  - Landscape mode
-- Accessibility
-  - Screen reader support
-  - Contrast requirements
-  - Touch target sizes
+- Worksheet customization UI (Phase 12): add/remove/reorder rows, per-row unit selection, editing existing templates
+- Favorites and recent units in the browser (deferred with favorite-unit persistence, Phase 12)
+- First-run onboarding/tutorial (deferred as nice-to-have, Phase 14; the idle-state tappable example covers lightweight onboarding)
 
-### 6. Testing Strategy (Not Yet Discussed)
+### 6. Testing Strategy — **established in practice**
 
-**Needs Detail On**:
+**Current State** (documented in best_practices.md "Testing Strategy"):
 
-- Unit test approach
-  - What to test at unit level
-  - Coverage targets
-  - Mock strategies
-- Integration test approach
-  - Key integration points
-  - Test scenarios
-- Widget/UI test approach
-  - Which UI flows to test
-  - Testing tools and frameworks
-- Performance testing
-  - Benchmarks for parser/evaluator
-  - UI responsiveness targets
+- Unit tests: 2045 passing across parser, core domain, tools, and features; the `test/` tree mirrors `lib/` directory-for-directory; MVP criterion is >80% coverage for parser/core domain (measured in CI; failing the build below the threshold is code review finding F11, still open)
+- Widget tests: shared harness in `test/helpers/` (`TestRepositories` + `pumpApp`) supplies all must-override repository providers; rebuild-scope tests use the `RebuildCounter` probe to pin per-keystroke rebuild bounds
+- Integration tests: `integration_test/` suite (boot, simulated restart, mocked currency refresh) against a real Android emulator, run unconditionally in CI with a timeout-and-retry-only-on-timeout wrapper
+- Performance testing: `tool/benchmark.dart` (with `--baseline` diffing) and `tool/memory_report.dart`; baselines, on-device procedures, and action thresholds (interaction >100 ms, memory >~50 MB) recorded in performance.md
 
-### 7. Error Handling & User Feedback (Partially Discussed)
+**Remaining** (Phase 9 tasks): widget-test coverage-gap audit, manual device-testing checklist, coverage-threshold enforcement (F11).
 
-**Current State**: Error types defined for parser/evaluator
+### 7. Error Handling & User Feedback — **largely settled in implementation**
 
-**Needs Detail On**:
+**Current State**:
 
-- User-facing error messages
-  - Exact wording for common errors
-  - Helpful suggestions for fixes
-  - When to show errors vs. warnings
-- Error recovery
-  - How to handle partial input
-  - Graceful degradation strategies
-- Loading states and feedback
-  - Indicators for background operations
-  - Progress for long operations
-- Success feedback
-  - Confirmation for user actions
-  - Subtle vs. prominent feedback
+- Exception hierarchy: all domain errors are `UnitaryException` subclasses (lex/parse/eval/dimension/bounds) with line/column positions on lex/parse errors; fail-fast with no partial-result recovery, and NaN-producing operations throw immediately — the "warnings" concept was never needed
+- Freeform: errors render in the result display and are announced via a polite live region with an "Error: " prefix; unknown units, circular definitions, and dimension mismatches have specific messages
+- Worksheets: per-cell red error text with an `error_outline` icon (non-color indicator) and native invalid-field semantics; worksheet-specific dimension-mismatch phrasing
+- Background operations: currency refresh shows a spinner, enforces a 60-second cooldown, and surfaces failures in a dialog without disturbing stored rates
+- Success feedback: copy actions confirm via SnackBar; evaluation results are announced to screen readers
+
+**Remaining**: no systematic pass over error-message *wording* (exact phrasing, actionable fix suggestions) has been done; treat as release-polish if user testing surfaces confusing messages.
 
 ---
 

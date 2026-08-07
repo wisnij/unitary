@@ -5,7 +5,7 @@ Thanks for your interest in contributing!  Unitary is a personal project, but
 bug reports, feature requests, and pull requests are all welcome.
 
 
-Reporting Bugs and Requesting Features
+Reporting bugs and requesting features
 --------------------------------------
 
 Use [GitHub issues](https://github.com/wisnij/unitary/issues).  For bugs,
@@ -19,7 +19,7 @@ For conversion-accuracy issues, the exact input expression is essential —
 many unit names are case-sensitive or ambiguous.
 
 
-Development Setup
+Development setup
 -----------------
 
 You need the [Flutter SDK](https://docs.flutter.dev/get-started/install)
@@ -40,7 +40,7 @@ pre-commit install
 ~~~~
 
 
-Making Changes
+Making changes
 --------------
 
 1. Create a branch off `main`.
@@ -59,7 +59,7 @@ Making Changes
    flutter analyze
    ~~~~
 
-### Guidelines
+### General guidelines
 
 - **One feature or fix per pull request** – keep PRs focused and reasonably
   sized

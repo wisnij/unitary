@@ -28,7 +28,7 @@ fetching currency exchange rates, and built-in rates are bundled so currency
 conversion works without a connection too.
 
 
-What It Does
+What it does
 ------------
 
 ### Freeform mode
@@ -137,7 +137,7 @@ tool/run_integration_tests.sh           # on-device tests (Android emulator)
   measurement procedures
 
 
-Project Status
+Project status
 --------------
 
 Unitary is feature-complete for its MVP and currently in the final polish and

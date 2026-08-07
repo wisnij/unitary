@@ -136,14 +136,6 @@ tool/run_integration_tests.sh           # on-device tests (Android emulator)
 - **[Performance](doc/performance.md)** – benchmark tooling, baselines, and
   measurement procedures
 
-### Application icon
-
-The launcher/favicon icon is generated from `assets/icon/unitary.svg` (the
-single source of truth).  After editing the SVG, regenerate all platform
-assets with `tool/generate_icons.sh` (requires Inkscape; the generated assets
-are committed, so normal builds don't need it).  A pre-commit hook keeps the
-generated assets in sync automatically.
-
 
 Project Status
 --------------

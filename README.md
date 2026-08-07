@@ -60,6 +60,8 @@ exponents, functions, and SI prefixes all carry their dimensions correctly.
   tap
 - **Definition lookup**: enter a bare unit name to see how it is defined
 
+![Freeform mode converting 5 ft + 3 in to centimeters](doc/screenshots/freeform.png)
+
 ### Worksheet mode
 
 Convert one value across many units at once.  Pick a worksheet, type a value
@@ -68,12 +70,17 @@ are built in: Angle, Area, Currency, Digital Storage, Energy, Length, Mass,
 Pressure, Speed, Temperature, Time, and Volume.  Your entries persist across
 sessions.
 
+![Length worksheet converting 100 meters across nine other units](doc/screenshots/worksheet.png)
+
 ### Unit browser
 
 Browse the entire unit catalog – over 7,000 units, 125 prefixes, and 100+
 functions imported from the [GNU Units](https://www.gnu.org/software/units/)
 database – alphabetically or grouped by physical dimension, with search and
 per-unit detail pages showing definitions, aliases, and resolved values.
+
+![Unit browser showing collapsed dimension groups above the expanded Area group](doc/screenshots/browser.png)
+![Detail page for the newton, showing its aliases, definition, and value](doc/screenshots/unit-detail.png)
 
 ### Currency conversion
 
@@ -82,6 +89,8 @@ automatically from the [Frankfurter](https://frankfurter.dev) API when the
 stored rates are more than a day old, and can be refreshed manually from
 Settings or the Currency worksheet.  Rates are stored on the device, so
 currency conversion keeps working offline.
+
+![Currency worksheet converting 100 Australian dollars, with the rate-freshness banner](doc/screenshots/currency.png)
 
 ### Designed for daily use
 
@@ -93,6 +102,9 @@ currency conversion keeps working offline.
 - **Configurable**: precision (2-10 significant figures),
   automatic/scientific/engineering notation, real-time or on-submit
   evaluation
+
+![Settings screen in dark mode](doc/screenshots/settings-dark.png)
+![Settings screen in light mode](doc/screenshots/settings-light.png)
 
 
 Development

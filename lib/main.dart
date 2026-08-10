@@ -15,7 +15,7 @@ import 'features/settings/state/settings_provider.dart';
 import 'features/worksheet/data/worksheet_repository.dart';
 import 'features/worksheet/state/worksheet_provider.dart';
 
-void main() async {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
   // Remove stale freeform-persistence keys left over from v0.7 and earlier.

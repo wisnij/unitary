@@ -20,7 +20,7 @@ import 'helpers/real_prefs.dart';
 /// contact the real network.
 Future<void> restart(WidgetTester tester) async {
   await RealPrefs.seedFreshCurrencyTimestamp();
-  app.main();
+  await app.main();
   await tester.pumpAndSettle();
 }
 
@@ -51,7 +51,7 @@ void main() {
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
-        app.main();
+        await app.main();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
 
@@ -88,7 +88,7 @@ void main() {
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
-        app.main();
+        await app.main();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
 
@@ -124,7 +124,7 @@ void main() {
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
-        app.main();
+        await app.main();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
 

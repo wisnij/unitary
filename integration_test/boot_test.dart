@@ -21,7 +21,7 @@ void main() {
       // short-circuits.
       await RealPrefs.seedFreshCurrencyTimestamp();
 
-      app.main();
+      await app.main();
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -42,7 +42,7 @@ void main() {
           },
         );
 
-        app.main();
+        await app.main();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
 

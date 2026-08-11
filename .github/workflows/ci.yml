@@ -60,14 +60,7 @@ jobs:
           git commit -m "Automatic deployment of $(git describe)"
       - run: git push origin HEAD:gh-pages --force
 
-  # The release chain below (prepare -> build-* -> release) is gated to push
-  # events only, matching what the separate Release workflow used to trigger
-  # on. Skipping `prepare` skips everything downstream via `needs:`, so this
-  # one condition covers the whole chain. Without it, every pull request
-  # would build an APK and a web bundle nobody looks at — and `prepare`'s
-  # `git describe` would be describing a PR merge ref.
   prepare:
-    if: ${{ github.event_name == 'push' }}
     needs: test
     runs-on: ubuntu-latest
     outputs:

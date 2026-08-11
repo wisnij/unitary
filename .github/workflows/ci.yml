@@ -81,6 +81,8 @@ jobs:
   build-android-apk:
     needs: prepare
     runs-on: ubuntu-latest
+    outputs:
+      asset: ${{ steps.asset.outputs.name }}
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -94,16 +96,23 @@ jobs:
           flutter build apk
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
+      - name: Compute asset name
+        id: asset
+        run: echo "name=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
       - name: Prepare Android APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk unitary-${{ needs.prepare.outputs.version }}.apk
+        run: cp build/app/outputs/flutter-apk/app-release.apk "${{ steps.asset.outputs.name }}"
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: unitary-${{ needs.prepare.outputs.version }}.apk
+          path: ${{ steps.asset.outputs.name }}
+          if-no-files-found: error
+          retention-days: 7
 
   build-web:
     needs: prepare
     runs-on: ubuntu-latest
+    outputs:
+      asset: ${{ steps.asset.outputs.name }}
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -118,12 +127,17 @@ jobs:
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
           --wasm
+      - name: Compute asset name
+        id: asset
+        run: echo "name=unitary-${{ needs.prepare.outputs.version }}-web.zip" >> "$GITHUB_OUTPUT"
       - name: Prepare web build
-        run: zip -r unitary-${{ needs.prepare.outputs.version }}-web.zip build/web
+        run: zip -r "${{ steps.asset.outputs.name }}" build/web
       - uses: actions/upload-artifact@v4
         with:
           name: web-zip
-          path: unitary-${{ needs.prepare.outputs.version }}-web.zip
+          path: ${{ steps.asset.outputs.name }}
+          if-no-files-found: error
+          retention-days: 7
 
   release:
     needs: [prepare, build-android-apk, build-web]
@@ -152,5 +166,5 @@ jobs:
           gh release create ${{ github.ref_name }}
           --notes-file RELEASE_NOTES.md
           --title "Release ${{ needs.prepare.outputs.version }}"
-          unitary-${{ needs.prepare.outputs.version }}.apk
-          unitary-${{ needs.prepare.outputs.version }}-web.zip
+          ${{ needs.build-android-apk.outputs.asset }}
+          ${{ needs.build-web.outputs.asset }}

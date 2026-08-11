@@ -32,6 +32,12 @@ void main() {
       'applies a stored currency rate to the unit repository before the '
       'first frame',
       (tester) async {
+        // Intercept the text-input channel so focusing a field can't pop the
+        // device's real IME (see restart_test.dart's useTestKeyboard for why
+        // that matters); text still lands through the synthetic keyboard.
+        tester.testTextInput.register();
+        addTearDown(tester.testTextInput.unregister);
+
         await RealPrefs.clear();
         // A deliberately unrealistic rate (real EUR/USD rates are never
         // anywhere near 2.0) so the assertion can't accidentally pass

@@ -22,21 +22,7 @@ Future<void> restart(WidgetTester tester) async {
   await RealPrefs.seedFreshCurrencyTimestamp();
   await app.main();
   await tester.pumpAndSettle();
-  // Replacing a live tree in place subjects the incoming tree — including
-  // the offstage pages AppShell keeps alive in its IndexedStack — to a
-  // transient degenerate-constraint layout pass that no real cold launch
-  // performs (the same artifact that surfaced the FastScrollBar zero-height
-  // clamp bug when this suite was built).  Fixed-height layouts can report
-  // benign RenderFlex overflows during that pass, so absorb exactly those;
-  // any other captured exception still fails the test.
-  final exception = tester.takeException();
-  if (exception is FlutterError &&
-      exception.message.contains('RenderFlex overflowed')) {
-    return;
-  }
-  if (exception != null) {
-    throw exception;
-  }
+  expect(tester.takeException(), isNull);
 }
 
 Future<void> openDrawerAndTap(WidgetTester tester, String tileText) async {
@@ -58,11 +44,27 @@ void main() {
     addTearDown(tester.view.reset);
   }
 
+  // IntegrationTestWidgetsFlutterBinding leaves registerTestTextInput false,
+  // so focusing a field lets TextInput.show reach the platform and pop the
+  // device's real IME.  Its inset is reported in the real screen's physical
+  // pixels, but useCompact forces devicePixelRatio to 1.0, so MediaQuery
+  // scales it as if it were logical pixels — a keyboard that covers half the
+  // real screen swallows nearly the whole 800 px-tall test view, leaving the
+  // freeform body a few pixels of height and overflowing the fixed-height
+  // operator key panel.  Registering the synthetic keyboard intercepts the
+  // channel, so no real IME appears and text still lands (the same fix the
+  // screenshot harness needed).
+  void useTestKeyboard(WidgetTester tester) {
+    tester.testTextInput.register();
+    addTearDown(tester.testTextInput.unregister);
+  }
+
   group('Restart persistence', () {
     testWidgets(
       'worksheet source value survives a restart',
       (tester) async {
         useCompact(tester);
+        useTestKeyboard(tester);
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
@@ -79,7 +81,6 @@ void main() {
         await tester.pumpAndSettle();
 
         await restart(tester);
-        expect(tester.takeException(), isNull);
 
         await openDrawerAndTap(tester, 'Worksheet');
 
@@ -100,6 +101,7 @@ void main() {
       'a changed setting survives a restart',
       (tester) async {
         useCompact(tester);
+        useTestKeyboard(tester);
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
@@ -118,7 +120,6 @@ void main() {
         await tester.pumpAndSettle();
 
         await restart(tester);
-        expect(tester.takeException(), isNull);
 
         await openDrawerAndTap(tester, 'Settings');
 
@@ -136,6 +137,7 @@ void main() {
       'a freeform history entry survives a restart',
       (tester) async {
         useCompact(tester);
+        useTestKeyboard(tester);
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
@@ -151,7 +153,6 @@ void main() {
         await tester.pumpAndSettle();
 
         await restart(tester);
-        expect(tester.takeException(), isNull);
 
         await tester.tap(find.byIcon(Icons.history));
         await tester.pumpAndSettle();

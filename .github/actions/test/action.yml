@@ -21,6 +21,20 @@ runs:
         path: coverage/cobertura.xml
     - run: dart run cobertura show
       shell: bash
+    - name: Enable KVM group permissions
+      # GitHub-hosted x86_64 Ubuntu runners do expose /dev/kvm, but the
+      # runner user isn't in the `kvm` group, so the emulator's ProbeKVM
+      # fails ("This user doesn't have permissions to use KVM") and
+      # android-emulator-runner falls back to `-accel off` — full software
+      # emulation. That fallback is what makes the emulator so slow and
+      # render-hang prone in CI (the "bad window surface handle" hangs that
+      # burned both attempts of run 31445832242). This udev rule is the
+      # remedy documented in the action's own README.
+      run: |
+        echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+        sudo udevadm control --reload-rules
+        sudo udevadm trigger --name-match=kvm
+      shell: bash
     - name: Run Android integration tests
       # Runs unconditionally for every caller of this action. Confirmed
       # passing both locally (repeatedly, against a real emulator) and in

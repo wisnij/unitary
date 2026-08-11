@@ -44,7 +44,7 @@ void main() {
     await RealPrefs.clear();
     await RealPrefs.seedFreshCurrencyTimestamp();
 
-    app.main();
+    await app.main();
     await tester.pumpAndSettle();
 
     // All top-level pages stay alive in AppShell's IndexedStack, so finders

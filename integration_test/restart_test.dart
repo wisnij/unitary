@@ -20,8 +20,9 @@ import 'helpers/real_prefs.dart';
 /// contact the real network.
 Future<void> restart(WidgetTester tester) async {
   await RealPrefs.seedFreshCurrencyTimestamp();
-  app.main();
+  await app.main();
   await tester.pumpAndSettle();
+  expect(tester.takeException(), isNull);
 }
 
 Future<void> openDrawerAndTap(WidgetTester tester, String tileText) async {
@@ -43,15 +44,31 @@ void main() {
     addTearDown(tester.view.reset);
   }
 
+  // IntegrationTestWidgetsFlutterBinding leaves registerTestTextInput false,
+  // so focusing a field lets TextInput.show reach the platform and pop the
+  // device's real IME.  Its inset is reported in the real screen's physical
+  // pixels, but useCompact forces devicePixelRatio to 1.0, so MediaQuery
+  // scales it as if it were logical pixels — a keyboard that covers half the
+  // real screen swallows nearly the whole 800 px-tall test view, leaving the
+  // freeform body a few pixels of height and overflowing the fixed-height
+  // operator key panel.  Registering the synthetic keyboard intercepts the
+  // channel, so no real IME appears and text still lands (the same fix the
+  // screenshot harness needed).
+  void useTestKeyboard(WidgetTester tester) {
+    tester.testTextInput.register();
+    addTearDown(tester.testTextInput.unregister);
+  }
+
   group('Restart persistence', () {
     testWidgets(
       'worksheet source value survives a restart',
       (tester) async {
         useCompact(tester);
+        useTestKeyboard(tester);
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
-        app.main();
+        await app.main();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
 
@@ -64,7 +81,6 @@ void main() {
         await tester.pumpAndSettle();
 
         await restart(tester);
-        expect(tester.takeException(), isNull);
 
         await openDrawerAndTap(tester, 'Worksheet');
 
@@ -85,10 +101,11 @@ void main() {
       'a changed setting survives a restart',
       (tester) async {
         useCompact(tester);
+        useTestKeyboard(tester);
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
-        app.main();
+        await app.main();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
 
@@ -103,7 +120,6 @@ void main() {
         await tester.pumpAndSettle();
 
         await restart(tester);
-        expect(tester.takeException(), isNull);
 
         await openDrawerAndTap(tester, 'Settings');
 
@@ -121,10 +137,11 @@ void main() {
       'a freeform history entry survives a restart',
       (tester) async {
         useCompact(tester);
+        useTestKeyboard(tester);
         await RealPrefs.clear();
         await RealPrefs.seedFreshCurrencyTimestamp();
 
-        app.main();
+        await app.main();
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
 
@@ -136,7 +153,6 @@ void main() {
         await tester.pumpAndSettle();
 
         await restart(tester);
-        expect(tester.takeException(), isNull);
 
         await tester.tap(find.byIcon(Icons.history));
         await tester.pumpAndSettle();

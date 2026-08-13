@@ -15,15 +15,18 @@ Phase 9 task "Verify >80% coverage target for parser/core domain".
   `tool/check_coverage_lib.dart`, following the existing `tool/` lib/exe
   convention) that parses `coverage/lcov.info`, restricts it to a configured path
   scope, and exits non-zero when line coverage falls below a configured minimum.
-- Scope enforcement to `lib/core/` — the parser and core domain named by the MVP
-  criterion — and **exclude the generated
-  `lib/core/domain/data/predefined_units.dart`**.  That file is 7233 of `lib/core`'s
-  8370 tracked lines (86%) and is 100% covered as a side effect of registration, so
-  including it reports 99.34% and masks essentially any regression in hand-written
-  code; excluding it, the real figure is 95.16%.
-- Set the enforced minimum at **90%**, above the 80% MVP floor.  Hand-written
-  `lib/core` sits at 95.16% today, so 90% leaves roughly five points of ordinary
-  churn while still failing on a genuine regression.
+- Scope enforcement to all of `lib/`, **excluding the generated
+  `lib/core/domain/data/predefined_units.dart`**.  That file is 7233 lines — larger
+  than all hand-written `lib/` code combined — and is 100% covered as a side effect
+  of registration, so including it reports 98.66% and masks essentially any
+  regression in hand-written code; excluding it, the real figure is 95.88%.
+- Set the enforced minimum at **90%**, above the 80% MVP floor.  Hand-written `lib/`
+  sits at 95.88% today, so 90% leaves roughly six points of ordinary churn while
+  still failing on a genuine regression.
+- Pin the files legitimately absent from the coverage report behind an explicit
+  allowlist, checked in both directions, since a report omits a file either because
+  no test loads it or because it has no executable lines to instrument — and cannot
+  distinguish the two.
 - Add a step to `.github/actions/test/action.yml` that runs the checker after the
   existing coverage steps, so a threshold failure never suppresses the coverage
   report artifact.
@@ -38,8 +41,9 @@ No production code changes; no new dependencies.
 ### New Capabilities
 
 - `coverage-threshold`: parsing an LCOV report, restricting it to a path scope with
-  exclusions, computing scoped line coverage, and failing CI below a configured
-  minimum — plus the CI wiring that enforces it.
+  exclusions, computing scoped line coverage, pinning expected-absent files behind a
+  bidirectionally-checked allowlist, and failing CI below a configured minimum —
+  plus the CI wiring that enforces it.
 
 ### Modified Capabilities
 

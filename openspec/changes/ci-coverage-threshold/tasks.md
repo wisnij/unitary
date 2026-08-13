@@ -14,8 +14,8 @@ until task 2 lands.
       line records are merged")
 - [ ] 1.4 Summary-record test: `LF:`/`LH:` values contradicting the `DA:` records
       are ignored and the totals follow the `DA:` records
-- [ ] 1.5 Scope tests: files under `lib/features/`, `lib/shared/`, and `lib/main.dart`
-      are excluded from the totals; files under `lib/core/` are included
+- [ ] 1.5 Scope tests: files under `lib/core/`, `lib/features/`, and `lib/shared/`
+      all contribute to the totals; files outside `lib/` (tool/test sources) do not
 - [ ] 1.6 Exclusion tests: `lib/core/domain/data/predefined_units.dart` is dropped
       from the totals and from the in-scope file list, while its sibling
       `lib/core/domain/data/builtin_functions.dart` is retained
@@ -43,14 +43,17 @@ until task 2 lands.
       allowlist comparison, per design D4: unexpected absence, allowlisted file
       present in the report, and allowlist entry with no file on disk are each a
       failure; allowlisted absences contribute 0/0
-- [ ] 2.4 Declare the allowlist as an empty `const <String>{}` with a doc comment
-      explaining what qualifies (declaration-only files: const-only data, bare
-      enums, compile-time constants) and citing the out-of-scope
-      `predefined_worksheets.dart` as the archetype — mirroring the shape and
-      intent of `_knownEvalFailures` in `predefined_units_test.dart`
+- [ ] 2.4 Declare the allowlist as a `const <String>{}` seeded with the four
+      currently-absent in-scope files, each carrying a comment naming its reason
+      (`lib/main.dart` — entry point, unreached by the unit-test run;
+      `lib/shared/top_level_page.dart` — bare enum;
+      `lib/features/about/about_constants.dart` — const declarations;
+      `lib/features/worksheet/data/predefined_worksheets.dart` — const template
+      data).  Doc comment explains what qualifies and how to retire an entry,
+      mirroring `_knownEvalFailures` in `predefined_units_test.dart`
 - [ ] 2.5 Add the result type carrying per-file counts, allowlist-mismatch details
       by category, the scoped total, the enforced minimum, and the pass/fail verdict
-- [ ] 2.6 Define the in-code defaults: minimum `90.0`, scope `lib/core/`, exclusion
+- [ ] 2.6 Define the in-code defaults: minimum `90.0`, scope `lib/`, exclusion
       `lib/core/domain/data/predefined_units.dart`, report path
       `coverage/lcov.info`
 - [ ] 2.7 Run `flutter test test/tool/check_coverage_lib_test.dart` and confirm the
@@ -70,8 +73,8 @@ until task 2 lands.
 - [ ] 3.4 Exit `0` on pass and `1` on fail (threshold shortfall, allowlist mismatch,
       or missing report)
 - [ ] 3.5 Verify against the real report: run `flutter test --coverage`, then
-      `dart run tool/check_coverage.dart`, and confirm it reports ~95.16% and
-      passes
+      `dart run tool/check_coverage.dart`, and confirm it reports ~95.88%
+      (3331/3474), reports no allowlist mismatches, and passes
 - [ ] 3.6 Verify the failure path: run with `--min 99` and confirm a non-zero exit
       with the shortfall explained
 

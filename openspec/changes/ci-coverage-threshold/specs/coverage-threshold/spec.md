@@ -26,14 +26,14 @@ emulator steps, so the cheap deterministic check fails fast.
 - **THEN** the coverage report has already been converted and uploaded by the
   preceding steps, and remains available as a workflow artifact
 
-### Requirement: Enforced scope excludes generated code
+### Requirement: Enforced scope is first-party source excluding generated code
 
-The enforced scope SHALL be the hand-written core domain: files under `lib/core/`,
+The enforced scope SHALL be all hand-written first-party source: files under `lib/`,
 excluding the generated `lib/core/domain/data/predefined_units.dart`.  Files outside
 the scope MUST NOT contribute to the computed percentage.
 
-The generated file is excluded because it accounts for roughly 86% of `lib/core`'s
-tracked lines and is fully covered as a side effect of unit registration, so
+The generated file is excluded because it is larger than all hand-written `lib/`
+code combined and is fully covered as a side effect of unit registration, so
 including it would let hand-written coverage regress substantially without moving
 the reported number.
 
@@ -44,16 +44,23 @@ the reported number.
 - **THEN** that file's lines are absent from both the covered and total counts, and
   it is not listed as an in-scope file
 
-#### Scenario: Out-of-scope files are not counted
+#### Scenario: All first-party source is counted
 
-- **WHEN** the report contains files under `lib/features/`, `lib/shared/`, or
-  `lib/main.dart`
+- **WHEN** the report contains files under `lib/core/`, `lib/features/`, and
+  `lib/shared/`
+- **THEN** all of their lines contribute to the computed percentage, so a
+  regression anywhere in first-party source can fail the check
+
+#### Scenario: Files outside `lib/` are not counted
+
+- **WHEN** the report contains files outside `lib/`, such as tool or test sources
 - **THEN** none of their lines contribute to the computed percentage
 
 #### Scenario: Hand-written siblings of generated code remain in scope
 
 - **WHEN** the report contains `lib/core/domain/data/builtin_functions.dart`
-- **THEN** its lines contribute to the computed percentage
+- **THEN** its lines contribute to the computed percentage, because the exclusion
+  names the generated file exactly rather than its containing directory
 
 ### Requirement: Coverage computed from per-line records
 

@@ -7,19 +7,33 @@ file is uploaded as an artifact, and `dart run cobertura show` prints a summary.
 Nothing fails the build below a threshold, so the MVP criterion ">80% for parser
 and core domain logic" is aspirational rather than enforced (finding **F11**).
 
-Measured baseline for this change (full suite, 2045 tests passing, August 13, 2026):
+Measured baseline for this change (full suite, 2045 tests passing, August 13, 2026),
+with the generated units file excluded except where noted:
 
-| Scope                                    | Covered / total lines | Percent    |
-|------------------------------------------|-----------------------|------------|
-| `lib/core/` including generated units     | 8315 / 8370           | **99.34%** |
-| `lib/core/` excluding generated units     | 1082 / 1137           | **95.16%** |
-| `lib/core/domain/data/predefined_units.dart` (generated) | 7233 / 7233 | 100.00% |
+| Scope                                                | Covered / total | Percent    |
+|------------------------------------------------------|-----------------|------------|
+| All of `lib/`                                         | 3331 / 3474     | **95.88%** |
+| `lib/core/` only                                      | 1082 / 1137     | 95.16%     |
+| Everything in `lib/` *except* `lib/core/`             | 2249 / 2337     | 96.23%     |
+| Pure-logic subset (core, `services`/`domain`/`data`/`models`, `shared/utils`) | 1391 / 1462 | 95.14% |
+| `lib/core/domain/data/predefined_units.dart` (generated) | 7233 / 7233  | 100.00%    |
 
-The generated file alone is 86% of `lib/core`'s tracked lines and is fully covered
-as a side effect of `UnitRepository.withPredefinedUnits()` running in nearly every
-test.  Any threshold applied to the including-generated figure is meaningless: the
-hand-written 1137 lines could drop to roughly 55% covered before the combined
-number fell below 95%.
+Two facts from this table drove the scope decision (D2).
+
+First, the generated file distorts any figure it appears in.  It is 7233 lines —
+more than twice the size of all hand-written `lib/` code combined — and is fully
+covered as a side effect of `UnitRepository.withPredefinedUnits()` running in nearly
+every test.  Including it, `lib/` reports 98.66%, and the hand-written 3474 lines
+could fall to roughly 69% covered before that combined number dropped below 90%.
+
+Second, the assumption that a repo-wide threshold would be *dragged down* by UI code
+(recorded in code review finding F11) does not hold for this codebase: non-core code
+is covered slightly **better** than core, 96.23% versus 95.16%.  Every candidate
+scope lands within a point of the others, so the choice of scope changes what the
+gate *covers*, not the number it reports.
+
+Flutter's LCOV output is minimal — only `SF:` / `DA:` / `LF:` / `LH:` /
+`end_of_record`, with repo-relative paths and no branch data.
 
 Flutter's LCOV output is minimal — only `SF:` / `DA:` / `LF:` / `LH:` /
 `end_of_record`, with repo-relative paths and no branch data.
@@ -28,8 +42,8 @@ Flutter's LCOV output is minimal — only `SF:` / `DA:` / `LF:` / `LH:` /
 
 **Goals:**
 
-- Fail CI when line coverage of hand-written `lib/core/` code drops below a
-  configured minimum, on every workflow that uses `./.github/actions/test`.
+- Fail CI when line coverage of hand-written `lib/` code drops below a configured
+  minimum, on every workflow that uses `./.github/actions/test`.
 - Make the enforced scope, exclusions, and threshold explicit, reviewable, and
   unit-tested rather than buried in a shell one-liner.
 - Keep the coverage report artifact available even when the gate fails.
@@ -37,11 +51,12 @@ Flutter's LCOV output is minimal — only `SF:` / `DA:` / `LF:` / `LH:` /
 
 **Non-Goals:**
 
-- Repo-wide or per-file thresholds.  The criterion names the parser and core
-  domain; a repo-wide number would be dominated by UI code and the generated
-  units file, and per-file minimums would fail on legitimately thin data classes
-  (`completion_entry.dart` is 8.33%, `token.dart` 33.33% — both covered
-  indirectly and accepted as gaps in the July review).
+- Per-file thresholds.  A per-file floor would fail on legitimately thin data
+  classes (`completion_entry.dart` is 8.33%, `token.dart` 33.33% — both covered
+  indirectly and accepted as gaps in the July review).  The consequence is
+  accepted knowingly: an aggregate gate cannot catch one weak file, so
+  `worksheet_engine.dart` at 87.30% passes on the strength of the other 3411
+  lines.  It stays visible in the per-file output instead.
 - Branch/function coverage.  Flutter's LCOV output carries neither.
 - Raising coverage.  This change enforces a floor; the separate Phase 9
   widget-test coverage-gap audit is where coverage actually improves.
@@ -68,26 +83,51 @@ Alternatives rejected:
   scoping and exclusion rules are exactly the part worth testing, and they would
   be invisible to `flutter analyze` and to the test suite.
 
-### D2: Scope is `lib/core/`, excluding the generated units file
+### D2: Scope is all of `lib/`, excluding the generated units file
 
-The enforced scope is the path prefix `lib/core/`, minus the exact path
+The enforced scope is the path prefix `lib/`, minus the exact path
 `lib/core/domain/data/predefined_units.dart`.
+
+The MVP criterion names "parser and core domain logic", which is a floor on what to
+enforce rather than a ceiling.  Restricting the gate to `lib/core/` would match its
+wording, but the measurements above show the usual justification for narrowing —
+dilution by poorly-covered UI code — is simply not true here.  With no dilution to
+avoid, narrowing only shrinks what the gate protects:
+
+- **The directory boundary doesn't match the conceptual one.**
+  `lib/features/worksheet/services/worksheet_engine.dart` is pure Dart conversion
+  logic, deliberately decoupled from Flutter in the F1 work so it could run outside
+  a Flutter host.  By the criterion's intent it is core domain logic; by directory
+  it sits in `features/`.  At 87.30% it is the least-covered logic file in the
+  project, and a `lib/core/`-only gate would not watch it at all.
+- The same applies to `shared/utils/quantity_formatter.dart`,
+  `features/currency/domain/currency_service.dart`, and the four persistence
+  repositories.
+- A "pure-logic" scope was considered as a middle option (95.14%; core plus
+  `services`/`domain`/`data`/`models` plus `shared/utils`).  It tracks the
+  criterion's intent, but requires a hand-maintained notion of which directories
+  count as logic — a judgment call to relitigate with every new directory, in
+  exchange for 0.7 points of difference in the reported number.
+
+`lib/` needs no such judgment: it is every line of first-party source, and it is
+already the scope `cobertura show` reports on.
 
 Exclusion matching is by exact relative path or directory prefix — no glob engine.
 The only exclusion needed today is a single generated file, and a hand-rolled glob
 matcher would be more code than the thing it configures.
 
-The generated file is excluded rather than the whole `lib/core/domain/data/`
-directory, so its hand-written sibling `builtin_functions.dart` (82 lines, 100%)
-stays inside the gate.
+The generated file is excluded by exact path rather than by excluding the whole
+`lib/core/domain/data/` directory, so its hand-written sibling
+`builtin_functions.dart` (82 lines, 100%) stays inside the gate.
 
 ### D3: Threshold 90%, defaulted in the tool
 
-Hand-written `lib/core` is at 95.16%.  A gate at the literal 80% MVP floor would
-tolerate losing ~173 covered lines before firing; 90% leaves roughly 59 lines of
-slack — enough that adding a thin uncovered data class doesn't break the build,
-tight enough that a real regression in the parser or domain does.  The 80%
-criterion in `implementation_plan.md` remains satisfied by construction.
+Hand-written `lib/` is at 95.88%.  A gate at the literal 80% MVP floor would
+tolerate losing ~552 covered lines before firing; 90% leaves roughly 204 lines of
+slack — enough that adding a thin uncovered data class or a lightly-tested screen
+doesn't break the build, tight enough that a real regression does.  The 80%
+criterion in `implementation_plan.md` remains satisfied by construction, and is now
+exceeded on a strictly larger body of code than it asks for.
 
 The threshold, scope, and exclusions live as defaults in `check_coverage_lib.dart`
 so that changing any of them is a reviewable, test-covered code change rather than
@@ -107,8 +147,8 @@ currently-absent non-entrypoint files are of that kind — `about_constants.dart
 (two `const` declarations), `top_level_page.dart` (a bare `enum`), and
 `predefined_worksheets.dart` (224 lines of pure `const` data).  The last has its own
 dedicated test file and four other test files importing it, and still appears zero
-times in the report.  All three are outside the enforced scope, so they are evidence
-about the mechanism rather than cases the checker must handle.
+times in the report.  Under D2's `lib/`-wide scope all three are in scope, so the
+checker must handle them rather than merely learn from them.
 
 Because the report cannot distinguish the two causes, the checker does not guess.
 It enumerates in-scope `.dart` files on disk and compares them against an explicit
@@ -127,9 +167,26 @@ intent ("when support is added, remove the affected IDs and the test will confir
 they now resolve correctly").  The third condition is the checker's own addition, so
 an entry cannot outlive the file it names.
 
-The allowlist starts **empty**: all 21 in-scope files currently report coverage, so
-any absence is an error from day one.  Its doc comment cites the out-of-scope files
-above as the archetype, so the first person who needs an entry knows what qualifies.
+The allowlist starts with exactly four entries, each a file that exists, is in
+scope, and has no executable lines to instrument:
+
+| Entry | Why it has no instrumentable lines |
+|---|---|
+| `lib/main.dart` | Entry point; not loaded by the unit-test run at all |
+| `lib/shared/top_level_page.dart` | A bare `enum` declaration |
+| `lib/features/about/about_constants.dart` | Two `const` declarations |
+| `lib/features/worksheet/data/predefined_worksheets.dart` | 224 lines of `const` template data |
+
+`lib/main.dart` is the one genuine cause-1 entry: it really is unreached by unit
+tests (the integration suite drives it, but that runs separately and its coverage
+is not collected here).  Listing it alongside the declaration-only files is
+deliberate — the allowlist records *expected absence*, whatever its cause, and the
+entry's comment states which cause applies.
+
+Under the `lib/core/`-only scope this list would have been empty, since every
+declaration-only file in the project happens to live outside `lib/core`.  Widening
+the scope in D2 is what makes the mechanism load-bearing from day one rather than
+purely anticipatory.
 
 Crucially, this removes the approximation the earlier draft of this decision
 depended on.  An allowlisted file genuinely has no executable lines, so contributing
@@ -145,8 +202,8 @@ Alternatives rejected:
   roughly the file's length: a 60-line untested module would move the scoped figure
   0.08 points instead of 4.77.
 - **Report-only, no disk enumeration** — no false positives, but leaves the real
-  hole open: a genuinely untested `lib/core/` file contributes to neither numerator
-  nor denominator and is invisible to the gate.
+  hole open: a genuinely untested `lib/` file contributes to neither numerator nor
+  denominator and is invisible to the gate.
 - **Infer from a mirroring `test/` file** — the test tree does mirror `lib/`
   directory-for-directory, but one test file legitimately covers several source
   files, so absence of a mirror is not evidence of absence of tests.
@@ -176,20 +233,30 @@ ordering rationale documented in `action.yml`:
 
 ## Risks / Trade-offs
 
-- **A legitimate refactor that moves covered code out of `lib/core/` lowers the
-  scoped percentage** → the threshold sits ~5 points below the current figure, and
-  the failure output names the per-file numbers, so the cause is visible
-  immediately; adjusting the constant is a one-line, reviewed change.
+- **A large, lightly-tested new feature can lower the aggregate below the floor**
+  → the threshold sits ~6 points (204 lines) below the current figure, and the
+  failure output names the per-file numbers, so the cause is visible immediately;
+  adjusting the constant is a one-line, reviewed change.  Note that the `lib/`-wide
+  scope removes an entire class of false alarm the narrower scope would have had:
+  moving code between `lib/core/` and `lib/features/` no longer changes the
+  denominator at all.
+- **An aggregate gate cannot catch a single weak file** → known and accepted (see
+  Non-Goals): `worksheet_engine.dart` at 87.30% is ~2% of the denominator and
+  passes on the strength of the other 3411 lines.  Every candidate scope shares
+  this property, so it is a consequence of choosing an aggregate rather than of
+  choosing `lib/`.  The per-file breakdown keeps it visible in every run.
 - **The gate measures line coverage only** — well-covered lines with untested
   branches still pass → accepted; Flutter emits no branch data, so this is a floor
   on the crudest metric, not a quality proof.  It complements rather than replaces
   the widget-test coverage-gap audit.
-- **The D4 allowlist needs maintenance**: adding a declaration-only file to
-  `lib/core/` fails the build until it gets an entry → deliberate, and the same
-  bargain `_knownEvalFailures` already makes.  The list starts empty, such files are
-  rare in the core domain, and the error message names the fix (add an entry with
-  its reason, or write a test).  The bidirectional checks mean a stale entry is
-  reported rather than silently masking a regression.
+- **The D4 allowlist needs maintenance**: adding a declaration-only file anywhere in
+  `lib/` fails the build until it gets an entry → deliberate, and the same bargain
+  `_knownEvalFailures` already makes.  The `lib/`-wide scope makes this more likely
+  to come up than the narrow scope would have (const-only data files are commoner in
+  `features/` than in `core/` — three of the four seed entries are), but the error
+  message names the fix (add an entry with its reason, or write a test), and the
+  bidirectional checks mean a stale entry is reported rather than silently masking a
+  regression.
 - **The checker assumes it runs from the repository root** (relative LCOV paths and
   on-disk scope enumeration) → it is invoked only from `action.yml` and documented
   local commands, both of which run at the root; a missing `coverage/lcov.info`

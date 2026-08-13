@@ -102,7 +102,28 @@ Testing Strategy
 
 ### Unit Tests
 
-**Coverage Target**: >80% for core domain logic
+**Coverage Target**: >80% for core domain logic (the MVP success criterion).
+CI enforces a stricter floor: **90% over all of `lib/`**, excluding the
+generated `lib/core/domain/data/predefined_units.dart`.  Check it locally with:
+
+~~~~ bash
+flutter test --coverage          # writes coverage/lcov.info
+dart run tool/check_coverage.dart
+~~~~
+
+The checker prints a per-file breakdown least-covered first and exits non-zero
+below the minimum.  `--min`, `--scope`, `--exclude`, and `--lcov` override the
+defaults for local exploration; the enforced values live in
+`tool/check_coverage_lib.dart` so changing them is a reviewed, test-covered
+change.
+
+It also fails when the set of files *absent* from the report stops matching the
+`defaultExpectedAbsent` allowlist.  A file is omitted from an LCOV report either
+because no test loads it or because it has no executable lines to instrument
+(const-only data, a bare enum), and the report cannot distinguish the two — so
+each expected absence is pinned with the reason it qualifies.  If the checker
+reports an unlisted absence, either write a test that loads the file or add an
+entry saying why it has nothing to instrument.
 
 **What to Test**:
 

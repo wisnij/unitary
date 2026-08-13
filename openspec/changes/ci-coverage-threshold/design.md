@@ -1,7 +1,9 @@
 ## Context
 
-`.github/actions/test/action.yml` already produces coverage on every workflow that
-uses it (`ci.yml`, `release.yml`): `flutter test --coverage` writes
+`.github/actions/test/action.yml` already produces coverage for every job that uses
+it — since the pipeline consolidation in commit 6e27a2e, that is `ci.yml`'s single
+`test` job, which gates the entire downstream chain (`lint → test → {deploy-web,
+prepare} → build-android-apk/build-web → release`): `flutter test --coverage` writes
 `coverage/lcov.info`, `dart run cobertura convert` produces `cobertura.xml`, that
 file is uploaded as an artifact, and `dart run cobertura show` prints a summary.
 Nothing fails the build below a threshold, so the MVP criterion ">80% for parser

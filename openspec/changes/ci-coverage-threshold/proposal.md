@@ -56,10 +56,13 @@ are unchanged.
 - **New**: `tool/check_coverage.dart`, `tool/check_coverage_lib.dart`,
   `test/tool/check_coverage_lib_test.dart`
 - **Modified**: `.github/actions/test/action.yml` (one added step)
-- **Affected workflows**: every caller of `./.github/actions/test` — currently
-  `ci.yml` and `release.yml` — gains the gate automatically, matching the
-  unconditional-by-default precedent set when the Android integration-test opt-in
-  toggle was removed
+- **Affected workflows**: every caller of `./.github/actions/test` gains the gate
+  automatically, matching the unconditional-by-default precedent set when the
+  Android integration-test opt-in toggle was removed.  Since the pipelines were
+  consolidated (commit 6e27a2e) that is `ci.yml`'s single `test` job, which gates
+  the whole downstream chain — `lint → test → {deploy-web, prepare} →
+  build-android-apk/build-web → release` — so one gate covers the web deploy, the
+  APK build, and the release
 - **Dependencies**: none added.  The `cobertura` dev dependency stays for report
   conversion; it offers only `convert` and `show`, with no threshold checking, so
   the checker is our own

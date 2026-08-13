@@ -94,24 +94,64 @@ so that changing any of them is a reviewable, test-covered code change rather th
 an edit to a CI argument list.  Flags (`--lcov`, `--min`, `--scope`, `--exclude`)
 override them for local use and for the tests.
 
-### D4: Files absent from the report count as zero, not as absent
+### D4: Absent files are pinned by an explicit allowlist, checked both ways
 
-`flutter test --coverage` only emits records for files actually imported during the
-run; a `lib/` file no test ever reaches is omitted from `lcov.info` entirely rather
-than appearing at 0%.  Today this affects four files, all outside the enforced
-scope (`lib/main.dart`, `lib/shared/top_level_page.dart`,
-`lib/features/about/about_constants.dart`,
-`lib/features/worksheet/data/predefined_worksheets.dart`); all 21 `lib/core/` files
-are present.
+`flutter test --coverage` reports only files loaded during the run, so a file can be
+missing from `lcov.info` for two indistinguishable reasons:
 
-Left unhandled, this is a hole straight through the gate: adding a new core file
-with no test at all would *raise* the reported percentage by not being counted.  So
-the checker enumerates in-scope `.dart` files on disk and treats any that the report
-omits as contributing zero covered lines, reporting them separately as
-"not covered by any test".  Because such a file's line count is unknown without
-parsing it, each counts as a single uncovered line for the percentage and is listed
-by name in the output — enough to make the condition visible and to move the number
-in the right direction, without building a Dart line-counter.
+1. no test ever loads it (genuinely untested — `lib/main.dart` today), or
+2. it is loaded and tested but has **no executable lines to instrument**.
+
+Cause 2 is not hypothetical and is easy to mistake for cause 1.  All three
+currently-absent non-entrypoint files are of that kind — `about_constants.dart`
+(two `const` declarations), `top_level_page.dart` (a bare `enum`), and
+`predefined_worksheets.dart` (224 lines of pure `const` data).  The last has its own
+dedicated test file and four other test files importing it, and still appears zero
+times in the report.  All three are outside the enforced scope, so they are evidence
+about the mechanism rather than cases the checker must handle.
+
+Because the report cannot distinguish the two causes, the checker does not guess.
+It enumerates in-scope `.dart` files on disk and compares them against an explicit
+allowlist of files expected to be absent, treating any of three mismatches as an
+error:
+
+| Condition | Verdict | Meaning |
+|---|---|---|
+| On disk, absent from report, not allowlisted | error | Untested, or newly declaration-only and needing a reviewed entry |
+| Allowlisted, present in report | error | Stale entry: the file gained executable lines |
+| Allowlisted, absent from disk | error | Stale entry: the file was deleted or moved |
+
+This is the pinned-expectation pattern the project already uses for
+`_knownEvalFailures` in `predefined_units_test.dart`, including its bidirectional
+intent ("when support is added, remove the affected IDs and the test will confirm
+they now resolve correctly").  The third condition is the checker's own addition, so
+an entry cannot outlive the file it names.
+
+The allowlist starts **empty**: all 21 in-scope files currently report coverage, so
+any absence is an error from day one.  Its doc comment cites the out-of-scope files
+above as the archetype, so the first person who needs an entry knows what qualifies.
+
+Crucially, this removes the approximation the earlier draft of this decision
+depended on.  An allowlisted file genuinely has no executable lines, so contributing
+`0/0` to the totals is exact rather than a fudge, and a non-allowlisted absence is a
+hard error rather than a barely-visible nudge to the percentage.  No Dart
+line-counting or source parsing is required in either direction.
+
+Alternatives rejected:
+
+- **Count each absent file as one uncovered line** (the earlier draft) — rests on
+  the false premise that absence implies untested, so it would print "not covered by
+  any test" for a legitimately tested const-only file.  It also under-penalizes by
+  roughly the file's length: a 60-line untested module would move the scoped figure
+  0.08 points instead of 4.77.
+- **Report-only, no disk enumeration** — no false positives, but leaves the real
+  hole open: a genuinely untested `lib/core/` file contributes to neither numerator
+  nor denominator and is invisible to the gate.
+- **Infer from a mirroring `test/` file** — the test tree does mirror `lib/`
+  directory-for-directory, but one test file legitimately covers several source
+  files, so absence of a mirror is not evidence of absence of tests.
+- **Parse the Dart to count executable lines** — reimplements the instrumenter and
+  needs the `analyzer` package as a new direct dependency.
 
 ### D5: Aggregate `DA:` records, don't trust `LF:`/`LH:`
 
@@ -144,10 +184,12 @@ ordering rationale documented in `action.yml`:
   branches still pass → accepted; Flutter emits no branch data, so this is a floor
   on the crudest metric, not a quality proof.  It complements rather than replaces
   the widget-test coverage-gap audit.
-- **D4's zero-line accounting is approximate** (an omitted file counts as one
-  uncovered line, not its real length) → it cannot make a passing build fail
-  spuriously, only nudge a genuinely untested file toward visibility; the file is
-  named explicitly in the output, which is the part that matters.
+- **The D4 allowlist needs maintenance**: adding a declaration-only file to
+  `lib/core/` fails the build until it gets an entry → deliberate, and the same
+  bargain `_knownEvalFailures` already makes.  The list starts empty, such files are
+  rare in the core domain, and the error message names the fix (add an entry with
+  its reason, or write a test).  The bidirectional checks mean a stale entry is
+  reported rather than silently masking a regression.
 - **The checker assumes it runs from the repository root** (relative LCOV paths and
   on-disk scope enumeration) → it is invoked only from `action.yml` and documented
   local commands, both of which run at the root; a missing `coverage/lcov.info`

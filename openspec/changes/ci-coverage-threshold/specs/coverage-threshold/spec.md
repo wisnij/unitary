@@ -81,26 +81,49 @@ MUST NOT be relied on.
 - **WHEN** a file's `LF:`/`LH:` summary values contradict its `DA:` records
 - **THEN** the computed totals follow the `DA:` records
 
-### Requirement: In-scope files missing from the report count as uncovered
+### Requirement: In-scope files absent from the report are pinned by an allowlist
 
-The checker SHALL enumerate in-scope `.dart` files on disk, treat any file missing
-from the coverage report as contributing no covered lines, and name each such file
-in its output.  This is required because a coverage run only reports files that were
-imported during the run, so an in-scope source file that no test reaches is omitted
-from the report entirely rather than appearing at zero.
+The checker SHALL enumerate in-scope `.dart` files on disk and compare them against
+an explicit allowlist of files expected to be absent from the coverage report,
+failing on any mismatch in either direction.  Allowlisted files MUST contribute
+nothing to either the covered or the total line counts.
 
-#### Scenario: Untested in-scope file is detected
+A coverage report omits a file either because no test loads it or because it has no
+executable lines to instrument, and the report cannot distinguish the two.  The
+allowlist records which absences are expected, so the checker never has to guess.
 
-- **WHEN** an in-scope `.dart` file exists on disk but has no record in the
-  coverage report
-- **THEN** the file is reported by name as not covered by any test, and it
-  contributes uncovered lines to the totals rather than being silently skipped
+#### Scenario: Unexpected absence fails
 
-#### Scenario: Excluded files are not required to appear
+- **WHEN** an in-scope `.dart` file exists on disk, has no record in the coverage
+  report, and is not on the allowlist
+- **THEN** the check fails and names the file, rather than silently omitting it
+  from the totals
+
+#### Scenario: Allowlisted file that starts reporting coverage fails
+
+- **WHEN** a file on the allowlist is present in the coverage report
+- **THEN** the check fails and names the file as a stale allowlist entry, so the
+  entry is removed and the file's lines rejoin the totals
+
+#### Scenario: Allowlist entry for a nonexistent file fails
+
+- **WHEN** a file on the allowlist does not exist on disk
+- **THEN** the check fails and names the file as a stale allowlist entry, so an
+  entry cannot outlive the file it names
+
+#### Scenario: Expected absence is accepted exactly
+
+- **WHEN** an in-scope file is on the allowlist, exists on disk, and is absent from
+  the report
+- **THEN** the check does not fail on its account and the file contributes zero
+  covered and zero total lines, leaving the computed percentage unchanged
+
+#### Scenario: Excluded files are exempt from the comparison
 
 - **WHEN** an excluded file (such as the generated units file) is absent from the
   report
-- **THEN** it is not reported as untested and does not affect the totals
+- **THEN** it is neither required on the allowlist nor reported as a mismatch, and
+  it does not affect the totals
 
 ### Requirement: Configurable threshold, scope, and report path
 

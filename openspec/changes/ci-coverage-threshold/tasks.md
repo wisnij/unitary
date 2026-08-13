@@ -19,13 +19,17 @@ until task 2 lands.
 - [ ] 1.6 Exclusion tests: `lib/core/domain/data/predefined_units.dart` is dropped
       from the totals and from the in-scope file list, while its sibling
       `lib/core/domain/data/builtin_functions.dart` is retained
-- [ ] 1.7 Missing-file tests: an in-scope `.dart` file present on disk but absent
-      from the report is reported by name as untested and contributes uncovered
-      lines; an *excluded* file absent from the report is neither reported nor
-      counted
-- [ ] 1.8 Threshold tests: a scoped percentage above, exactly at, and below the
+- [ ] 1.7 Allowlist tests, one per verdict in design D4's table: an unallowlisted
+      in-scope file absent from the report fails; an allowlisted file *present* in
+      the report fails as a stale entry; an allowlist entry naming a file absent
+      from disk fails as a stale entry
+- [ ] 1.8 Allowlist acceptance tests: an allowlisted file that exists on disk and is
+      absent from the report neither fails nor changes the computed percentage
+      (contributes 0/0, not 0/1); an *excluded* file absent from the report is
+      exempt from the comparison entirely
+- [ ] 1.9 Threshold tests: a scoped percentage above, exactly at, and below the
       minimum produce pass, pass, and fail results respectively
-- [ ] 1.9 Missing-report test: a nonexistent report path produces a clear failure
+- [ ] 1.10 Missing-report test: a nonexistent report path produces a clear failure
       result naming the path rather than an unhandled exception
 
 ## 2. Checker library
@@ -35,14 +39,21 @@ until task 2 lands.
       count, ignore `LF:`/`LH:`
 - [ ] 2.2 Add the scope/exclusion filter: include by path prefix, exclude by exact
       relative path or directory prefix (no glob engine — see design D2)
-- [ ] 2.3 Add on-disk enumeration of in-scope `.dart` files and detection of files
-      missing from the report, per design D4
-- [ ] 2.4 Add the result type carrying per-file counts, missing-file names, the
-      scoped total, the enforced minimum, and the pass/fail verdict
-- [ ] 2.5 Define the in-code defaults: minimum `90.0`, scope `lib/core/`, exclusion
+- [ ] 2.3 Add on-disk enumeration of in-scope `.dart` files and the bidirectional
+      allowlist comparison, per design D4: unexpected absence, allowlisted file
+      present in the report, and allowlist entry with no file on disk are each a
+      failure; allowlisted absences contribute 0/0
+- [ ] 2.4 Declare the allowlist as an empty `const <String>{}` with a doc comment
+      explaining what qualifies (declaration-only files: const-only data, bare
+      enums, compile-time constants) and citing the out-of-scope
+      `predefined_worksheets.dart` as the archetype — mirroring the shape and
+      intent of `_knownEvalFailures` in `predefined_units_test.dart`
+- [ ] 2.5 Add the result type carrying per-file counts, allowlist-mismatch details
+      by category, the scoped total, the enforced minimum, and the pass/fail verdict
+- [ ] 2.6 Define the in-code defaults: minimum `90.0`, scope `lib/core/`, exclusion
       `lib/core/domain/data/predefined_units.dart`, report path
       `coverage/lcov.info`
-- [ ] 2.6 Run `flutter test test/tool/check_coverage_lib_test.dart` and confirm the
+- [ ] 2.7 Run `flutter test test/tool/check_coverage_lib_test.dart` and confirm the
       task-1 tests now pass
 
 ## 3. Executable wrapper
@@ -52,9 +63,12 @@ until task 2 lands.
       `tool/benchmark.dart`'s shape
 - [ ] 3.2 Parse `--lcov`, `--min`, `--scope` (repeatable), `--exclude`
       (repeatable), and `--help`; fall back to the library defaults
-- [ ] 3.3 Print the per-file breakdown least-covered-first, the named untested
-      files, the scoped total, and an explicit pass/fail line naming the minimum
-- [ ] 3.4 Exit `0` on pass and `1` on fail (including a missing report)
+- [ ] 3.3 Print the per-file breakdown least-covered-first, the scoped total, and an
+      explicit pass/fail line naming the minimum; on an allowlist mismatch, name the
+      offending files by category with the remedy (add an entry with its reason,
+      remove the stale entry, or write a test)
+- [ ] 3.4 Exit `0` on pass and `1` on fail (threshold shortfall, allowlist mismatch,
+      or missing report)
 - [ ] 3.5 Verify against the real report: run `flutter test --coverage`, then
       `dart run tool/check_coverage.dart`, and confirm it reports ~95.16% and
       passes

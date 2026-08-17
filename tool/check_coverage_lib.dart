@@ -62,6 +62,66 @@ const Set<String> defaultExpectedAbsent = {
 /// Default location of the LCOV report written by `flutter test --coverage`.
 const String defaultLcovPath = 'coverage/lcov.info';
 
+/// Parses command-line arguments into a report path and a [CoverageConfig].
+///
+/// Recognises `--lcov`, `--min`, `--scope`, and `--exclude`; `--scope` and
+/// `--exclude` may each be repeated, and supplying either replaces the
+/// corresponding default rather than adding to it.  The expected-absence
+/// allowlist is deliberately not exposed as a flag: it is a reviewed,
+/// test-covered constant rather than a per-invocation knob.
+///
+/// Throws [FormatException] on an unknown argument, a flag missing its value,
+/// or a `--min` outside 0..100.  `--help` is handled by the executable, since
+/// it is an output concern rather than a configuration one.
+(String, CoverageConfig) parseArgs(List<String> args) {
+  var lcovPath = defaultLcovPath;
+  var minimum = defaultMinimumPercent;
+  final scopes = <String>[];
+  final exclusions = <String>[];
+
+  String valueFor(int i, String flag) {
+    if (i + 1 >= args.length) {
+      throw FormatException('$flag requires a value');
+    }
+    return args[i + 1];
+  }
+
+  for (var i = 0; i < args.length; i++) {
+    switch (args[i]) {
+      case '--lcov':
+        lcovPath = valueFor(i, '--lcov');
+        i++;
+      case '--min':
+        final raw = valueFor(i, '--min');
+        final parsed = double.tryParse(raw);
+        if (parsed == null || parsed < 0 || parsed > 100) {
+          throw FormatException(
+            '--min must be a percentage in 0..100, got "$raw"',
+          );
+        }
+        minimum = parsed;
+        i++;
+      case '--scope':
+        scopes.add(valueFor(i, '--scope'));
+        i++;
+      case '--exclude':
+        exclusions.add(valueFor(i, '--exclude'));
+        i++;
+      default:
+        throw FormatException('unknown argument "${args[i]}"');
+    }
+  }
+
+  return (
+    lcovPath,
+    CoverageConfig(
+      minimumPercent: minimum,
+      scopes: scopes.isEmpty ? defaultScopes : scopes,
+      exclusions: exclusions.isEmpty ? defaultExclusions : exclusions,
+    ),
+  );
+}
+
 /// Line-coverage counts for a single file.
 class FileCoverage {
   final String path;

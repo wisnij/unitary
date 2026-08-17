@@ -73,6 +73,13 @@ Flutter's LCOV output is minimal — only `SF:` / `DA:` / `LF:` / `LH:` /
 `tool/` already follows (`benchmark`, `memory_report`, `generate_predefined_units`,
 `import_gnu_units`, `release`).
 
+Argument parsing lives in the library too, not just the computation.  It encodes
+real behavior — the recognised option set, replace-vs-accumulate semantics for
+repeated options, and value validation — and the first defect found in this change
+(allowlist staleness misfiring under `--scope`) was in exactly that
+override-handling path.  The executable retains only `--help`, output formatting,
+and the exit code, which are output concerns verified by invocation.
+
 Alternatives rejected:
 
 - **`dart run cobertura`** — verified to expose only `convert` and `show`

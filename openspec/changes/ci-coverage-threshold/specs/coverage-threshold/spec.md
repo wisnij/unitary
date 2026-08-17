@@ -186,17 +186,28 @@ naming the enforced minimum.
 ### Requirement: Testable library structure
 
 The coverage-checking logic SHALL live in a library file with unit tests under
-`test/tool/`, with the executable as a thin wrapper that handles argument parsing,
-output, and the process exit code — matching the existing `tool/` lib/exe
-convention.  The library covers report parsing, scope and exclusion filtering,
-percentage computation, missing-file detection, and threshold comparison.
+`test/tool/`, with the executable as a thin wrapper that handles output and the
+process exit code — matching the existing `tool/` lib/exe convention.  The library
+covers report parsing, argument parsing, scope and exclusion filtering, percentage
+computation, missing-file detection, and threshold comparison.
+
+Argument parsing belongs in the library rather than the executable because it
+encodes real behavior — which options are recognised, whether repeated options
+accumulate or replace, and what values are rejected — and so must be testable.
 
 #### Scenario: Library logic covered by tests
 
 - **WHEN** `flutter test test/tool/` runs
-- **THEN** tests exercising report parsing, scope filtering, exclusion handling,
-  missing-file detection, and threshold comparison pass without requiring a real
-  coverage run
+- **THEN** tests exercising report parsing, argument parsing, scope filtering,
+  exclusion handling, missing-file detection, and threshold comparison pass
+  without requiring a real coverage run
+
+#### Scenario: Invalid arguments are rejected
+
+- **WHEN** arguments contain an unrecognised option, an option missing its value,
+  or a minimum outside 0..100
+- **THEN** parsing fails with a message naming the offending argument, and the
+  executable exits with a status distinct from a coverage failure
 
 #### Scenario: Executable exit code reflects the result
 

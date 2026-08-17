@@ -436,6 +436,113 @@ void main() {
     });
   });
 
+  group('parseArgs', () {
+    test('with no arguments returns the production defaults', () {
+      final (lcovPath, config) = parseArgs(const []);
+
+      expect(lcovPath, defaultLcovPath);
+      expect(config.minimumPercent, defaultMinimumPercent);
+      expect(config.scopes, defaultScopes);
+      expect(config.exclusions, defaultExclusions);
+      expect(config.expectedAbsent, defaultExpectedAbsent);
+    });
+
+    test('--lcov overrides the report path', () {
+      final (lcovPath, _) = parseArgs(const ['--lcov', 'build/other.info']);
+
+      expect(lcovPath, 'build/other.info');
+    });
+
+    test('--min overrides the minimum', () {
+      final (_, config) = parseArgs(const ['--min', '85.5']);
+
+      expect(config.minimumPercent, 85.5);
+    });
+
+    test('--min accepts the boundary values', () {
+      expect(parseArgs(const ['--min', '0']).$2.minimumPercent, 0.0);
+      expect(parseArgs(const ['--min', '100']).$2.minimumPercent, 100.0);
+    });
+
+    test('--scope is repeatable and replaces the defaults', () {
+      final (_, config) = parseArgs(const [
+        '--scope',
+        'lib/core/',
+        '--scope',
+        'lib/shared/',
+      ]);
+
+      expect(config.scopes, ['lib/core/', 'lib/shared/']);
+    });
+
+    test('--exclude is repeatable and replaces the defaults', () {
+      final (_, config) = parseArgs(const [
+        '--exclude',
+        'lib/gen/',
+        '--exclude',
+        'lib/other.dart',
+      ]);
+
+      expect(config.exclusions, ['lib/gen/', 'lib/other.dart']);
+    });
+
+    test('combines several flags', () {
+      final (lcovPath, config) = parseArgs(const [
+        '--lcov',
+        'a.info',
+        '--min',
+        '75',
+        '--scope',
+        'lib/core/',
+      ]);
+
+      expect(lcovPath, 'a.info');
+      expect(config.minimumPercent, 75.0);
+      expect(config.scopes, ['lib/core/']);
+      expect(
+        config.exclusions,
+        defaultExclusions,
+        reason: 'an unsupplied option keeps its default',
+      );
+    });
+
+    test('an allowlist override is not exposed as a flag', () {
+      // The allowlist is a reviewed, test-covered constant, not a CLI knob.
+      final (_, config) = parseArgs(const ['--min', '50']);
+
+      expect(config.expectedAbsent, defaultExpectedAbsent);
+    });
+
+    group('rejects', () {
+      test('a non-numeric --min', () {
+        expect(
+          () => parseArgs(const ['--min', 'abc']),
+          throwsFormatException,
+        );
+      });
+
+      test('a --min outside 0..100', () {
+        expect(() => parseArgs(const ['--min', '-1']), throwsFormatException);
+        expect(() => parseArgs(const ['--min', '101']), throwsFormatException);
+      });
+
+      test('a flag missing its value', () {
+        expect(() => parseArgs(const ['--min']), throwsFormatException);
+        expect(() => parseArgs(const ['--lcov']), throwsFormatException);
+        expect(() => parseArgs(const ['--scope']), throwsFormatException);
+        expect(() => parseArgs(const ['--exclude']), throwsFormatException);
+      });
+
+      test('an unknown flag', () {
+        expect(() => parseArgs(const ['--bogus']), throwsFormatException);
+      });
+
+      test('a bare positional argument', () {
+        expect(() => parseArgs(const ['coverage.info']), throwsFormatException);
+      });
+    });
+  });
+
   group('production defaults', () {
     test('enforce at least the 80% MVP criterion', () {
       expect(defaultMinimumPercent, greaterThanOrEqualTo(80.0));

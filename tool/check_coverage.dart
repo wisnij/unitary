@@ -44,7 +44,7 @@ void main(List<String> args) {
   final String lcovPath;
   final CoverageConfig config;
   try {
-    (lcovPath, config) = _parseArgs(args);
+    (lcovPath, config) = parseArgs(args);
   } on FormatException catch (e) {
     stderr.writeln('Error: ${e.message}');
     stderr.write(_usage);
@@ -54,55 +54,6 @@ void main(List<String> args) {
   final result = checkCoverage(lcovPath: lcovPath, config: config);
   _report(result, config);
   exit(result.passed ? 0 : 1);
-}
-
-(String, CoverageConfig) _parseArgs(List<String> args) {
-  var lcovPath = defaultLcovPath;
-  var minimum = defaultMinimumPercent;
-  final scopes = <String>[];
-  final exclusions = <String>[];
-
-  String valueFor(int i, String flag) {
-    if (i + 1 >= args.length) {
-      throw FormatException('$flag requires a value');
-    }
-    return args[i + 1];
-  }
-
-  for (var i = 0; i < args.length; i++) {
-    switch (args[i]) {
-      case '--lcov':
-        lcovPath = valueFor(i, '--lcov');
-        i++;
-      case '--min':
-        final raw = valueFor(i, '--min');
-        final parsed = double.tryParse(raw);
-        if (parsed == null || parsed < 0 || parsed > 100) {
-          throw FormatException(
-            '--min must be a percentage in 0..100, got "$raw"',
-          );
-        }
-        minimum = parsed;
-        i++;
-      case '--scope':
-        scopes.add(valueFor(i, '--scope'));
-        i++;
-      case '--exclude':
-        exclusions.add(valueFor(i, '--exclude'));
-        i++;
-      default:
-        throw FormatException('unknown argument "${args[i]}"');
-    }
-  }
-
-  return (
-    lcovPath,
-    CoverageConfig(
-      minimumPercent: minimum,
-      scopes: scopes.isEmpty ? defaultScopes : scopes,
-      exclusions: exclusions.isEmpty ? defaultExclusions : exclusions,
-    ),
-  );
 }
 
 void _report(CoverageResult result, CoverageConfig config) {

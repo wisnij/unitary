@@ -231,12 +231,16 @@ CoverageResult evaluate({
         path,
   ]..sort();
 
-  // Allowlist entries that no longer describe reality.  Excluded paths are
-  // exempt from the comparison entirely, so the two mechanisms cannot fight.
+  // Allowlist entries that no longer describe reality.  Only entries inside
+  // the configured scope are checked: `isInScope` covers exclusions (so the
+  // two mechanisms cannot fight) and also skips entries outside the scope
+  // prefixes, which [filesOnDisk] was never asked to enumerate — without that,
+  // narrowing the scope would report every allowlisted file elsewhere in the
+  // tree as deleted.
   final stalePresent = <String>[];
   final staleMissing = <String>[];
   for (final path in config.expectedAbsent) {
-    if (config.isExcluded(path)) {
+    if (!config.isInScope(path)) {
       continue;
     }
     if (reported.containsKey(path)) {

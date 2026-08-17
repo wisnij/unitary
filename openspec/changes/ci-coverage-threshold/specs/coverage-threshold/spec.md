@@ -125,6 +125,13 @@ allowlist records which absences are expected, so the checker never has to guess
 - **THEN** the check does not fail on its account and the file contributes zero
   covered and zero total lines, leaving the computed percentage unchanged
 
+#### Scenario: Allowlist entries outside the configured scope are ignored
+
+- **WHEN** the configured scope is narrowed so that an allowlist entry falls
+  outside it, and the on-disk enumeration therefore never covers that entry
+- **THEN** the entry is neither checked nor reported as stale, so narrowing the
+  scope cannot misreport allowlisted files elsewhere in the tree as deleted
+
 #### Scenario: Excluded files are exempt from the comparison
 
 - **WHEN** an excluded file (such as the generated units file) is absent from the

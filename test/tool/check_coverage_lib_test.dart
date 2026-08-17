@@ -295,6 +295,46 @@ void main() {
       expect(withAllowlisted.percent, withoutIt.percent);
     });
 
+    test('an allowlist entry outside the configured scope is ignored', () {
+      // Mirrors `--scope lib/core/`: enumerateSourceFiles only walks the
+      // narrowed scope, so an allowlisted file living outside it is absent
+      // from filesOnDisk even though it exists.  It must not be reported as
+      // deleted.
+      final result = evaluate(
+        reported: parseLcov(lcovRecord('lib/core/a.dart', {1: 1})),
+        filesOnDisk: const ['lib/core/a.dart'],
+        config: configWith(
+          scopes: const ['lib/core/'],
+          expectedAbsent: const {'lib/main.dart'},
+        ),
+      );
+
+      expect(result.staleMissing, isEmpty);
+      expect(result.stalePresent, isEmpty);
+      expect(result.unexpectedAbsent, isEmpty);
+      expect(result.passed, isTrue);
+    });
+
+    test(
+      'an out-of-scope allowlist entry present in the report is ignored',
+      () {
+        final result = evaluate(
+          reported: parseLcov(
+            lcovRecord('lib/core/a.dart', {1: 1}) +
+                lcovRecord('lib/features/b.dart', {1: 1}),
+          ),
+          filesOnDisk: const ['lib/core/a.dart'],
+          config: configWith(
+            scopes: const ['lib/core/'],
+            expectedAbsent: const {'lib/features/b.dart'},
+          ),
+        );
+
+        expect(result.stalePresent, isEmpty);
+        expect(result.passed, isTrue);
+      },
+    );
+
     test('an excluded file absent from the report is exempt', () {
       final result = evaluate(
         reported: parseLcov(lcovRecord('lib/a.dart', {1: 1})),

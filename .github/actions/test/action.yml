@@ -21,6 +21,21 @@ runs:
         path: coverage/cobertura.xml
     - run: dart run cobertura show
       shell: bash
+    - name: Check coverage threshold
+      # Enforces a minimum on hand-written lib/ coverage (the generated units
+      # file is excluded — it is larger than all hand-written lib/ code
+      # combined and 100% covered as a side effect of registration, so
+      # including it would mask almost any real regression). Also verifies
+      # that the set of files absent from the report still matches the
+      # expected-absence allowlist; see tool/check_coverage_lib.dart.
+      #
+      # Placed after the coverage steps so a threshold failure never prevents
+      # the report from being generated and uploaded — the artifact is exactly
+      # what you need to diagnose the failure. Placed before the emulator
+      # steps so this deterministic, seconds-long check fails fast rather than
+      # after the ~13-minute integration run.
+      run: dart run tool/check_coverage.dart
+      shell: bash
     - name: Enable KVM group permissions
       # GitHub-hosted x86_64 Ubuntu runners do expose /dev/kvm, but the
       # runner user isn't in the `kvm` group, so the emulator's ProbeKVM

@@ -533,7 +533,26 @@ Implementation Phases
      unit-level
    - Manual testing on real devices — documented checklist; at least one real
      Android device pass
-   - Verify >80% coverage target for parser/core domain (MVP success criterion)
+   - [x] Verify >80% coverage target for parser/core domain (MVP success
+     criterion) — done August 13, 2026 (code review F11): coverage is now
+     *enforced* in CI, not merely measured.  `tool/check_coverage.dart` (+
+     `_lib` + 27 tests) parses `coverage/lcov.info` and fails the build below a
+     minimum, wired into `.github/actions/test/action.yml` after the report
+     upload (so a failure still leaves a downloadable artifact) and before the
+     emulator steps (so it fails fast).  Scope is **all of `lib/`** at a **90%**
+     minimum, not just `lib/core/` at 80%: measurement showed non-core code is
+     covered slightly *better* than core (96.23% vs 95.16%), so the usual
+     rationale for narrowing — dilution by UI code — does not hold here, and
+     narrowing would only shrink what the gate protects (notably
+     `worksheet_engine.dart`, pure conversion logic living under `features/`).
+     The generated `predefined_units.dart` is excluded: at 7233 lines it is
+     larger than all hand-written `lib/` code combined and 100% covered as a
+     side effect of registration, so including it reports 98.66% and would mask
+     almost any regression.  Baseline at introduction: **~95.9%** (3332/3474 on
+     the measured run; the suite's line coverage drifts by about a line between
+     runs, so the figure is approximate by nature).
+     Files legitimately absent from the report are pinned by a bidirectionally
+     checked allowlist (see `design_progress.md` for why absence is ambiguous).
 
 5. Bug fixes — reactive bucket; populate from manual/device testing and profiling
 

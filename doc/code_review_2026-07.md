@@ -246,7 +246,7 @@ re-ranked alongside new findings.
   unbuilt widget tree — made it easy to first misdiagnose as a silent
   wrong-default bug) and was fixed.
 
-### F11: Coverage is measured in CI but the 80% criterion is not enforced
+### F11: Coverage is measured in CI but the 80% criterion is not enforced — DONE (August 13, 2026)
 
 - **Category:** testing · **Effort:** S
 - **Evidence:** `.github/actions/test/action.yml` runs
@@ -257,6 +257,32 @@ re-ranked alongside new findings.
   `lib/core/` paths and fail below 80%, e.g. with a short `dart run` script
   or `lcov --summary`).  Scoping matters: a repo-wide threshold would be
   dominated by UI files and the generated units file.
+- **Resolution:** `tool/check_coverage.dart` + `_lib` + 27 tests, wired into
+  `.github/actions/test/action.yml` after the report upload (so a failure
+  still leaves a downloadable artifact) and before the emulator steps (so it
+  fails fast).  No new dependencies — `cobertura` exposes only `convert` and
+  `show`.  The existing coverage steps are unchanged.
+
+  Two parts of the fix above were **not** followed, both deliberately.
+
+  First, **the scope is all of `lib/` at 90%, not `lib/core/` at 80%.**  The
+  "dominated by UI files" claim was measured and is false for this codebase:
+  non-core code is covered *better* than core, 96.23% vs 95.16%, so there is
+  no dilution to avoid.  The generated units file genuinely does distort, but
+  an exact-path exclusion handles it at any scope, so it never required
+  narrowing.  Narrowing would only have shrunk what the gate protects —
+  notably `worksheet_engine.dart` (pure conversion logic under `features/`,
+  and at 87.30% the least-covered logic file in the project).  Baseline at
+  introduction: ~95.9% (3332/3474 on the measured run; the suite's line coverage
+  drifts by about a line between runs).
+
+  Second, **files absent from the report are pinned by a bidirectionally
+  checked allowlist** rather than assumed untested.  An LCOV report omits a
+  file either because no test loads it or because it has no executable lines
+  to instrument, and cannot distinguish the two:
+  `predefined_worksheets.dart` has a dedicated test file and appears zero
+  times in `lcov.info`, being 224 lines of `const` data.  See
+  `openspec/changes/ci-coverage-threshold/` for the full design record.
 
 ### F12: README describes the pre-implementation project and has broken links — DONE (August 5, 2026)
 
@@ -405,7 +431,10 @@ Suggested sequencing
   one documentation change; the README rewrite ran wider than F12's fix —
   full user-first rewrite from scratch).
 - F8 (dropdown overflow) — small UI fix.
-- F11 (coverage threshold) — small CI change.
+- ~~F11 (coverage threshold) — small CI change.~~ **Done** (August 13, 2026,
+  `ci-coverage-threshold`) — scoped wider than this review suggested (all of
+  `lib/` at 90%), because the review's stated rationale for narrowing did not
+  survive measurement.
 - ~~F1 (UserSettings decoupling) — small, and moves the worksheet benchmark
   where it belongs.~~ **Done** (July 22, 2026,
   `decouple-usersettings-flutter`).

@@ -9,6 +9,7 @@ set -o pipefail
     flutter analyze
     flutter test --coverage
     dart run cobertura show
+    dart run tool/check_coverage.dart
 )
 
 if [[ ${ENABLE_ANDROID_INTEGRATION_TESTS:-} == "true" ]]; then

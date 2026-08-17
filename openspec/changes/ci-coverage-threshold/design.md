@@ -14,11 +14,15 @@ with the generated units file excluded except where noted:
 
 | Scope                                                | Covered / total | Percent    |
 |------------------------------------------------------|-----------------|------------|
-| All of `lib/`                                         | 3331 / 3474     | **95.88%** |
+| All of `lib/`                                         | 3332 / 3474     | **~95.9%** |
 | `lib/core/` only                                      | 1082 / 1137     | 95.16%     |
-| Everything in `lib/` *except* `lib/core/`             | 2249 / 2337     | 96.23%     |
-| Pure-logic subset (core, `services`/`domain`/`data`/`models`, `shared/utils`) | 1391 / 1462 | 95.14% |
+| Everything in `lib/` *except* `lib/core/`             | 2250 / 2337     | 96.28%     |
+| Pure-logic subset (core, `services`/`domain`/`data`/`models`, `shared/utils`) | 1392 / 1462 | 95.21% |
 | `lib/core/domain/data/predefined_units.dart` (generated) | 7233 / 7233  | 100.00%    |
+
+These are one run's figures.  The suite's line coverage is not perfectly
+reproducible — it drifts by about a line between runs, for the reason recorded
+under Risks — so treat the decimals as indicative rather than exact.
 
 Two facts from this table drove the scope decision (D2).
 
@@ -140,8 +144,8 @@ The generated file is excluded by exact path rather than by excluding the whole
 
 ### D3: Threshold 90%, defaulted in the tool
 
-Hand-written `lib/` is at 95.88%.  A gate at the literal 80% MVP floor would
-tolerate losing ~552 covered lines before firing; 90% leaves roughly 204 lines of
+Hand-written `lib/` is at ~95.9%.  A gate at the literal 80% MVP floor would
+tolerate losing ~550 covered lines before firing; 90% leaves roughly 205 lines of
 slack — enough that adding a thin uncovered data class or a lightly-tested screen
 doesn't break the build, tight enough that a real regression does.  The 80%
 criterion in `implementation_plan.md` remains satisfied by construction, and is now
@@ -258,6 +262,20 @@ ordering rationale documented in `action.yml`:
   scope removes an entire class of false alarm the narrower scope would have had:
   moving code between `lib/core/` and `lib/features/` no longer changes the
   denominator at all.
+- **The measured figure is not perfectly reproducible** → accepted and documented
+  rather than engineered around.  `FreeformNotifier._pickExample()`
+  (`freeform_provider.dart`) draws from `idleExamples` with an unseeded `Random`
+  in a `do { … } while (pick == _lastExample)` loop, and
+  `FreeformExample.operator ==` short-circuits — its final comparison executes
+  only when the picker happens to redraw the previous example somewhere in the
+  suite.  So `idle_examples.dart` reports 4/7 or 5/7 depending on the run, and
+  the `lib/` total moves by a line (±0.03 points).  That is three orders of
+  magnitude below the ~205 lines of headroom, so it cannot flip the verdict; the
+  practical consequence is only that two runs may disagree in the second decimal,
+  which is why the figures above are quoted approximately.  Seeding the picker
+  purely to stabilise a metric would be the tail wagging the dog: the randomness
+  is a deliberate product behavior, and the gate is a floor, not a tracked
+  statistic.  Pre-existing; this change merely made it visible.
 - **An aggregate gate cannot catch a single weak file** → known and accepted (see
   Non-Goals): `worksheet_engine.dart` at 87.30% is ~2% of the denominator and
   passes on the strength of the other 3411 lines.  Every candidate scope shares

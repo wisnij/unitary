@@ -19,9 +19,9 @@ Phase 9 task "Verify >80% coverage target for parser/core domain".
   `lib/core/domain/data/predefined_units.dart`**.  That file is 7233 lines — larger
   than all hand-written `lib/` code combined — and is 100% covered as a side effect
   of registration, so including it reports 98.66% and masks essentially any
-  regression in hand-written code; excluding it, the real figure is 95.88%.
+  regression in hand-written code; excluding it, the real figure is ~95.9%.
 - Set the enforced minimum at **90%**, above the 80% MVP floor.  Hand-written `lib/`
-  sits at 95.88% today, so 90% leaves roughly six points of ordinary churn while
+  sits at ~95.9% today, so 90% leaves roughly six points of ordinary churn while
   still failing on a genuine regression.
 - Pin the files legitimately absent from the coverage report behind an explicit
   allowlist, checked in both directions, since a report omits a file either because

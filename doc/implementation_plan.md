@@ -548,7 +548,9 @@ Implementation Phases
      The generated `predefined_units.dart` is excluded: at 7233 lines it is
      larger than all hand-written `lib/` code combined and 100% covered as a
      side effect of registration, so including it reports 98.66% and would mask
-     almost any regression.  Baseline at introduction: **3331/3474 = 95.88%**.
+     almost any regression.  Baseline at introduction: **~95.9%** (3332/3474 on
+     the measured run; the suite's line coverage drifts by about a line between
+     runs, so the figure is approximate by nature).
      Files legitimately absent from the report are pinned by a bidirectionally
      checked allowlist (see `design_progress.md` for why absence is ambiguous).
 

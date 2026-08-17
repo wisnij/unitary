@@ -273,7 +273,8 @@ re-ranked alongside new findings.
   narrowing.  Narrowing would only have shrunk what the gate protects —
   notably `worksheet_engine.dart` (pure conversion logic under `features/`,
   and at 87.30% the least-covered logic file in the project).  Baseline at
-  introduction: 3331/3474 = 95.88%.
+  introduction: ~95.9% (3332/3474 on the measured run; the suite's line coverage
+  drifts by about a line between runs).
 
   Second, **files absent from the report are pinned by a bidirectionally
   checked allowlist** rather than assumed untested.  An LCOV report omits a

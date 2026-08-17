@@ -73,8 +73,9 @@ until task 2 lands.
 - [x] 3.4 Exit `0` on pass and `1` on fail (threshold shortfall, allowlist mismatch,
       or missing report)
 - [x] 3.5 Verify against the real report: run `flutter test --coverage`, then
-      `dart run tool/check_coverage.dart`, and confirm it reports ~95.88%
-      (3331/3474), reports no allowlist mismatches, and passes
+      `dart run tool/check_coverage.dart`, and confirm it reports ~95.9%
+      (3332/3474 on the measured run; drifts by a line — see design Risks),
+      reports no allowlist mismatches, and passes
 - [x] 3.6 Verify the failure path: run with `--min 99` and confirm a non-zero exit
       with the shortfall explained
 
@@ -111,3 +112,34 @@ until task 2 lands.
 - [x] 6.2 Run `flutter analyze` and confirm it is clean
 - [x] 6.3 Confirm the new tool files match the repo convention (lib/exe split, tests
       under `test/tool/`, no new dependencies in `pubspec.yaml`)
+
+## 7. Review follow-ups
+
+Findings from the `/opsx:verify` pass after group 6, fixed one at a time.  Both
+defects lived in the argument-override paths, which had no automated coverage —
+which is what motivated 7.2.
+
+- [x] 7.1 **Allowlist staleness misfired under `--scope`** (critical): narrowing the
+      scope made `enumerateSourceFiles` skip allowlisted files elsewhere in the
+      tree, so all four were reported as deleted.  Fixed by skipping entries via
+      `!config.isInScope(path)` (which subsumes the exclusion check) instead of
+      `config.isExcluded(path)`; two red-first regression tests and a new spec
+      scenario, "Allowlist entries outside the configured scope are ignored"
+- [x] 7.2 **Executable wrapper was untested**: extracted `parseArgs` from
+      `check_coverage.dart` into `check_coverage_lib.dart` and covered it with 13
+      tests (defaults, each flag, `--min` boundaries, repeatability, rejection of
+      unknown/valueless/out-of-range arguments).  Spec requirement 7 and design D1
+      updated to name argument parsing as library-resident, plus a new scenario
+      "Invalid arguments are rejected".  `_report`/`_reportMismatches` remain
+      verified by invocation only — a deliberate boundary
+- [x] 7.3 **`--exclude` could un-exclude the generated file**: replace semantics
+      meant `--exclude lib/features/` silently readmitted `predefined_units.dart`
+      and reported 99.20% instead of 95.29%.  Made `--exclude` additive while
+      `--scope` keeps replace semantics (narrowing is the point of passing it);
+      output now lists the active exclusions.  New spec scenario, "An override
+      cannot re-admit excluded generated code"; a `--no-default-excludes` escape
+      hatch was considered and left out
+- [x] 7.4 Second verify pass: recorded the suite's ±1-line coverage nondeterminism
+      (unseeded `Random` in `_pickExample` + short-circuiting `operator ==`) in
+      design Risks rather than seeding production code for it, and refreshed the
+      test counts and baseline figures across the docs

@@ -65,10 +65,18 @@ const String defaultLcovPath = 'coverage/lcov.info';
 /// Parses command-line arguments into a report path and a [CoverageConfig].
 ///
 /// Recognises `--lcov`, `--min`, `--scope`, and `--exclude`; `--scope` and
-/// `--exclude` may each be repeated, and supplying either replaces the
-/// corresponding default rather than adding to it.  The expected-absence
-/// allowlist is deliberately not exposed as a flag: it is a reviewed,
-/// test-covered constant rather than a per-invocation knob.
+/// `--exclude` may each be repeated.  The two differ deliberately:
+///
+/// - `--scope` **replaces** the defaults, because narrowing what is measured is
+///   the entire reason to pass it.
+/// - `--exclude` **adds** to the defaults, so the generated units file can never
+///   be dropped from the exclusion list by accident.  It is larger than all
+///   hand-written `lib/` code combined and fully covered, so letting it back
+///   into the count would silently inflate the reported figure — the exact
+///   distortion the default exclusion exists to prevent.
+///
+/// The expected-absence allowlist is deliberately not exposed as a flag: it is a
+/// reviewed, test-covered constant rather than a per-invocation knob.
 ///
 /// Throws [FormatException] on an unknown argument, a flag missing its value,
 /// or a `--min` outside 0..100.  `--help` is handled by the executable, since
@@ -117,7 +125,7 @@ const String defaultLcovPath = 'coverage/lcov.info';
     CoverageConfig(
       minimumPercent: minimum,
       scopes: scopes.isEmpty ? defaultScopes : scopes,
-      exclusions: exclusions.isEmpty ? defaultExclusions : exclusions,
+      exclusions: [...defaultExclusions, ...exclusions],
     ),
   );
 }

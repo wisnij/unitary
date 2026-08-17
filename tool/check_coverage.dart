@@ -15,8 +15,10 @@
 /// Run from the repository root: LCOV paths are repo-relative, and the
 /// allowlist comparison enumerates source files from the working directory.
 ///
-/// `--scope` and `--exclude` may each be repeated; supplying either replaces
-/// the corresponding default rather than adding to it.
+/// `--scope` and `--exclude` may each be repeated.  `--scope` replaces the
+/// default scope, since narrowing what is measured is the point of passing it;
+/// `--exclude` adds to the default exclusions, so the generated units file
+/// cannot be un-excluded by accident and inflate the reported figure.
 library;
 
 import 'dart:io';
@@ -30,8 +32,10 @@ Usage: dart run tool/check_coverage.dart [options]
 Options:
   --lcov <path>       LCOV report to read (default: $defaultLcovPath)
   --min <percent>     Minimum scoped line coverage (default: $defaultMinimumPercent)
-  --scope <prefix>    Path prefix to enforce; repeatable (default: ${defaultScopes.join(', ')})
-  --exclude <path>    Path or directory prefix to exclude; repeatable
+  --scope <prefix>    Path prefix to enforce; repeatable, replaces the
+                      default (${defaultScopes.join(', ')})
+  --exclude <path>    Path or directory prefix to exclude; repeatable, added
+                      to the defaults rather than replacing them
   -h, --help          Show this help
 ''';
 
@@ -67,10 +71,12 @@ void _report(CoverageResult result, CoverageConfig config) {
     (w, f) => f.path.length > w ? f.path.length : w,
   );
 
-  stdout.writeln(
-    'Coverage for ${config.scopes.join(', ')} '
-    '(excluding ${config.exclusions.length} path(s)), least-covered first:',
-  );
+  stdout.writeln('Coverage for ${config.scopes.join(', ')}, excluding:');
+  for (final exclusion in config.exclusions) {
+    stdout.writeln('  $exclusion');
+  }
+  stdout.writeln();
+  stdout.writeln('Least-covered first:');
   stdout.writeln();
   for (final file in result.files) {
     stdout.writeln(

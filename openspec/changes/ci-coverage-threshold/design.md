@@ -125,6 +125,15 @@ Exclusion matching is by exact relative path or directory prefix — no glob eng
 The only exclusion needed today is a single generated file, and a hand-rolled glob
 matcher would be more code than the thing it configures.
 
+`--scope` and `--exclude` differ deliberately in how they combine with the
+defaults.  `--scope` replaces, because narrowing what is measured is the whole
+reason to pass it.  `--exclude` *adds*, because replace semantics made the
+generated file one flag away from re-entering the count: `--exclude lib/features/`
+originally reported 99.20% instead of 95.29%, silently reintroducing the exact
+distortion the default exclusion exists to prevent.  A `--no-default-excludes`
+escape hatch was considered and left out — no use for it has come up, and it can
+be added if one does.
+
 The generated file is excluded by exact path rather than by excluding the whole
 `lib/core/domain/data/` directory, so its hand-written sibling
 `builtin_functions.dart` (82 lines, 100%) stays inside the gate.

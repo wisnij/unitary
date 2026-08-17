@@ -475,7 +475,7 @@ void main() {
       expect(config.scopes, ['lib/core/', 'lib/shared/']);
     });
 
-    test('--exclude is repeatable and replaces the defaults', () {
+    test('--exclude is repeatable and adds to the defaults', () {
       final (_, config) = parseArgs(const [
         '--exclude',
         'lib/gen/',
@@ -483,7 +483,27 @@ void main() {
         'lib/other.dart',
       ]);
 
-      expect(config.exclusions, ['lib/gen/', 'lib/other.dart']);
+      expect(config.exclusions, [
+        ...defaultExclusions,
+        'lib/gen/',
+        'lib/other.dart',
+      ]);
+    });
+
+    test('--exclude cannot un-exclude the generated units file', () {
+      // Additive semantics exist for exactly this: the generated file is
+      // larger than all hand-written lib/ code combined, so silently letting
+      // it back into the count would inflate the reported figure.
+      final (_, config) = parseArgs(const ['--exclude', 'lib/features/']);
+
+      expect(
+        config.exclusions,
+        contains('lib/core/domain/data/predefined_units.dart'),
+      );
+      expect(
+        config.isExcluded('lib/core/domain/data/predefined_units.dart'),
+        isTrue,
+      );
     });
 
     test('combines several flags', () {

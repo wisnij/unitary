@@ -157,7 +157,15 @@ project's MVP success criteria.
 
 - **WHEN** the checker is invoked with an explicit minimum, scope, exclusion, or
   report path
-- **THEN** the supplied value replaces the corresponding default for that run
+- **THEN** the supplied minimum, scope, or report path replaces the corresponding
+  default for that run, and the supplied exclusions are added to the default
+  exclusions
+
+#### Scenario: An override cannot re-admit excluded generated code
+
+- **WHEN** the checker is invoked with an explicit exclusion
+- **THEN** the default exclusions still apply, so generated code excluded by
+  default cannot be re-admitted to the totals and inflate the reported figure
 
 #### Scenario: Missing report is reported clearly
 

@@ -152,8 +152,8 @@ tool/run_integration_tests.sh           # on-device tests (Android emulator)
 Project status
 --------------
 
-Unitary is feature-complete for its MVP and currently in the final polish and
-testing phase before its first public release.  Over 2,000 automated tests
+Unitary is feature-complete for its MVP, with polish and testing complete,
+and is now preparing its first public release.  Over 2,000 automated tests
 cover the expression engine, unit system, and UI, plus an on-device
 integration test suite run in CI.  See the
 [Implementation Plan](doc/implementation_plan.md) for the detailed roadmap,

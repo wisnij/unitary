@@ -15,6 +15,16 @@ ThemeMode _toFlutterThemeMode(ThemePreference preference) =>
       ThemePreference.light => ThemeMode.light,
     };
 
+/// Root widget of the application, mounted by `main()`.
+///
+/// Owns the two [ThemeData] variants (light and dark, both seeded from
+/// [Colors.blue]) and selects between them from the persisted
+/// [UserSettings.themeMode], so a theme change takes effect without a
+/// restart.  Its [State] also fires the post-frame currency staleness check;
+/// see [CurrencyStatusNotifier.maybeRefresh].
+///
+/// The navigation shell lives in [AppShell] — this widget deliberately holds
+/// nothing but app-wide configuration.
 class UnitaryApp extends ConsumerStatefulWidget {
   const UnitaryApp({super.key});
 

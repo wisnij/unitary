@@ -335,7 +335,7 @@ Implementation Phases
 
 ---
 
-### Phase 9: Polish & Testing (Weeks 22-24) — IN PROGRESS
+### Phase 9: Polish & Testing (Weeks 22-24) — COMPLETE
 
 **Goals:** Production-ready quality
 
@@ -529,10 +529,34 @@ Implementation Phases
      remains deferred (not needed for this scope — see
      `openspec/changes/archive/2026-08-02-integration-tests/design.md`). See
      [Design Progress](design_progress.md) for the full account.
-   - Widget tests — audit coverage gaps; the existing ~2043 tests are largely
-     unit-level
-   - Manual testing on real devices — documented checklist; at least one real
-     Android device pass
+   - [x] Widget tests — audit coverage gaps — closed September 1, 2026 as
+     **satisfied by the CI coverage gate** rather than by a separate audit.
+     The task was written when coverage was merely measured; the August 13
+     threshold work changed the premise.  Its scope is all of `lib/` — UI
+     included — at a 90% floor against ~95.9% actual, and the measurement
+     taken then showed the concern behind this task (a suite "largely
+     unit-level", so UI thinly covered) is not borne out: non-core code is
+     covered slightly *better* than core, 96.23% vs 95.16%.  A manual audit
+     would re-derive what the gate now enforces continuously.  What the gate
+     cannot catch is a single weak file hiding behind an aggregate, and one
+     is known: `worksheet_engine.dart` at 87.30%, the least-covered logic
+     file in the project — recorded in Phase 12 rather than fixed here, since
+     a per-file floor would also fail legitimately thin data classes
+     (`completion_entry.dart` 8.33%, `token.dart` 33.33%).
+   - [x] Manual testing on real devices — closed September 1, 2026 as
+     **done in practice, checklist deliberately not written.**  Real-device
+     passes drove much of this phase and are individually recorded above:
+     safe-area verification against a left-edge camera cutout in landscape;
+     touch-target and tablet-spacing verification on both phone and tablet;
+     a full TalkBack pass (July 7) that found the `RenderTable` semantics
+     focus-rect bug; on-device profile-mode performance passes (startup
+     trace, per-keystroke frame timing before and after the rebuild-scoping
+     fix, fast-scroll drag); and the Android auto-capitalization bug (August
+     3), found only by using the app on a real device.  The `integration_test`
+     suite runs on a real Android emulator in CI on every workflow.  A
+     written checklist was judged to add process rather than coverage for a
+     single-maintainer project — revisit if contributors join, or ahead of a
+     Play Store submission where a repeatable pre-submit pass earns its keep.
    - [x] Verify >80% coverage target for parser/core domain (MVP success
      criterion) — done August 13, 2026 (code review F11): coverage is now
      *enforced* in CI, not merely measured.  `tool/check_coverage.dart` (+
@@ -554,11 +578,46 @@ Implementation Phases
      Files legitimately absent from the report are pinned by a bidirectionally
      checked allowlist (see `design_progress.md` for why absence is ambiguous).
 
-5. Bug fixes — reactive bucket; populate from manual/device testing and profiling
+5. [x] Bug fixes — reactive bucket, closed September 1, 2026: it was
+   populated and drained continuously through the phase rather than at the
+   end.  Real defects found and fixed here — each by the activity meant to
+   surface it — were the `FastScrollBar` zero-height clamp crash
+   (`ArgumentError` on a degenerate layout pass, found by the integration
+   suite), Android IME auto-capitalization breaking case-sensitive unit
+   lookup (found on-device), the `RenderTable` semantics focus-rect offset
+   (found by the TalkBack pass), the stale-rate currency worksheet, and the
+   contrast failures fixed by the audit.  No open bug is known at phase
+   close; new ones go to Phase 10 or the post-MVP phases.
 
 6. Documentation
-   - Code documentation — dartdoc pass on public APIs of the core domain and
-     feature providers
+   - [x] Code documentation — dartdoc pass on public APIs of the core domain
+     and feature providers — done September 1, 2026, scoped deliberately to
+     the *narrative* gap rather than to lint compliance.  Measurement first:
+     temporarily enabling `public_member_api_docs` flags 224 members across
+     `lib/`, but 167 of those (86 constructors + 81 fields) are leaf members
+     of classes that already carry a class-level doc, and the five enums it
+     appeared to flag turned out to be documented — the hits were their
+     *values*, reported at the single-line enum's own line/column.  An
+     independent scan for type declarations lacking a preceding `///` found
+     exactly two in all of `lib/`: `UnitaryApp` (`app.dart`) and
+     `CurrencyStatusNotifier` (`currency_provider.dart`); both now documented
+     (theme wiring and post-frame refresh hook; the deliberate
+     `maybeRefresh`/`refresh` split and the `unitRepositoryVersionProvider`
+     bump).  `TokenType`'s 13 values had real explanatory content in trailing
+     `//` comments, invisible to IDE hover and dartdoc — converted to `///`
+     and expanded where the source disagreed with the comment (the `times`
+     Unicode variants, `per` as a `divide` spelling, and `divideNum`'s
+     highest-precedence/numeric-literals-only rule, each verified against
+     `lexer.dart`/`parser.dart` and then empirically: `2|3 m` → 0.667 m,
+     `2|3 m|s` → `ParseException`).  **Not done, by decision:** documenting
+     the 167 constructors/fields, which would add boilerplate under docs that
+     already explain them; enabling `public_member_api_docs` (Unitary is an
+     application, not a published package, so there is no external consumer
+     of its API surface); and publishing generated dartdoc — `doc/api/` is a
+     gitignored February 2026 byproduct covering only Phase 1 libraries, left
+     as-is.  A nested `lib/core/analysis_options.yaml` was verified to scope
+     the lint to exactly the core domain (70 hits, nothing outside `lib/core`
+     flagged) should that tradeoff ever be revisited.
    - [x] Audit the design documents under `doc/` and decide which to keep,
      update, or archive — done August 5, 2026 (code review F13): completed
      phase plans (`phase1_plan`, `phase2_plan`, `phase4_plan`,
@@ -580,9 +639,30 @@ Implementation Phases
      hooks, change workflow (tests first, full suite + analyze), PR
      guidelines, license terms; distilled from `best_practices.md`
 
-**Deliverable:** MVP ready for release
+**Deliverable:** MVP ready for release ✓
+
+**Test Coverage:** 2088 tests passing; ~95.9% line coverage over `lib/`,
+enforced in CI at a 90% floor
 
 **Started:** June 18, 2026 (application icon)
+
+**Completed:** September 1, 2026
+
+**Closing note:** the phase ends with no known open bugs and every task
+either done or explicitly closed with reasoning above.  Two items were
+closed as satisfied-in-substance rather than performed — the widget-test
+audit (subsumed by the CI coverage gate) and the device-testing checklist
+(testing done, checklist not written).  Carried into Phase 10 as genuine
+release blockers, neither of which is Phase 9 work: the Android release
+build is still signed with the **debug** key
+(`android/app/build.gradle.kts` — the `flutter create` TODO), which would
+prevent in-place upgrades for anyone who installs the first published APK,
+and there is no **privacy policy**, which Phase 10 already lists and which
+the Play Store requires as a hosted URL.  Also outstanding but deferred by
+decision: the deferred code-review findings (F2, F3, F4, F5, F7, F16 — all
+architecture debt or latent-only), of which only **F8** (worksheet AppBar
+dropdown overflow at ≲410 dp) is user-visible and worth a decision before
+release.
 
 ---
 

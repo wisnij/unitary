@@ -666,27 +666,210 @@ release.
 
 ---
 
-### Phase 10: Release (Week 25)
+### Phase 10: Release (Week 25) — IN PROGRESS
 
-**Goals:** Publish to GitHub and Play Store
+**Goals:** Cut a properly signed 1.0.0, publish it on GitHub, and submit it
+to the Play Store
+
+**Context at phase start (September 1, 2026):** this phase was written before
+implementation and assumed nothing was published yet.  In fact most of it
+already shipped incrementally — the repository has been public since early
+on, and the tag-driven release pipeline has published 38 releases (v0.5.2
+onward, against 47 tags going back to v0.1.0), with v0.9.7 in flight at the
+time of writing.  What genuinely remains is release *engineering* that the
+0.9.x stream never needed because it was pre-1.0 — a real signing key, a
+meaningful version code, and a privacy policy — plus the Play Store
+submission, which is an **active goal for this phase**, not the optional
+extra the original list treated it as.  The task list below is re-derived
+from the actual state rather than kept as originally written.
+
+The "Week 25" estimate no longer reflects the scope.  Play Store onboarding
+is gated by Google's timelines rather than by work on this end — identity
+verification, and possibly a mandatory closed-testing period measured in
+weeks — so the phase should be planned around that rather than around the
+engineering tasks, which are small by comparison.
 
 **Tasks:**
 
-1. Prepare Play Store assets
-   - Screenshots
-   - Description
-   - Privacy policy
+1. GitHub distribution — **already done**, verified September 1, 2026
+   - [x] Set up GitHub repository — public at `github.com/wisnij/unitary`,
+     description and homepage set, AGPL-3.0 detected by GitHub
+   - [x] Add license — `LICENSE.md` (AGPL v3); the app also satisfies AGPL
+     §13's network-use obligation in-app, since the About screen offers both
+     "License terms" (full text via `LicenseScreen`) and "Project home"
+     (source URL) — this matters because the web build is hosted, and §13
+     obliges offering source to users who interact with it over a network
+   - [x] Polish README — rewritten August 5, 2026 (F12) with eight
+     device-captured screenshots added August 7
+   - [x] Publish to GitHub — fully automated and proven: pushing a `vX.Y.Z`
+     tag runs `prepare` → `build-android-apk` + `build-web` → `release`,
+     which creates the GitHub release with the APK and web zip attached and
+     the tag's annotation body as the release notes
+   - [x] Web deployment — every push to `main` builds with `--wasm` and
+     force-pushes to `gh-pages`; live at <https://wisnij.github.io/unitary/>
+   - [x] Screenshots — eight captured via `tool/take_screenshots.sh`.  Note
+     these are sized for the README; the Play Store needs its own set (see
+     task 6)
 
-2. Build release APK/AAB
-3. Set up GitHub repository
-   - Clean up code
-   - Add license
-   - Polish README
+2. Release signing — **BLOCKER for any published 1.0.0**
+   - [ ] **Decide the two-channel signing strategy first** — this is the one
+     decision in the phase that is effectively irreversible once anything is
+     published, and shipping through both GitHub and Play makes it sharper
+     than it would otherwise be.  Play App Signing has Google hold the app
+     signing key while you upload with a separate upload key, and Play then
+     re-signs; a GitHub APK signed with *your* key therefore carries a
+     different signature from the Play build of the same version.  Android
+     refuses to install an update whose signature differs, so the two
+     channels become mutually exclusive for any given user: whichever one
+     they install from first is the one they are stuck with, and switching
+     means uninstalling and losing local data.  The usual way out is to
+     enrol in Play App Signing by supplying the *existing* key rather than
+     letting Google generate one, and to sign the GitHub APK with that same
+     key, so both channels produce identical signatures.  Verify the current
+     Play App Signing options before committing — this behaviour has changed
+     before, and the choice cannot be revisited after the first upload
+   - [ ] Generate a release keystore and store it somewhere durable, with a
+     backup.  Losing it means no future update can ever install over an
+     existing install, through either channel
+   - [ ] Add keystore patterns to `.gitignore` **before** creating the key —
+     `*.jks`, `*.keystore`, and `android/key.properties` are all currently
+     unignored, so a stray `git add -A` would commit the signing key
+   - [ ] Wire a real `signingConfig` into `android/app/build.gradle.kts`,
+     replacing the `signingConfigs.getByName("debug")` line under
+     `buildTypes.release` (the `flutter create` TODO immediately above it),
+     reading credentials from an untracked `key.properties`
+   - [ ] Supply the keystore to CI as encoded repository secrets so
+     `build-android-apk` produces a properly signed artifact; keep the local
+     path working for developer builds
+   - [ ] Verify the output: `apksigner verify --print-certs` must no longer
+     report `CN=Android Debug`
+   - **Why this blocks:** verified against the current build config and the
+     locally built release APK — the release build type is signed with the
+     debug key, so `Signer #1 certificate DN: C=US, O=Android, CN=Android
+     Debug`.  Anyone who installs a debug-signed 1.0.0 cannot later install a
+     properly signed 1.0.1 over it (signature mismatch); they must uninstall
+     first, losing settings, worksheet values, and history.  That makes this
+     a fix-before-first-publish item, not a fix-later one.  The Play Store
+     rejects debug-signed uploads outright
 
-4. Publish to GitHub
-5. Submit to Play Store (optional)
+3. Version code — **BLOCKER**
+   - [ ] Adopt a `version: X.Y.Z+N` scheme in `pubspec.yaml` and decide how
+     `N` is derived (monotonic counter, or a CI-computed value)
+   - [ ] Confirm the built artifact reports the intended value
+   - **Current state:** `pubspec.yaml` carries a bare `version: 0.9.7` with
+     no `+build` suffix, so every release build has shipped with
+     `versionCode='1'` (confirmed with `aapt2 dump badging` against a local
+     release APK).  Play requires each upload to strictly exceed the previous
+     version code, so a permanent 1 cannot be uploaded twice; Android's own
+     upgrade and downgrade-protection semantics also key off it for sideloaded
+     APKs.  Note `versionName` is unaffected — it tracks the pubspec version
+     correctly today
 
-**Deliverable:** Public MVP release
+4. Privacy policy — **BLOCKER**
+   - [ ] Write it.  The content is unusually simple and worth stating
+     plainly: the app collects nothing, transmits no personal data, has no
+     analytics, ads, or trackers, and stores everything locally via
+     SharedPreferences.  Its only network request is an unauthenticated fetch
+     of exchange rates from the Frankfurter API, which carries no user
+     identifier; the declared permissions are `INTERNET` plus Flutter's own
+     `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
+   - [ ] Host it at a stable URL — the existing `gh-pages` deployment is the
+     natural home, and Play requires a URL rather than in-app text
+   - [ ] Link it from the README and the in-app About screen
+
+5. Cut 1.0.0
+   - [ ] Decide what 1.0.0 means here and whether any deferred item should
+     land first — the open candidate is code-review **F8** (the worksheet
+     AppBar dropdown overflows at ≲410 dp), the only user-visible item among
+     the deferred findings; F2/F3/F4/F5/F7/F16 are architecture debt or
+     latent-only and are fine to carry
+   - [ ] Bump `pubspec.yaml` to 1.0.0 with its build number, update
+     `CHANGELOG.md`, tag, and let the existing pipeline publish
+   - [ ] Verify the published artifacts: signature, version code, and an
+     install-over-previous test on a real device
+   - [ ] Update the README's "Project status" section, which will no longer
+     be describing a pre-release app
+
+6. Play Store submission — the largest single group, and the long pole for
+   the phase.  Start the account and testing-track steps **early**: they are
+   gated by Google's timelines rather than by work on this end, so they can
+   run in parallel with tasks 2–5 rather than waiting on them
+   - [ ] Register a Google Play developer account (one-time fee) and complete
+     identity verification.  **Verify current onboarding requirements before
+     planning the timeline** — Google has previously required new personal
+     developer accounts to run a closed test with a minimum number of testers
+     for a minimum continuous period before production access is granted.  If
+     that still applies it dominates the schedule and needs recruiting real
+     testers, so establish it first rather than discovering it at submission
+   - [ ] Build an AAB in CI — the release job currently runs `flutter build
+     apk` only; Play needs `flutter build appbundle`.  Add it alongside the
+     APK (which stays, for direct GitHub download) and attach it to the
+     release, or upload it to Play directly from CI
+   - [ ] Decide how uploads happen: manually through the Play Console at
+     first, or automated from CI.  Manual is the right default for the first
+     submission — the console surfaces policy warnings and pre-launch report
+     findings that a scripted upload would hide.  Automating later is
+     straightforward if the release cadence justifies it
+   - [ ] Verify the AAB against the signing strategy chosen in task 2 —
+     specifically that a Play-delivered build and a GitHub-downloaded APK of
+     the same version carry the same signature, so users are not locked into
+     whichever channel they installed from first
+   - [ ] Store listing copy: short description ≤80 characters, full
+     description ≤4000.  The README's feature tour is the obvious source, but
+     Play descriptions are read cold by people who have never heard of the
+     app, so lead with what it does rather than how it is built.  The "no
+     ads, no tracking, no subscriptions, everything offline" angle is a
+     genuine differentiator in this category and belongs near the top
+   - [ ] Store listing graphics: app icon at 512×512 (derivable from
+     `assets/icon/unitary.svg` via the existing `tool/generate_icons.sh`
+     pipeline) and a feature graphic at 1024×500, which has no existing
+     source and must be designed
+   - [ ] Store listing screenshots — a separate set from the README's.  Play
+     has its own count and aspect-ratio rules per form factor, and listing
+     tablet screenshots is what makes the app eligible to be surfaced as
+     tablet-capable.  The app genuinely earns that: the two-pane expanded
+     layouts are worth showing.  `tool/take_screenshots.sh` already automates
+     device capture and can be pointed at a tablet AVD, so extend it rather
+     than capturing by hand
+   - [ ] Complete the Data safety declaration — straightforward here: no data
+     collected, none shared, none transmitted off-device except the
+     unauthenticated exchange-rate fetch, which carries no user identifier.
+     Keep it consistent with the privacy policy from task 4, since the two
+     are cross-checked
+   - [ ] Complete the content rating questionnaire (expected: rated for
+     everyone) and the remaining declarations Play requires at submission —
+     ads (none), target audience, and news/government/financial category
+     questions
+   - [ ] Confirm the target API level meets Play's current requirement.
+     `targetSdk` is 36 and `minSdk` 24 as built, which is current today, but
+     the requirement advances annually and is enforced on new uploads
+   - [ ] Roll out through the testing tracks — internal, then closed if
+     required by the account rules above, then production.  Read the
+     pre-launch report at each stage: it runs the app on real devices and
+     catches crashes, accessibility issues, and policy problems before users
+     do
+   - [ ] Accept the recurring obligations this channel brings, which the
+     GitHub and web channels do not: annual target-API deadlines, periodic
+     re-declaration of data safety and content rating, and policy compliance
+     on an ongoing basis.  A published app that falls behind these is
+     eventually removed from the store
+
+7. Pre-release cleanup — small, opportunistic
+   - [ ] Remove the stale `applicationId` TODO in
+     `android/app/build.gradle.kts` — it advises specifying a unique
+     application ID, which was already done (`dev.wisnij.unitary`); only the
+     signing TODO beneath it is real
+   - [ ] Decide on `doc/api/` — a gitignored February 2026 dartdoc byproduct
+     covering only the Phase 1 libraries.  Either regenerate and publish it
+     alongside the web app or delete it; leaving a stale copy on disk is the
+     status quo and is also acceptable
+
+**Deliverable:** Public MVP release — a signed, versioned 1.0.0 published on
+GitHub and live on the Play Store, with the web app deployed and a privacy
+policy hosted
+
+**Non-goals:** iOS/App Store (Phase 13), and any feature work — Phase 9
+closed with no known open bugs, and 1.0.0 should ship what is already tested
 
 ---
 
@@ -903,7 +1086,7 @@ The MVP will be considered successful when it meets these criteria:
 - Additional worksheet templates based on user requests
 - Custom unit feature implemented
 - iOS support added
-- Play Store publication (optional)
+- Play Store publication — now an active Phase 10 goal rather than a post-MVP option
 
 **Code Quality:**
 

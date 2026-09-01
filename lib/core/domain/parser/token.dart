@@ -1,23 +1,56 @@
 /// The type of a lexical token in an expression.
 enum TokenType {
   // Literals
-  number, // 3.14, 1.5e-10, .5
-  identifier, // any identifier (unit or function name)
+  /// A numeric literal: `3.14`, `1.5e-10`, `.5`.
+  number,
+
+  /// A unit or function name.
+  identifier,
+
   // Operators
-  plus, // +
-  minus, // -
-  times, // *, ×, ·, etc.
-  divide, // /, ÷, per
-  divideNum, // |, ⁄
-  exponent, // ^, **
+  /// Addition, or unary plus: `+`.
+  plus,
+
+  /// Subtraction, or unary negation: `-`.
+  minus,
+
+  /// Explicit multiplication: `*`, or the Unicode variants `×`, `·`, `⋅`, `⨉`.
+  ///
+  /// Implicit multiplication (`5 m`) produces no token of its own — the parser
+  /// infers it from adjacent operands, and binds it tighter than this token.
+  times,
+
+  /// Division: `/`, `÷`, or the word `per`.
+  divide,
+
+  /// Numeric fraction: `|` or `⁄`.
+  ///
+  /// Distinct from [divide] because it binds at the highest precedence level
+  /// and both operands must be bare numeric literals — `2|3 m` is two-thirds
+  /// of a metre, and `2|3 m|s` is a parse error.
+  divideNum,
+
+  /// Exponentiation: `^` or `**`.
+  exponent,
+
   // Grouping
-  leftParen, // (
-  rightParen, // )
-  comma, // ,
+  /// Opening parenthesis: `(`.
+  leftParen,
+
+  /// Closing parenthesis: `)`.
+  rightParen,
+
+  /// Argument separator: `,`.
+  comma,
+
   // Prefix operators
-  inverse, // ~
-  // Special
-  eof, // end of input
+  /// Inverse function application: `~`, as in `~tempF`.
+  ///
+  /// Only meaningful immediately before a known function name.
+  inverse,
+
+  /// End of input.  Always the final token in a lexed sequence.
+  eof,
 }
 
 /// A single token produced by the lexer.

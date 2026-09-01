@@ -557,8 +557,34 @@ Implementation Phases
 5. Bug fixes — reactive bucket; populate from manual/device testing and profiling
 
 6. Documentation
-   - Code documentation — dartdoc pass on public APIs of the core domain and
-     feature providers
+   - [x] Code documentation — dartdoc pass on public APIs of the core domain
+     and feature providers — done September 1, 2026, scoped deliberately to
+     the *narrative* gap rather than to lint compliance.  Measurement first:
+     temporarily enabling `public_member_api_docs` flags 224 members across
+     `lib/`, but 167 of those (86 constructors + 81 fields) are leaf members
+     of classes that already carry a class-level doc, and the five enums it
+     appeared to flag turned out to be documented — the hits were their
+     *values*, reported at the single-line enum's own line/column.  An
+     independent scan for type declarations lacking a preceding `///` found
+     exactly two in all of `lib/`: `UnitaryApp` (`app.dart`) and
+     `CurrencyStatusNotifier` (`currency_provider.dart`); both now documented
+     (theme wiring and post-frame refresh hook; the deliberate
+     `maybeRefresh`/`refresh` split and the `unitRepositoryVersionProvider`
+     bump).  `TokenType`'s 13 values had real explanatory content in trailing
+     `//` comments, invisible to IDE hover and dartdoc — converted to `///`
+     and expanded where the source disagreed with the comment (the `times`
+     Unicode variants, `per` as a `divide` spelling, and `divideNum`'s
+     highest-precedence/numeric-literals-only rule, each verified against
+     `lexer.dart`/`parser.dart` and then empirically: `2|3 m` → 0.667 m,
+     `2|3 m|s` → `ParseException`).  **Not done, by decision:** documenting
+     the 167 constructors/fields, which would add boilerplate under docs that
+     already explain them; enabling `public_member_api_docs` (Unitary is an
+     application, not a published package, so there is no external consumer
+     of its API surface); and publishing generated dartdoc — `doc/api/` is a
+     gitignored February 2026 byproduct covering only Phase 1 libraries, left
+     as-is.  A nested `lib/core/analysis_options.yaml` was verified to scope
+     the lint to exactly the core domain (70 hits, nothing outside `lib/core`
+     flagged) should that tradeoff ever be revisited.
    - [x] Audit the design documents under `doc/` and decide which to keep,
      update, or archive — done August 5, 2026 (code review F13): completed
      phase plans (`phase1_plan`, `phase2_plan`, `phase4_plan`,

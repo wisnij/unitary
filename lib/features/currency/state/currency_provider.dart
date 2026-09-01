@@ -85,6 +85,23 @@ final currencyStatusProvider =
       CurrencyStatusNotifier.new,
     );
 
+/// Drives currency rate refreshes and tracks their observable state.
+///
+/// Seeds [CurrencyStatus.lastUpdatedAt] from the stored rates in [build], so
+/// the timestamp is correct on the first frame without waiting on the network.
+///
+/// Two refresh paths, deliberately different:
+///
+/// - [maybeRefresh] — silent, fired once at launch.  Fetches only when the
+///   stored rates are older than 24 hours, reports no progress, and swallows
+///   errors, so a failed launch-time fetch is invisible to the user.
+/// - [refresh] — user-initiated.  Always fetches, surfaces progress through
+///   [CurrencyStatus.isFetching], returns an error string on failure, and
+///   enforces a 60-second cooldown between attempts.
+///
+/// Whenever a fetch actually changes the stored rates, both paths increment
+/// [unitRepositoryVersionProvider] so that dependent views — the unit browser
+/// and any worksheet with persisted sources — recompute against the new rates.
 class CurrencyStatusNotifier extends Notifier<CurrencyStatus> {
   static const _cooldown = Duration(seconds: 60);
 

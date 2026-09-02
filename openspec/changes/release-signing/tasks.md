@@ -2,9 +2,9 @@
 
 - [x] 1.1 Confirm the version-code change has landed — Play rejects duplicate
   version codes, and every build currently reports `versionCode=1`
-- [ ] 1.2 Add `*.jks`, `*.p12`, `*.keystore`, and `android/key.properties` to
+- [x] 1.2 Add `*.jks`, `*.p12`, `*.keystore`, and `android/key.properties` to
   `.gitignore`, and commit this **before** any key exists on disk
-- [ ] 1.3 Verify the ignore rules by placing a dummy file at each path and
+- [x] 1.3 Verify the ignore rules by placing a dummy file at each path and
   confirming `git status` does not offer it
 
 ## 2. Confirm the open questions before generating keys

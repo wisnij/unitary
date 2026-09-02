@@ -1,6 +1,6 @@
 ## 1. Prerequisites and safety
 
-- [ ] 1.1 Confirm the version-code change has landed — Play rejects duplicate
+- [x] 1.1 Confirm the version-code change has landed — Play rejects duplicate
   version codes, and every build currently reports `versionCode=1`
 - [ ] 1.2 Add `*.jks`, `*.p12`, `*.keystore`, and `android/key.properties` to
   `.gitignore`, and commit this **before** any key exists on disk

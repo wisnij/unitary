@@ -332,7 +332,8 @@ dart run tool/release.dart major
 The script will:
 
 1. Verify the working tree is clean
-2. Read the current version from `pubspec.yaml`
+2. Read the current version from `pubspec.yaml` and check that its recorded
+   version code matches its version name, aborting if they disagree
 3. Collect commits since the last tag
 4. Generate a changelog entry grouped by category
 5. Update `CHANGELOG.md` and `pubspec.yaml`
@@ -346,6 +347,39 @@ After the script completes, push with `git push && git push --tags`.
 - **Major** (X.0.0): Breaking changes or major milestones
 - **Minor** (0.X.0): New features, phase completions
 - **Patch** (0.0.X): Bug fixes, minor improvements
+
+**Android version code:**
+
+`pubspec.yaml` records the version as `X.Y.Z+CODE`.  Flutter reads Android's
+`versionName` from the first half and its `versionCode` from the second, and
+the release script derives the code from the name as:
+
+~~~~
+MAJOR × 1000000 + MINOR × 1000 + PATCH
+~~~~
+
+so `1.2.3` becomes `1002003` and `0.9.7` becomes `9007`.  The name stays the
+single source of truth — there is no counter to bump by hand, and the script
+refuses to run when a hand-edited `pubspec.yaml` records a code that disagrees
+with its name.
+
+Android orders builds by version code, not by version name, so the code must
+increase with every release: a build whose code does not exceed the installed
+one cannot be installed over it, and Play rejects an upload that does not
+exceed the previous one.  Two ceilings are enforced at release time rather than
+discovered at upload time, both by throwing from the derivation:
+
+- A **minor or patch component of 1000 or more** cannot be encoded in the three
+  digits allocated to it — `1.1000.0` and `2.0.0` would both yield `2000000`.
+  If a component ever approaches 1000, widen the scheme (the next step up is
+  four digits per component) rather than working around the error; widening is
+  safe because it only ever produces larger codes.
+- A code above **2100000000**, the maximum Android accepts, which under this
+  scheme means a major component above 2100.  There is no widening available
+  here, since that limit belongs to the platform.
+
+Note that releases up to and including v0.9.7 shipped before this scheme, with
+a permanent version code of 1.
 
 **Conventional commit prefixes and changelog mapping:**
 

@@ -70,6 +70,96 @@ void main() {
       });
     });
 
+    group('version code', () {
+      test('derives the code from the semantic version', () {
+        expect(Version(1, 0, 0).versionCode, 1000000);
+        expect(Version(1, 2, 3).versionCode, 1002003);
+        expect(Version(0, 9, 7).versionCode, 9007);
+      });
+
+      test('derives the code from the version part alone', () {
+        expect(Version.parse('1.2.3+1002003').versionCode, 1002003);
+        // A stale or wrong recorded suffix does not influence the result.
+        expect(Version.parse('1.2.3+1').versionCode, 1002003);
+      });
+
+      test('clears the code carried by every published release', () {
+        expect(Version(0, 9, 7).versionCode, greaterThan(1));
+      });
+
+      test('increases strictly with every kind of bump', () {
+        final versions = [
+          Version(0, 0, 0),
+          Version(0, 9, 7),
+          Version(1, 0, 0),
+          Version(1, 2, 3),
+          // Near the top of the encodable range: every bump of this one
+          // still lands inside it.
+          Version(9, 998, 998),
+        ];
+        for (final version in versions) {
+          for (final type in BumpType.values) {
+            expect(
+              version.bump(type).versionCode,
+              greaterThan(version.versionCode),
+              reason: 'bumping $version by $type must increase its code',
+            );
+          }
+        }
+      });
+
+      test('a bump past the ceiling throws rather than colliding', () {
+        // Monotonicity holds only across encodable versions. Bumping a
+        // component that is already at its ceiling produces a version whose
+        // code would collide with the next component up, so the guard rejects
+        // it instead of returning the smaller-or-equal value.
+        expect(
+          () => Version(1, 0, 999).bump(BumpType.patch).versionCode,
+          throwsRangeError,
+        );
+        expect(
+          () => Version(1, 999, 0).bump(BumpType.minor).versionCode,
+          throwsRangeError,
+        );
+      });
+
+      test('orders a chain of successive releases', () {
+        final chain = [
+          Version(0, 9, 7),
+          Version(0, 9, 8),
+          Version(0, 10, 0),
+          Version(1, 0, 0),
+          Version(1, 0, 1),
+        ];
+        for (var i = 1; i < chain.length; i++) {
+          expect(chain[i].versionCode, greaterThan(chain[i - 1].versionCode));
+        }
+      });
+
+      test('throws when the minor component is out of range', () {
+        expect(() => Version(1, 1000, 0).versionCode, throwsRangeError);
+        expect(() => Version(1, 1001, 0).versionCode, throwsRangeError);
+      });
+
+      test('throws when the patch component is out of range', () {
+        expect(() => Version(1, 0, 1000).versionCode, throwsRangeError);
+      });
+
+      test('accepts the largest encodable minor and patch components', () {
+        expect(Version(1, 999, 999).versionCode, 1999999);
+      });
+
+      test('throws when the code would exceed the Android maximum', () {
+        expect(() => Version(2100, 0, 1).versionCode, throwsRangeError);
+        expect(() => Version(2101, 0, 0).versionCode, throwsRangeError);
+      });
+
+      test('accepts the largest version code Android allows', () {
+        expect(Version(2100, 0, 0).versionCode, 2100000000);
+        expect(Version(2100, 0, 0).versionCode, Version.maxAndroidVersionCode);
+      });
+    });
+
     group('equality', () {
       test('equal versions are equal', () {
         expect(Version(1, 2, 3), equals(Version(1, 2, 3)));
@@ -427,6 +517,96 @@ void main() {
     test('throws if no version line found', () {
       const content = 'name: myapp\n\nenvironment:\n';
       expect(() => updatePubspecVersion(content, '0.2.0'), throwsStateError);
+    });
+
+    test('writes the name and derived code for a bumped version', () {
+      const content = 'name: myapp\nversion: 0.9.7+9007\n\nenvironment:\n';
+      final newVersion = Version.parse('0.9.7').bump(BumpType.patch);
+      final result = updatePubspecVersion(content, newVersion.pubspecVersion);
+      expect(result, contains('version: 0.9.8+9008'));
+    });
+
+    test('leaves no stale code behind when replacing a suffixed version', () {
+      const content = 'name: myapp\nversion: 1.2.3+1002003\n\nenvironment:\n';
+      final result = updatePubspecVersion(
+        content,
+        Version(1, 3, 0).pubspecVersion,
+      );
+      expect(result, contains('version: 1.3.0+1003000'));
+      expect(result, isNot(contains('1002003')));
+      expect('+'.allMatches(result).length, 1);
+    });
+
+    test('writes a suffix onto a version line that had none', () {
+      const content = 'name: myapp\nversion: 0.9.7\n\nenvironment:\n';
+      final result = updatePubspecVersion(
+        content,
+        Version(0, 9, 8).pubspecVersion,
+      );
+      expect(result, contains('version: 0.9.8+9008'));
+      expect('+'.allMatches(result).length, 1);
+    });
+  });
+
+  group('pubspecVersion', () {
+    test('joins the version name and its derived code', () {
+      expect(Version(1, 2, 3).pubspecVersion, '1.2.3+1002003');
+      expect(Version(0, 9, 7).pubspecVersion, '0.9.7+9007');
+      expect(Version(1, 0, 0).pubspecVersion, '1.0.0+1000000');
+    });
+
+    test('round-trips through Version.parse', () {
+      final version = Version(1, 2, 3);
+      expect(Version.parse(version.pubspecVersion), equals(version));
+    });
+
+    test('throws when the code cannot be derived', () {
+      expect(() => Version(1, 1000, 0).pubspecVersion, throwsRangeError);
+    });
+  });
+
+  group('checkVersionCodeConsistency', () {
+    test('accepts a version whose code matches its name', () {
+      expect(checkVersionCodeConsistency('1.2.3+1002003'), isNull);
+      expect(checkVersionCodeConsistency('0.9.7+9007'), isNull);
+      expect(checkVersionCodeConsistency('1.0.0+1000000'), isNull);
+    });
+
+    test('reports a code that disagrees with the name', () {
+      final message = checkVersionCodeConsistency('1.2.3+1');
+      expect(message, isNotNull);
+      expect(message, contains('1002003'));
+    });
+
+    test('reports a missing code', () {
+      final message = checkVersionCodeConsistency('1.2.3');
+      expect(message, isNotNull);
+      expect(message, contains('1002003'));
+    });
+
+    test('reports a non-numeric code', () {
+      final message = checkVersionCodeConsistency('1.2.3+abc');
+      expect(message, isNotNull);
+      expect(message, contains('1002003'));
+    });
+
+    test('reports an empty code', () {
+      final message = checkVersionCodeConsistency('1.2.3+');
+      expect(message, isNotNull);
+      expect(message, contains('1002003'));
+    });
+
+    test('reports a version whose code cannot be derived', () {
+      final message = checkVersionCodeConsistency('1.1000.0+1');
+      expect(message, isNotNull);
+      expect(message, contains('minor'));
+    });
+
+    test('rejects a malformed version name', () {
+      expect(
+        () => checkVersionCodeConsistency('nonsense'),
+        throwsFormatException,
+      );
     });
   });
 

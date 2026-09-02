@@ -13,24 +13,28 @@
   first release creation, and capture the current PEPK export procedure
 - [ ] 2.2 Confirm Play's current minimum app-signing-key expiry date and that 30
   years clears it
-- [ ] 2.3 Decide the final DN field values (`CN`, `O`, `C`) and confirm that
-  omitting `L`, `ST`, and `OU` is accepted by the enrolment flow — recorded as an
-  open question in `design.md` and deliberately deferred to this point
+- [ ] 2.3 Re-read the decided DN (`CN=Unitary, O=wisnij.dev, C=US`) once before
+  generating anything, and confirm that omitting `L`, `ST`, and `OU` is accepted
+  by Play's enrolment flow — a typo or a rejected field cannot be corrected after
+  the key exists
 - [ ] 2.4 Decide whether the release job runs in a GitHub Actions environment
   with required reviewers, or relies on repository secrets alone
 
 ## 3. Generate and secure the keys
 
-- [ ] 3.1 Generate the app signing key: RSA 2048, SHA256withRSA, `-validity
-  10950`, PKCS12, alias `unitary-app`, with the DN agreed in 2.3
-- [ ] 3.2 Generate the upload key with the same parameters, alias
+- [ ] 3.1 Generate the app signing key: RSA 2048, `-validity 10950`, PKCS12,
+  alias `unitary-app`, `-dname "CN=Unitary, O=wisnij.dev, C=US"`, and an explicit
+  `-sigalg SHA256withRSA` — JDK 21 otherwise defaults to SHA384withRSA
+- [ ] 3.2 Generate the upload key with the same parameters and DN, alias
   `unitary-upload`, in a **separate** keystore file
-- [ ] 3.3 Record both certificate SHA-256 fingerprints (`keytool -list -v`) in a
-  durable location outside the keystores
-- [ ] 3.4 Store both keystores and their passwords in a password manager, and
+- [ ] 3.3 Confirm via `keytool -list -v` that both certificates report the
+  intended owner and signature algorithm, with no empty `L=` or `ST=` components
+- [ ] 3.4 Record both certificate SHA-256 fingerprints in a durable location
+  outside the keystores
+- [ ] 3.5 Store both keystores and their passwords in a password manager, and
   place offline backups in at least two locations — losing the app signing key
   ends the app's upgrade path permanently
-- [ ] 3.5 Verify each keystore opens with its recorded password from a clean
+- [ ] 3.6 Verify each keystore opens with its recorded password from a clean
   location, so the backup is known-good rather than assumed
 
 ## 4. Gradle signing configuration
@@ -76,7 +80,7 @@
 - [ ] 6.2 Export the app signing key with PEPK and complete the upload
 - [ ] 6.3 Designate `unitary-upload` as the upload key
 - [ ] 6.4 Confirm the app signing certificate shown in the Console matches the
-  fingerprint recorded in 3.3
+  fingerprint recorded in 3.4
 - [ ] 6.5 Confirm a Play-delivered install and a GitHub APK of the same version
   present the same certificate, and that each installs over the other as an
   update

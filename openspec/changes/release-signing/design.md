@@ -105,17 +105,37 @@ Parameters, chosen once and permanent:
 |---|---|---|
 | Algorithm | RSA | Play's upload-your-own-key path expects RSA; EC has ragged support in the older v1/JAR scheme |
 | Key size | 2048 | What Play itself generates, so never the odd case in a compatibility question |
-| Signature algorithm | SHA256withRSA | Modern keytool default |
+| Signature algorithm | SHA256withRSA, passed explicitly via `-sigalg` | **Not** the default — JDK 21's keytool defaults RSA 2048 to SHA384withRSA (verified).  Either is strong and nothing validates a self-signed certificate's signature, but SHA256withRSA is the Android convention and matches the existing debug key, so it is chosen deliberately rather than inherited |
 | Validity | 30 years (`-validity 10950`) | An expired signing certificate freezes the app — no updates can be published.  Play enforces a minimum expiry; 30 years clears it with margin, and matches the debug key's own horizon |
 | Store format | PKCS12 | JKS is the deprecated proprietary format |
 | Aliases | `unitary-app`, `unitary-upload` | Referenced from `key.properties` and CI secrets |
 
 The certificate's distinguished name is **permanent and publicly visible** to
-anyone who inspects an APK.  A minimal set is used — `CN`, `O`, `C` — with
-locality and state deliberately omitted, since those would be new personal
-disclosure that cannot ever be retracted, whereas the maintainer's name already
-appears in `LICENSE.md` and every commit.  Exact field values are to be confirmed
-at implementation time.
+anyone who runs `apksigner verify --print-certs`, and it appears on Play
+Console's app signing page.  Both keys use:
+
+```
+CN=Unitary, O=wisnij.dev, C=US
+```
+
+`CN` names the product rather than the maintainer, and `O` matches the
+`dev.wisnij` application-ID namespace.  Product identity is preferred over
+personal identity precisely because the field is permanent: a personal name or
+country is a claim that can become untrue over a 30-year certificate lifetime and
+can never be corrected, whereas the project's identity is stable.  It also
+discloses nothing beyond what the application ID already broadcasts.  `L`
+(locality) and `ST` (state) are **omitted entirely** rather than left blank —
+they would be new personal disclosure that cannot be retracted, and an empty
+value such as `L=` bakes a permanent empty component into the certificate rather
+than leaving it out (verified).
+
+Nothing validates any of this.  Android compares public keys, not names; the
+certificate is self-signed with no CA in the picture.  keytool does not even
+enforce that `C` is a two-letter code — `C=USA` is accepted without complaint
+(verified) — so the values must be got right by inspection, not by tooling.
+For the same reason the exact string above is worth re-reading once before the
+key is generated: a typo is permanent, and `-dname` should be passed explicitly
+so that keytool never drops into its interactive prompt sequence.
 
 A PKCS12 consequence to expect rather than debug: Java's PKCS12 implementation
 does not support a per-entry key password distinct from the store password, so
@@ -220,9 +240,10 @@ verification precedes enrolment.
 
 ## Open Questions
 
-- Exact DN field values (`CN`, `O`, `C`) — to be confirmed at implementation
-  time, along with a final check that omitting `L`/`ST`/`OU` is acceptable to
-  Play's enrolment flow.
+- DN field values are decided (`CN=Unitary, O=wisnij.dev, C=US`), but should be
+  re-read once at implementation time before the key is generated, together with
+  a check that omitting `L`/`ST`/`OU` is acceptable to Play's enrolment flow.
+  Both are cheap to confirm and impossible to correct afterwards.
 - Whether Play still offers "use your own signing key" at first release creation,
   and the current PEPK procedure.
 - Play's current minimum app-signing-key expiry date, to confirm 30 years clears

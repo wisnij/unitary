@@ -10,15 +10,24 @@ file.
 
 The app signing key SHALL be RSA 2048 with signature algorithm SHA256withRSA,
 stored in a PKCS12 keystore, and valid for 30 years from generation.  Its
-certificate distinguished name SHALL carry a minimal field set — common name,
-organization, and country — omitting locality and state, since certificate fields
-are permanently public and cannot be retracted.
+certificate distinguished name SHALL be `CN=Unitary, O=wisnij.dev, C=US`,
+omitting locality and state rather than leaving them blank, since certificate
+fields are permanently public and cannot be retracted.  These values SHALL be
+re-confirmed immediately before the key is generated, because they cannot be
+corrected afterwards.
 
 #### Scenario: A release build carries the app signing certificate
 
 - **WHEN** a release APK is built by the release workflow
 - **THEN** `apksigner verify --print-certs` reports the app signing key's
   certificate, and its SHA-256 fingerprint equals the recorded expected value
+
+#### Scenario: The generated certificate carries the agreed distinguished name
+
+- **WHEN** the app signing key has been generated
+- **THEN** `keytool -list -v` reports its owner as `CN=Unitary, O=wisnij.dev,
+  C=US`, with no locality, state, or organizational-unit component present —
+  neither populated nor empty
 
 #### Scenario: No release artifact is debug-signed
 

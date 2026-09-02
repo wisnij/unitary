@@ -3,20 +3,20 @@
 ### Requirement: Version code is derived from the semantic version
 
 The Android version code SHALL be computed from the semantic version as
-`MAJOR × 10000 + MINOR × 100 + PATCH`, so that the version name remains the
+`MAJOR × 1000000 + MINOR × 1000 + PATCH`, so that the version name remains the
 single source of truth and no independently maintained counter exists.
 
 #### Scenario: Typical versions encode as expected
 
 - **WHEN** the version code is computed for `1.0.0`, `1.2.3`, and `0.9.7`
-- **THEN** the results are `10000`, `10203`, and `907` respectively
+- **THEN** the results are `1000000`, `1002003`, and `9007` respectively
 
 #### Scenario: A build suffix in the input is ignored
 
 - **WHEN** the version code is computed from a version string that already
-  carries a build suffix, such as `1.2.3+10203`
+  carries a build suffix, such as `1.2.3+1002003`
 - **THEN** the result is derived from the `1.2.3` portion alone and equals
-  `10203`
+  `1002003`
 
 ### Requirement: Version codes increase with semantic version order
 
@@ -39,27 +39,47 @@ Play accepts successive uploads.
 ### Requirement: Unencodable versions are rejected
 
 The computation SHALL fail with an error rather than return a colliding value
-when a minor or patch component is 100 or greater.  Such a component cannot be
-encoded in the two decimal digits the scheme allocates it: `1.100.0` and `2.0.0`
-would both yield `20000`, silently breaking the ordering guarantee above.
+when a minor or patch component is 1000 or greater.  Such a component cannot be
+encoded in the three decimal digits the scheme allocates it: `1.1000.0` and
+`2.0.0` would both yield `2000000`, silently breaking the ordering guarantee
+above.
 
 #### Scenario: An out-of-range minor component fails
 
 - **WHEN** the version code is computed for a version whose minor component is
-  100 or greater
+  1000 or greater
 - **THEN** the computation throws rather than returning a value
 
 #### Scenario: An out-of-range patch component fails
 
 - **WHEN** the version code is computed for a version whose patch component is
-  100 or greater
+  1000 or greater
 - **THEN** the computation throws rather than returning a value
 
 #### Scenario: Boundary components are accepted
 
 - **WHEN** the version code is computed for a version whose minor and patch
-  components are 99
+  components are 999
 - **THEN** the computation succeeds
+
+### Requirement: Version codes stay within Android's valid range
+
+The computation SHALL fail with an error rather than return a value greater than
+2100000000, the largest version code Android and Play accept.  Under this scheme
+that bound is reached by the major component alone, at major 2101 and above; a
+value over the limit would be rejected at upload time or refused by the package
+manager, so it is caught where the version is derived instead.
+
+#### Scenario: A major component beyond the platform limit fails
+
+- **WHEN** the version code is computed for a version whose major component
+  would produce a code greater than 2100000000, such as `2101.0.0`
+- **THEN** the computation throws rather than returning a value
+
+#### Scenario: The boundary value is accepted
+
+- **WHEN** the version code is computed for `2100.0.0`
+- **THEN** the computation succeeds and returns `2100000000`
 
 ### Requirement: Releases record the version code in pubspec.yaml
 
@@ -90,7 +110,7 @@ name, and SHALL fail rather than proceed when they disagree.
 #### Scenario: Consistent version passes
 
 - **WHEN** the release tooling runs against a `pubspec.yaml` recording
-  `1.2.3+10203`
+  `1.2.3+1002003`
 - **THEN** the consistency check passes and the release proceeds
 
 #### Scenario: Inconsistent version fails the release

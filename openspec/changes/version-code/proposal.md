@@ -19,8 +19,8 @@ rather than alongside it.
 ## What Changes
 
 - Adopt a version code derived deterministically from the semantic version:
-  `MAJOR × 10000 + MINOR × 100 + PATCH`, so `1.0.0` → `10000` and `1.2.3` →
-  `10203`.  The version name remains the single source of truth; there is no
+  `MAJOR × 1000000 + MINOR × 1000 + PATCH`, so `1.0.0` → `1000000` and `1.2.3` →
+  `1002003`.  The version name remains the single source of truth; there is no
   second counter to keep in sync or forget.
 - Teach the existing release tooling (`tool/release.dart` /
   `tool/release_lib.dart`, which already parses, bumps, and writes the version)

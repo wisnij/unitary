@@ -75,28 +75,46 @@ forgot-to-bump errors.  It is also the only option besides a hand counter that
 lets a clean checkout of a tag reproduce the exact artifact — the git-derived and
 timestamp schemes both make a build depend on something outside the tree.
 
-### D2: `MAJOR × 10000 + MINOR × 100 + PATCH`, with an explicit range guard
+### D2: `MAJOR × 1000000 + MINOR × 1000 + PATCH`, with an explicit range guard
 
-`1.0.0` → `10000`; `1.2.3` → `10203`; the current `0.9.7` → `907`.
+`1.0.0` → `1000000`; `1.2.3` → `1002003`; the current `0.9.7` → `9007`.
 
 The formula is readable at a glance — the decimal digits of the code spell the
-version — which matters when the number appears in a Play Console listing or an
-`aapt2` dump with no other context.
+version, three digits per component — which matters when the number appears in a
+Play Console listing or an `aapt2` dump with no other context.  Three-digit
+groups are also the grouping that numeric displays already apply, so a rendered
+`1,002,003` separates into exactly one group per component with no mental
+arithmetic.
 
-It allocates two decimal digits each to minor and patch, so **a minor or patch
-component of 100 or more breaks monotonicity**: `1.100.0` would encode as
-`20000`, colliding with `2.0.0`.  Rather than treat that as a documented
+It allocates three decimal digits each to minor and patch, so **a minor or patch
+component of 1000 or more breaks monotonicity**: `1.1000.0` would encode as
+`2000000`, colliding with `2.0.0`.  Rather than treat that as a documented
 footgun, the computation SHALL reject it: attempting to encode an
 out-of-range component is an error at release time, when it is trivially
 fixable, rather than a duplicate version code discovered at upload time.  Ten
 releases of history put the observed maximums at minor 9 and patch 7, so the
 ceiling is remote — but it is a real edge, and a guard costs one comparison.
 
-A wider `MAJOR × 1000000 + MINOR × 1000 + PATCH` was considered and rejected: it
-raises the ceiling to 999 per component, still finite, still needing the same
-guard, at the cost of readability.  Android's own ceiling
-(version codes must stay below 2100000000) is not a practical constraint for
-either scheme.
+A narrower `MAJOR × 10000 + MINOR × 100 + PATCH` was considered and rejected.
+Its ceiling of 99 per component is reachable in ordinary practice — a hundred
+patch releases within one minor line, or a hundred minors without a major bump,
+are both unremarkable for a long-lived application — and the guard above would
+then fire in the middle of cutting a release, forcing an encoding migration at
+the least convenient moment.  Widening later is at least safe
+(`M × 10⁶ + m × 10³ + p ≥ M × 10⁴ + m × 10² + p` for all non-negative
+components, so monotonicity survives the switch), but a migration never needed
+beats a migration merely survivable, and the wider scheme costs nothing to adopt
+now.  The one thing the narrower scheme buys — room for a fourth build/hotfix
+component within Android's ceiling, which three-digit groups cannot fit — is not
+wanted: a re-release under a corrected build is handled by bumping the patch
+version, which the release tooling already makes a one-command operation.
+Android's own ceiling (version codes may not exceed 2100000000) is not a
+practical constraint for either scheme, but it is the nearest of the three under
+this one — it bounds major at 2100 here, against 209999 under the narrower
+scheme.  The computation therefore guards the total against it as well, on the
+same reasoning as the component guard: it costs one comparison, and the
+alternative is a value that Play rejects at upload time or that the package
+manager refuses outright, discovered far from where it was derived.
 
 ### D3: Computed and written by the release tooling
 
@@ -117,7 +135,7 @@ supported path for changing the version and it now checks itself.
 
 ### D4: Seed the current version rather than waiting for the next release
 
-`pubspec.yaml` is updated to `0.9.7+907` as part of this change, so the working
+`pubspec.yaml` is updated to `0.9.7+9007` as part of this change, so the working
 tree is consistent immediately and a local release build produces a sensible
 version code before 1.0.0 is cut.  Leaving it bare until the next bump would mean
 the repository spends the whole `release-signing` change in a state where test
@@ -127,7 +145,7 @@ verified against.
 ### D5: The transition from version code 1 is naturally monotonic
 
 Every published release carries code 1; the first release under this scheme
-carries at least `907`, and 1.0.0 carries `10000`.  Since the new values exceed
+carries at least `9007`, and 1.0.0 carries `1000000`.  Since the new values exceed
 the old, Android and Play both see an ordinary increase and no special handling
 is required.  This is worth stating because the reverse — a scheme whose first
 value undercut the deployed one — would have been unrecoverable, and it is the
@@ -135,10 +153,17 @@ kind of property that is obvious only once checked.
 
 ## Risks / Trade-offs
 
-**A minor or patch component reaching 100 would break ordering.** → Rejected at
+**A minor or patch component reaching 1000 would break ordering.** → Rejected at
 computation time (D2) rather than documented and hoped about.  If the project
-ever genuinely needs a three-digit component, the scheme widens — but that is a
+ever genuinely needs a four-digit component, the scheme widens — but that is a
 deliberate migration, made with the constraint visible, not a silent collision.
+
+**A major component past 2100 would exceed Android's maximum version code.** →
+Guarded at computation time alongside the component check (D2).  Unlike the
+component ceiling there is no widening available here: 2100000000 is the
+platform's limit, so a project that ever reached it would have to abandon a
+version-derived code entirely.  At major 2100 that is not a scenario worth
+planning for, only one worth failing loudly on.
 
 **Re-releasing a fixed build under the same version name is impossible.** →
 Accepted, and arguably correct: two artifacts with the same version name should
@@ -159,7 +184,7 @@ those builds anyway.
 1. Add the derived version code and its range guard to `Version`, with tests.
 2. Write the suffix from the release bump path, with tests over the pubspec
    round-trip.
-3. Seed `pubspec.yaml` with `0.9.7+907`.
+3. Seed `pubspec.yaml` with `0.9.7+9007`.
 4. Confirm a locally built release APK reports the expected version code via
    `aapt2 dump badging`.
 

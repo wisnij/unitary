@@ -590,6 +590,12 @@ void main() {
       expect(message, contains('1002003'));
     });
 
+    test('reports an empty code', () {
+      final message = checkVersionCodeConsistency('1.2.3+');
+      expect(message, isNotNull);
+      expect(message, contains('1002003'));
+    });
+
     test('reports a version whose code cannot be derived', () {
       final message = checkVersionCodeConsistency('1.1000.0+1');
       expect(message, isNotNull);

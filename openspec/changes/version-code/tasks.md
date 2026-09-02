@@ -59,5 +59,5 @@
 - [x] 5.3 Update `doc/design_progress.md` with a dated entry noting that every
   release through v0.9.7 shipped as `versionCode='1'`, and that the scheme's
   first value comfortably exceeds it so the transition needs no special handling
-- [ ] 5.4 Confirm `release-signing`'s task 1.1 — which gates on this change
+- [x] 5.4 Confirm `release-signing`'s task 1.1 — which gates on this change
   having landed — is satisfied

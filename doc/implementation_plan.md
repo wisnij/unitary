@@ -709,7 +709,7 @@ engineering tasks, which are small by comparison.
      force-pushes to `gh-pages`; live at <https://wisnij.github.io/unitary/>
    - [x] Screenshots — eight captured via `tool/take_screenshots.sh`.  Note
      these are sized for the README; the Play Store needs its own set (see
-     task 6)
+     task 7)
 
 2. Release signing — **BLOCKER for any published 1.0.0**
    - [ ] **Decide the two-channel signing strategy first** — this is the one
@@ -795,7 +795,43 @@ engineering tasks, which are small by comparison.
      natural home, and Play requires a URL rather than in-app text
    - [ ] Link it from the README and the in-app About screen
 
-5. Cut 1.0.0
+5. APK size — **deferred, decide before cutting 1.0.0**
+   - [ ] Decide what the GitHub release APK should contain, and either bring it
+     under the 50 MB MVP criterion or revise the criterion deliberately
+   - **Finding (September 2, 2026):** the published APK is **53.8 MB**, and has
+     been for every 0.9.x release (confirmed against the GitHub release assets,
+     not a local build).  An earlier note in this plan put it at ~20 MB; that
+     was measured from a stale single-ABI artifact left in `build/` and was
+     wrong.  `flutter build apk` — which is exactly what CI runs — produces a
+     fat APK carrying three ABIs:
+
+     | slice | size |
+     | --- | --- |
+     | `arm64-v8a` | 17.7 MB |
+     | `armeabi-v7a` | 15.6 MB |
+     | `x86_64` | 19.1 MB |
+     | everything else | 1.2 MB |
+
+     Native libraries are 97.7% of the download.  They are stored uncompressed
+     with `android:extractNativeLibs=false`, so they are mapped in place out of
+     `base.apk` rather than unpacked — which means Android keeps the **entire**
+     APK on disk and never discards the slices the device cannot use.  A typical
+     arm64 phone therefore carries ~34.7 MB of dead weight, including an x86_64
+     slice that only ever runs on emulators.  Play is unaffected: it serves
+     splits from the AAB, so a Play install is roughly 19 MB.
+   - **Options, cheapest first:** drop `x86_64` from the fat APK (one asset,
+     ~35 MB, no effect on real phones — but the release APK would no longer run
+     on an x86_64 emulator, which needs checking against the integration suite,
+     though that builds debug); `--split-per-abi` (three assets at ~16–20 MB
+     each, but users must know their architecture); or leave it and revise the
+     criterion.
+   - **Why it is its own change:** it is an independent question about what the
+     release job builds, and folding it into release signing would muddy a
+     change whose point is the signing key.  It touches the same
+     `build-android-apk` job, so deciding it before that job is reworked twice
+     is worth a little sequencing care.
+
+6. Cut 1.0.0
    - [ ] Decide what 1.0.0 means here and whether any deferred item should
      land first — the open candidate is code-review **F8** (the worksheet
      AppBar dropdown overflows at ≲410 dp), the only user-visible item among
@@ -808,10 +844,10 @@ engineering tasks, which are small by comparison.
    - [ ] Update the README's "Project status" section, which will no longer
      be describing a pre-release app
 
-6. Play Store submission — the largest single group, and the long pole for
+7. Play Store submission — the largest single group, and the long pole for
    the phase.  Start the account and testing-track steps **early**: they are
    gated by Google's timelines rather than by work on this end, so they can
-   run in parallel with tasks 2–5 rather than waiting on them
+   run in parallel with tasks 2–6 rather than waiting on them
    - [ ] Register a Google Play developer account (one-time fee) and complete
      identity verification.  **Verify current onboarding requirements before
      planning the timeline** — Google has previously required new personal
@@ -872,7 +908,7 @@ engineering tasks, which are small by comparison.
      on an ongoing basis.  A published app that falls behind these is
      eventually removed from the store
 
-7. Pre-release cleanup — small, opportunistic
+8. Pre-release cleanup — small, opportunistic
    - [ ] Remove the stale `applicationId` TODO in
      `android/app/build.gradle.kts` — it advises specifying a unique
      application ID, which was already done (`dev.wisnij.unitary`); only the
@@ -1081,7 +1117,8 @@ The MVP will be considered successful when it meets these criteria:
 - ✓ Runs smoothly on mid-range Android devices (60 FPS UI)
 - ✓ Parser handles malformed input gracefully with helpful error messages
 - ✓ Unit test coverage >80% for parser and core domain logic
-- ✓ App size <50MB
+- ✗ App size <50MB — **not currently met**: the published APK is 53.8 MB
+  because `flutter build apk` bundles three ABIs.  See Phase 10 task 5
 
 **Documentation Requirements:**
 

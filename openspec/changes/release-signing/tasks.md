@@ -22,19 +22,90 @@
 
 ## 3. Generate and secure the keys
 
-- [ ] 3.1 Generate the app signing key: RSA 2048, `-validity 10950`, PKCS12,
-  alias `unitary-app`, `-dname "CN=Unitary, O=wisnij.dev, C=US"`, and an explicit
-  `-sigalg SHA256withRSA` — JDK 21 otherwise defaults to SHA384withRSA
-- [ ] 3.2 Generate the upload key with the same parameters and DN, alias
-  `unitary-upload`, in a **separate** keystore file
-- [ ] 3.3 Confirm via `keytool -list -v` that both certificates report the
-  intended owner and signature algorithm, with no empty `L=` or `ST=` components
-- [ ] 3.4 Record both certificate SHA-256 fingerprints in a durable location
-  outside the keystores
-- [ ] 3.5 Store both keystores and their passwords in a password manager, and
+These commands are run **by hand, by the maintainer** — never by CI, an agent, or
+any automated process.  The private keys must not exist in a build environment
+that did not create them, and the passwords must not appear in a transcript.
+
+Note that no `-storepass` or `-keypass` is passed: keytool prompts instead, which
+keeps the password out of shell history and out of the process table, where
+command-line arguments are world-readable via `ps`.  PKCS12 does not support a
+key password distinct from the store password — keytool warns and ignores
+`-keypass` if given — so each keystore has exactly one password.
+
+- [ ] 3.1 Create a destination outside the repository, so the keys are never in
+  the working tree at all rather than merely ignored:
+
+  ```bash
+  mkdir -p ~/keys/unitary && chmod 700 ~/keys/unitary
+  ```
+
+- [ ] 3.2 Generate the app signing key (prompts for a password; use a long random
+  one from the password manager):
+
+  ```bash
+  keytool -genkeypair \
+    -alias unitary-app \
+    -keyalg RSA -keysize 2048 -sigalg SHA256withRSA \
+    -validity 10950 \
+    -storetype PKCS12 \
+    -keystore ~/keys/unitary/unitary-app.p12 \
+    -dname "CN=Unitary, O=wisnij.dev, C=US"
+  ```
+
+  `-sigalg` is explicit because JDK 21 otherwise defaults RSA 2048 to
+  SHA384withRSA.  `-validity 10950` is 30×365 days.  `-dname` is explicit so
+  keytool never falls into its interactive prompt sequence, where a typo is
+  easier to make and impossible to correct afterwards.
+
+- [ ] 3.3 Generate the upload key — same parameters and DN, different alias, and
+  a **separate file** so that one keystore's password does not expose both keys:
+
+  ```bash
+  keytool -genkeypair \
+    -alias unitary-upload \
+    -keyalg RSA -keysize 2048 -sigalg SHA256withRSA \
+    -validity 10950 \
+    -storetype PKCS12 \
+    -keystore ~/keys/unitary/unitary-upload.p12 \
+    -dname "CN=Unitary, O=wisnij.dev, C=US"
+  ```
+
+- [ ] 3.4 Restrict permissions on both keystores:
+
+  ```bash
+  chmod 600 ~/keys/unitary/*.p12
+  ```
+
+- [ ] 3.5 Confirm each certificate reports the intended owner, signature
+  algorithm, and validity — and that no empty `L=` or `ST=` component was baked
+  in:
+
+  ```bash
+  keytool -list -v -keystore ~/keys/unitary/unitary-app.p12 -alias unitary-app \
+    | grep -E 'Owner|Valid from|Signature algorithm|Subject Public Key'
+  ```
+
+  Expect `Owner: CN=Unitary, O=wisnij.dev, C=US` exactly, `SHA256withRSA`, a
+  2048-bit RSA key, and an expiry roughly 30 years out.  Repeat for the upload
+  keystore.
+
+- [ ] 3.6 Record both certificate SHA-256 fingerprints, normalised to the form
+  `apksigner` emits, in a durable location outside the keystores:
+
+  ```bash
+  keytool -list -v -keystore ~/keys/unitary/unitary-app.p12 -alias unitary-app \
+    | awk '/SHA256:/ {gsub(":",""); print tolower($2)}'
+  ```
+
+  keytool prints `SHA256: AA:BB:CC:…` while `apksigner` prints a lowercase
+  contiguous digest; they are the same value in different formats, and the
+  normalisation above is what makes the CI comparison in 5.5 possible.  Verified
+  against the existing debug key, where both tools agree byte for byte once
+  normalised.
+- [ ] 3.7 Store both keystores and their passwords in a password manager, and
   place offline backups in at least two locations — losing the app signing key
   ends the app's upgrade path permanently
-- [ ] 3.6 Verify each keystore opens with its recorded password from a clean
+- [ ] 3.8 Verify each keystore opens with its recorded password from a clean
   location, so the backup is known-good rather than assumed
 
 ## 4. Gradle signing configuration
@@ -64,7 +135,9 @@
   `android/key.properties` before `flutter build apk`, with no shell tracing and
   nothing echoed
 - [ ] 5.5 Add the verification step: compare the built APK's signer certificate
-  SHA-256 fingerprint against the expected value and fail on mismatch
+  SHA-256 fingerprint against the expected value and fail on mismatch, comparing
+  the normalised lowercase contiguous form from 3.6 rather than keytool's
+  colon-separated rendering
 - [ ] 5.6 Confirm the verification step actually fails on a wrong-key build, by
   temporarily pointing it at a deliberately wrong expected fingerprint — a check
   that has never been seen to fail is not yet a check
@@ -80,7 +153,7 @@
 - [ ] 6.2 Export the app signing key with PEPK and complete the upload
 - [ ] 6.3 Designate `unitary-upload` as the upload key
 - [ ] 6.4 Confirm the app signing certificate shown in the Console matches the
-  fingerprint recorded in 3.4
+  fingerprint recorded in 3.6
 - [ ] 6.5 Confirm a Play-delivered install and a GitHub APK of the same version
   present the same certificate, and that each installs over the other as an
   update

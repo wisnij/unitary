@@ -11,8 +11,15 @@ Current state, verified rather than assumed:
 - `android/app/build.gradle.kts` signs the `release` build type with the debug
   key; `apksigner verify --print-certs` on the built APK reports `C=US,
   O=Android, CN=Android Debug`.
-- The debug keystore is `~/.android/debug.keystore` — RSA 2048, SHA256withRSA,
-  valid to 2053, and protected by the standard password `android`.
+- The debug keystore actually used by the build is
+  `~/.config/.android/debug.keystore` — RSA 2048, SHA256withRSA, valid to 2056,
+  protected by the standard password `android`.  Note there is a second, older
+  keystore at `~/.android/debug.keystore` (valid to 2053) that is **not** what
+  signs builds on this machine; modern Android tooling resolves the
+  `ANDROID_USER_HOME` location, which lands under `~/.config` here.  The
+  distinction cost a detour once and is recorded so it does not cost another:
+  when checking which key signed an artifact, compare fingerprints rather than
+  assuming a path.
 - No keystore, `key.properties`, or CI secret exists in the project; `.gitignore`
   has no keystore patterns.
 - The APK is signed with the v2 scheme only (no v1, no v3 — so no rotation
@@ -182,6 +189,13 @@ builds a plausible failure mode rather than a hypothetical one.
 The expected fingerprint is recorded at key generation, stored as a
 non-secret CI variable, and is also what confirms Play shows the same certificate
 after enrolment.
+
+One formatting detail matters for the comparison: `keytool -list -v` renders the
+fingerprint as uppercase colon-separated (`SHA256: AA:BB:…`) while `apksigner
+verify --print-certs` emits a lowercase contiguous digest.  They are the same
+value — verified byte for byte against the existing debug key after
+normalisation — so the check must strip colons and lowercase before comparing,
+or it would never match.
 
 ## Risks / Trade-offs
 

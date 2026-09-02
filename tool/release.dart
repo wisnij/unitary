@@ -201,6 +201,17 @@ void _runRelease(BumpType bumpType, {required bool dryRun}) {
     stderr.writeln('Error: No version line found in pubspec.yaml.');
     exit(1);
   }
+  // The recorded version code is derived from the version name, so a
+  // hand-edited pubspec can put the two out of step.  Check before doing
+  // anything: a mismatch means the working tree disagrees with itself about
+  // which release it is, and nothing should be bumped, committed, or tagged
+  // until that is resolved.
+  final inconsistency = checkVersionCodeConsistency(versionMatch.group(1)!);
+  if (inconsistency != null) {
+    stderr.writeln('Error: $inconsistency');
+    exit(1);
+  }
+
   final currentVersion = Version.parse(versionMatch.group(1)!);
   final newVersion = currentVersion.bump(bumpType);
 
@@ -266,7 +277,10 @@ void _runRelease(BumpType bumpType, {required bool dryRun}) {
     stdout.writeln('Link reference:');
     stdout.writeln(linkRef);
     stdout.writeln();
-    stdout.writeln('Would update pubspec.yaml and CHANGELOG.md');
+    stdout.writeln(
+      'Would update pubspec.yaml (version: ${newVersion.pubspecVersion}) '
+      'and CHANGELOG.md',
+    );
     stdout.writeln('Would commit and tag as v$newVersion');
     return;
   }
@@ -295,9 +309,10 @@ void _runRelease(BumpType bumpType, {required bool dryRun}) {
     );
   }
 
-  // Update pubspec.yaml.
+  // Update pubspec.yaml.  The version is written as `X.Y.Z+CODE` so Flutter
+  // picks up an Android version code that tracks the release.
   pubspecFile.writeAsStringSync(
-    updatePubspecVersion(pubspecContent, '$newVersion'),
+    updatePubspecVersion(pubspecContent, newVersion.pubspecVersion),
   );
 
   // Show summary and prompt.

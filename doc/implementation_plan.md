@@ -752,18 +752,36 @@ engineering tasks, which are small by comparison.
      a fix-before-first-publish item, not a fix-later one.  The Play Store
      rejects debug-signed uploads outright
 
-3. Version code — **BLOCKER**
-   - [ ] Adopt a `version: X.Y.Z+N` scheme in `pubspec.yaml` and decide how
-     `N` is derived (monotonic counter, or a CI-computed value)
-   - [ ] Confirm the built artifact reports the intended value
-   - **Current state:** `pubspec.yaml` carries a bare `version: 0.9.7` with
-     no `+build` suffix, so every release build has shipped with
-     `versionCode='1'` (confirmed with `aapt2 dump badging` against a local
-     release APK).  Play requires each upload to strictly exceed the previous
-     version code, so a permanent 1 cannot be uploaded twice; Android's own
-     upgrade and downgrade-protection semantics also key off it for sideloaded
-     APKs.  Note `versionName` is unaffected — it tracks the pubspec version
-     correctly today
+3. Version code — **RESOLVED** (September 2, 2026)
+   - [x] Adopt a `version: X.Y.Z+N` scheme in `pubspec.yaml` and decide how
+     `N` is derived (monotonic counter, or a CI-computed value) — derived from
+     the semantic version as `MAJOR × 1000000 + MINOR × 1000 + PATCH`, so
+     `1.2.3` → `1002003` and the current `0.9.7` → `9007`.  The version name
+     stays the single source of truth: there is no second counter to bump or
+     forget, and `tool/release_lib.dart` computes the code while
+     `tool/release.dart` writes `X.Y.Z+CODE` into `pubspec.yaml` on every
+     bump.  A hand-edited pubspec whose recorded code disagrees with its name
+     aborts the release before anything is bumped, committed, or tagged.
+     Rejected alternatives: a hand-maintained counter (forgettable), and
+     git- or timestamp-derived values (not reproducible from a clean checkout
+     of a tag).  Two ceilings throw at release time rather than surfacing at
+     upload time — a minor or patch component of 1000 or more (unencodable in
+     the three digits allocated it), and a code above Android's maximum of
+     2100000000 (major above 2100)
+   - [x] Confirm the built artifact reports the intended value — a local
+     release APK reports `versionCode='9007' versionName='0.9.7'` via
+     `aapt2 dump badging`, the same command that originally exposed the
+     permanent 1
+   - **Prior state:** `pubspec.yaml` carried a bare `version: 0.9.7` with
+     no `+build` suffix, so every release build shipped with
+     `versionCode='1'`.  Play requires each upload to strictly exceed the
+     previous version code, so a permanent 1 cannot be uploaded twice;
+     Android's own upgrade and downgrade-protection semantics also key off it
+     for sideloaded APKs.  `versionName` was unaffected throughout — it
+     tracked the pubspec version correctly.  The published releases keep their
+     version code of 1 and are not retroactively fixed; since every new code
+     exceeds 1, the transition needs no special handling.  See
+     `openspec/changes/version-code/`
 
 4. Privacy policy — **BLOCKER**
    - [ ] Write it.  The content is unusually simple and worth stating

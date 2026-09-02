@@ -36,6 +36,60 @@ class Version {
     return Version(parsed[0], parsed[1], parsed[2]);
   }
 
+  /// The largest version code Android and Google Play accept.
+  static const int maxAndroidVersionCode = 2100000000;
+
+  /// The exclusive upper bound on the minor and patch components, set by the
+  /// three decimal digits [versionCode] allocates to each of them.
+  static const int _componentLimit = 1000;
+
+  /// The Android version code derived from this version, as
+  /// `MAJOR * 1000000 + MINOR * 1000 + PATCH` — so `1.2.3` becomes 1002003
+  /// and the version name remains the single source of truth, with no
+  /// separately maintained counter to keep in sync.
+  ///
+  /// Throws a [RangeError] rather than returning an unusable value when the
+  /// version cannot be encoded. A minor or patch component of
+  /// [_componentLimit] or more would overflow into the digits belonging to
+  /// the component above it, silently breaking ordering: `1.1000.0` and
+  /// `2.0.0` would both yield 2000000. A code above [maxAndroidVersionCode]
+  /// is refused by the package manager and rejected by Play. Both are caught
+  /// here, where the version is derived, rather than at upload time.
+  int get versionCode {
+    if (minor >= _componentLimit) {
+      throw RangeError.value(
+        minor,
+        'minor',
+        'Version $this cannot be encoded as a version code: the minor '
+            'component must be less than $_componentLimit',
+      );
+    }
+    if (patch >= _componentLimit) {
+      throw RangeError.value(
+        patch,
+        'patch',
+        'Version $this cannot be encoded as a version code: the patch '
+            'component must be less than $_componentLimit',
+      );
+    }
+
+    final code = major * 1000000 + minor * 1000 + patch;
+    if (code > maxAndroidVersionCode) {
+      throw RangeError.value(
+        code,
+        'versionCode',
+        'Version $this encodes as a version code above the maximum Android '
+            'accepts ($maxAndroidVersionCode)',
+      );
+    }
+    return code;
+  }
+
+  /// This version as it is recorded in `pubspec.yaml`: the version name, `+`,
+  /// and the derived [versionCode]. Flutter reads Android's `versionName`
+  /// from the first half and its `versionCode` from the second.
+  String get pubspecVersion => '$this+$versionCode';
+
   Version bump(BumpType type) {
     switch (type) {
       case BumpType.major:
@@ -215,6 +269,49 @@ String formatTagMessage(String version, String changelogSection) {
     return 'Release v$version';
   }
   return 'Release v$version\n\n$body';
+}
+
+/// Verifies that a version string recorded in `pubspec.yaml` carries the
+/// version code derived from its version name.
+///
+/// Returns null when they agree, or a description of the mismatch when they do
+/// not.  Because `pubspec.yaml` is hand-editable, a recorded code can drift
+/// from the name it is supposed to follow — including by carrying no code at
+/// all, which is what every release before this scheme shipped.  The release
+/// tooling refuses to proceed in that case rather than publishing a version
+/// code that does not match the release it labels.
+///
+/// Throws a [FormatException] if [recorded] is not a valid version string.
+String? checkVersionCodeConsistency(String recorded) {
+  final version = Version.parse(recorded);
+
+  final int expected;
+  try {
+    expected = version.versionCode;
+  } on RangeError catch (error) {
+    return 'pubspec.yaml records version "$recorded", whose version code '
+        'cannot be derived: ${error.message}';
+  }
+
+  final plusIndex = recorded.indexOf('+');
+  if (plusIndex < 0) {
+    return 'pubspec.yaml records version "$recorded" with no version code. '
+        'Expected "${version.pubspecVersion}".';
+  }
+
+  final suffix = recorded.substring(plusIndex + 1);
+  final actual = int.tryParse(suffix);
+  if (actual == null) {
+    return 'pubspec.yaml records version "$recorded", whose version code '
+        '"$suffix" is not a number. Expected "${version.pubspecVersion}".';
+  }
+  if (actual != expected) {
+    return 'pubspec.yaml records version code $actual for version $version, '
+        'but $expected is derived from that version name. '
+        'Expected "${version.pubspecVersion}".';
+  }
+
+  return null;
 }
 
 /// Replaces the version line in pubspec.yaml content.

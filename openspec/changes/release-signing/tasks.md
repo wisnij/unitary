@@ -46,14 +46,14 @@ command-line arguments are world-readable via `ps`.  PKCS12 does not support a
 key password distinct from the store password — keytool warns and ignores
 `-keypass` if given — so each keystore has exactly one password.
 
-- [ ] 3.1 Create a destination outside the repository, so the keys are never in
+- [x] 3.1 Create a destination outside the repository, so the keys are never in
   the working tree at all rather than merely ignored:
 
   ```bash
   mkdir -p ~/keys/unitary && chmod 700 ~/keys/unitary
   ```
 
-- [ ] 3.2 Generate the app signing key (prompts for a password; use a long random
+- [x] 3.2 Generate the app signing key (prompts for a password; use a long random
   one from the password manager):
 
   ```bash
@@ -76,7 +76,7 @@ key password distinct from the store password — keytool warns and ignores
   is explicit so keytool never falls into its interactive prompt sequence, where
   a typo is both easier to make and harder to notice.
 
-- [ ] 3.3 Generate the upload key — same parameters and DN, different alias, and
+- [x] 3.3 Generate the upload key — same parameters and DN, different alias, and
   a **separate file** so that one keystore's password does not expose both keys:
 
   ```bash
@@ -89,13 +89,13 @@ key password distinct from the store password — keytool warns and ignores
     -dname "CN=Unitary, O=wisnij.dev, C=US"
   ```
 
-- [ ] 3.4 Restrict permissions on both keystores:
+- [x] 3.4 Restrict permissions on both keystores:
 
   ```bash
   chmod 600 ~/keys/unitary/*.p12
   ```
 
-- [ ] 3.5 Confirm each certificate reports the intended owner, signature
+- [x] 3.5 Confirm each certificate reports the intended owner, signature
   algorithm, and validity — and that no empty `L=` or `ST=` component was baked
   in:
 
@@ -108,7 +108,7 @@ key password distinct from the store password — keytool warns and ignores
   2048-bit RSA key, and an expiry roughly 30 years out.  Repeat for the upload
   keystore.
 
-- [ ] 3.6 Record both certificate SHA-256 fingerprints, normalised to the form
+- [x] 3.6 Record both certificate SHA-256 fingerprints, normalised to the form
   `apksigner` emits, in a durable location outside the keystores:
 
   ```bash
@@ -121,7 +121,7 @@ key password distinct from the store password — keytool warns and ignores
   normalisation above is what makes the CI comparison in 5.5 possible.  Verified
   against the existing debug key, where both tools agree byte for byte once
   normalised.
-- [ ] 3.7 Export each public certificate in PEM form — Play's enrolment expects
+- [x] 3.7 Export each public certificate in PEM form — Play's enrolment expects
   the app signing key's certificate as `.der` or `.pem`, and the upload key is
   registered by its certificate too:
 
@@ -133,11 +133,34 @@ key password distinct from the store password — keytool warns and ignores
 
   These contain no private key and are not secret.
 
-- [ ] 3.8 Store both keystores and their passwords in a password manager, and
-  place offline backups in at least two locations — losing the app signing key
-  ends the app's upgrade path permanently
-- [ ] 3.9 Verify each keystore opens with its recorded password from a clean
-  location, so the backup is known-good rather than assumed
+- [x] 3.8 Store both keystores and their passwords in a password manager, as
+  base64 text.  The `.p12` is already encrypted by its store password, so the
+  encoding is only to make it paste-able; the blob carries the private key,
+  certificate, and alias together, so a restore needs nothing else:
+
+  ```bash
+  base64 -w0 ~/keys/unitary/unitary-app.p12
+  base64 -w0 ~/keys/unitary/unitary-upload.p12
+  ```
+
+  About 3.5 KB of text each.  This is the same encoding CI needs in 5.2, so
+  produce it once and use it in both places.  Keep the password in the same
+  entry as the blob — a keystore whose password is lost is as dead as one that
+  was never backed up — and place offline copies in at least two locations.
+  Losing the app signing key ends the app's upgrade path permanently.
+- [x] 3.9 Verify the backup restores, rather than assuming it does: decode each
+  blob into a scratch directory, open it with the recorded password, and confirm
+  the certificate fingerprint matches the value recorded in 3.6:
+
+  ```bash
+  base64 -d < backup.txt > /tmp/restore-check.p12
+  keytool -list -v -keystore /tmp/restore-check.p12 -alias unitary-app \
+    | awk '/SHA256:/ {gsub(":",""); print tolower($2)}'
+  ```
+
+  A password-manager blob is exactly the kind of backup that turns out years
+  later to have been truncated or mangled, at the worst possible moment.  Delete
+  the scratch copy afterwards.
 
 ## 4. Gradle signing configuration
 

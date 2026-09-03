@@ -72,13 +72,13 @@ exclusive per user.
 
 Three ways to reach one certificate across both channels were considered:
 
-| | A: own the app key | B: Google generates | C: Google generates, republish Play APK |
-|---|---|---|---|
-| Signatures match | Yes | **No** | Yes |
-| App key held by | Maintainer + CI | Google only | Google only |
-| GitHub APK build | Automated | Automated | **Manual per release** |
-| Key can be lost | Yes | No | No |
-| Key can leak | Yes | No | No |
+|                  | A: own the app key | B: Google generates | C: Google generates, republish Play APK |
+|------------------|--------------------|---------------------|-----------------------------------------|
+| Signatures match | Yes                | **No**              | Yes                                     |
+| App key held by  | Maintainer + CI    | Google only         | Google only                             |
+| GitHub APK build | Automated          | Automated           | **Manual per release**                  |
+| Key can be lost  | Yes                | No                  | No                                      |
+| Key can leak     | Yes                | No                  | No                                      |
 
 **Chosen: A.**  B is disqualified outright — it splits users across two
 incompatible channels for the life of the app.  C is genuinely attractive on
@@ -108,14 +108,14 @@ later by deleting one secret rather than restructuring.
 
 Parameters, chosen once and permanent:
 
-| Parameter | Value | Rationale |
-|---|---|---|
-| Algorithm | RSA | Play's upload-your-own-key path expects RSA; EC has ragged support in the older v1/JAR scheme |
-| Key size | 2048 | What Play itself generates, so never the odd case in a compatibility question |
-| Signature algorithm | SHA256withRSA, passed explicitly via `-sigalg` | **Not** the default — JDK 21's keytool defaults RSA 2048 to SHA384withRSA (verified).  Either is strong and nothing validates a self-signed certificate's signature, but SHA256withRSA is the Android convention and matches the existing debug key, so it is chosen deliberately rather than inherited |
-| Validity | 30 years (`-validity 10950`) | An expired signing certificate freezes the app — no updates can be published.  Play enforces a minimum expiry; 30 years clears it with margin, and matches the debug key's own horizon |
-| Store format | PKCS12 | JKS is the deprecated proprietary format |
-| Aliases | `unitary-app`, `unitary-upload` | Referenced from `key.properties` and CI secrets |
+| Parameter           | Value                                          | Rationale                                                                                                                                                                                                                                                                                                                                                                                                                      |
+|---------------------|------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Algorithm           | RSA                                            | Play's upload-your-own-key path expects RSA; EC has ragged support in the older v1/JAR scheme                                                                                                                                                                                                                                                                                                                                  |
+| Key size            | 2048                                           | What Play itself generates, so never the odd case in a compatibility question                                                                                                                                                                                                                                                                                                                                                  |
+| Signature algorithm | SHA256withRSA, passed explicitly via `-sigalg` | **Not** the default — JDK 21's keytool defaults RSA 2048 to SHA384withRSA (verified).  Either is strong and nothing validates a self-signed certificate's signature, but SHA256withRSA is the Android convention and matches the existing debug key, so it is chosen deliberately rather than inherited                                                                                                                        |
+| Validity            | 30 years (`-validity 10950`)                   | An expired signing certificate freezes the app — no updates can be published.  Play enforces a minimum expiry; 30 years clears it with margin, and matches the debug key's own horizon                                                                                                                                                                                                                                         |
+| Store format        | PKCS12                                         | JKS is the deprecated proprietary format.  Play's docs describe the *upload* key as "stored in a Java keystore (.jks or .keystore)", but Play never sees the container — it verifies a signature and a certificate — and conversion is lossless if a tool insists (verified: an imported copy reports an identical certificate fingerprint).  This is the one chosen parameter that is reversible without generating a new key |
+| Aliases             | `unitary-app`, `unitary-upload`                | Referenced from `key.properties` and CI secrets                                                                                                                                                                                                                                                                                                                                                                                |
 
 The certificate's distinguished name is **permanent and publicly visible** to
 anyone who runs `apksigner verify --print-certs`, and it appears on Play
@@ -197,6 +197,55 @@ value — verified byte for byte against the existing debug key after
 normalisation — so the check must strip colons and lowercase before comparing,
 or it would never match.
 
+### D6: Signing secrets are scoped to tag builds via a GitHub Actions environment
+
+`build-android-apk` carries no `if:` condition — only the final `release` step is
+tag-gated — so the APK is built on every push to `main`, every pull request, and
+every tag.  That is deliberate (commit `7dd8b9d`, so the release path is
+exercised before tagging), but it means repository-level secrets would decode the
+keystore onto a runner dozens of times a month for builds that have no reason to
+be signed.
+
+Three options were compared:
+
+|                                | Repo secrets        | Environment + reviewers    | Environment + tag policy |
+|--------------------------------|---------------------|----------------------------|--------------------------|
+| Key materialises on            | every push, PR, tag | tag builds, after approval | tag builds only          |
+| Manual step per release        | none                | one approval               | none                     |
+| Survives a rogue workflow edit | no                  | yes                        | yes                      |
+| Audit trail                    | no                  | yes                        | yes                      |
+
+**Chosen: environment with a `v*` deployment tag policy, no required reviewers.**
+The decisive property is that the policy lives in *repository settings*, not in
+the workflow file — so an edit to `.github/workflows/ci.yml` cannot grant a
+branch access to the key, whereas with repository secrets the workflow file is
+the only thing standing between any branch and the keystore.  Log masking is not
+a defence here; `base64` defeats it trivially.
+
+Required reviewers were rejected: `environment:` is job-level and cannot be
+applied conditionally, so approvals would fire on ordinary `main` pushes as well
+as releases, contradicting the unattended-release goal for what amounts to a
+solo maintainer approving their own work.
+
+**Consequence — the APK job splits in two.**  A job whose environment excludes
+the current ref *fails* rather than skipping, so the signed build must be a
+separate, tag-only job:
+
+```
+build-android-apk          all pushes/PRs, no environment
+                           → no key.properties, so debug signing via D4
+                           → keeps the build path exercised, publishes nothing
+
+build-android-apk-signed   tags only, environment: release
+                           → real key, fingerprint verified per D5
+                           → this is what the release job attaches
+```
+
+This composes with D4 rather than fighting it: the unsigned job needs no special
+casing, because an absent `key.properties` already falls back to debug signing.
+Debug-signed artifacts from that job are never published — only the `release`
+job, which runs on tags, attaches anything.
+
 ## Risks / Trade-offs
 
 **The app signing key is readable by the release workflow, and a leak is
@@ -204,10 +253,13 @@ effectively unrecoverable.** → The upload key being separate means a CI
 compromise cannot *publish* to Play, and is rotatable.  But the app signing key
 is the one that cannot be un-leaked: Play can issue a key upgrade for new
 installs, while every existing install stays updatable by whoever holds the
-stolen key.  Mitigated, not eliminated, by scoping the signing secrets to a
-GitHub Actions environment used only by the release job, pinning third-party
-actions by commit SHA, and keeping the offline backup authoritative so rotation
-is always possible.  This is the accepted price of D1 plus unattended releases;
+stolen key.  Mitigated, not eliminated, by D6 — which cuts the exposure window
+from every push and pull request down to tag builds alone, and puts the rule
+somewhere a workflow edit cannot reach — together with pinning third-party
+actions by commit SHA and keeping the offline backup authoritative so rotation is
+always possible.  Note that an attacker holding repository admin, or the
+maintainer's GitHub account, can change the environment rules; this is defence in
+depth, not a wall.  This is the accepted price of D1 plus unattended releases;
 switching to C later remains possible and would remove the exposure at the cost
 of a manual step.
 
@@ -254,13 +306,19 @@ verification precedes enrolment.
 
 ## Open Questions
 
-- DN field values are decided (`CN=Unitary, O=wisnij.dev, C=US`), but should be
-  re-read once at implementation time before the key is generated, together with
-  a check that omitting `L`/`ST`/`OU` is acceptable to Play's enrolment flow.
-  Both are cheap to confirm and impossible to correct afterwards.
-- Whether Play still offers "use your own signing key" at first release creation,
-  and the current PEPK procedure.
-- Play's current minimum app-signing-key expiry date, to confirm 30 years clears
-  it.
-- Whether to adopt a GitHub Actions environment with required reviewers for the
-  release job, or rely on repository secrets alone.
+- ~~DN field values~~ — **settled September 3, 2026**: `CN=Unitary,
+  O=wisnij.dev, C=US`.  Play documents no distinguished-name requirements at
+  all, only key type and size, so omitting `L`/`ST`/`OU` carries no known risk.
+  Strictly this is absence of a documented constraint rather than positive
+  confirmation; accepted as final on that basis.  The remaining act — re-reading
+  the `-dname` before generating — lives in task 3.2.
+- ~~Whether Play still offers "use your own signing key" at first release
+  creation~~ — **confirmed September 3, 2026**: the Console's "Change app signing
+  key" offers Export-and-upload options for a private key and its public
+  certificate.  The exact PEPK invocation is still to be captured at enrolment.
+- ~~Play's current minimum app-signing-key expiry date~~ — **confirmed September
+  3, 2026**: validity must end after 22 October 2033, with 25 years or more
+  recommended.  `-validity 10950` yields 2056, clearing both.
+- ~~Whether to adopt a GitHub Actions environment for the release job, or rely on
+  repository secrets alone~~ — **settled September 3, 2026**: environment with a
+  `v*` tag policy and no required reviewers.  See D6.

@@ -101,6 +101,36 @@ keystore placed in the working tree cannot be committed accidentally.
 - **WHEN** the release workflow completes
 - **THEN** its logs contain neither a decoded keystore nor any signing password
 
+### Requirement: Signing key material is available only to release builds
+
+The signing keys SHALL be reachable only by workflow runs triggered by a release
+tag, and SHALL NOT be available to builds triggered by a pull request or by an
+ordinary push to a branch.  This SHALL be enforced by a deployment rule held in
+repository settings rather than by a condition in the workflow file, so that
+editing the workflow cannot widen access.
+
+Builds that cannot reach the keys SHALL still run, producing a debug-signed
+artifact by the fallback above, and such artifacts SHALL NOT be published.
+
+#### Scenario: A tag build can reach the signing key
+
+- **WHEN** the workflow runs for a `v*` tag
+- **THEN** the signing job obtains the keystore and produces an artifact signed
+  with the app signing key
+
+#### Scenario: A pull-request build cannot reach the signing key
+
+- **WHEN** the workflow runs for a pull request or an ordinary branch push
+- **THEN** no job obtains the keystore, the build still succeeds, and the
+  resulting artifact is debug-signed and published nowhere
+
+#### Scenario: Editing the workflow does not widen access
+
+- **WHEN** a workflow file is modified on a branch so that a non-tag job requests
+  the signing environment
+- **THEN** that job is refused the environment and fails, rather than being
+  granted the keystore
+
 ### Requirement: Developer builds succeed without signing keys
 
 A clone with no keystore and no `android/key.properties` SHALL still build, so

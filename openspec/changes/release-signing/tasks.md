@@ -9,16 +9,30 @@
 
 ## 2. Confirm the open questions before generating keys
 
-- [ ] 2.1 Confirm the Play Console still offers "use your own signing key" at
-  first release creation, and capture the current PEPK export procedure
-- [ ] 2.2 Confirm Play's current minimum app-signing-key expiry date and that 30
-  years clears it
-- [ ] 2.3 Re-read the decided DN (`CN=Unitary, O=wisnij.dev, C=US`) once before
-  generating anything, and confirm that omitting `L`, `ST`, and `OU` is accepted
-  by Play's enrolment flow — a typo or a rejected field cannot be corrected after
-  the key exists
-- [ ] 2.4 Decide whether the release job runs in a GitHub Actions environment
-  with required reviewers, or relies on repository secrets alone
+- [x] 2.1 Confirm the Play Console still offers "use your own signing key" at
+  first release creation, and capture the current PEPK export procedure —
+  **confirmed September 3, 2026.**  `developer.android.com/studio/publish/app-signing`:
+  "select Change app signing key and select one of the Export and upload options
+  that lets you securely upload a private key and its public certificate."
+  Option A stands
+- [x] 2.2 Confirm Play's current minimum app-signing-key expiry date and that 30
+  years clears it — **confirmed September 3, 2026.**  Play requires "a validity
+  period ending after 22 October 2033" and recommends "25 years or more".  A key
+  generated now with `-validity 10950` expires 2056-08-26 (verified), clearing
+  the hard date by 23 years and satisfying the recommendation
+- [x] 2.3 Confirm the decided DN (`CN=Unitary, O=wisnij.dev, C=US`) is
+  acceptable — **settled September 3, 2026.**  Play's published requirements
+  cover only key type and size ("Custom keys must be RSA 2048-bit or higher")
+  and impose no constraint on distinguished-name fields; a search for
+  counter-examples found none.  This is absence of a documented constraint
+  rather than positive confirmation, but it is the strongest evidence available
+  short of enrolling, and the DN is accepted as final on that basis.  The
+  re-read-before-generating caution moves to 3.2, where it applies
+- [x] 2.4 Decide how CI reaches the signing secrets — **settled September 3,
+  2026**: a GitHub Actions environment with a `v*` deployment tag policy and no
+  required reviewers.  Cuts key exposure from every push and PR down to tag
+  builds, keeps releases unattended, and places the rule in repository settings
+  where a workflow edit cannot bypass it.  See design D6
 
 ## 3. Generate and secure the keys
 
@@ -52,10 +66,15 @@ key password distinct from the store password — keytool warns and ignores
     -dname "CN=Unitary, O=wisnij.dev, C=US"
   ```
 
+  **Read the `-dname` line once more before pressing return.**  It is baked into
+  the certificate permanently, a typo cannot be corrected without generating a
+  new key, and by this point in the process it is the easiest thing in the
+  command to skim past.
+
   `-sigalg` is explicit because JDK 21 otherwise defaults RSA 2048 to
-  SHA384withRSA.  `-validity 10950` is 30×365 days.  `-dname` is explicit so
-  keytool never falls into its interactive prompt sequence, where a typo is
-  easier to make and impossible to correct afterwards.
+  SHA384withRSA.  `-validity 10950` is 30×365 days, expiring in 2056.  `-dname`
+  is explicit so keytool never falls into its interactive prompt sequence, where
+  a typo is both easier to make and harder to notice.
 
 - [ ] 3.3 Generate the upload key — same parameters and DN, different alias, and
   a **separate file** so that one keystore's password does not expose both keys:
@@ -102,10 +121,22 @@ key password distinct from the store password — keytool warns and ignores
   normalisation above is what makes the CI comparison in 5.5 possible.  Verified
   against the existing debug key, where both tools agree byte for byte once
   normalised.
-- [ ] 3.7 Store both keystores and their passwords in a password manager, and
+- [ ] 3.7 Export each public certificate in PEM form — Play's enrolment expects
+  the app signing key's certificate as `.der` or `.pem`, and the upload key is
+  registered by its certificate too:
+
+  ```bash
+  keytool -exportcert -rfc -alias unitary-app \
+    -keystore ~/keys/unitary/unitary-app.p12 \
+    -file ~/keys/unitary/unitary-app.pem
+  ```
+
+  These contain no private key and are not secret.
+
+- [ ] 3.8 Store both keystores and their passwords in a password manager, and
   place offline backups in at least two locations — losing the app signing key
   ends the app's upgrade path permanently
-- [ ] 3.8 Verify each keystore opens with its recorded password from a clean
+- [ ] 3.9 Verify each keystore opens with its recorded password from a clean
   location, so the backup is known-good rather than assumed
 
 ## 4. Gradle signing configuration
@@ -125,32 +156,56 @@ key password distinct from the store password — keytool warns and ignores
 
 ## 5. CI wiring
 
-- [ ] 5.1 Add repository secrets: base64-encoded app signing keystore, its
-  password, and its alias
-- [ ] 5.2 Add repository secrets for the upload keystore, its password, and its
-  alias
-- [ ] 5.3 Add the expected app signing certificate SHA-256 fingerprint as a
-  non-secret CI variable
-- [ ] 5.4 In `build-android-apk`, decode the app signing keystore and write
+- [ ] 5.1 Create a `release` GitHub Actions environment with a deployment tag
+  policy limiting it to `v*`, and no required reviewers
+- [ ] 5.2 Add the app signing keystore (base64), its password, and its alias as
+  **environment** secrets on `release` — not repository secrets
+- [ ] 5.3 Add the upload keystore, its password, and its alias as environment
+  secrets on `release`
+- [ ] 5.4 Add the expected app signing certificate SHA-256 fingerprint as a
+  non-secret variable
+- [ ] 5.5 Split the APK build: leave `build-android-apk` unconditional and
+  keyless, so every push and PR keeps exercising the build path (it falls back to
+  debug signing per D4 and publishes nothing), and add a tag-only
+  `build-android-apk-signed` job declaring `environment: release`
+- [ ] 5.6 In the signed job, decode the keystore and write
   `android/key.properties` before `flutter build apk`, with no shell tracing and
   nothing echoed
-- [ ] 5.5 Add the verification step: compare the built APK's signer certificate
-  SHA-256 fingerprint against the expected value and fail on mismatch, comparing
-  the normalised lowercase contiguous form from 3.6 rather than keytool's
-  colon-separated rendering
-- [ ] 5.6 Confirm the verification step actually fails on a wrong-key build, by
+- [ ] 5.7 Point the `release` job at the signed job's artifact, so the published
+  APK can never be the debug-signed one
+- [ ] 5.8 Add the verification step to the signed job: compare the built APK's
+  signer certificate SHA-256 fingerprint against the expected value and fail on
+  mismatch, comparing the normalised lowercase contiguous form from 3.6 rather
+  than keytool's colon-separated rendering
+- [ ] 5.9 Confirm the verification step actually fails on a wrong-key build, by
   temporarily pointing it at a deliberately wrong expected fingerprint — a check
   that has never been seen to fail is not yet a check
-- [ ] 5.7 Confirm the workflow log contains no keystore content and no passwords
-- [ ] 5.8 Run the release workflow end to end and confirm the published APK
-  carries the app signing certificate
+- [ ] 5.10 Confirm a pull-request run still succeeds, produces a debug-signed
+  artifact, and never obtains the keystore
+- [ ] 5.11 Confirm the workflow log contains no keystore content and no passwords
+- [ ] 5.12 Run the release workflow end to end from a tag and confirm the
+  published APK carries the app signing certificate
 
 ## 6. Play App Signing enrolment
 
 - [ ] 6.1 In the Play Console, create the first release **deliberately choosing
   to upload the existing app signing key** — the default generates a Google key
   and silently forecloses matching signatures across channels, permanently
-- [ ] 6.2 Export the app signing key with PEPK and complete the upload
+- [ ] 6.2 Export the app signing key with PEPK and complete the upload.  Play's
+  documentation describes the upload key as "stored in a Java keystore (.jks or
+  .keystore)", while these keys are PKCS12 (`.p12`) — the modern keytool default,
+  and a format Play never actually sees for the upload key, since it verifies a
+  signature and a certificate rather than a container.  If PEPK or the Console
+  rejects PKCS12, convert rather than regenerate:
+
+  ```bash
+  keytool -importkeystore -srckeystore ~/keys/unitary/unitary-app.p12 \
+    -srcstoretype PKCS12 -destkeystore ~/keys/unitary/unitary-app.jks \
+    -deststoretype JKS
+  ```
+
+  Verified lossless — the converted keystore holds the same key and reports an
+  identical certificate fingerprint, so nothing downstream changes
 - [ ] 6.3 Designate `unitary-upload` as the upload key
 - [ ] 6.4 Confirm the app signing certificate shown in the Console matches the
   fingerprint recorded in 3.6

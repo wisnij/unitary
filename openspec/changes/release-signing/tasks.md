@@ -164,18 +164,28 @@ key password distinct from the store password — keytool warns and ignores
 
 ## 4. Gradle signing configuration
 
-- [ ] 4.1 Add the `key.properties`-driven signing config to
+- [x] 4.1 Add the `key.properties`-driven signing config to
   `android/app/build.gradle.kts`, replacing
   `signingConfig = signingConfigs.getByName("debug")` under `buildTypes.release`
-- [ ] 4.2 Make the release signing config conditional on `key.properties` being
+- [x] 4.2 Make the release signing config conditional on `key.properties` being
   present, falling back to debug signing so a keyless clone still builds
-- [ ] 4.3 Remove the stale `applicationId` TODO comment — the ID is already set
+- [x] 4.3 Remove the stale `applicationId` TODO comment — the ID is already set
   to `dev.wisnij.unitary`; only the signing TODO above it was real
-- [ ] 4.4 Verify a local release build with `key.properties` present is signed
-  with the app signing key, by fingerprint
-- [ ] 4.5 Verify a local release build with `key.properties` absent still
-  succeeds and falls back to debug signing
-- [ ] 4.6 Verify the built APK contains no keystore and no `key.properties`
+- [x] 4.4 Verify a local release build with `key.properties` present is signed
+  with the app signing key, by fingerprint — confirmed: `CN=Unitary,
+  O=wisnij.dev, C=US`, SHA-256
+  `4e22238ae5008f5a1dd1515fb434445ffbf1fdd47609ea93be4646705c7a62bd`, matching
+  the value recorded in 3.6.  The same build still reports `versionCode=9007`
+- [x] 4.5 Verify a local release build with `key.properties` absent still
+  succeeds and falls back to debug signing — confirmed: build succeeded,
+  `apksigner` reports `CN=Android Debug`.  Also confirmed the opposite failure
+  mode is loud rather than silent: a `key.properties` present but incomplete
+  fails the build with `android/key.properties is present but missing:
+  storePassword, keyPassword` instead of producing a mis-signed artifact
+- [x] 4.6 Verify the built APK contains no keystore and no `key.properties` —
+  no entry matching `*.p12`, `*.jks`, `*.keystore`, `*.pem`, `*.der`, or
+  `key.properties`.  Re-checked against the signed artifact from 4.4: still
+  none
 
 ## 5. CI wiring
 

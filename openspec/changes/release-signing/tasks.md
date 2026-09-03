@@ -189,14 +189,33 @@ key password distinct from the store password — keytool warns and ignores
 
 ## 5. CI wiring
 
-- [ ] 5.1 Create a `release` GitHub Actions environment with a deployment tag
-  policy limiting it to `v*`, and no required reviewers
-- [ ] 5.2 Add the app signing keystore (base64), its password, and its alias as
-  **environment** secrets on `release` — not repository secrets
-- [ ] 5.3 Add the upload keystore, its password, and its alias as environment
-  secrets on `release`
-- [ ] 5.4 Add the expected app signing certificate SHA-256 fingerprint as a
-  non-secret variable
+- [x] 5.1 Create a `release` GitHub Actions environment with a deployment tag
+  policy limiting it to `v*`, and no required reviewers — verified via the API:
+  the environment's only protection rule is `branch_policy`, and its single
+  policy is `{"name": "v*", "type": "tag"}`.  Note the policy is of type *tag*,
+  not branch — a branch policy named `v*` reads identically in a listing and
+  would silently never match a tag ref
+- [x] 5.2 Add the app signing keystore (base64), its password, and its alias as
+  **environment** secrets on `release` — not repository secrets:
+  `ANDROID_APP_KEYSTORE_B64`, `ANDROID_APP_KEYSTORE_PASSWORD`,
+  `ANDROID_APP_KEY_ALIAS`
+- [x] 5.3 Add the upload keystore, its password, and its alias as environment
+  secrets on `release`: `ANDROID_UPLOAD_KEYSTORE_B64`,
+  `ANDROID_UPLOAD_KEYSTORE_PASSWORD`, `ANDROID_UPLOAD_KEY_ALIAS`.  Nothing reads
+  these yet — they are consumed by the AAB build, which belongs to the Play
+  submission work rather than this change.  Two things for whoever writes that
+  job: an AAB cannot be checked with `apksigner` (APK-only), since app bundles
+  are JAR-signed — use `keytool -printcert -jarfile` or `jarsigner -verify
+  -certs`; and signing it with the *upload* key rather than the app signing key
+  means rewriting `key.properties` to point at the upload keystore before that
+  build step, per design D3
+- [x] 5.4 Add the expected certificate SHA-256 fingerprints as non-secret
+  **variables** on `release`: `ANDROID_APP_CERT_SHA256` and
+  `ANDROID_UPLOAD_CERT_SHA256`.  Variables rather than secrets deliberately —
+  they derive from public certificates, and a secret would be masked to `***`
+  in the workflow log, destroying the diagnostic exactly when a mismatch needs
+  diagnosing.  Verified `ANDROID_APP_CERT_SHA256` matches the fingerprint of the
+  locally signed APK (`4e22238a…`)
 - [x] 5.5 Split the APK build: leave `build-android-apk` unconditional and
   keyless, so every push and PR keeps exercising the build path (it falls back to
   debug signing per D4 and publishes nothing), and add a tag-only

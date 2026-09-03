@@ -78,9 +78,42 @@ jobs:
           echo "build_metadata=${build_timestamp}-${description}" >> $GITHUB_OUTPUT
           echo "version=$(git describe | sed 's/^v//')" >> $GITHUB_OUTPUT
 
+  # Unsigned build, on every push and pull request.  No signing secrets are in
+  # reach here: without android/key.properties the release build type falls back
+  # to debug signing.  This exists to keep the Android build path exercised
+  # before a tag is cut; its artifact is never published.
   build-android-apk:
     needs: prepare
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.x'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - name: Build Android APK (unsigned)
+        run: >-
+          flutter build apk
+          --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
+          --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk-unsigned
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  # Signed build, tags only.  The `release` environment carries the signing
+  # secrets and is restricted by repository settings to v* tags, so this job
+  # cannot run — and the secrets cannot be reached — from a branch or a pull
+  # request, whatever the workflow file says.
+  build-android-apk-signed:
+    if: github.ref_type == 'tag'
+    needs: prepare
+    runs-on: ubuntu-latest
+    environment: release
     outputs:
       asset: ${{ steps.asset.outputs.name }}
     steps:
@@ -91,11 +124,53 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: Build Android APK
+      - name: Write signing configuration
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_APP_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_APP_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_APP_KEY_ALIAS }}
+        run: |
+          set +x
+          umask 077
+          keystore="${RUNNER_TEMP}/unitary-app.p12"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$keystore"
+          # PKCS12 has a single password, so storePassword and keyPassword match.
+          {
+            printf 'storeFile=%s\n' "$keystore"
+            printf 'storePassword=%s\n' "$KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEYSTORE_PASSWORD"
+          } > android/key.properties
+      - name: Build Android APK (signed)
         run: >-
           flutter build apk
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
+      - name: Verify signing certificate
+        env:
+          EXPECTED: ${{ vars.ANDROID_APP_CERT_SHA256 }}
+        run: |
+          if [ -z "$EXPECTED" ]; then
+            echo "::error::ANDROID_APP_CERT_SHA256 is not set; cannot verify signing"
+            exit 1
+          fi
+          apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
+          if [ -z "$apksigner" ]; then
+            echo "::error::apksigner not found in $ANDROID_HOME/build-tools"
+            exit 1
+          fi
+          actual=$("$apksigner" verify --print-certs \
+            build/app/outputs/flutter-apk/app-release.apk \
+            | awk '/certificate SHA-256 digest/ {print $NF}')
+          echo "expected: $EXPECTED"
+          echo "actual:   $actual"
+          if [ "$actual" != "$EXPECTED" ]; then
+            echo "::error::APK is not signed with the expected app signing key"
+            exit 1
+          fi
+      - name: Remove signing material
+        if: always()
+        run: rm -f android/key.properties "${RUNNER_TEMP}/unitary-app.p12"
       - name: Compute asset name
         id: asset
         run: echo "name=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
@@ -140,7 +215,8 @@ jobs:
           retention-days: 7
 
   release:
-    needs: [prepare, build-android-apk, build-web]
+    if: github.ref_type == 'tag'
+    needs: [prepare, build-android-apk-signed, build-web]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -159,12 +235,11 @@ jobs:
         run: >-
           git tag -l --format="%(contents:body)" ${{ github.ref_name }} | tee RELEASE_NOTES.md
       - name: Create GitHub release
-        if: github.ref_type == 'tag'
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
           gh release create ${{ github.ref_name }}
           --notes-file RELEASE_NOTES.md
           --title "Release ${{ needs.prepare.outputs.version }}"
-          ${{ needs.build-android-apk.outputs.asset }}
+          ${{ needs.build-android-apk-signed.outputs.asset }}
           ${{ needs.build-web.outputs.asset }}

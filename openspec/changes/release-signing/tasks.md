@@ -197,22 +197,27 @@ key password distinct from the store password — keytool warns and ignores
   secrets on `release`
 - [ ] 5.4 Add the expected app signing certificate SHA-256 fingerprint as a
   non-secret variable
-- [ ] 5.5 Split the APK build: leave `build-android-apk` unconditional and
+- [x] 5.5 Split the APK build: leave `build-android-apk` unconditional and
   keyless, so every push and PR keeps exercising the build path (it falls back to
   debug signing per D4 and publishes nothing), and add a tag-only
   `build-android-apk-signed` job declaring `environment: release`
-- [ ] 5.6 In the signed job, decode the keystore and write
+- [x] 5.6 In the signed job, decode the keystore and write
   `android/key.properties` before `flutter build apk`, with no shell tracing and
   nothing echoed
-- [ ] 5.7 Point the `release` job at the signed job's artifact, so the published
+- [x] 5.7 Point the `release` job at the signed job's artifact, so the published
   APK can never be the debug-signed one
-- [ ] 5.8 Add the verification step to the signed job: compare the built APK's
+- [x] 5.8 Add the verification step to the signed job: compare the built APK's
   signer certificate SHA-256 fingerprint against the expected value and fail on
   mismatch, comparing the normalised lowercase contiguous form from 3.6 rather
   than keytool's colon-separated rendering
 - [ ] 5.9 Confirm the verification step actually fails on a wrong-key build, by
   temporarily pointing it at a deliberately wrong expected fingerprint — a check
-  that has never been seen to fail is not yet a check
+  that has never been seen to fail is not yet a check.  **Rehearsed locally**
+  against a throwaway keystore by running the workflow's own step verbatim:
+  correct fingerprint exits 0, wrong fingerprint exits 1 with
+  `::error::APK is not signed with the expected app signing key`, and an unset
+  variable exits 1 rather than passing vacuously.  Still to be confirmed in CI,
+  where `apksigner` discovery via `ANDROID_HOME` differs
 - [ ] 5.10 Confirm a pull-request run still succeeds, produces a debug-signed
   artifact, and never obtains the keystore
 - [ ] 5.11 Confirm the workflow log contains no keystore content and no passwords

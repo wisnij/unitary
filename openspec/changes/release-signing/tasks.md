@@ -233,14 +233,34 @@ key password distinct from the store password — keytool warns and ignores
   signer certificate SHA-256 fingerprint against the expected value and fail on
   mismatch, comparing the normalised lowercase contiguous form from 3.6 rather
   than keytool's colon-separated rendering
-- [ ] 5.9 Confirm the verification step actually fails on a wrong-key build, by
+- [x] 5.9 Confirm the verification step actually fails on a wrong-key build, by
   temporarily pointing it at a deliberately wrong expected fingerprint — a check
-  that has never been seen to fail is not yet a check.  **Rehearsed locally**
-  against a throwaway keystore by running the workflow's own step verbatim:
-  correct fingerprint exits 0, wrong fingerprint exits 1 with
-  `::error::APK is not signed with the expected app signing key`, and an unset
-  variable exits 1 rather than passing vacuously.  Still to be confirmed in CI,
-  where `apksigner` discovery via `ANDROID_HOME` differs
+  that has never been seen to fail is not yet a check.  **Confirmed in CI** on
+  run 33851350537 (tag `v0.9.8-signing-test`, `ANDROID_APP_CERT_SHA256`
+  transposed in its first two characters):
+
+  ```
+  expected: e422238ae5008f5a1dd1515fb434445ffbf1fdd47609ea93be4646705c7a62bd
+  actual:   4e22238ae5008f5a1dd1515fb434445ffbf1fdd47609ea93be4646705c7a62bd
+  Error: APK is not signed with the expected app signing key
+  ```
+
+  The run proved four things beyond the check itself: the `release` environment
+  admitted the tag, the keystore decoded and `key.properties` was written (the
+  reported `actual` is the real app signing certificate, not a debug one),
+  `apksigner` was found via `ANDROID_HOME` in CI, and `build-android-apk-test`
+  was **skipped** — the first live confirmation of the `!= 'tag'` condition.
+
+  Method, for repeating this: the signing job runs only on a `v*` tag, and the
+  environment's tag policy is what makes that so — widening either to test from
+  a branch would disable the control being tested.  Use a throwaway tag instead.
+  A failing verification skips the `release` job, so **no GitHub release is
+  created** and the run is self-cleaning (confirmed: `gh release view
+  v0.9.8-signing-test` → not found).  Note `tag.gpgsign true` in the user's
+  global git config makes every `git tag` signed and therefore annotated; pass
+  `--no-sign` for a lightweight tag, though tag type is irrelevant here since
+  the release-notes step never runs.
+
 - [x] 5.10 Confirm a pull-request run still succeeds, produces a debug-signed
   artifact, and never obtains the keystore — confirmed on run 33725890117, which
   ran before the jobs were renamed: the debug-key job succeeded while the
@@ -251,7 +271,13 @@ key password distinct from the store password — keytool warns and ignores
   runner generates its own throwaway debug key — a further reason these
   artifacts must never be published: they are not even consistently signed from
   one run to the next
-- [ ] 5.11 Confirm the workflow log contains no keystore content and no passwords
+- [x] 5.11 Confirm the workflow log contains no keystore content and no
+  passwords — confirmed against run 33851350537's full log (4858 lines).  The
+  only `storePassword=`/`keyPassword=` occurrences are GitHub echoing the step's
+  own script source, showing the variable reference rather than its value; the
+  only long base64 runs are the emulator's adb public key from the
+  integration-test job.  17 `***` markers show masking active where secret
+  values would otherwise appear
 - [ ] 5.12 Run the release workflow end to end from a tag and confirm the
   published APK carries the app signing certificate
 

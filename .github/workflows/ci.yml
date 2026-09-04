@@ -78,11 +78,19 @@ jobs:
           echo "build_metadata=${build_timestamp}-${description}" >> $GITHUB_OUTPUT
           echo "version=$(git describe | sed 's/^v//')" >> $GITHUB_OUTPUT
 
-  # Unsigned build, on every push and pull request.  No signing secrets are in
-  # reach here: without android/key.properties the release build type falls back
-  # to debug signing.  This exists to keep the Android build path exercised
-  # before a tag is cut; its artifact is never published.
-  build-android-apk:
+  # Rehearses the release APK job on every push and pull request, so a failure
+  # in the build, naming, or upload steps surfaces before a tag is cut rather
+  # than during a release.  Identical to build-android-apk-release except that
+  # no signing secrets are in reach: without android/key.properties the release
+  # build type falls back to the debug key, whichever throwaway one the runner
+  # generated.  Its artifact is never published.
+  #
+  # Skipped on tags: build-android-apk-release then covers the same ground with
+  # the real key, so running both would spend a full APK build to produce a
+  # second, debug-signed unitary-<version>.apk sitting beside the publishable
+  # one under the same filename.
+  build-android-apk-test:
+    if: github.ref_type != 'tag'
     needs: prepare
     runs-on: ubuntu-latest
     steps:
@@ -93,23 +101,28 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: Build Android APK (unsigned)
+      - name: Build Android APK (debug-signed)
         run: >-
           flutter build apk
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
+      - name: Compute asset name
+        id: asset
+        run: echo "name=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
+      - name: Prepare Android APK
+        run: cp build/app/outputs/flutter-apk/app-release.apk "${{ steps.asset.outputs.name }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: android-apk-unsigned
-          path: build/app/outputs/flutter-apk/app-release.apk
+          name: android-apk-test
+          path: ${{ steps.asset.outputs.name }}
           if-no-files-found: error
           retention-days: 7
 
-  # Signed build, tags only.  The `release` environment carries the signing
-  # secrets and is restricted by repository settings to v* tags, so this job
-  # cannot run — and the secrets cannot be reached — from a branch or a pull
-  # request, whatever the workflow file says.
-  build-android-apk-signed:
+  # Release build type, app signing key — tags only.  The `release` environment
+  # carries the signing secrets and is restricted by repository settings to v*
+  # tags, so this job cannot run — and the secrets cannot be reached — from a
+  # branch or a pull request, whatever the workflow file says.
+  build-android-apk-release:
     if: github.ref_type == 'tag'
     needs: prepare
     runs-on: ubuntu-latest
@@ -141,7 +154,7 @@ jobs:
             printf 'keyAlias=%s\n' "$KEY_ALIAS"
             printf 'keyPassword=%s\n' "$KEYSTORE_PASSWORD"
           } > android/key.properties
-      - name: Build Android APK (signed)
+      - name: Build Android APK (release-signed)
         run: >-
           flutter build apk
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
@@ -178,7 +191,7 @@ jobs:
         run: cp build/app/outputs/flutter-apk/app-release.apk "${{ steps.asset.outputs.name }}"
       - uses: actions/upload-artifact@v4
         with:
-          name: android-apk
+          name: android-apk-release
           path: ${{ steps.asset.outputs.name }}
           if-no-files-found: error
           retention-days: 7
@@ -216,7 +229,7 @@ jobs:
 
   release:
     if: github.ref_type == 'tag'
-    needs: [prepare, build-android-apk-signed, build-web]
+    needs: [prepare, build-android-apk-release, build-web]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -227,7 +240,7 @@ jobs:
           fetch-tags: true
       - uses: actions/download-artifact@v4
         with:
-          name: android-apk
+          name: android-apk-release
       - uses: actions/download-artifact@v4
         with:
           name: web-zip
@@ -241,5 +254,5 @@ jobs:
           gh release create ${{ github.ref_name }}
           --notes-file RELEASE_NOTES.md
           --title "Release ${{ needs.prepare.outputs.version }}"
-          ${{ needs.build-android-apk-signed.outputs.asset }}
+          ${{ needs.build-android-apk-release.outputs.asset }}
           ${{ needs.build-web.outputs.asset }}

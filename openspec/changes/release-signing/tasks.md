@@ -216,10 +216,14 @@ key password distinct from the store password — keytool warns and ignores
   in the workflow log, destroying the diagnostic exactly when a mismatch needs
   diagnosing.  Verified `ANDROID_APP_CERT_SHA256` matches the fingerprint of the
   locally signed APK (`4e22238a…`)
-- [x] 5.5 Split the APK build: leave `build-android-apk` unconditional and
-  keyless, so every push and PR keeps exercising the build path (it falls back to
+- [x] 5.5 Split the APK build: `build-android-apk-test` runs on non-tag pushes
+  and PRs, keyless, so the build path keeps being exercised (it falls back to
   debug signing per D4 and publishes nothing), and add a tag-only
-  `build-android-apk-signed` job declaring `environment: release`
+  `build-android-apk-release` job declaring `environment: release`.  The keyless
+  job is named `-test` because it rehearses the release job — build, asset
+  naming, and upload — rather than because it builds a debug *type*: both jobs
+  run `flutter build apk --release`, and only the key differs.  It is not named
+  *unsigned*, since an APK cannot install unsigned at all
 - [x] 5.6 In the signed job, decode the keystore and write
   `android/key.properties` before `flutter build apk`, with no shell tracing and
   nothing echoed
@@ -237,8 +241,16 @@ key password distinct from the store password — keytool warns and ignores
   `::error::APK is not signed with the expected app signing key`, and an unset
   variable exits 1 rather than passing vacuously.  Still to be confirmed in CI,
   where `apksigner` discovery via `ANDROID_HOME` differs
-- [ ] 5.10 Confirm a pull-request run still succeeds, produces a debug-signed
-  artifact, and never obtains the keystore
+- [x] 5.10 Confirm a pull-request run still succeeds, produces a debug-signed
+  artifact, and never obtains the keystore — confirmed on run 33725890117, which
+  ran before the jobs were renamed: the debug-key job succeeded while the
+  release-key job and `release` were both **skipped**, so the `release`
+  environment was never entered and the secrets were never in reach.  The artifact carries `CN=Android Debug` and no
+  key material, and still reports `versionCode=9007`.  Its debug fingerprint
+  (`59884694…`) differs from the local machine's (`c082f77c…`) because each
+  runner generates its own throwaway debug key — a further reason these
+  artifacts must never be published: they are not even consistently signed from
+  one run to the next
 - [ ] 5.11 Confirm the workflow log contains no keystore content and no passwords
 - [ ] 5.12 Run the release workflow end to end from a tag and confirm the
   published APK carries the app signing certificate

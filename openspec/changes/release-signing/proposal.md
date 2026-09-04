@@ -29,9 +29,10 @@ zero on every recent one — and rises permanently the moment 1.0.0 ships.
   following the standard Flutter convention.
 - Add keystore patterns to `.gitignore` **before** any key exists, so a stray
   `git add -A` cannot commit one.
-- Supply both keystores to CI as repository secrets and wire the release job to
-  sign the GitHub APK with the app signing key and the Play AAB with the upload
-  key, by rewriting `key.properties` between the two build steps.
+- Supply both keystores to CI as secrets on a `release` environment restricted
+  to `v*` tags, and wire the tag-only signing job to sign the GitHub APK with the
+  app signing key — and, when the Play AAB build lands, to sign that with the
+  upload key by rewriting `key.properties` between the two build steps.
 - Enrol in Play App Signing by **uploading the existing app signing key** rather
   than letting Google generate one, so that a GitHub-downloaded APK and a
   Play-delivered install of the same version carry identical signatures.
@@ -62,9 +63,11 @@ zero on every recent one — and rises permanently the moment 1.0.0 ships.
   time), plus a new untracked `android/key.properties`.
 - **Repository hygiene**: `.gitignore` gains `*.jks`, `*.p12`, `*.keystore`, and
   `android/key.properties`.
-- **CI**: `.github/workflows/ci.yml` — the `build-android-apk` job gains
-  keystore decoding and `key.properties` generation.  New repository secrets for
-  both keystores and their passwords.
+- **CI**: `.github/workflows/ci.yml` — the APK build splits in two.
+  `build-android-apk-test` runs on every push and pull request with no keys in
+  reach, and `build-android-apk-release` runs on tags only, decoding the keystore
+  and generating `key.properties`.  Secrets are scoped to a `release`
+  environment restricted to `v*` tags, not held as repository secrets.
 - **Play Console**: one-time app signing enrolment using the PEPK-encrypted app
   signing key, performed as part of the first manual submission.
 - **Distribution**: both channels converge on one certificate, so users can move

@@ -4,7 +4,7 @@ Unitary ships through two channels that must stay compatible: APKs attached to
 GitHub releases (automated today, and continuing after the Play launch) and, from
 1.0.0, the Play Store.  Both are built by the same tag-driven pipeline in
 `.github/workflows/ci.yml` (`prepare` → `build-android-apk` + `build-web` →
-`release`).
+`release`, as the jobs were named before this change).
 
 Current state, verified rather than assumed:
 
@@ -164,8 +164,10 @@ matching the stock Flutter convention, with no flavors, no extra build types, an
 nothing for a future reader to decode.  The channel/key mapping lives in the
 workflow, where the artifacts are already separate steps.
 
-Keystores reach CI as base64-encoded repository secrets, decoded to files at the
-start of the job and referenced by the generated `key.properties`.
+Keystores reach CI as base64-encoded secrets, decoded to files under
+`RUNNER_TEMP` — outside the workspace, so they cannot be packaged or committed —
+and referenced by the generated `key.properties`.  D6 settles where those secrets
+live: on a `release` environment rather than at repository scope.
 
 ### D4: Local builds must keep working without any key
 
@@ -199,8 +201,8 @@ or it would never match.
 
 ### D6: Signing secrets are scoped to tag builds via a GitHub Actions environment
 
-`build-android-apk` carries no `if:` condition — only the final `release` step is
-tag-gated — so the APK is built on every push to `main`, every pull request, and
+`build-android-apk` — as it stood before this change — carried no `if:`
+condition, and only the final `release` step was tag-gated — so the APK is built on every push to `main`, every pull request, and
 every tag.  That is deliberate (commit `7dd8b9d`, so the release path is
 exercised before tagging), but it means repository-level secrets would decode the
 keystore onto a runner dozens of times a month for builds that have no reason to
@@ -232,19 +234,26 @@ the current ref *fails* rather than skipping, so the signed build must be a
 separate, tag-only job:
 
 ```
-build-android-apk          all pushes/PRs, no environment
+build-android-apk-test     non-tag pushes/PRs, no environment
                            → no key.properties, so debug signing via D4
-                           → keeps the build path exercised, publishes nothing
+                           → mirrors the release job step for step apart from
+                             signing, so build, asset-naming and upload
+                             failures surface before a tag; publishes nothing
 
-build-android-apk-signed   tags only, environment: release
+build-android-apk-release  tags only, environment: release
                            → real key, fingerprint verified per D5
                            → this is what the release job attaches
 ```
 
-This composes with D4 rather than fighting it: the unsigned job needs no special
+This composes with D4 rather than fighting it: the keyless job needs no special
 casing, because an absent `key.properties` already falls back to debug signing.
 Debug-signed artifacts from that job are never published — only the `release`
 job, which runs on tags, attaches anything.
+
+The two APK jobs are mutually exclusive (`!= 'tag'` and `== 'tag'`), so exactly
+one runs per event.  Letting the test job run on tags too would spend a full APK
+build producing a second `unitary-<version>.apk` — debug-signed, identically
+named, sitting beside the publishable one in the run's artifact list.
 
 ## Risks / Trade-offs
 

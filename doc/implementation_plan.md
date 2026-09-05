@@ -711,8 +711,8 @@ engineering tasks, which are small by comparison.
      these are sized for the README; the Play Store needs its own set (see
      task 7)
 
-2. Release signing — **BLOCKER for any published 1.0.0**
-   - [ ] **Decide the two-channel signing strategy first** — this is the one
+2. Release signing — **RESOLVED** (September 5, 2026)
+   - [x] **Decide the two-channel signing strategy first** — this is the one
      decision in the phase that is effectively irreversible once anything is
      published, and shipping through both GitHub and Play makes it sharper
      than it would otherwise be.  Play App Signing has Google hold the app
@@ -728,29 +728,47 @@ engineering tasks, which are small by comparison.
      key, so both channels produce identical signatures.  Verify the current
      Play App Signing options before committing — this behaviour has changed
      before, and the choice cannot be revisited after the first upload
-   - [ ] Generate a release keystore and store it somewhere durable, with a
+   - [x] Generate a release keystore and store it somewhere durable, with a
      backup.  Losing it means no future update can ever install over an
      existing install, through either channel
-   - [ ] Add keystore patterns to `.gitignore` **before** creating the key —
+   - [x] Add keystore patterns to `.gitignore` **before** creating the key —
      `*.jks`, `*.keystore`, and `android/key.properties` are all currently
      unignored, so a stray `git add -A` would commit the signing key
-   - [ ] Wire a real `signingConfig` into `android/app/build.gradle.kts`,
+   - [x] Wire a real `signingConfig` into `android/app/build.gradle.kts`,
      replacing the `signingConfigs.getByName("debug")` line under
      `buildTypes.release` (the `flutter create` TODO immediately above it),
      reading credentials from an untracked `key.properties`
-   - [ ] Supply the keystore to CI as encoded repository secrets so
-     `build-android-apk` produces a properly signed artifact; keep the local
-     path working for developer builds
-   - [ ] Verify the output: `apksigner verify --print-certs` must no longer
+   - [x] Supply the keystore to CI as base64 secrets so the release build
+     produces a properly signed artifact; keep the local path working for
+     developer builds.  Delivered more narrowly than this bullet originally
+     proposed: the secrets live on a **`release` environment** restricted by
+     repository settings to `v*` tags, not at repository scope, so a workflow
+     edit on a branch cannot reach them.  The APK build split accordingly into
+     `build-android-apk-test` (non-tag, keyless, debug fallback, never
+     published) and `build-android-apk-release` (tags only, real key,
+     certificate fingerprint verified before the artifact is uploaded)
+   - [x] Verify the output: `apksigner verify --print-certs` must no longer
      report `CN=Android Debug`
-   - **Why this blocks:** verified against the current build config and the
-     locally built release APK — the release build type is signed with the
-     debug key, so `Signer #1 certificate DN: C=US, O=Android, CN=Android
-     Debug`.  Anyone who installs a debug-signed 1.0.0 cannot later install a
-     properly signed 1.0.1 over it (signature mismatch); they must uninstall
-     first, losing settings, worksheet values, and history.  That makes this
-     a fix-before-first-publish item, not a fix-later one.  The Play Store
-     rejects debug-signed uploads outright
+   - **Why this blocked, and how it closed:** every release up to and
+     including v0.9.7 was signed with the debug key (`Signer #1 certificate
+     DN: C=US, O=Android, CN=Android Debug`).  Anyone installing a
+     debug-signed 1.0.0 could never install a properly signed 1.0.1 over it —
+     Android refuses an update whose signature differs, so they would have had
+     to uninstall first, losing settings, worksheet values, and history.  That
+     made it a fix-before-first-publish item.  **v0.9.8 (September 5, 2026) is
+     the first properly signed release**: the asset attached to the GitHub
+     release is byte-identical to the CI artifact and reports `CN=Unitary,
+     O=wisnij.dev, C=US`.  The break it implies has therefore already
+     happened, ahead of 1.0.0 rather than at it — an install of v0.9.7 or
+     earlier cannot be updated in place.  Design, verification, and the
+     decision record are in
+     `openspec/changes/release-signing/`
+   - **Still ahead, and still irreversible:** this task settles the GitHub half
+     of the strategy.  The Play half — enrolling in Play App Signing with *this
+     same key* rather than letting Google generate one — has not happened yet
+     and lives in task 7.  Until it does, the "one signature across both
+     channels" property is decided but not realised, and the single
+     unrecoverable click of the phase is still ahead
 
 3. Version code — **RESOLVED** (September 2, 2026)
    - [x] Adopt a `version: X.Y.Z+N` scheme in `pubspec.yaml` and decide how

@@ -278,8 +278,20 @@ key password distinct from the store password — keytool warns and ignores
   only long base64 runs are the emulator's adb public key from the
   integration-test job.  17 `***` markers show masking active where secret
   values would otherwise appear
-- [ ] 5.12 Run the release workflow end to end from a tag and confirm the
-  published APK carries the app signing certificate
+- [x] 5.12 Run the release workflow end to end from a tag and confirm the
+  published APK carries the app signing certificate — confirmed on tag `v0.9.8`.
+  The asset attached to the GitHub release is **byte-identical** to the
+  `android-apk-release` artifact and reports `CN=Unitary, O=wisnij.dev, C=US`,
+  SHA-256 `4e22238a…`, `versionCode=9008`, and no packaged key material.  The
+  same commit's `android-apk-test` artifact from the main-branch run is a
+  distinct file signed with a runner debug key (`4e0dfff0…`), so the two paths
+  are demonstrably separate and only the signed one reaches the release.
+
+  Caution for anyone repeating this: the two APKs came out at exactly the same
+  byte size (56433241), so size is not a discriminator — compare the signer
+  certificate, not the file length.  Note also that the test artifact's debug
+  fingerprint differs again from the earlier PR run's (`59884694…`), confirming
+  each runner generates its own throwaway debug key
 
 ## 6. Play App Signing enrolment
 

@@ -44,3 +44,10 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 /android/build/reports
+
+# Release signing — never commit key material.  Keystores are kept outside the
+# repository entirely; these patterns are a backstop against an accidental copy.
+*.jks
+*.keystore
+*.p12
+/android/key.properties

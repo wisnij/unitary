@@ -35,9 +35,7 @@ Network access
 
 Unitary works entirely offline.  It makes exactly one kind of network request:
 fetching currency exchange rates from the [Frankfurter
-API](https://frankfurter.dev) at `api.frankfurter.dev`.  Exchange rates are
-bundled with the app, so even this is optional — currency conversion works
-without a connection.
+API](https://frankfurter.dev) at `api.frankfurter.dev`.
 
 This request happens automatically when the stored rates are more than a day
 old, and when you refresh rates manually from Settings or the Currency
@@ -92,8 +90,7 @@ Changes to this policy
 
 If this policy changes, the revised version is published at the address above
 with an updated effective date, and it accompanies the release whose behaviour
-it describes.  Because a copy travels inside each build, the policy shown in a
-given version of the app describes that version.
+it describes.
 
 
 Contact

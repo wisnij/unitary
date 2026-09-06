@@ -13,17 +13,13 @@ The app SHALL provide a dedicated About screen (analogous to the Settings screen
 
 ## ADDED Requirements
 
-### Requirement: Privacy policy entry opens the hosted policy
-The About screen SHALL contain a tappable "Privacy policy" entry with the hosted policy URL as its subtitle.  When tapped, the app SHALL open that URL in the system browser using `url_launcher`, matching the behaviour of the Project home entry.  The app SHALL NOT bundle the policy text, so that the document a user reads is always the current one rather than a copy frozen at the installed release.
+### Requirement: Privacy policy entry opens the bundled policy
+The About screen SHALL contain a tappable "Privacy policy" entry that pushes a screen rendering the bundled `PRIVACY.md`, matching the navigation behaviour of the License terms entry rather than the URL-launching behaviour of Project home.  The policy shown SHALL be the copy bundled with the running build, so it describes that build's behaviour and is available without a network connection.
 
-#### Scenario: Privacy policy tile shows URL subtitle
-- **WHEN** the About screen is displayed
-- **THEN** the Privacy policy tile shows the hosted policy URL as its subtitle
-
-#### Scenario: Tapping Privacy policy opens browser
+#### Scenario: Tapping Privacy policy opens the policy screen
 - **WHEN** the user taps "Privacy policy"
-- **THEN** the system browser opens to the hosted privacy policy URL
+- **THEN** the privacy policy screen is pushed onto the navigation stack
 
-#### Scenario: URL launch failure is handled gracefully
-- **WHEN** the system cannot launch the URL (e.g. no browser available)
-- **THEN** the app does not crash
+#### Scenario: Policy screen renders the bundled document
+- **WHEN** the privacy policy screen is displayed
+- **THEN** the bundled policy is shown as formatted text under an app bar with back navigation

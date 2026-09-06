@@ -49,22 +49,59 @@ a contact address.
 - **WHEN** the policy is read
 - **THEN** it provides an address for privacy enquiries
 
-### Requirement: The policy is discoverable from the app and the README
-The About screen and the README SHALL each link to the hosted policy.
-Neither SHALL reproduce the policy text, so that a single document remains
-authoritative and no installed release can present a contradicting copy.
+### Requirement: The app bundles and displays the policy
+The app SHALL bundle `PRIVACY.md` as an asset and SHALL render it on a
+dedicated screen reached from the About screen, so the policy describing a
+given build travels with that build and is readable without a network
+connection.  Links within the rendered document SHALL be tappable and open in
+the system browser, and a failure to launch a link SHALL NOT crash the app.
 
-#### Scenario: About screen links to the policy
-- **WHEN** the About screen is displayed
-- **THEN** it offers an entry that opens the hosted policy
+#### Scenario: Policy is bundled with the app
+- **WHEN** the app's bundled assets are inspected
+- **THEN** `PRIVACY.md` is among them
+
+#### Scenario: Policy renders from the bundled asset
+- **WHEN** the user opens the privacy policy screen
+- **THEN** the bundled document is rendered as formatted text with an app bar and back navigation
+
+#### Scenario: Policy is readable offline
+- **WHEN** the device has no network connection
+- **THEN** the policy screen still renders the full document
+
+#### Scenario: Asset fails to load
+- **WHEN** the bundled document cannot be read
+- **THEN** the screen shows an error message rather than crashing
+
+#### Scenario: Links in the document are tappable
+- **WHEN** the user taps a link in the rendered policy
+- **THEN** the system browser opens that link, and a launch failure does not crash the app
+
+### Requirement: The bundled copy identifies its version and the current one
+The policy SHALL state an effective date and SHALL name the canonical hosted
+URL, so a reader of a bundled copy can tell which version of the document
+they are seeing and reach the current one.  A bundled copy describes the
+behaviour of the build that carries it and is not required to match a later
+hosted revision.
+
+#### Scenario: Effective date is present
+- **WHEN** the policy is read, in the app or on the hosted page
+- **THEN** it states the date from which it takes effect
+
+#### Scenario: Canonical URL is reachable from the bundled copy
+- **WHEN** the policy is read inside the app
+- **THEN** it names the hosted URL as the location of the current version, as a tappable link
+
+### Requirement: The policy is discoverable from the app and the README
+The About screen SHALL offer an entry that opens the bundled policy screen,
+and the README SHALL link to the hosted policy.
+
+#### Scenario: About screen opens the policy
+- **WHEN** the user selects the privacy policy entry on the About screen
+- **THEN** the policy screen is pushed onto the navigation stack
 
 #### Scenario: README links to the policy
 - **WHEN** the README's statement about ads, tracking, and data harvesting is read
 - **THEN** it links to the hosted policy
-
-#### Scenario: No bundled copy of the policy text
-- **WHEN** the app is inspected for bundled assets
-- **THEN** the policy text is not among them
 
 ### Requirement: Published policy changes accompany the behaviour they describe
 A change to what the app collects or transmits SHALL be published together

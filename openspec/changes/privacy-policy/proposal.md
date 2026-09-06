@@ -39,10 +39,12 @@ repository.
   file.  It also defuses a live trap on `assets/LICENSE.md`, which the web
   app fetches at runtime and which survives only because it happens to carry
   no YAML front matter.
-- Add a "Privacy policy" tile to the About screen that opens the hosted URL,
-  mirroring the existing "Project home" tile.  The app links **out** rather
-  than bundling the text, so the policy a user reads is always the current
-  one and cannot be contradicted by a stale copy frozen into an old APK.
+- Bundle `PRIVACY.md` as a Flutter asset and render it in-app through a
+  `PrivacyScreen` mirroring the existing `LicenseScreen`, reached from a new
+  "Privacy policy" tile on the About screen.  Each build therefore carries
+  the policy that describes *that build's* behaviour, readable offline, while
+  the document names its effective date and links to the canonical hosted
+  copy for the current version.
 - Link the policy from the README's no-monetization paragraph.
 - Promote `markdown` from a transitive dependency to a direct
   **`dev_dependency`**.  It is already resolved in `pubspec.lock` via
@@ -60,8 +62,9 @@ repository.
   generated output, and the requirement that the deploy branch be published
   verbatim rather than post-processed.
 - `privacy-policy`: the policy document itself — that it exists, what it must
-  disclose truthfully, where it is hosted, and the paths by which users reach
-  it from the app and the README.
+  disclose truthfully, where it is hosted, how it is bundled into and
+  rendered by the app, and the paths by which users reach it from the app and
+  the README.
 
 ### Modified Capabilities
 
@@ -74,14 +77,17 @@ repository.
 **New files:** `PRIVACY.md`, `web/privacy/index.html` (generated),
 `web/.nojekyll`, `tool/generate_web_docs.dart`,
 `tool/generate_web_docs_lib.dart`,
-`test/tool/generate_web_docs_lib_test.dart`.
+`test/tool/generate_web_docs_lib_test.dart`,
+`lib/features/about/presentation/privacy_screen.dart`,
+`test/features/about/presentation/privacy_screen_test.dart`.
 
-**Modified files:** `pubspec.yaml` (dev dependency),
+**Modified files:** `pubspec.yaml` (dev dependency, plus `PRIVACY.md` in the
+Flutter `assets:` list beside `LICENSE.md`),
 `.pre-commit-config.yaml` (new hook), `README.md` (link),
 `lib/features/about/about_constants.dart` (new URL constant),
 `lib/features/about/presentation/about_screen.dart` (new tile),
-`test/features/about/presentation/about_screen_test.dart` (two tests
-mirroring the existing "Project home" pair).
+`test/features/about/presentation/about_screen_test.dart` (tests mirroring
+the existing "License terms" navigation pair).
 
 **CI:** unchanged.  Both web-producing jobs (`deploy-web`, `build-web`)
 already copy everything under `web/`, and the `lint` job already runs the
@@ -95,7 +101,8 @@ The canonical trailing-slash form is what gets registered with Play.
 **Coverage gate:** `about_constants.dart` gains a third constant and remains
 declaration-only, so it stays on `check_coverage_lib.dart`'s
 `defaultExpectedAbsent` allowlist; that entry's comment ("Two const
-declarations") needs updating.
+declarations") needs updating.  `privacy_screen.dart` is new code inside the
+90% floor and needs widget tests, mirroring `license_screen_test.dart`.
 
 **Not in scope:** the Play Console Data safety declaration (Phase 10 task 7),
 which must stay consistent with this document but is submitted separately.

@@ -28,7 +28,9 @@
 - [ ] 4.3 Note that the browser-hosted build is served by GitHub Pages, which logs requests as any host does, and that this does not apply to the installed app
 - [ ] 4.4 State the declared Android permission (`INTERNET`); verify against a release APK with `aapt2 dump badging` before claiming the full permission set, and omit Flutter-injected internal permissions if they cannot be confirmed
 - [ ] 4.5 Add `wisnij@gmail.com` as the contact address and an effective date
-- [ ] 4.6 Confirm `markdownlint-cli2` passes on the new file, using setext headings per the project's Markdown convention
+- [ ] 4.6 Name the canonical hosted URL in the document as the location of the current version, so the bundled copy self-identifies and links out (rendered as a tappable link in-app by `flutter_markdown_plus`)
+- [ ] 4.7 Confirm `markdownlint-cli2` passes on the new file, using setext headings per the project's Markdown convention
+- [ ] 4.8 Add `PRIVACY.md` to the Flutter `assets:` list in `pubspec.yaml`, beside `LICENSE.md`
 
 ## 5. Generated page and hook
 
@@ -42,13 +44,17 @@
 - [ ] 6.1 Add an empty `web/.nojekyll`
 - [ ] 6.2 Confirm it survives the build: run `flutter build web` and check `build/web/.nojekyll` exists (Flutter's copy loop uses `listSync`, which includes dotfiles)
 
-## 7. App integration — tests first
+## 7. In-app policy screen — tests first
 
-- [ ] 7.1 Add two tests to `test/features/about/presentation/about_screen_test.dart` mirroring the existing "Project home" pair: the Privacy policy tile shows the URL as its subtitle, and tapping it records the hosted URL on the existing `FakeUrlLauncher`
-- [ ] 7.2 Add a test pinning entry order: Privacy policy renders after License terms and before Project home
-- [ ] 7.3 Add `privacyPolicyUrl` to `lib/features/about/about_constants.dart`
-- [ ] 7.4 Add the Privacy policy `ListTile` to `AboutScreen`, mirroring the Project home tile including its silent launch-failure handling
-- [ ] 7.5 Update the `about_constants.dart` comment in `check_coverage_lib.dart`'s `defaultExpectedAbsent` ("Two const declarations" → three) and confirm the file is still declaration-only
+- [ ] 7.1 Write `test/features/about/presentation/privacy_screen_test.dart` mirroring `license_screen_test.dart`: the bundled document renders as formatted text under an "Privacy policy" app bar with back navigation
+- [ ] 7.2 Add a test for the asset-failure path — a load error shows a message rather than crashing
+- [ ] 7.3 Add a test that tapping a link in the rendered document launches it via the existing `FakeUrlLauncher`, and that a launch failure does not crash
+- [ ] 7.4 Add tests to `about_screen_test.dart` mirroring the existing "License terms" pair: tapping "Privacy policy" pushes `PrivacyScreen`, and entry order places it after License terms and before Project home
+- [ ] 7.5 Implement `lib/features/about/presentation/privacy_screen.dart` mirroring `LicenseScreen` (`DefaultAssetBundle.loadString('PRIVACY.md')`, `flutter_markdown_plus`, `onTapLink` → `url_launcher` with silent failure handling)
+- [ ] 7.6 Add `privacyPolicyUrl` to `lib/features/about/about_constants.dart` for use by the README/document and any link-out need
+- [ ] 7.7 Add the Privacy policy `ListTile` to `AboutScreen`, navigating like the License terms tile
+- [ ] 7.8 Update the `about_constants.dart` comment in `check_coverage_lib.dart`'s `defaultExpectedAbsent` ("Two const declarations" → three) and confirm the file is still declaration-only
+- [ ] 7.9 Confirm `privacy_screen.dart` is covered well enough to keep the aggregate above the 90% floor (`dart run tool/check_coverage.dart`)
 
 ## 8. README
 
@@ -59,18 +65,19 @@
 - [ ] 9.1 `flutter test --reporter failures-only` — full suite passes
 - [ ] 9.2 `flutter analyze` — no issues
 - [ ] 9.3 `pre-commit run --all-files` — clean
-- [ ] 9.4 Confirm `unitary-<version>-web.zip` produced by a local `flutter build web` contains `privacy/index.html` and `.nojekyll`
+- [ ] 9.4 Confirm `unitary-<version>-web.zip` produced by a local `flutter build web` contains `privacy/index.html`, `.nojekyll`, and `assets/PRIVACY.md`
+- [ ] 9.5 Verify the in-app screen on a real device: the policy renders, its hosted-URL link opens a browser, and it still renders with the network disabled
 
 ## 10. Post-merge verification (requires deployment from `main`)
 
 - [ ] 10.1 Confirm `https://wisnij.github.io/unitary/privacy/` returns 200 and renders correctly
 - [ ] 10.2 Confirm `https://wisnij.github.io/unitary/privacy` 301-redirects to the canonical trailing-slash form
 - [ ] 10.3 Confirm `https://wisnij.github.io/unitary/.last_build_id` now returns 200 — the observable signal that `.nojekyll` took effect (it returns 404 today)
-- [ ] 10.4 Confirm `https://wisnij.github.io/unitary/assets/LICENSE.md` still returns 200 as `text/markdown`, and that the web app's License terms screen still renders
+- [ ] 10.4 Confirm `https://wisnij.github.io/unitary/assets/LICENSE.md` and `.../assets/PRIVACY.md` both return 200 as `text/markdown`, and that the web app's License terms and Privacy policy screens both render
 - [ ] 10.5 Confirm the deployed web app itself is unaffected (loads and evaluates an expression)
 
 ## 11. Documentation
 
 - [ ] 11.1 Mark Phase 10 task 4 complete in `doc/implementation_plan.md`, recording the hosted URL, the generated-and-committed approach, and the `.nojekyll` finding
-- [ ] 11.2 Add a dated entry to `doc/design_progress.md` covering the generator, the Jekyll findings (front-matter conversion, silent dotfile omission), and the link-out decision
+- [ ] 11.2 Add a dated entry to `doc/design_progress.md` covering the generator, the Jekyll findings (front-matter conversion, silent dotfile omission), and the decision to bundle the policy per-build rather than link out
 - [ ] 11.3 Note in Phase 10 task 7 that the Play Console Data safety declaration must stay consistent with the policy's disclosures, and that the canonical trailing-slash URL is the one to register

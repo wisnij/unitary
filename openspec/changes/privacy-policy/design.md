@@ -52,10 +52,14 @@ GitHub project link, nothing else.  `AndroidManifest.xml` declares only
   later is a configuration change rather than a rewrite.
 - A policy that is *truthful under scrutiny*, including the disclosures that
   a naive "we collect nothing" would gloss over.
+- A copy inside each build that describes that build, readable without a
+  network connection.
 
 **Non-Goals:**
 
-- Rendering the policy inside the app.  See D4.
+- A user-facing privacy *settings* surface.  The policy is a document to
+  read, not a set of toggles; there is nothing to configure because there is
+  nothing collected.
 - Publishing the `doc/` pages.  The generator is built to accommodate them;
   actually converting them is separate work with its own layout decisions.
 - The Play Console Data safety declaration (Phase 10 task 7).  It must agree
@@ -108,8 +112,12 @@ with front matter, Jekyll converts BOTH, and drops each source .md:
 ```
 
 Jekyll cannot distinguish the asset copy from the page copy.  This change
-does not bundle the policy as an asset (D4), so the conflict does not arise
-here — but it is why "let Jekyll do it" does not generalise.
+*does* bundle the policy as an asset (D4), but the conflict still does not
+arise, because `PRIVACY.md` lives at the repository root rather than under
+`web/`: it reaches `build/web` once, as `assets/PRIVACY.md`, while the
+generated page is a separate file at `web/privacy/index.html`.  The conflict
+would arise for any document placed under `web/` *and* declared as an asset,
+which is why "let Jekyll do it" does not generalise — and why D3 matters.
 
 Finally, with no `_config.yml` and no `_layouts/`, Jekyll emits a bare
 fragment: no `<html>`, no `<title>`, no `charset`, and no
@@ -139,21 +147,39 @@ The cost is foreclosing Jekyll processing, which D2 already declines to use.
 The only observable change to the live site is that `.last_build_id` begins
 returning `200`.
 
-### D4: The app links out; it does not bundle the policy text
+### D4: The app bundles the policy and renders it in-app
 
-`LICENSE.md` is a Flutter asset rendered in-app by `LicenseScreen`, and
-symmetry argues for a `PrivacyScreen` beside it.  The symmetry breaks on one
-point: **the AGPL text never changes, and a privacy policy does.**  A policy
-compiled into an APK is frozen at that release, while the hosted copy — the
-one Play cross-checks against the Data safety declaration, and therefore the
-authoritative one — moves on.  Two documents both claiming to be the privacy
-policy, disagreeing, is worse than one that takes a tap to open.
+`PRIVACY.md` is a Flutter asset rendered by a `PrivacyScreen` mirroring the
+existing `LicenseScreen`, rather than a URL the About screen launches.
 
-Phase 10 task 4 asks only to "link it from the README and the in-app About
-screen", so this is also the scoped reading.  The cost is that a user with no
-connectivity cannot read the policy, which is a mild irony for an
-offline-first app and is accepted: an offline user is, by construction, not
-transmitting anything the policy would need to warn them about.
+The argument against bundling is that a policy compiled into an APK freezes
+at that release while the hosted copy moves on, leaving two documents that
+both claim to be the privacy policy and disagree.  That framing is wrong,
+because it treats the frozen copy as stale when it is in fact *accurate*: an
+installed APK's behaviour is fixed at build time, so the policy that
+described that behaviour when the artifact was built is the one that
+correctly describes the software the user is actually running.  A later
+document, written about later code, would be the misleading one to show them.
+The in-app copy and the hosted copy answer different questions — "what does
+this app do?" and "what does the current version of this app do?" — and both
+answers are worth having.
+
+Two properties keep them from being confused for one another.  The document
+SHALL carry an effective date, and it SHALL name the canonical hosted URL.
+`LicenseScreen` already makes Markdown links tappable through `onTapLink`, so
+that URL is a live link in-app and simultaneously appears on the hosted page,
+which means one source document produces both without special-casing either.
+
+This also removes the offline gap: the policy of an app whose selling point
+is that everything works offline is now itself readable offline.  Phase 10
+task 4 asks only to "link it from the README and the in-app About screen", so
+this exceeds the literal scope deliberately.
+
+Note that no double-copy conflict of the kind described in D2 arises.
+`PRIVACY.md` lives at the repository root and reaches `build/web` only as
+`assets/PRIVACY.md`; the generated page is a *different* file at
+`web/privacy/index.html`.  D3 covers the asset copy: `.nojekyll` now protects
+two Markdown assets from Jekyll's front-matter conversion rather than one.
 
 ### D5: The generator is general; the document set is data
 
@@ -247,12 +273,16 @@ one that reads cleaner.
 
 ## Risks / Trade-offs
 
-**The published policy is rolling, not versioned.**  `deploy-web` runs on
-every push to `main`, so an edit goes live before the next release → this is
-the intended consequence of D4 (one authoritative, current document), and it
-is why nothing is bundled into the APK to contradict it.  If a future change
-alters what the app transmits, the policy edit must land *with* that change
-rather than ahead of it.
+**The bundled copy and the hosted copy can differ between releases.**
+`deploy-web` runs on every push to `main`, so the hosted page moves ahead of
+the newest APK → by design (D4): each artifact carries the policy describing
+its own behaviour.  The confusion this could cause is mitigated by the
+document naming its effective date and the canonical hosted URL, so an
+in-app reader can always see which copy they are looking at and reach the
+current one.  The residual obligation is that a change altering what the app
+collects or transmits must land *with* its policy edit, never ahead of it —
+otherwise a build would ship carrying a description of behaviour it does not
+have.
 
 **The hook pattern and the document set can diverge as documents are added**
 → CI runs the hook with `--all-files`, so a missed pattern entry fails lint

@@ -51,10 +51,9 @@
 - [x] 7.3 Add a test that tapping a link in the rendered document launches it via the existing `FakeUrlLauncher`, and that a launch failure does not crash
 - [x] 7.4 Add tests to `about_screen_test.dart` mirroring the existing "License terms" pair: tapping "Privacy policy" pushes `PrivacyScreen`, and entry order places it after License terms and before Project home
 - [x] 7.5 Implement `lib/features/about/presentation/privacy_screen.dart` mirroring `LicenseScreen` (`DefaultAssetBundle.loadString('PRIVACY.md')`, `flutter_markdown_plus`, `onTapLink` → `url_launcher` with silent failure handling)
-- [x] 7.6 Add `privacyPolicyUrl` to `lib/features/about/about_constants.dart` for use by the README/document and any link-out need
-- [x] 7.7 Add the Privacy policy `ListTile` to `AboutScreen`, navigating like the License terms tile
-- [x] 7.8 Update the `about_constants.dart` comment in `check_coverage_lib.dart`'s `defaultExpectedAbsent` ("Two const declarations" → three) and confirm the file is still declaration-only
-- [x] 7.9 Confirm `privacy_screen.dart` is covered well enough to keep the aggregate above the 90% floor (`dart run tool/check_coverage.dart`)
+- [x] 7.6 Add the Privacy policy `ListTile` to `AboutScreen`, navigating like the License terms tile
+- [x] 7.7 Confirm `about_constants.dart` is unchanged, so its `defaultExpectedAbsent` entry in `check_coverage_lib.dart` still describes it correctly
+- [x] 7.8 Confirm `privacy_screen.dart` is covered well enough to keep the aggregate above the 90% floor (`dart run tool/check_coverage.dart`)
 
 ## 8. README
 

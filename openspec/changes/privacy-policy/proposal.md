@@ -84,7 +84,6 @@ repository.
 **Modified files:** `pubspec.yaml` (dev dependency, plus `PRIVACY.md` in the
 Flutter `assets:` list beside `LICENSE.md`),
 `.pre-commit-config.yaml` (new hook), `README.md` (link),
-`lib/features/about/about_constants.dart` (new URL constant),
 `lib/features/about/presentation/about_screen.dart` (new tile),
 `test/features/about/presentation/about_screen_test.dart` (tests mirroring
 the existing "License terms" navigation pair).
@@ -98,11 +97,11 @@ GitHub Pages 301-redirects directory paths lacking a trailing slash, so
 `…/unitary/privacy` is also reachable and is the form used in prose links.
 The canonical trailing-slash form is what gets registered with Play.
 
-**Coverage gate:** `about_constants.dart` gains a third constant and remains
-declaration-only, so it stays on `check_coverage_lib.dart`'s
-`defaultExpectedAbsent` allowlist; that entry's comment ("Two const
-declarations") needs updating.  `privacy_screen.dart` is new code inside the
-90% floor and needs widget tests, mirroring `license_screen_test.dart`.
+**Coverage gate:** `privacy_screen.dart` is new code inside the 90% floor and
+needs widget tests, mirroring `license_screen_test.dart`.  The hosted URL is
+named in `PRIVACY.md` itself rather than in a Dart constant, so
+`about_constants.dart` is untouched and its `defaultExpectedAbsent` entry
+still describes it accurately.
 
 **Not in scope:** the Play Console Data safety declaration (Phase 10 task 7),
 which must stay consistent with this document but is submitted separately.

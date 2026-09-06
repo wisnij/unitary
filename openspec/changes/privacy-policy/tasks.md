@@ -69,11 +69,11 @@
 
 ## 10. Post-merge verification (requires deployment from `main`)
 
-- [ ] 10.1 Confirm `https://wisnij.github.io/unitary/privacy/` returns 200 and renders correctly
-- [ ] 10.2 Confirm `https://wisnij.github.io/unitary/privacy` 301-redirects to the canonical trailing-slash form
-- [ ] 10.3 Confirm `https://wisnij.github.io/unitary/.last_build_id` now returns 200 — the observable signal that `.nojekyll` took effect (it returns 404 today)
-- [ ] 10.4 Confirm `https://wisnij.github.io/unitary/assets/LICENSE.md` and `.../assets/PRIVACY.md` both return 200 as `text/markdown`, and that the web app's License terms and Privacy policy screens both render
-- [ ] 10.5 Confirm the deployed web app itself is unaffected (loads and evaluates an expression)
+- [x] 10.1 Confirm `https://wisnij.github.io/unitary/privacy/` returns 200 and renders correctly
+- [x] 10.2 Confirm `https://wisnij.github.io/unitary/privacy` 301-redirects to the canonical trailing-slash form
+- [x] 10.3 Confirm `https://wisnij.github.io/unitary/.last_build_id` now returns 200 — the observable signal that `.nojekyll` took effect (it returns 404 today)
+- [x] 10.4 Confirm `https://wisnij.github.io/unitary/assets/LICENSE.md` and `.../assets/PRIVACY.md` both return 200 as `text/markdown`, and that the web app's License terms and Privacy policy screens both render
+- [x] 10.5 Confirm the deployed web app itself is unaffected (loads and evaluates an expression)
 
 ## 11. Documentation
 

@@ -813,10 +813,10 @@ engineering tasks, which are small by comparison.
      to the installed app.  The permission claim was verified against the real
      signed release APK rather than assumed: `aapt2 dump badging` on
      `app-release.apk` (`versionCode='9007'`) reports `INTERNET` **and**
-     `dev.wisnij.unitary.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`, so a first
-     draft claiming "a single permission" was wrong and was corrected; the
-     second is a Flutter-declared, app-scoped permission for private broadcast
-     receivers and conveys no access to anything
+     `dev.wisnij.unitary.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`.  The
+     second is Flutter-declared, namespaced to the app, and used for its own
+     private broadcast receivers; it conveys no access to anything about the
+     user, and the policy lists and explains both
    - [x] Host it at a stable URL — <https://wisnij.github.io/unitary/privacy/>,
      generated from `PRIVACY.md` into `web/privacy/index.html`.  Since
      `flutter build web` copies `web/` verbatim into `build/web`, and

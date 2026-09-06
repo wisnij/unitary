@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/about/presentation/license_screen.dart';
+import 'package:unitary/features/about/presentation/privacy_screen.dart';
 import 'package:unitary/features/about/state/build_metadata_provider.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
@@ -186,6 +187,35 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(LicenseScreen), findsOneWidget);
+    });
+
+    testWidgets('Privacy policy tile is present', (tester) async {
+      await pumpAbout(tester);
+
+      expect(find.text('Privacy policy'), findsOneWidget);
+    });
+
+    testWidgets('tapping Privacy policy navigates to PrivacyScreen', (
+      tester,
+    ) async {
+      await pumpAbout(tester);
+
+      await tester.tap(find.text('Privacy policy'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(PrivacyScreen), findsOneWidget);
+    });
+
+    testWidgets('Privacy policy sits between License terms and Project home', (
+      tester,
+    ) async {
+      await pumpAbout(tester);
+
+      double topOf(String label) =>
+          tester.getTopLeft(find.widgetWithText(ListTile, label)).dy;
+
+      expect(topOf('License terms'), lessThan(topOf('Privacy policy')));
+      expect(topOf('Privacy policy'), lessThan(topOf('Project home')));
     });
 
     testWidgets('Project home tile shows URL subtitle', (tester) async {

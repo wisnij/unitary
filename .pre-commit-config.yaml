@@ -21,6 +21,16 @@ repos:
             assets/units/units-supplementary\.json |
             tool/generate_predefined_units
           )
+      - id: generate-web-docs
+        name: Regenerate HTML docs for the web build
+        language: system
+        entry: dart run tool/generate_web_docs.dart
+        pass_filenames: false
+        files: |
+          (?x)^(
+            PRIVACY\.md |
+            tool/generate_web_docs
+          )
       - id: generate-icons
         name: Regenerate application icons
         language: system

@@ -53,7 +53,7 @@ const Set<String> defaultExpectedAbsent = {
   'lib/main.dart',
   // A bare enum declaration.
   'lib/shared/top_level_page.dart',
-  // Two const declarations.
+  // Three const declarations.
   'lib/features/about/about_constants.dart',
   // 224 lines of const worksheet template data.
   'lib/features/worksheet/data/predefined_worksheets.dart',

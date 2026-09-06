@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!--
+  GENERATED FILE - do not edit.
+  Generated from PRIVACY.md by tool/generate_web_docs.dart.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Unitary</title>
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --fg: #1a1c1e;
+  --muted: #43474e;
+  --link: #0b57d0;
+  --rule: #c4c7c5;
+  --code-bg: #f1f3f4;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #060d18;
+    --fg: #e2e2e6;
+    --muted: #c3c6cf;
+    --link: #a8c7fa;
+    --rule: #43474e;
+    --code-bg: #16202e;
+  }
+}
+body {
+  margin: 0;
+  padding: 2rem 1.25rem 3rem;
+  background: var(--bg);
+  color: var(--fg);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+  overflow-wrap: break-word;
+}
+main, footer {
+  max-width: 37.5rem;
+  margin-inline: auto;
+}
+h1, h2, h3 {
+  line-height: 1.25;
+}
+h1 {
+  font-size: 1.75rem;
+  margin: 0 0 0.5em;
+}
+h2 {
+  font-size: 1.25rem;
+  margin-top: 2em;
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--rule);
+}
+h3 {
+  font-size: 1.05rem;
+  margin-top: 1.75em;
+}
+a {
+  color: var(--link);
+}
+ul, ol {
+  padding-left: 1.4em;
+}
+li {
+  margin: 0.35em 0;
+}
+code {
+  background: var(--code-bg);
+  padding: 0.15em 0.35em;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
+pre {
+  background: var(--code-bg);
+  padding: 1em;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+pre code {
+  background: none;
+  padding: 0;
+}
+table {
+  border-collapse: collapse;
+}
+th, td {
+  border: 1px solid var(--rule);
+  padding: 0.4em 0.7em;
+  text-align: left;
+}
+footer {
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.9em;
+}
+footer a {
+  color: var(--muted);
+  text-decoration: none;
+}
+footer a:hover {
+  text-decoration: underline;
+}
+</style>
+</head>
+<body>
+<main>
+<h1 id="privacy-policy">Privacy Policy</h1>
+<p><strong>Effective date:</strong> September 6, 2026</p>
+<p>Unitary does not collect, store, or transmit any personal information about
+you.  There are no accounts, no analytics, no advertising, no trackers, no
+crash reporting, and no third-party SDKs of any kind.  Nothing you type into
+the app is sent anywhere.</p>
+<p>The current version of this policy is published at
+<a href="https://wisnij.github.io/unitary/privacy">https://wisnij.github.io/unitary/privacy</a>.  The copy included in the app
+describes the version of Unitary you have installed; if you are reading it
+inside the app, the published copy may be newer.</p>
+<h2 id="what-unitary-stores">What Unitary stores</h2>
+<p>Unitary saves the following on your device only, so the app can pick up where
+you left off:</p>
+<ul>
+<li>your settings (precision, notation, theme, evaluation mode)</li>
+<li>your worksheet entries and which worksheet was last open</li>
+<li>your history of successful conversions in freeform mode</li>
+<li>the most recently fetched currency exchange rates</li>
+</ul>
+<p>This data never leaves your device.  It is not backed up to any service by
+Unitary, it is not readable by the developer, and it is removed when you
+uninstall the app.</p>
+<h2 id="network-access">Network access</h2>
+<p>Unitary works entirely offline.  It makes exactly one kind of network request:
+fetching currency exchange rates from the <a href="https://frankfurter.dev">Frankfurter
+API</a> at <code>api.frankfurter.dev</code>.  Exchange rates are
+bundled with the app, so even this is optional — currency conversion works
+without a connection.</p>
+<p>This request happens automatically when the stored rates are more than a day
+old, and when you refresh rates manually from Settings or the Currency
+worksheet.  It is unauthenticated and carries no identifier of any kind: no
+account, no device ID, no advertising ID, and none of your conversions,
+expressions, or settings.  It asks only for the current rate table.</p>
+<p>It is still a network request, so it cannot be invisible.  As with any request
+to any server, the operator of the Frankfurter API can see your device's IP
+address and the time of the request.  Unitary has no control over what that
+operator does with that information; see their own site for their practices.</p>
+<h2 id="using-unitary-in-a-web-browser">Using Unitary in a web browser</h2>
+<p>Unitary is also published as a web app at
+<a href="https://wisnij.github.io/unitary/">https://wisnij.github.io/unitary/</a>.  That version behaves identically, and
+stores its data in your browser's local storage rather than in app storage.</p>
+<p>Because it is delivered over the web, it is served by GitHub Pages, and GitHub
+records requests to it as any web host does.  That is a function of hosting,
+not of Unitary, and it does not apply to the Android app you install from an
+APK or from the Play Store.</p>
+<h2 id="permissions">Permissions</h2>
+<p>On Android, Unitary declares two permissions, neither of which grants access
+to anything about you:</p>
+<ul>
+<li><code>INTERNET</code>, used only for the exchange-rate request described above.</li>
+<li><code>dev.wisnij.unitary.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION</code>, declared by
+the Flutter framework so the app can register its own private broadcast
+receivers on newer Android versions.  It is scoped to Unitary itself and
+conveys no access to anything outside the app.</li>
+</ul>
+<p>Unitary requests no access to your location, contacts, camera, microphone,
+files, or any other sensitive data, and it has no ability to do so.</p>
+<h2 id="children">Children</h2>
+<p>Unitary is a unit conversion calculator suitable for all ages.  It collects no
+data from anyone, including children.</p>
+<h2 id="changes-to-this-policy">Changes to this policy</h2>
+<p>If this policy changes, the revised version is published at the address above
+with an updated effective date, and it accompanies the release whose behaviour
+it describes.  Because a copy travels inside each build, the policy shown in a
+given version of the app describes that version.</p>
+<h2 id="contact">Contact</h2>
+<p>Questions about this policy can be sent to Jim Wisniewski at
+<a href="mailto:wisnij@gmail.com">wisnij@gmail.com</a>, or raised as an issue at
+<a href="https://github.com/wisnij/unitary/issues">https://github.com/wisnij/unitary/issues</a>.</p>
+</main>
+<footer><a href="../">← Unitary</a></footer>
+</body>
+</html>

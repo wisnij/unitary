@@ -10,7 +10,8 @@ evaluation and worksheet-based conversion modes.
 
 Unitary is [free software](https://www.gnu.org/philosophy/free-sw.html), both libre and
 gratis.  It does not and will never contain ads, paywalls, subscriptions, in-app
-purchases, tracking, data harvesting, or any other monetization scheme.
+purchases, tracking, data harvesting, or any other monetization scheme.  See the
+[privacy policy](https://wisnij.github.io/unitary/privacy) for specifics.
 
 
 Getting Unitary

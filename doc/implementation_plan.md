@@ -801,17 +801,63 @@ engineering tasks, which are small by comparison.
      exceeds 1, the transition needs no special handling.  See
      `openspec/changes/version-code/`
 
-4. Privacy policy — **BLOCKER**
-   - [ ] Write it.  The content is unusually simple and worth stating
-     plainly: the app collects nothing, transmits no personal data, has no
-     analytics, ads, or trackers, and stores everything locally via
-     SharedPreferences.  Its only network request is an unauthenticated fetch
-     of exchange rates from the Frankfurter API, which carries no user
-     identifier; the declared permissions are `INTERNET` plus Flutter's own
-     `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`
-   - [ ] Host it at a stable URL — the existing `gh-pages` deployment is the
-     natural home, and Play requires a URL rather than in-app text
-   - [ ] Link it from the README and the in-app About screen
+4. Privacy policy — **RESOLVED** (September 6, 2026), pending deployment
+   - [x] Write it — `PRIVACY.md` at the repository root, the single source of
+     truth.  The content is as simple as expected (the app collects nothing,
+     stores everything locally, has no analytics, ads, or trackers), with two
+     disclosures added deliberately so it survives scrutiny rather than
+     reading cleaner: the exchange-rate request necessarily exposes the
+     requester's **IP address** to the Frankfurter operator even though it
+     carries no identifier, and the **web** build is served by GitHub Pages,
+     which logs requests as any host does — a distinction that does not apply
+     to the installed app.  The permission claim was verified against the real
+     signed release APK rather than assumed: `aapt2 dump badging` on
+     `app-release.apk` (`versionCode='9007'`) reports `INTERNET` **and**
+     `dev.wisnij.unitary.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`.  The
+     second is Flutter-declared, namespaced to the app, and used for its own
+     private broadcast receivers; it conveys no access to anything about the
+     user, and the policy lists and explains both
+   - [x] Host it at a stable URL — <https://wisnij.github.io/unitary/privacy/>,
+     generated from `PRIVACY.md` into `web/privacy/index.html`.  Since
+     `flutter build web` copies `web/` verbatim into `build/web`, and
+     `deploy-web` force-pushes exactly that tree to `gh-pages`, the page
+     reaches both the deployment and the release web archive with **no CI
+     change at all**.  GitHub Pages 301-redirects the no-trailing-slash form,
+     so `…/unitary/privacy` is what prose links use while the canonical
+     trailing-slash form is what gets registered with Play
+   - [x] Link it from the README and the in-app About screen — and, going
+     beyond the original scope, **bundle it**: `PRIVACY.md` is a Flutter asset
+     rendered by `PrivacyScreen` (mirroring `LicenseScreen`), so each build
+     carries the policy describing *that build's* behaviour and the policy of
+     an offline-first app is itself readable offline.  The document names its
+     effective date and the canonical hosted URL, so a bundled copy
+     self-identifies and links to the current one
+   - [x] Generalised generator — `tool/generate_web_docs.dart` +
+     `_lib.dart` (+ 33 tests) is deliberately not privacy-specific: the
+     document set is a `const` list, titles come from each document's first
+     H1, the back-link to the app is derived from output depth, styling is
+     inlined so a page works from the release archive, and a link to a `.md`
+     file outside the document set is a hard failure — the seam that makes
+     publishing `doc/` later a data change.  Output is committed and kept in
+     step by a `generate-web-docs` pre-commit hook; the lint job already runs
+     the hooks, so drift fails the build with no new CI step
+   - [x] `web/.nojekyll` — added as a **fix**, not a precaution.  GitHub Pages
+     runs a legacy Jekyll build on the deploy branch (`build_type: "legacy"`),
+     and it was already silently deleting a deployed file: `.last_build_id` is
+     committed to `gh-pages` yet returns **404** on the live site while
+     `version.json` and `manifest.json` beside it return 200, because Jekyll
+     excludes `.`- and `_`-prefixed paths.  It also retires a live trap on
+     `assets/LICENSE.md` — the web License screen works only because that file
+     happens to carry no YAML front matter, and nothing in the test suite
+     would catch someone adding one.  With `PRIVACY.md` now a second Markdown
+     asset, that protection covers two files
+   - [ ] **Remaining, post-merge:** confirm the page is live at the canonical
+     URL, that the no-slash form redirects, that `.last_build_id` now returns
+     200 (the observable signal `.nojekyll` took effect), that both Markdown
+     assets still serve as `text/markdown`, and that the deployed app is
+     unaffected.  Also an on-device pass of the in-app screen (renders, link
+     opens a browser, still renders with the network disabled)
+   - **Design artifacts:** `openspec/changes/privacy-policy/`
 
 5. APK size — **deferred, decide before cutting 1.0.0**
    - [ ] Decide what the GitHub release APK should contain, and either bring it
@@ -907,7 +953,12 @@ engineering tasks, which are small by comparison.
      collected, none shared, none transmitted off-device except the
      unauthenticated exchange-rate fetch, which carries no user identifier.
      Keep it consistent with the privacy policy from task 4, since the two
-     are cross-checked
+     are cross-checked — specifically with the two disclosures that policy
+     makes deliberately: the exchange-rate request exposes the requester's IP
+     address to the Frankfurter operator, and the web build is served by a
+     host that logs requests.  Register the **canonical trailing-slash URL**
+     <https://wisnij.github.io/unitary/privacy/> rather than the redirecting
+     form, so a reviewer never traverses a 301
    - [ ] Complete the content rating questionnaire (expected: rated for
      everyone) and the remaining declarations Play requires at submission —
      ads (none), target audience, and news/government/financial category

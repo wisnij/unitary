@@ -8,6 +8,7 @@ import '../../settings/state/package_info_provider.dart';
 import '../about_constants.dart';
 import '../state/build_metadata_provider.dart';
 import 'license_screen.dart';
+import 'privacy_screen.dart';
 
 /// About screen with version, build, license, and project link.
 class AboutScreen extends ConsumerWidget {
@@ -74,6 +75,19 @@ class AboutScreen extends ConsumerWidget {
                   context,
                   MaterialPageRoute<void>(
                     builder: (_) => const LicenseScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: const Text('Privacy policy'),
+              subtitle: const Text('What Unitary does with your data'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PrivacyScreen(),
                   ),
                 );
               },

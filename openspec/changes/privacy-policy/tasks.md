@@ -66,7 +66,7 @@
 - [x] 9.2 `flutter analyze` — no issues
 - [x] 9.3 `pre-commit run --all-files` — clean
 - [x] 9.4 Confirm `unitary-<version>-web.zip` produced by a local `flutter build web` contains `privacy/index.html`, `.nojekyll`, and `assets/PRIVACY.md`
-- [ ] 9.5 Verify the in-app screen on a real device: the policy renders, its hosted-URL link opens a browser, and it still renders with the network disabled
+- [x] 9.5 Verify the in-app screen on a real device: the policy renders, its hosted-URL link opens a browser, and it still renders with the network disabled
 
 ## 10. Post-merge verification (requires deployment from `main`)
 

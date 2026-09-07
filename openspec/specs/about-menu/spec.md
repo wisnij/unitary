@@ -5,10 +5,7 @@
 Specifies the About screen and its entry point in the sidebar drawer.  The
 About screen provides users with app-level information: version, optional build
 metadata, license terms, and a link to the project home page.
-
-
 ## Requirements
-
 ### Requirement: About entry in sidebar drawer footer
 The sidebar drawer SHALL contain an "About" entry in a footer section alongside the "Settings" entry.  The footer section (divider + Settings + About) SHALL be anchored to the bottom of the drawer whenever the drawer is taller than the navigation content above it; when navigation content would overflow, the footer scrolls with the rest of the drawer content.
 
@@ -24,14 +21,16 @@ The sidebar drawer SHALL contain an "About" entry in a footer section alongside 
 - **WHEN** the user taps "About" in the drawer
 - **THEN** the drawer closes and the About screen is pushed onto the navigation stack
 
-
 ### Requirement: About screen
-The app SHALL provide a dedicated About screen (analogous to the Settings screen) containing four entries in order: Version, Build (conditional), License terms, Project home.
+The app SHALL provide a dedicated About screen (analogous to the Settings screen) containing five entries in order: Version, Build (conditional), License terms, Privacy policy, Project home.  The two document links (License terms, Privacy policy) SHALL be adjacent, ahead of Project home.
 
 #### Scenario: About screen renders with app bar
 - **WHEN** the About screen is displayed
 - **THEN** an app bar titled "About" is shown with a back navigation control
 
+#### Scenario: Privacy policy appears between License terms and Project home
+- **WHEN** the About screen is displayed
+- **THEN** the Privacy policy entry is rendered after License terms and before Project home
 
 ### Requirement: Version entry displays app version
 The About screen SHALL display the current app version number (e.g. "0.5.9") as a non-interactive informational tile.  The version SHALL be read at runtime using `package_info_plus`.  Long-pressing the tile SHALL copy the version string to the clipboard and show a brief confirmation.
@@ -48,7 +47,6 @@ The About screen SHALL display the current app version number (e.g. "0.5.9") as 
 - **WHEN** the user long-presses the Version tile
 - **THEN** the version string is copied to the clipboard and a confirmation snackbar is shown
 
-
 ### Requirement: Build entry displays build metadata
 The About screen SHALL display build metadata (e.g. "20260315-123456.abc1234") as a non-interactive informational tile.  The metadata SHALL be read from the `BUILD_METADATA` compile-time constant.  The tile SHALL be hidden entirely when no build metadata is set (i.e. when `BUILD_METADATA` is absent or empty).  Long-pressing the tile SHALL copy the metadata string to the clipboard and show a brief confirmation.
 
@@ -63,7 +61,6 @@ The About screen SHALL display build metadata (e.g. "20260315-123456.abc1234") a
 #### Scenario: Long-pressing Build tile copies value
 - **WHEN** the user long-presses the Build tile
 - **THEN** the build metadata string is copied to the clipboard and a confirmation snackbar is shown
-
 
 ### Requirement: License terms entry opens formatted license text
 The About screen SHALL contain a tappable "License terms" entry with subtitle "GNU AGPL 3.0".  When tapped, the app SHALL navigate to a full-screen view that renders the GNU Affero General Public License version 3 as formatted Markdown, bundled as an asset from `LICENSE.md`.  Any hyperlinks in the license text SHALL be tappable and open in the system browser.
@@ -84,7 +81,6 @@ The About screen SHALL contain a tappable "License terms" entry with subtitle "G
 - **WHEN** the user is viewing the license screen
 - **THEN** the user can navigate back to the About screen
 
-
 ### Requirement: Project home entry opens GitHub URL
 The About screen SHALL contain a tappable "Project home" entry with the project GitHub URL as its subtitle.  When tapped, the app SHALL open the URL in the system browser using `url_launcher`.
 
@@ -99,3 +95,15 @@ The About screen SHALL contain a tappable "Project home" entry with the project 
 #### Scenario: URL launch failure is handled gracefully
 - **WHEN** the system cannot launch the URL (e.g. no browser available)
 - **THEN** the app does not crash
+
+### Requirement: Privacy policy entry opens the bundled policy
+The About screen SHALL contain a tappable "Privacy policy" entry that pushes a screen rendering the bundled `PRIVACY.md`, matching the navigation behaviour of the License terms entry rather than the URL-launching behaviour of Project home.  The policy shown SHALL be the copy bundled with the running build, so it describes that build's behaviour and is available without a network connection.
+
+#### Scenario: Tapping Privacy policy opens the policy screen
+- **WHEN** the user taps "Privacy policy"
+- **THEN** the privacy policy screen is pushed onto the navigation stack
+
+#### Scenario: Policy screen renders the bundled document
+- **WHEN** the privacy policy screen is displayed
+- **THEN** the bundled policy is shown as formatted text under an app bar with back navigation
+

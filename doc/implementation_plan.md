@@ -851,7 +851,7 @@ engineering tasks, which are small by comparison.
      happens to carry no YAML front matter, and nothing in the test suite
      would catch someone adding one.  With `PRIVACY.md` now a second Markdown
      asset, that protection covers two files
-   - [ ] **Remaining, post-merge:** confirm the page is live at the canonical
+   - [x] **Remaining, post-merge:** confirm the page is live at the canonical
      URL, that the no-slash form redirects, that `.last_build_id` now returns
      200 (the observable signal `.nojekyll` took effect), that both Markdown
      assets still serve as `text/markdown`, and that the deployed app is

@@ -73,6 +73,25 @@ android {
     }
 }
 
+// The release APK carries native code for arm64-v8a and armeabi-v7a only.  No
+// phone or tablet that can install Unitary needs x86_64, and x86 Chromebooks
+// translate 32-bit ARM, so the x86_64 slice would only cost every device ~19 MB
+// of storage (native libraries stay inside the installed APK).
+//
+// This is a packaging exclusion rather than `ndk.abiFilters` or
+// `--target-platform` alone because the Flutter Gradle plugin resets the ABI
+// filters to all of its default ABIs.  Dependency libraries (androidx
+// DataStore's, today) would then still ship in a partial lib/x86_64/, and an
+// x86_64 device would select that ABI and crash for lack of libflutter.so
+// instead of running the ARM code.  Scoped to the release build type so debug
+// and profile builds keep x86_64 for the emulator the integration tests run
+// on.  tool/verify_apk_abis.dart checks the result in CI.
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        variant.packaging.jniLibs.excludes.add("**/x86_64/**")
+    }
+}
+
 flutter {
     source = "../.."
 }

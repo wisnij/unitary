@@ -86,9 +86,13 @@ kept on the device:
 | Option | Assets | Stored on arm64 device | Stored on 32-bit device | Installs on 32-bit-only devices | Version-code impact |
 |---|---|---|---|---|---|
 | Status quo (3 ABIs) | 1 | 53.8 MB | 53.8 MB | Yes | None |
-| **Both ARM ABIs (chosen)** | **1** | **~34.5 MB** | **~34.5 MB** | **Yes** | **None** |
+| **Both ARM ABIs (chosen)** | **1** | **35.1 MB** | **35.1 MB** | **Yes** | **None** |
 | arm64 only | 1 | ~18.9 MB | n/a | No | None |
 | `--split-per-abi`, ARM only | 2 | ~18.9 MB | ~16.8 MB | Yes, with the right file | Offset added |
+
+The chosen figure is measured: a local release build is 36,785,016 bytes
+(35.1 MB), against 57,146,011 bytes (54.5 MB) for the same commit with all
+three ABIs.  The other rows are estimates from the v0.9.8 slice sizes.
 
 - **arm64 only** was rejected because it leaves out current Android Go phones
   and tablets running 32-bit-only userspace, plus x86 Chromebooks that translate
@@ -132,8 +136,9 @@ documentation doesn't say whether `jniLibs` patterns are matched against the
 full path inside the APK or a path relative to `lib/`, and its only example has
 the form `**/exclude.so`.  A leading `**/` matches either way.  `jniLibs`
 patterns only apply to native libraries, so the broader pattern can't catch
-anything else.  Task 2.2 confirms the exclusion takes effect, and D4's check
-guards it from then on.
+anything else.  A local release build confirms the pattern works: it removes
+DataStore's x86_64 library along with Flutter's.  D4's check guards it from
+then on.
 
 Alternatives considered:
 
@@ -214,10 +219,6 @@ implementation confirms the built APK still reports the pubspec code.
 - **[x86_64 devices without ARM translation can no longer install]** →
   None is known that meets `minSdk 24`.  x86 Chromebooks translate 32-bit ARM,
   which the APK includes.  The web app covers anyone else.
-- **[The ~34.5 MB figure is an estimate]** It is computed from the v0.9.8 slice
-  sizes, not measured.  → Measure the built APK during implementation and
-  record the real figure.  The 50 MB criterion has about 15 MB of margin, so the
-  estimate can't flip the verdict.
 - **[AGP API drift]** `androidComponents.onVariants` and
   `variant.packaging.jniLibs` are AGP 8 variant APIs.  → If they're renamed, the
   Gradle build fails with an error.  If the exclusion stops taking effect for

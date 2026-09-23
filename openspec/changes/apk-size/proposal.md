@@ -5,7 +5,8 @@ v0.9.8), missing the MVP criterion of under 50 MB.  `flutter build apk` produces
 a fat APK carrying native code for three ABIs, and because native libraries are
 stored uncompressed with `extractNativeLibs=false`, Android keeps the whole APK
 on disk and never discards the slices a device cannot run.  The x86_64 slice is
-the largest (19.1 MB) and serves no phone or tablet that can install Unitary.
+the largest (19.1 MB), and no phone or tablet that can install Unitary needs it:
+the one known x86_64 phone at `minSdk 24` also runs ARM code.
 The GitHub APK is meant as a way to install on phones and tablets without Play,
 so this is worth settling before 1.0.0 is cut.
 
@@ -25,8 +26,9 @@ so this is worth settling before 1.0.0 is cut.
 - Both APK build jobs pass `--target-platform android-arm,android-arm64`, so the
   unused x86_64 engine is not compiled and the non-tag rehearsal job builds the
   same configuration the tag job publishes.
-- Both APK build jobs verify the built APK's native library layout and fail
-  unless it contains exactly the two ARM ABIs, each with `libflutter.so`.
+- Both APK build jobs verify the built APK's native library layout with a new,
+  tested tool, `tool/verify_apk_abis.dart`, and fail unless it contains exactly
+  the two ARM ABIs, each with `libflutter.so` and `libapp.so`.
 - Debug and profile builds are unchanged: they keep every ABI, so the
   integration suite on the x86_64 emulator and local development are unaffected.
 - The version code is unchanged.  This is a fat APK, not a per-ABI split, so
@@ -54,8 +56,12 @@ so this is worth settling before 1.0.0 is cut.
 ## Impact
 
 - **Build configuration**: `android/app/build.gradle.kts` gains a release-only
-  JNI packaging exclusion for `lib/x86_64/**`.
-- **CI**: `.github/workflows/ci.yml` — `build-android-apk-test` and
+  JNI packaging exclusion for x86_64 native libraries.
+- **Tooling**: new `tool/verify_apk_abis.dart` and
+  `tool/verify_apk_abis_lib.dart`, with tests in
+  `test/tool/verify_apk_abis_lib_test.dart`.  No new dependencies: the
+  executable lists the APK's entries with `unzip -Z1`.
+- **CI**: in `.github/workflows/ci.yml`, `build-android-apk-test` and
   `build-android-apk-release` both gain `--target-platform
   android-arm,android-arm64` and an ABI layout verification step.
   `build-web`, `deploy-web`, and the integration tests in

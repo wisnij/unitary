@@ -87,7 +87,7 @@ kept on the device:
 |---|---|---|---|---|---|
 | Status quo (3 ABIs) | 1 | 53.8 MB | 53.8 MB | Yes | None |
 | **Both ARM ABIs (chosen)** | **1** | **~34.5 MB** | **~34.5 MB** | **Yes** | **None** |
-| arm64 only | 1 | ~18.9 MB | — | No | None |
+| arm64 only | 1 | ~18.9 MB | n/a | No | None |
 | `--split-per-abi`, ARM only | 2 | ~18.9 MB | ~16.8 MB | Yes, with the right file | Offset added |
 
 - **arm64 only** was rejected because it leaves out current Android Go phones
@@ -116,7 +116,7 @@ Add a release-only exclusion through AGP's variant API in
 ```kotlin
 androidComponents {
     onVariants(selector().withBuildType("release")) { variant ->
-        variant.packaging.jniLibs.excludes.add("lib/x86_64/**")
+        variant.packaging.jniLibs.excludes.add("**/x86_64/**")
     }
 }
 ```
@@ -126,6 +126,14 @@ exclusion.  The exclusion also covers every library under `lib/x86_64/`, whether
 from Flutter or from a dependency.  Scoping it to `release` leaves `debug` and
 `profile` alone, so the emulator integration suite and on-device profiling keep
 working.
+
+The pattern is written `**/x86_64/**` rather than `lib/x86_64/**`.  AGP's
+documentation doesn't say whether `jniLibs` patterns are matched against the
+full path inside the APK or a path relative to `lib/`, and its only example has
+the form `**/exclude.so`.  A leading `**/` matches either way.  `jniLibs`
+patterns only apply to native libraries, so the broader pattern can't catch
+anything else.  Task 2.2 confirms the exclusion takes effect, and D4's check
+guards it from then on.
 
 Alternatives considered:
 
@@ -153,31 +161,42 @@ x86_64 engine and `libapp.so` that would be discarded.  It goes on both jobs so
 publishes, and a layout problem shows up on a pull request instead of at a tag.
 Without the flag the result would be the same, just slower to build.
 
-### D4: A shared script verifies the ABI layout in both jobs
+### D4: A tested Dart tool verifies the ABI layout in both jobs
 
-Add `tool/verify_apk_abis.sh <apk>`, called by both APK jobs right after the
-build.  In the release job it runs before the signing-material cleanup and the
-upload.  It lists `lib/` entries in the APK and fails unless:
+Add `tool/verify_apk_abis.dart`, called by both APK jobs right after the build.
+In the release job it runs next to the signing-certificate check, before the
+signing-material cleanup and the upload.  It fails unless:
 
-- the set of ABI directories is exactly `arm64-v8a` and `armeabi-v7a`, and
+- the set of ABI directories under `lib/` is exactly `arm64-v8a` and
+  `armeabi-v7a`, and
 - each of them contains `libflutter.so` and `libapp.so`.
 
 The check pins the full expected set instead of just "no `x86_64`", so it also
 catches a partial directory for an ABI nobody has thought about.  Examples:
 32-bit `x86` libraries from a future dependency, or a Flutter upgrade that
-changes its filtering.  It is a script, not inline workflow YAML, because two
-jobs share it and it can be run on a local build.  A shell script matches
-`tool/run_integration_tests.sh` and needs no Dart toolchain.  `unzip` is
-available on GitHub-hosted Ubuntu runners.
+changes its filtering.
+
+It follows the project's tool convention.  The logic lives in
+`tool/verify_apk_abis_lib.dart` as a pure function over the APK's entry names,
+returning the problems it found, and is unit-tested in
+`test/tool/verify_apk_abis_lib_test.dart`.  The executable only gets the entry
+list, prints the result, and sets the exit code.  It gets the list by running
+`unzip -Z1 <apk>`, which is available on GitHub-hosted Ubuntu runners, so no
+dependency is added.  Both APK jobs already set up Flutter, so `dart run` is
+available there.
 
 Alternatives considered:
 
+- **A shell script.**  Rejected.  The set comparison and partial-directory
+  detection are real logic, and a shell script could only be checked by hand
+  once.  The project's `.sh` tools only orchestrate other commands; every tool
+  with logic is a Dart `_lib` with tests.
+- **Reading the APK with `package:archive`.**  Rejected.  It would add a
+  dependency to do what `unzip -Z1` already does.
+- **Inline workflow YAML.**  Rejected.  Two jobs share the check, and it should
+  be runnable against a local build.
 - **Only inspect the tag build.**  Rejected.  A problem would surface only when
   cutting a release.
-- **A Dart tool with a `_lib` and tests**, following the `check_coverage`
-  convention.  Rejected as out of proportion for a set comparison over
-  `unzip -Z1` output.  The script's failure path is exercised once by hand
-  (see tasks).
 
 ### D5: The version code is left alone
 

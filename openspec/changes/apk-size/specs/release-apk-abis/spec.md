@@ -57,6 +57,11 @@ the x86_64 emulator and local development on x86_64 emulators continue to work.
 - **WHEN** a debug APK is built for an x86_64 emulator
 - **THEN** it contains `lib/x86_64/libflutter.so`
 
+#### Scenario: A profile build
+
+- **WHEN** a profile APK is built with `flutter build apk --profile`
+- **THEN** it contains `lib/x86_64/libflutter.so`
+
 #### Scenario: The integration suite still runs
 
 - **WHEN** the integration suite runs on the x86_64 emulator in CI
@@ -77,8 +82,8 @@ per-ABI offset applied.
 
 Every CI job that builds a release APK SHALL verify the built APK's native
 library layout against the two requirements above.  The job SHALL fail when
-verification fails, and in a job that publishes an artifact, it SHALL fail
-before the artifact is uploaded.  Verification SHALL compare the full set of ABI
+verification fails, and SHALL do so before it uploads its artifact.  This
+applies to the rehearsal job as well as the tag job, since both upload one.  Verification SHALL compare the full set of ABI
 directories against the expected set, not only check that `x86_64` is absent,
 so that a partial directory for any other ABI is also caught.
 

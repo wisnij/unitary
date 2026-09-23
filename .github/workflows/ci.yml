@@ -106,6 +106,9 @@ jobs:
           flutter build apk
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
+          --target-platform android-arm,android-arm64
+      - name: Verify native library ABIs
+        run: dart run tool/verify_apk_abis.dart build/app/outputs/flutter-apk/app-release.apk
       - name: Compute asset name
         id: asset
         run: echo "name=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
@@ -159,6 +162,7 @@ jobs:
           flutter build apk
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
+          --target-platform android-arm,android-arm64
       - name: Verify signing certificate
         env:
           EXPECTED: ${{ vars.ANDROID_APP_CERT_SHA256 }}
@@ -181,6 +185,8 @@ jobs:
             echo "::error::APK is not signed with the expected app signing key"
             exit 1
           fi
+      - name: Verify native library ABIs
+        run: dart run tool/verify_apk_abis.dart build/app/outputs/flutter-apk/app-release.apk
       - name: Remove signing material
         if: always()
         run: rm -f android/key.properties "${RUNNER_TEMP}/unitary-app.p12"

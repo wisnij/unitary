@@ -120,6 +120,6 @@ effects must not be committed.
 
 ## 6. After merge
 
-- [ ] 6.1 On the next `v*` release, confirm the attached APK passes
+- [x] 6.1 On the next `v*` release, confirm the attached APK passes
   `dart run tool/verify_apk_abis.dart`, its size matches 2.2, it is still the only APK
   asset, and `apksigner` still reports the app signing certificate

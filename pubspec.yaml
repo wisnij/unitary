@@ -1,7 +1,7 @@
 name: unitary
 description: "Unit converter and dimensional analysis calculator"
 publish_to: 'none'
-version: 0.9.8+9008
+version: 0.9.9+9009
 
 environment:
   sdk: ^3.10.8

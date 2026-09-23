@@ -86,13 +86,14 @@ kept on the device:
 | Option | Assets | Stored on arm64 device | Stored on 32-bit device | Installs on 32-bit-only devices | Version-code impact |
 |---|---|---|---|---|---|
 | Status quo (3 ABIs) | 1 | 53.8 MB | 53.8 MB | Yes | None |
-| **Both ARM ABIs (chosen)** | **1** | **35.1 MB** | **35.1 MB** | **Yes** | **None** |
+| **Both ARM ABIs (chosen)** | **1** | **34.7 MB** | **34.7 MB** | **Yes** | **None** |
 | arm64 only | 1 | ~18.9 MB | n/a | No | None |
 | `--split-per-abi`, ARM only | 2 | ~18.9 MB | ~16.8 MB | Yes, with the right file | Offset added |
 
-The chosen figure is measured: a local release build is 36,785,016 bytes
-(35.1 MB), against 57,146,011 bytes (54.5 MB) for the same commit with all
-three ABIs.  The other rows are estimates from the v0.9.8 slice sizes.
+The chosen figure is the published v0.9.9 APK, 36,333,428 bytes (34.7 MB).  A
+local release build of the same configuration was 36,785,016 bytes (35.1 MB),
+against 57,146,011 bytes (54.5 MB) for the same commit with all three ABIs.  The
+other rows are estimates from the v0.9.8 slice sizes.
 
 - **arm64 only** was rejected because it leaves out current Android Go phones
   and tablets running 32-bit-only userspace, plus x86 Chromebooks that translate

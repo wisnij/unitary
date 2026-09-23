@@ -903,7 +903,7 @@ engineering tasks, which are small by comparison.
      Android selecting `primaryCpuAbi=arm64-v8a`.  Not every x86_64 image
      translates: the API 33 `google_apis` image does not.  The 32-bit
      translation path that some Chromebooks use was not tested locally
-   - **Design artifacts:** `openspec/changes/apk-size/`
+   - **Design artifacts:** `openspec/changes/archive/2026-09-23-apk-size/`
 
 6. Cut 1.0.0
    - [ ] Decide what 1.0.0 means here and whether any deferred item should

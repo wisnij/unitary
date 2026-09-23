@@ -89,7 +89,7 @@ effects must not be committed.
   signing-material cleanup and the upload
 - [x] 3.3 Update the comments above the two jobs if they describe what the APK
   contains, so they stay accurate
-- [ ] 3.4 On the pull request, confirm `build-android-apk-test` passes, its
+- [x] 3.4 On the pull request, confirm `build-android-apk-test` passes, its
   verification output lists exactly the two ARM ABIs, and the integration
   tests in the `test` job pass unchanged
 

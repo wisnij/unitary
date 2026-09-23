@@ -14,7 +14,7 @@ so this is worth settling before 1.0.0 is cut.
 
 - The release APK carries native code for exactly two ABIs, `armeabi-v7a` and
   `arm64-v8a`, and no `x86_64`.  It remains a single asset under the same name,
-  measured at 35.1 MB (36,785,016 bytes) on a local build.
+  published in v0.9.9 at 34.7 MB (36,333,428 bytes).
 - x86_64 is removed at packaging time for the release variant, so that
   libraries contributed by dependencies are excluded along with Flutter's own.
   Passing `--target-platform` alone is insufficient: Flutter resets the ABI
@@ -66,7 +66,7 @@ so this is worth settling before 1.0.0 is cut.
   android-arm,android-arm64` and an ABI layout verification step.
   `build-web`, `deploy-web`, and the integration tests in
   `.github/actions/test` are untouched.
-- **Distribution**: the GitHub APK drops from 53.8 MB to 35.1 MB, for
+- **Distribution**: the GitHub APK drops from 53.8 MB to 34.7 MB, for
   download and for storage on the device.  The asset name and single-asset
   release layout are unchanged.
 - **Documentation**: `doc/implementation_plan.md` (Phase 10 task 5 and the MVP

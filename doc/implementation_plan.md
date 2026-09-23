@@ -863,9 +863,10 @@ engineering tasks, which are small by comparison.
    - [x] Decide what the GitHub release APK should contain, and either bring it
      under the 50 MB MVP criterion or revise the criterion deliberately.  It now
      carries native code for `arm64-v8a` and `armeabi-v7a` only, with no
-     `x86_64`.  A local release build is **36,785,016 bytes (35.1 MB)**, against
-     57,146,011 bytes (54.5 MB) for the same commit with all three ABIs, so the
-     criterion is met as written.  Native libraries stay inside the installed
+     `x86_64`.  The published v0.9.9 APK is **36,333,428 bytes (34.7 MB)**, so
+     the criterion is met as written.  Locally, the same configuration measured
+     36,785,016 bytes (35.1 MB), against 57,146,011 bytes (54.5 MB) for the same
+     commit with all three ABIs.  Native libraries stay inside the installed
      APK (`extractNativeLibs=false`), so the saving is storage on every device,
      not only download size.  It is still one asset under the same name
    - **Why these two ABIs** (researched September 13, 2026): the last x86 phones
@@ -902,7 +903,7 @@ engineering tasks, which are small by comparison.
      Android selecting `primaryCpuAbi=arm64-v8a`.  Not every x86_64 image
      translates: the API 33 `google_apis` image does not.  The 32-bit
      translation path that some Chromebooks use was not tested locally
-   - **Design artifacts:** `openspec/changes/apk-size/`
+   - **Design artifacts:** `openspec/changes/archive/2026-09-23-apk-size/`
 
 6. Cut 1.0.0
    - [ ] Decide what 1.0.0 means here and whether any deferred item should
@@ -1200,8 +1201,8 @@ The MVP will be considered successful when it meets these criteria:
 - ✓ Runs smoothly on mid-range Android devices (60 FPS UI)
 - ✓ Parser handles malformed input gracefully with helpful error messages
 - ✓ Unit test coverage >80% for parser and core domain logic
-- ✓ App size <50MB: the release APK is 35.1 MB, carrying native code for
-  the two ARM ABIs only.  See Phase 10 task 5
+- ✓ App size <50MB: the release APK is 34.7 MB as published in v0.9.9,
+  carrying native code for the two ARM ABIs only.  See Phase 10 task 5
 
 **Documentation Requirements:**
 

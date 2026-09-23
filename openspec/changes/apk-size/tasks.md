@@ -67,9 +67,15 @@ effects must not be committed.
 - [x] 2.6 Run the integration suite locally on the x86_64 emulator
   (`tool/run_integration_tests.sh`) and confirm it passes, showing debug builds
   are unaffected
-- [ ] 2.7 Install the 2.2 APK on the x86_64 emulator (an Android 11+ image, which
-  translates ARM) with `adb install`, launch it, and confirm it reaches the
-  first screen.  Uninstall afterwards so later emulator runs start clean
+- [x] 2.7 Install the 2.2 APK on an x86_64 emulator image that translates ARM,
+  launch it, and confirm it reaches the first screen.  Not every x86_64 image
+  translates: the API 33 `google_apis` image lists only `x86_64`.  The API 35
+  `google_apis` x86_64 image does (`ro.dalvik.vm.native.bridge` is
+  `libndk_translation.so`), for 64-bit ARM only (ABI list `x86_64,arm64-v8a`).
+  Create an AVD from it, `adb install` the APK, and confirm Android chose
+  `primaryCpuAbi=arm64-v8a`, `libflutter.so` loads from `lib/arm64-v8a/`, and
+  the app stays running on the Freeform screen.  Uninstall afterwards so later
+  emulator runs start clean
 
 ## 3. CI
 
@@ -99,12 +105,12 @@ effects must not be committed.
 
 ## 5. Documentation
 
-- [ ] 5.1 Update `doc/implementation_plan.md` Phase 10 task 5: check it off and
+- [x] 5.1 Update `doc/implementation_plan.md` Phase 10 task 5: check it off and
   record the decision (one APK, both ARM ABIs, no x86_64), the options rejected
   and why, the partial-directory problem, and the measured APK size from 2.2
-- [ ] 5.2 Update the MVP success criterion line "App size <50MB" in
+- [x] 5.2 Update the MVP success criterion line "App size <50MB" in
   `doc/implementation_plan.md` to met, citing the measured size
-- [ ] 5.3 Add a dated entry to `doc/design_progress.md` covering the decision,
+- [x] 5.3 Add a dated entry to `doc/design_progress.md` covering the decision,
   the device research (CDD §7.6.1, Chromebook translation, the last x86 phones),
   Flutter's ABI filter reset and the DataStore library, and the measured size
 - [x] 5.4 Replace the estimated size in `proposal.md` (What Changes and Impact)

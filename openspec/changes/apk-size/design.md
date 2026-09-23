@@ -219,6 +219,13 @@ implementation confirms the built APK still reports the pubspec code.
 - **[x86_64 devices without ARM translation can no longer install]** →
   None is known that meets `minSdk 24`.  x86 Chromebooks translate 32-bit ARM,
   which the APK includes.  The web app covers anyone else.
+- **[The 32-bit translation path is untested locally]** The API 35 emulator
+  image that verified the fallback translates 64-bit ARM only, so it showed an
+  x86_64 device falling back to `arm64-v8a`, not to `armeabi-v7a`.  x86
+  Chromebooks without 64-bit translation depend on the second.  → The package
+  manager's fallback works the same way for either ABI, and ChromeOS documents
+  32-bit translation on every Android-capable Chromebook.  Accepted without
+  further testing.
 - **[AGP API drift]** `androidComponents.onVariants` and
   `variant.packaging.jniLibs` are AGP 8 variant APIs.  → If they're renamed, the
   Gradle build fails with an error.  If the exclusion stops taking effect for

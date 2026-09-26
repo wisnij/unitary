@@ -547,9 +547,10 @@ String _canonicalPath(String path) {
 
 /// Throws unless [outputDir] is safe to replace wholesale.
 ///
-/// Inside the repository, only a directory strictly within `build/` is
-/// accepted, so a stray argument cannot delete sources or the Flutter build.
-/// Outside it, anything is accepted except an ancestor of the repository.
+/// Inside the repository, only [defaultOutputDir] or a directory within it is
+/// accepted, so a stray argument cannot delete sources or another build's
+/// output, such as Flutter's `build/web`.  Outside the repository, anything is
+/// accepted except an ancestor of the repository.
 void _checkOutputDir(String outputDir, String root) {
   final out = _canonicalPath(outputDir);
   final repo = _canonicalPath(root);
@@ -558,10 +559,11 @@ void _checkOutputDir(String outputDir, String root) {
       'Output directory "$outputDir" contains the repository',
     );
   }
-  if (out.startsWith('$repo/') && !out.startsWith('$repo/build/')) {
+  final site = '$repo/$defaultOutputDir';
+  if (out.startsWith('$repo/') && out != site && !out.startsWith('$site/')) {
     throw WebDocException(
       'Output directory "$outputDir" is inside the repository but not '
-      'within build/',
+      'within $defaultOutputDir',
     );
   }
 }

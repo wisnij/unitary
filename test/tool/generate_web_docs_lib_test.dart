@@ -625,7 +625,16 @@ void main() {
     });
 
     group('refuses an output directory', () {
-      for (final dir in ['web', 'web/site', 'lib/site', '.', 'build']) {
+      for (final dir in [
+        'web',
+        'web/site',
+        'lib/site',
+        '.',
+        'build',
+        'build/web',
+        'build/app',
+        'build/sites',
+      ]) {
         test('at $dir, before touching anything', () {
           final target = Directory('${repo.path}/$dir')
             ..createSync(recursive: true);
@@ -655,6 +664,16 @@ void main() {
         );
         expect(File('${repo.path}/PRIVACY.md').existsSync(), isTrue);
       });
+    });
+
+    test('accepts a directory within build/site', () {
+      generateWebDocs(
+        docs: const [sampleDoc],
+        root: repo.path,
+        outputDir: '$out/preview',
+      );
+
+      expect(File('$out/preview/privacy.html').existsSync(), isTrue);
     });
 
     test('accepts an output directory outside the repository', () {

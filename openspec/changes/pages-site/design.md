@@ -163,8 +163,9 @@ is dropped; replacing the directory also guarantees that a page removed from
 the document set does not linger in a local build.
 
 The tool refuses an output directory that contains the repository, or that
-lies inside the repository anywhere other than strictly within `build/`, so a
-stray argument cannot delete sources or the Flutter build.  Everything is
+lies inside the repository anywhere other than `build/site` or a directory
+within it, so a stray argument cannot delete sources or another build's output
+(Flutter's own `build/web`, for instance).  Everything is
 rendered before anything is deleted, so a generation error also leaves the
 previous output in place.
 

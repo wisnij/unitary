@@ -24,6 +24,14 @@ class AboutScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openUrl(String url) async {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.platformDefault);
+    } catch (_) {
+      // Silently ignore launch failures (e.g. no browser available).
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final effectiveBuildMetadata = ref.watch(buildMetadataProvider);
@@ -40,6 +48,44 @@ class AboutScreen extends ConsumerWidget {
       body: SafeArea(
         child: ListView(
           children: [
+            ListTile(
+              leading: const Icon(Icons.open_in_new),
+              title: const Text('Project home'),
+              subtitle: const Text(projectHomeUrl),
+              onTap: () => _openUrl(projectHomeUrl),
+            ),
+            ListTile(
+              leading: const Icon(Icons.code),
+              title: const Text('Source code'),
+              subtitle: const Text(sourceCodeUrl),
+              onTap: () => _openUrl(sourceCodeUrl),
+            ),
+            ListTile(
+              leading: const Icon(Icons.privacy_tip_outlined),
+              title: const Text('Privacy policy'),
+              subtitle: const Text('What Unitary does with your data'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const PrivacyScreen(),
+                  ),
+                );
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.description_outlined),
+              title: const Text('License terms'),
+              subtitle: const Text('GNU AGPL 3.0'),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(
+                    builder: (_) => const LicenseScreen(),
+                  ),
+                );
+              },
+            ),
             Semantics(
               // Expose the long-press copy gesture as a discoverable action
               // in the assistive-technology actions menu.
@@ -66,45 +112,6 @@ class AboutScreen extends ConsumerWidget {
                       _copyToClipboard(context, effectiveBuildMetadata),
                 ),
               ),
-            ListTile(
-              leading: const Icon(Icons.description_outlined),
-              title: const Text('License terms'),
-              subtitle: const Text('GNU AGPL 3.0'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => const LicenseScreen(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip_outlined),
-              title: const Text('Privacy policy'),
-              subtitle: const Text('What Unitary does with your data'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (_) => const PrivacyScreen(),
-                  ),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.open_in_new),
-              title: const Text('Project home'),
-              subtitle: const Text(projectHomeUrl),
-              onTap: () async {
-                final uri = Uri.parse(projectHomeUrl);
-                try {
-                  await launchUrl(uri, mode: LaunchMode.platformDefault);
-                } catch (_) {
-                  // Silently ignore launch failures (e.g. no browser available).
-                }
-              },
-            ),
           ],
         ),
       ),

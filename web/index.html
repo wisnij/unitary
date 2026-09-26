@@ -2,19 +2,18 @@
 <html>
 <head>
   <!--
-    If you are serving your web app in a path other than the root, change the
-    href value below to reflect the base path you are serving from.
+    No <base> element, on purpose: without one, relative URLs resolve against
+    the directory this page was loaded from, so one build works wherever it
+    is mounted (/app/ on the project site, any subdirectory when the release
+    archive is self-hosted, or a local preview).  This relies on the app's
+    default hash URL strategy; with path-based URLs, relative URLs would
+    resolve against the route path instead.
 
-    The path provided below has to start and end with a slash "/" in order for
-    it to work correctly.
-
-    For more details:
-    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
-
-    This is a placeholder for base href that will be replaced by the value of
-    the `--base-href` argument provided to `flutter build`.
+    A relative <base href="./"> would behave the same in a release build, but
+    the `flutter run` development server rejects any base href that is not
+    absolute.  Do not pass --base-href to `flutter build web`: there is no
+    placeholder for it to replace.
   -->
-  <base href="$FLUTTER_BASE_HREF">
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">

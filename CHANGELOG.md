@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Finalize APK size change
+- Redesign project site
 
 
 [0.9.9] - 2026-09-23

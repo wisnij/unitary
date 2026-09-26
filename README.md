@@ -11,7 +11,7 @@ evaluation and worksheet-based conversion modes.
 Unitary is [free software](https://www.gnu.org/philosophy/free-sw.html), both libre and
 gratis.  It does not and will never contain ads, paywalls, subscriptions, in-app
 purchases, tracking, data harvesting, or any other monetization scheme.  See the
-[privacy policy](https://wisnij.github.io/unitary/privacy) for specifics.
+[privacy policy](https://unitary.wisnij.dev/privacy) for specifics.
 
 
 Getting Unitary
@@ -20,7 +20,7 @@ Getting Unitary
 - **Android**: download the APK from the
   [latest release](https://github.com/wisnij/unitary/releases/latest) and
   install it.  (You may need to allow installation from unknown sources.)
-- **Web**: try it in your browser at <https://wisnij.github.io/unitary/> —
+- **Web**: try it in your browser at <https://unitary.wisnij.dev/app/> —
   the same app, deployed automatically from the latest code.
 - **From source**: see [Development](#development) below.
 

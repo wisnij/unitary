@@ -696,8 +696,8 @@ engineering tasks, which are small by comparison.
      description and homepage set, AGPL-3.0 detected by GitHub
    - [x] Add license — `LICENSE.md` (AGPL v3); the app also satisfies AGPL
      §13's network-use obligation in-app, since the About screen offers both
-     "License terms" (full text via `LicenseScreen`) and "Project home"
-     (source URL) — this matters because the web build is hosted, and §13
+     "License terms" (full text via `LicenseScreen`) and "Source code"
+     (the repository URL) — this matters because the web build is hosted, and §13
      obliges offering source to users who interact with it over a network
    - [x] Polish README — rewritten August 5, 2026 (F12) with eight
      device-captured screenshots added August 7
@@ -705,8 +705,11 @@ engineering tasks, which are small by comparison.
      tag runs `prepare` → `build-android-apk` + `build-web` → `release`,
      which creates the GitHub release with the APK and web zip attached and
      the tag's annotation body as the release notes
-   - [x] Web deployment — every push to `main` builds with `--wasm` and
-     force-pushes to `gh-pages`; live at <https://wisnij.github.io/unitary/>
+   - [x] Web deployment — every push to `main` publishes the project site
+     at <https://unitary.wisnij.dev/> through GitHub Pages' Actions
+     deployment: the rendered README at `/`, the web app (built with
+     `--wasm`) at `/app/`, and the privacy policy at `/privacy`.  See
+     `openspec/changes/pages-site/`
    - [x] Screenshots — eight captured via `tool/take_screenshots.sh`.  Note
      these are sized for the README; the Play Store needs its own set (see
      task 7)
@@ -824,7 +827,10 @@ engineering tasks, which are small by comparison.
      reaches both the deployment and the release web archive with **no CI
      change at all**.  GitHub Pages 301-redirects the no-trailing-slash form,
      so `…/unitary/privacy` is what prose links use while the canonical
-     trailing-slash form is what gets registered with Play
+     trailing-slash form is what gets registered with Play.  **Superseded
+     by the `pages-site` change:** the policy now lives at
+     <https://unitary.wisnij.dev/privacy>, served without a redirect from a
+     `privacy.html` generated in CI, and the old address redirects to it
    - [x] Link it from the README and the in-app About screen — and, going
      beyond the original scope, **bundle it**: `PRIVACY.md` is a Flutter asset
      rendered by `PrivacyScreen` (mirroring `LicenseScreen`), so each build
@@ -840,7 +846,9 @@ engineering tasks, which are small by comparison.
      file outside the document set is a hard failure — the seam that makes
      publishing `doc/` later a data change.  Output is committed and kept in
      step by a `generate-web-docs` pre-commit hook; the lint job already runs
-     the hooks, so drift fails the build with no new CI step
+     the hooks, so drift fails the build with no new CI step.  The `pages-site`
+     change later moved generation into CI, publishing to a site directory
+     rather than `web/`, and removed the committed page and the hook
    - [x] `web/.nojekyll` — added as a **fix**, not a precaution.  GitHub Pages
      runs a legacy Jekyll build on the deploy branch (`build_type: "legacy"`),
      and it was already silently deleting a deployed file: `.last_build_id` is
@@ -850,7 +858,9 @@ engineering tasks, which are small by comparison.
      `assets/LICENSE.md` — the web License screen works only because that file
      happens to carry no YAML front matter, and nothing in the test suite
      would catch someone adding one.  With `PRIVACY.md` now a second Markdown
-     asset, that protection covers two files
+     asset, that protection covers two files.  Removed again by the
+     `pages-site` change: the site is now deployed through GitHub Actions,
+     which never runs Jekyll
    - [x] **Remaining, post-merge:** confirm the page is live at the canonical
      URL, that the no-slash form redirects, that `.last_build_id` now returns
      200 (the observable signal `.nojekyll` took effect), that both Markdown
@@ -971,9 +981,9 @@ engineering tasks, which are small by comparison.
      are cross-checked — specifically with the two disclosures that policy
      makes deliberately: the exchange-rate request exposes the requester's IP
      address to the Frankfurter operator, and the web build is served by a
-     host that logs requests.  Register the **canonical trailing-slash URL**
-     <https://wisnij.github.io/unitary/privacy/> rather than the redirecting
-     form, so a reviewer never traverses a 301
+     host that logs requests.  Register the canonical URL
+     <https://unitary.wisnij.dev/privacy>, with **no trailing slash**: that
+     form is served directly, while `/privacy/` returns 404
    - [ ] Complete the content rating questionnaire (expected: rated for
      everyone) and the remaining declarations Play requires at submission —
      ads (none), target audience, and news/government/financial category

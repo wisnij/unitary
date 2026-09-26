@@ -3,8 +3,9 @@
 ## Purpose
 
 Specifies the About screen and its entry point in the sidebar drawer.  The
-About screen provides users with app-level information: version, optional build
-metadata, license terms, and a link to the project home page.
+About screen provides users with app-level information: links to the project
+site and its source code, the privacy policy, license terms, version, and
+optional build metadata.
 ## Requirements
 ### Requirement: About entry in sidebar drawer footer
 The sidebar drawer SHALL contain an "About" entry in a footer section alongside the "Settings" entry.  The footer section (divider + Settings + About) SHALL be anchored to the bottom of the drawer whenever the drawer is taller than the navigation content above it; when navigation content would overflow, the footer scrolls with the rest of the drawer content.
@@ -22,15 +23,15 @@ The sidebar drawer SHALL contain an "About" entry in a footer section alongside 
 - **THEN** the drawer closes and the About screen is pushed onto the navigation stack
 
 ### Requirement: About screen
-The app SHALL provide a dedicated About screen (analogous to the Settings screen) containing five entries in order: Version, Build (conditional), License terms, Privacy policy, Project home.  The two document links (License terms, Privacy policy) SHALL be adjacent, ahead of Project home.
+The app SHALL provide a dedicated About screen (analogous to the Settings screen) containing six entries in order: Project home, Source code, Privacy policy, License terms, Version, Build (conditional).  The two web links (Project home, Source code) SHALL come first, followed by the two document links (Privacy policy, License terms), with the informational Version and Build entries last.
 
 #### Scenario: About screen renders with app bar
 - **WHEN** the About screen is displayed
 - **THEN** an app bar titled "About" is shown with a back navigation control
 
-#### Scenario: Privacy policy appears between License terms and Project home
-- **WHEN** the About screen is displayed
-- **THEN** the Privacy policy entry is rendered after License terms and before Project home
+#### Scenario: Entries appear in order
+- **WHEN** the About screen is displayed with build metadata present
+- **THEN** its entries are, from top to bottom: Project home, Source code, Privacy policy, License terms, Version, Build
 
 ### Requirement: Version entry displays app version
 The About screen SHALL display the current app version number (e.g. "0.5.9") as a non-interactive informational tile.  The version SHALL be read at runtime using `package_info_plus`.  Long-pressing the tile SHALL copy the version string to the clipboard and show a brief confirmation.
@@ -81,18 +82,40 @@ The About screen SHALL contain a tappable "License terms" entry with subtitle "G
 - **WHEN** the user is viewing the license screen
 - **THEN** the user can navigate back to the About screen
 
-### Requirement: Project home entry opens GitHub URL
-The About screen SHALL contain a tappable "Project home" entry with the project GitHub URL as its subtitle.  When tapped, the app SHALL open the URL in the system browser using `url_launcher`.
+### Requirement: Project home entry opens the project site
+The About screen SHALL contain a tappable "Project home" entry with the
+project site URL, `https://unitary.wisnij.dev/`, as its subtitle.  When
+tapped, the app SHALL open that URL in the system browser using
+`url_launcher`.
 
-#### Scenario: Project home tile shows URL subtitle
+#### Scenario: Project home tile shows the site URL
 - **WHEN** the About screen is displayed
-- **THEN** the Project home tile shows the GitHub repository URL as its subtitle
+- **THEN** the Project home tile shows `https://unitary.wisnij.dev/` as its subtitle
 
-#### Scenario: Tapping Project home opens browser
+#### Scenario: Tapping Project home opens the site
 - **WHEN** the user taps "Project home"
-- **THEN** the system browser opens to the project's GitHub repository URL
+- **THEN** the system browser opens `https://unitary.wisnij.dev/`
 
-#### Scenario: URL launch failure is handled gracefully
+#### Scenario: Project home launch failure is handled gracefully
+- **WHEN** the system cannot launch the URL (e.g. no browser available)
+- **THEN** the app does not crash
+
+### Requirement: Source code entry opens the GitHub repository
+The About screen SHALL contain a tappable "Source code" entry with the
+project's GitHub repository URL, `https://github.com/wisnij/unitary`, as its
+subtitle.  When tapped, the app SHALL open that URL in the system browser
+using `url_launcher`.  This entry is the app's offer of its corresponding
+source.
+
+#### Scenario: Source code tile shows the repository URL
+- **WHEN** the About screen is displayed
+- **THEN** the Source code tile shows `https://github.com/wisnij/unitary` as its subtitle
+
+#### Scenario: Tapping Source code opens the repository
+- **WHEN** the user taps "Source code"
+- **THEN** the system browser opens `https://github.com/wisnij/unitary`
+
+#### Scenario: Source code launch failure is handled gracefully
 - **WHEN** the system cannot launch the URL (e.g. no browser available)
 - **THEN** the app does not crash
 
@@ -106,4 +129,3 @@ The About screen SHALL contain a tappable "Privacy policy" entry that pushes a s
 #### Scenario: Policy screen renders the bundled document
 - **WHEN** the privacy policy screen is displayed
 - **THEN** the bundled policy is shown as formatted text under an app bar with back navigation
-

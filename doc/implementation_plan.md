@@ -712,7 +712,7 @@ engineering tasks, which are small by comparison.
      `openspec/changes/pages-site/`
    - [x] Screenshots — eight captured via `tool/take_screenshots.sh`.  Note
      these are sized for the README; the Play Store needs its own set (see
-     task 7)
+     task 8)
 
 2. Release signing — **RESOLVED** (September 5, 2026)
    - [x] **Decide the two-channel signing strategy first** — this is the one
@@ -769,7 +769,7 @@ engineering tasks, which are small by comparison.
    - **Still ahead, and still irreversible:** this task settles the GitHub half
      of the strategy.  The Play half — enrolling in Play App Signing with *this
      same key* rather than letting Google generate one — has not happened yet
-     and lives in task 7.  Until it does, the "one signature across both
+     and lives in task 8.  Until it does, the "one signature across both
      channels" property is decided but not realised, and the single
      unrecoverable click of the phase is still ahead
 
@@ -915,7 +915,17 @@ engineering tasks, which are small by comparison.
      translation path that some Chromebooks use was not tested locally
    - **Design artifacts:** `openspec/changes/archive/2026-09-23-apk-size/`
 
-6. Cut 1.0.0
+6. Pre-release cleanup — small, opportunistic
+   - [ ] Remove the stale `applicationId` TODO in
+     `android/app/build.gradle.kts` — it advises specifying a unique
+     application ID, which was already done (`dev.wisnij.unitary`); only the
+     signing TODO beneath it is real
+   - [ ] Decide on `doc/api/` — a gitignored February 2026 dartdoc byproduct
+     covering only the Phase 1 libraries.  Either regenerate and publish it
+     alongside the web app or delete it; leaving a stale copy on disk is the
+     status quo and is also acceptable
+
+7. Cut 1.0.0
    - [ ] Decide what 1.0.0 means here and whether any deferred item should
      land first — the open candidate is code-review **F8** (the worksheet
      AppBar dropdown overflows at ≲410 dp), the only user-visible item among
@@ -928,10 +938,10 @@ engineering tasks, which are small by comparison.
    - [ ] Update the README's "Project status" section, which will no longer
      be describing a pre-release app
 
-7. Play Store submission — the largest single group, and the long pole for
+8. Play Store submission — the largest single group, and the long pole for
    the phase.  Start the account and testing-track steps **early**: they are
    gated by Google's timelines rather than by work on this end, so they can
-   run in parallel with tasks 2–6 rather than waiting on them
+   run in parallel with tasks 2–7 rather than waiting on them
    - [ ] Register a Google Play developer account (one-time fee) and complete
      identity verification.  **Verify current onboarding requirements before
      planning the timeline** — Google has previously required new personal
@@ -1001,16 +1011,6 @@ engineering tasks, which are small by comparison.
      re-declaration of data safety and content rating, and policy compliance
      on an ongoing basis.  A published app that falls behind these is
      eventually removed from the store
-
-8. Pre-release cleanup — small, opportunistic
-   - [ ] Remove the stale `applicationId` TODO in
-     `android/app/build.gradle.kts` — it advises specifying a unique
-     application ID, which was already done (`dev.wisnij.unitary`); only the
-     signing TODO beneath it is real
-   - [ ] Decide on `doc/api/` — a gitignored February 2026 dartdoc byproduct
-     covering only the Phase 1 libraries.  Either regenerate and publish it
-     alongside the web app or delete it; leaving a stale copy on disk is the
-     status quo and is also acceptable
 
 **Deliverable:** Public MVP release — a signed, versioned 1.0.0 published on
 GitHub and live on the Play Store, with the web app deployed and a privacy

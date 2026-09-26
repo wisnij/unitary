@@ -915,17 +915,23 @@ engineering tasks, which are small by comparison.
      translation path that some Chromebooks use was not tested locally
    - **Design artifacts:** `openspec/changes/archive/2026-09-23-apk-size/`
 
-6. Pre-release cleanup — small, opportunistic
+6. Pre-release cleanup – **RESOLVED** (September 26, 2026)
    - [x] Remove the stale `applicationId` TODO in
      `android/app/build.gradle.kts` — it advised specifying a unique
      application ID, which was already done (`dev.wisnij.unitary`).  Removed
      September 3, 2026 by the release-signing change (task 2), which also
      resolved the signing TODO beneath it, so the file has no `flutter create`
      TODOs left
-   - [ ] Decide on `doc/api/` — a gitignored February 2026 dartdoc byproduct
-     covering only the Phase 1 libraries.  Either regenerate and publish it
-     alongside the web app or delete it; leaving a stale copy on disk is the
-     status quo and is also acceptable
+   - [x] Decide on `doc/api/` – decided September 26, 2026 **not to publish**
+     the API docs: they serve internal development rather than end users, and
+     `dart doc` regenerates them locally on demand into the gitignored
+     `doc/api/`.  May be revisited later.  Findings for that: dartdoc always
+     uses the root `README.md` as its index page (no option changes this, so a
+     different landing page needs the README swapped at generation time), and
+     directory-level overviews such as one for `lib/core/domain/models/` can be
+     written as dartdoc categories – a Markdown page declared in
+     `dartdoc_options.yaml`, with each library opting in via
+     `{@category …}` on a `library;` directive
 
 7. Cut 1.0.0
    - [ ] Decide what 1.0.0 means here and whether any deferred item should

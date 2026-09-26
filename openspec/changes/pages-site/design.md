@@ -244,6 +244,11 @@ subtitle.  A new "Source code" entry, directly after it, opens
 failure handling.  The source offer that AGPL §13 requires for the hosted web
 build becomes a clearly labelled entry of its own.
 
+The entries are reordered to Project home, Source code, Privacy policy,
+License terms, Version, Build: the two web links first, then the two bundled
+documents with the policy ahead of the license, and the informational
+entries last.
+
 ### D8: `PRIVACY.md` edits and the DNS-only requirement
 
 Both URLs in `PRIVACY.md` change: the policy's own address to

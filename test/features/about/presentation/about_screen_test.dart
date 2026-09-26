@@ -217,18 +217,6 @@ void main() {
       expect(find.byType(PrivacyScreen), findsOneWidget);
     });
 
-    testWidgets('Privacy policy sits between License terms and Project home', (
-      tester,
-    ) async {
-      await pumpAbout(tester);
-
-      double topOf(String label) =>
-          tester.getTopLeft(find.widgetWithText(ListTile, label)).dy;
-
-      expect(topOf('License terms'), lessThan(topOf('Privacy policy')));
-      expect(topOf('Privacy policy'), lessThan(topOf('Project home')));
-    });
-
     testWidgets('Project home tile shows the site URL', (tester) async {
       await pumpAbout(tester);
       expect(find.text('Project home'), findsOneWidget);
@@ -264,7 +252,7 @@ void main() {
       ]);
     });
 
-    testWidgets('Source code immediately follows Project home', (tester) async {
+    testWidgets('entries appear in order', (tester) async {
       await pumpAbout(tester, buildMetadata: 'build');
 
       final titles = tester
@@ -273,12 +261,12 @@ void main() {
           .toList();
 
       expect(titles, [
-        'Version',
-        'Build',
-        'License terms',
-        'Privacy policy',
         'Project home',
         'Source code',
+        'Privacy policy',
+        'License terms',
+        'Version',
+        'Build',
       ]);
     });
 

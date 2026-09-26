@@ -1,19 +1,15 @@
 ## MODIFIED Requirements
 
 ### Requirement: About screen
-The app SHALL provide a dedicated About screen (analogous to the Settings screen) containing six entries in order: Version, Build (conditional), License terms, Privacy policy, Project home, Source code.  The two document links (License terms, Privacy policy) SHALL be adjacent, ahead of the two web links (Project home, Source code).
+The app SHALL provide a dedicated About screen (analogous to the Settings screen) containing six entries in order: Project home, Source code, Privacy policy, License terms, Version, Build (conditional).  The two web links (Project home, Source code) SHALL come first, followed by the two document links (Privacy policy, License terms), with the informational Version and Build entries last.
 
 #### Scenario: About screen renders with app bar
 - **WHEN** the About screen is displayed
 - **THEN** an app bar titled "About" is shown with a back navigation control
 
-#### Scenario: Privacy policy appears between License terms and Project home
-- **WHEN** the About screen is displayed
-- **THEN** the Privacy policy entry is rendered after License terms and before Project home
-
-#### Scenario: Source code is the last entry
-- **WHEN** the About screen is displayed
-- **THEN** the Source code entry is rendered immediately after Project home
+#### Scenario: Entries appear in order
+- **WHEN** the About screen is displayed with build metadata present
+- **THEN** its entries are, from top to bottom: Project home, Source code, Privacy policy, License terms, Version, Build
 
 ## ADDED Requirements
 

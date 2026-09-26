@@ -49,6 +49,7 @@
 - [x] 6.1 Update About screen tests: "Project home" subtitle is `https://unitary.wisnij.dev/` and tapping launches it; a "Source code" entry follows it with subtitle `https://github.com/wisnij/unitary`, launches that URL, and survives a launch failure; entry order matches the spec
 - [x] 6.2 In `lib/features/about/about_constants.dart`, point `projectHomeUrl` at `https://unitary.wisnij.dev/` and add `sourceCodeUrl`
 - [x] 6.3 Add the "Source code" `ListTile` after "Project home" in `about_screen.dart` (code icon, shared launch-and-ignore-failure behaviour)
+- [x] 6.4 Reorder the About entries to Project home, Source code, Privacy policy, License terms, Version, Build (tests first)
 
 ## 7. Documents and URLs
 

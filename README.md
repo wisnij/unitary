@@ -195,3 +195,5 @@ This program includes data files that are part of [GNU
 Units](https://www.gnu.org/software/units/).
 GNU Units is copyright © 1996-2002, 2004-2020, 2022, 2024, 2026 Free Software
 Foundation, Inc.
+
+TEST ONLY: [Link to a missing file](missing-file.md)

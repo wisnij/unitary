@@ -43,7 +43,7 @@
 - [x] 5.2 Add a `build-site` job (all events, `needs: build-web`): check out, set up Dart/Flutter, run `dart run tool/generate_web_docs.dart build/site`, download the web build into `build/site/app/`, and upload with `actions/upload-pages-artifact`
 - [x] 5.3 Add a `deploy-site` job (`if: github.ref == 'refs/heads/main'` on push, `needs: build-site`) with `permissions: pages: write, id-token: write`, `environment: github-pages` (URL from the deploy step output), the existing non-cancelling concurrency group, and `actions/deploy-pages`
 - [x] 5.4 Delete the `deploy-web` job
-- [ ] 5.5 Confirm on a pull request that `build-site` runs and `deploy-site` is skipped, and that deliberately adding a link to a missing file in `README.md` fails `build-site`
+- [x] 5.5 Confirm on a pull request that `build-site` runs and `deploy-site` is skipped, and that deliberately adding a link to a missing file in `README.md` fails pull-request CI.  It fails in the `test` job, whose generator test renders the real README, before `build-site` runs (run 36219739495: `WebDocException: README.md links to "missing-file.md", which does not exist`)
 
 ## 6. About screen: tests first
 
@@ -70,11 +70,11 @@
 
 ## 9. Cutover (manual, after merge)
 
-- [ ] 9.1 Repository Settings → Pages → Source: GitHub Actions
-- [ ] 9.2 Re-run the workflow on `main`; check `/`, `/app/` and `/privacy` at `https://wisnij.github.io/unitary/` (skip `/app/` under the base-href fallback and proceed straight to 9.3–9.4)
-- [ ] 9.3 Settings → Pages → Custom domain: `unitary.wisnij.dev`
-- [ ] 9.4 Cloudflare: delete the `unitary` redirect rule; add `CNAME unitary → wisnij.github.io`, DNS-only
-- [ ] 9.5 After GitHub's DNS check passes and the certificate is issued, enable Enforce HTTPS
-- [ ] 9.6 Verify: `/`, `/app/`, `/app` → `/app/`, `/privacy` (200, no redirect), `/privacy/` (404, accepted), canonical tags, `wisnij.github.io/unitary/privacy` → `unitary.wisnij.dev/privacy`, and `unitary.wisnij.dev` resolving to GitHub Pages addresses rather than Cloudflare's
-- [ ] 9.7 On a device build, confirm About → Project home and Source code open the right URLs, and the bundled policy's link opens the new address
-- [ ] 9.8 Delete the `gh-pages` branch
+- [x] 9.1 Repository Settings → Pages → Source: GitHub Actions
+- [x] 9.2 Re-run the workflow on `main`; check `/`, `/app/` and `/privacy` at `https://wisnij.github.io/unitary/` (skip `/app/` under the base-href fallback and proceed straight to 9.3–9.4)
+- [x] 9.3 Settings → Pages → Custom domain: `unitary.wisnij.dev`
+- [x] 9.4 Cloudflare: delete the `unitary` redirect rule; add `CNAME unitary → wisnij.github.io`, DNS-only
+- [x] 9.5 After GitHub's DNS check passes and the certificate is issued, enable Enforce HTTPS
+- [x] 9.6 Verify: `/`, `/app/`, `/app` → `/app/`, `/privacy` (200, no redirect), `/privacy/` (404, accepted), canonical tags, `wisnij.github.io/unitary/privacy` → `unitary.wisnij.dev/privacy`, and `unitary.wisnij.dev` resolving to GitHub Pages addresses rather than Cloudflare's
+- [x] 9.7 On a device build, confirm About → Project home and Source code open the right URLs, and the bundled policy's link opens the new address
+- [x] 9.8 Delete the `gh-pages` branch

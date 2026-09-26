@@ -43,7 +43,7 @@
 - [x] 5.2 Add a `build-site` job (all events, `needs: build-web`): check out, set up Dart/Flutter, run `dart run tool/generate_web_docs.dart build/site`, download the web build into `build/site/app/`, and upload with `actions/upload-pages-artifact`
 - [x] 5.3 Add a `deploy-site` job (`if: github.ref == 'refs/heads/main'` on push, `needs: build-site`) with `permissions: pages: write, id-token: write`, `environment: github-pages` (URL from the deploy step output), the existing non-cancelling concurrency group, and `actions/deploy-pages`
 - [x] 5.4 Delete the `deploy-web` job
-- [ ] 5.5 Confirm on a pull request that `build-site` runs and `deploy-site` is skipped, and that deliberately adding a link to a missing file in `README.md` fails `build-site`
+- [x] 5.5 Confirm on a pull request that `build-site` runs and `deploy-site` is skipped, and that deliberately adding a link to a missing file in `README.md` fails pull-request CI.  It fails in the `test` job, whose generator test renders the real README, before `build-site` runs (run 36219739495: `WebDocException: README.md links to "missing-file.md", which does not exist`)
 
 ## 6. About screen: tests first
 

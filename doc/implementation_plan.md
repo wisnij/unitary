@@ -916,10 +916,12 @@ engineering tasks, which are small by comparison.
    - **Design artifacts:** `openspec/changes/archive/2026-09-23-apk-size/`
 
 6. Pre-release cleanup — small, opportunistic
-   - [ ] Remove the stale `applicationId` TODO in
-     `android/app/build.gradle.kts` — it advises specifying a unique
-     application ID, which was already done (`dev.wisnij.unitary`); only the
-     signing TODO beneath it is real
+   - [x] Remove the stale `applicationId` TODO in
+     `android/app/build.gradle.kts` — it advised specifying a unique
+     application ID, which was already done (`dev.wisnij.unitary`).  Removed
+     September 3, 2026 by the release-signing change (task 2), which also
+     resolved the signing TODO beneath it, so the file has no `flutter create`
+     TODOs left
    - [ ] Decide on `doc/api/` — a gitignored February 2026 dartdoc byproduct
      covering only the Phase 1 libraries.  Either regenerate and publish it
      alongside the web app or delete it; leaving a stale copy on disk is the

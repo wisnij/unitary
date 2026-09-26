@@ -74,8 +74,13 @@ The Pages source changes from the `gh-pages` branch to "GitHub Actions".  A
 `build-site` job runs on every push and pull request, assembles the site and
 uploads it with `actions/upload-pages-artifact`.  A `deploy-site` job, only
 for pushes to `main`, runs `actions/deploy-pages` with `pages: write` and
-`id-token: write` in the `github-pages` environment, under the same
-non-cancelling concurrency group that `deploy-web` uses today.
+`id-token: write` in the `github-pages` environment, under a
+non-cancelling concurrency group as `deploy-web` had.
+
+`actions/upload-pages-artifact` v4 and later leave dotfiles out of the
+artifact unless `include-hidden-files: true` is set, and
+`actions/upload-artifact` has the same default.  Both uploads set it, so the
+deployed tree matches the assembled one, `app/.last_build_id` included.
 
 - **Custom domain** lives in repository settings.  With a branch deploy it
   would also need a `CNAME` file in every force-push, or the push would clear
@@ -111,6 +116,22 @@ fall back to `--base-href /app/` for the site build, leave the release zip
 built as today, and accept that the deploy and the custom-domain switch must
 happen together (see Migration Plan).
 
+**Spike result (September 25, 2026): the relative base works.**
+`flutter build web --release --wasm` accepts an `index.html` with no
+`$FLUTTER_BASE_HREF` placeholder, with no warning.  The build was served from
+`/app/` under a local server and driven in headless Chromium over the DevTools
+protocol, using real mouse input on Flutter's semantics nodes.  Every request
+resolved under `/app/` with status 200, including the fonts, the asset
+manifests, and `assets/LICENSE.md` and `assets/PRIVACY.md` when their screens
+were opened.  Both screens rendered their documents.  The identical build
+served from a server root also booted and loaded `assets/PRIVACY.md`.  The
+fallback is not needed.
+
+Headless Chromium's `--screenshot` and `--dump-dom` are useless for this kind
+of check: they capture before the Flutter view mounts and show a blank page,
+even for the live site.  Waiting in real time and driving the page over the
+DevTools protocol is what worked.
+
 With a mount-agnostic build, `build-site` does not build the app itself: it
 `needs: build-web` and unpacks that job's output into `app/`.  One Flutter web
 build per workflow run instead of two, and the site and the release asset are
@@ -141,8 +162,11 @@ longer committed, the "write only when changed" behaviour loses its reason and
 is dropped; replacing the directory also guarantees that a page removed from
 the document set does not linger in a local build.
 
-The tool refuses an output directory that is inside `web/`, `lib/` or any
-other tracked source tree, so a stray argument cannot delete sources.
+The tool refuses an output directory that contains the repository, or that
+lies inside the repository anywhere other than strictly within `build/`, so a
+stray argument cannot delete sources or the Flutter build.  Everything is
+rendered before anything is deleted, so a generation error also leaves the
+previous output in place.
 
 *Alternative considered*: shell steps in the workflow.  Rejected: untestable,
 and image discovery would have to be hard-coded.

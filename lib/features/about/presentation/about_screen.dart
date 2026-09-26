@@ -24,6 +24,14 @@ class AboutScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _openUrl(String url) async {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.platformDefault);
+    } catch (_) {
+      // Silently ignore launch failures (e.g. no browser available).
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final effectiveBuildMetadata = ref.watch(buildMetadataProvider);
@@ -96,14 +104,13 @@ class AboutScreen extends ConsumerWidget {
               leading: const Icon(Icons.open_in_new),
               title: const Text('Project home'),
               subtitle: const Text(projectHomeUrl),
-              onTap: () async {
-                final uri = Uri.parse(projectHomeUrl);
-                try {
-                  await launchUrl(uri, mode: LaunchMode.platformDefault);
-                } catch (_) {
-                  // Silently ignore launch failures (e.g. no browser available).
-                }
-              },
+              onTap: () => _openUrl(projectHomeUrl),
+            ),
+            ListTile(
+              leading: const Icon(Icons.code),
+              title: const Text('Source code'),
+              subtitle: const Text(sourceCodeUrl),
+              onTap: () => _openUrl(sourceCodeUrl),
             ),
           ],
         ),

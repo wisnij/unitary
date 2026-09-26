@@ -13,7 +13,7 @@ Privacy Policy
 
 Unitary collects nothing.
 
-<https://wisnij.github.io/unitary/privacy>
+<https://unitary.wisnij.dev/privacy>
 ''';
 
 /// Serves [_fakePolicyText] for `PRIVACY.md`, and fails for anything else.
@@ -117,13 +117,13 @@ void main() {
       await tester.pump();
 
       await tester.tap(
-        find.textContaining('wisnij.github.io/unitary/privacy'),
+        find.textContaining('unitary.wisnij.dev/privacy'),
       );
       await tester.pumpAndSettle();
 
       expect(
         fakeUrlLauncher.launchedUrls,
-        contains('https://wisnij.github.io/unitary/privacy'),
+        contains('https://unitary.wisnij.dev/privacy'),
       );
     });
 
@@ -133,7 +133,7 @@ void main() {
       await tester.pump();
 
       await tester.tap(
-        find.textContaining('wisnij.github.io/unitary/privacy'),
+        find.textContaining('unitary.wisnij.dev/privacy'),
       );
       await tester.pumpAndSettle();
 

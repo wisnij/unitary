@@ -1,7 +1,7 @@
 Privacy Policy
 ==============
 
-**Effective date:** September 6, 2026
+**Effective date:** September 25, 2026
 
 Unitary does not collect, store, or transmit any personal information about
 you.  There are no accounts, no analytics, no advertising, no trackers, no
@@ -9,7 +9,7 @@ crash reporting, and no third-party SDKs of any kind.  Nothing you type into
 the app is sent anywhere.
 
 The current version of this policy is published at
-<https://wisnij.github.io/unitary/privacy>.  The copy included in the app
+<https://unitary.wisnij.dev/privacy>.  The copy included in the app
 describes the version of Unitary you have installed; if you are reading it
 inside the app, the published copy may be newer.
 
@@ -53,7 +53,7 @@ Using Unitary in a web browser
 ------------------------------
 
 Unitary is also published as a web app at
-<https://wisnij.github.io/unitary/>.  That version behaves identically, and
+<https://unitary.wisnij.dev/app/>.  That version behaves identically, and
 stores its data in your browser's local storage rather than in app storage.
 
 Because it is delivered over the web, it is served by GitHub Pages, and GitHub

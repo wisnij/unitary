@@ -26,6 +26,17 @@ class FakeUrlLauncher extends UrlLauncherPlatform {
   }
 }
 
+/// Fake [UrlLauncherPlatform] whose launches always fail.
+class ThrowingUrlLauncher extends UrlLauncherPlatform {
+  @override
+  LinkDelegate? get linkDelegate => null;
+
+  @override
+  Future<bool> launchUrl(String url, LaunchOptions options) async {
+    throw Exception('no browser');
+  }
+}
+
 void main() {
   late TestRepositories repos;
   late FakeUrlLauncher fakeUrlLauncher;
@@ -218,22 +229,71 @@ void main() {
       expect(topOf('Privacy policy'), lessThan(topOf('Project home')));
     });
 
-    testWidgets('Project home tile shows URL subtitle', (tester) async {
+    testWidgets('Project home tile shows the site URL', (tester) async {
       await pumpAbout(tester);
       expect(find.text('Project home'), findsOneWidget);
-      expect(find.text('https://github.com/wisnij/unitary'), findsOneWidget);
+      expect(find.text('https://unitary.wisnij.dev/'), findsOneWidget);
     });
 
-    testWidgets('tapping Project home launches GitHub URL', (tester) async {
+    testWidgets('tapping Project home launches the site URL', (tester) async {
       await pumpAbout(tester);
 
       await tester.tap(find.text('Project home'));
       await tester.pumpAndSettle();
 
-      expect(
-        fakeUrlLauncher.launchedUrls,
-        contains('https://github.com/wisnij/unitary'),
-      );
+      expect(fakeUrlLauncher.launchedUrls, ['https://unitary.wisnij.dev/']);
     });
+
+    testWidgets('Source code tile shows the repository URL', (tester) async {
+      await pumpAbout(tester);
+      expect(find.text('Source code'), findsOneWidget);
+      expect(find.text('https://github.com/wisnij/unitary'), findsOneWidget);
+    });
+
+    testWidgets('tapping Source code launches the repository URL', (
+      tester,
+    ) async {
+      await pumpAbout(tester);
+
+      await tester.ensureVisible(find.text('Source code'));
+      await tester.tap(find.text('Source code'));
+      await tester.pumpAndSettle();
+
+      expect(fakeUrlLauncher.launchedUrls, [
+        'https://github.com/wisnij/unitary',
+      ]);
+    });
+
+    testWidgets('Source code immediately follows Project home', (tester) async {
+      await pumpAbout(tester, buildMetadata: 'build');
+
+      final titles = tester
+          .widgetList<ListTile>(find.byType(ListTile))
+          .map((tile) => (tile.title as Text?)?.data)
+          .toList();
+
+      expect(titles, [
+        'Version',
+        'Build',
+        'License terms',
+        'Privacy policy',
+        'Project home',
+        'Source code',
+      ]);
+    });
+
+    for (final entry in ['Project home', 'Source code']) {
+      testWidgets('a failed $entry launch does not crash', (tester) async {
+        UrlLauncherPlatform.instance = ThrowingUrlLauncher();
+        await pumpAbout(tester);
+
+        await tester.ensureVisible(find.text(entry));
+        await tester.tap(find.text(entry));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+        expect(find.text(entry), findsOneWidget);
+      });
+    }
   });
 }

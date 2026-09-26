@@ -71,14 +71,20 @@ assembled tree, with no server-side build step applied to it.
 - **THEN** it is served byte-for-byte at its path in the tree
 
 ### Requirement: One web build serves every mount point
-The web app SHALL be built with a relative base href, so that a single build
-runs correctly at `/app/` on the site, at any other directory it is served
-from, and from the release web archive.  The site SHALL use the same build
-that is published as the release web asset.
+The web app SHALL resolve its own URLs relative to the page it is loaded
+from, with no absolute base href, so that a single build runs correctly at
+`/app/` on the site, at any other directory it is served from, and from the
+release web archive.  The site SHALL use the same build that is published as
+the release web asset.  The Flutter development server (`flutter run` on a
+web device) SHALL continue to serve the app.
 
 #### Scenario: Release archive runs from a subdirectory
 - **WHEN** the release web archive's contents are served from a subdirectory of a web server
 - **THEN** the app loads and runs
+
+#### Scenario: Development server still runs the app
+- **WHEN** `flutter run -d chrome` or `flutter run -d web-server` is started
+- **THEN** the app is served and loads its assets, with no base-href error
 
 #### Scenario: Site and release asset share a build
 - **WHEN** a workflow run produces both the site and the release web archive

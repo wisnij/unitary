@@ -97,35 +97,41 @@ deployed tree matches the assembled one, `app/.last_build_id` included.
 assembled tree.  Rejected: it keeps Jekyll and the `.nojekyll` guard in play,
 and needs `contents: write`.
 
-### D2: Relative base href, one build shared by the site and the release zip
+### D2: No base element, one build shared by the site and the release zip
 
-`web/index.html`'s `<base href="$FLUTTER_BASE_HREF">` becomes
-`<base href="./">`, and no job passes `--base-href`.  `./` resolves against
-the directory `index.html` was loaded from, so one build works at `/app/` on
-the custom domain, at `wisnij.github.io/unitary/app/` before the domain is
-switched, from a subdirectory in the release web zip (which today works only
-at a server root), and in a local preview.
+`web/index.html` drops its `<base href="$FLUTTER_BASE_HREF">` element
+altogether, and no job passes `--base-href`.  With no `<base>`, the browser
+resolves relative URLs against the directory `index.html` was loaded from, so
+one build works at `/app/` on the custom domain, at
+`wisnij.github.io/unitary/app/` before the domain is switched, from a
+subdirectory in the release web zip (which previously worked only at a server
+root), and in a local preview.
 
 This is sound only because of the hash URL strategy: with path-based URLs,
-`./` would resolve against a route path and break asset loading.  Whether the
-engine's asset loading and `flutter build web` itself accept a relative base
-is not known, so **the first implementation task is a spike**: build with
-`./`, serve the output from a nested directory, and exercise startup, fonts,
-and both Markdown-asset screens (License terms, Privacy policy).  If it fails,
-fall back to `--base-href /app/` for the site build, leave the release zip
-built as today, and accept that the deploy and the custom-domain switch must
-happen together (see Migration Plan).
+relative URLs would resolve against a route path and break asset loading.
 
-**Spike result (September 25, 2026): the relative base works.**
-`flutter build web --release --wasm` accepts an `index.html` with no
-`$FLUTTER_BASE_HREF` placeholder, with no warning.  The build was served from
-`/app/` under a local server and driven in headless Chromium over the DevTools
-protocol, using real mouse input on Flutter's semantics nodes.  Every request
-resolved under `/app/` with status 200, including the fonts, the asset
-manifests, and `assets/LICENSE.md` and `assets/PRIVACY.md` when their screens
-were opened.  Both screens rendered their documents.  The identical build
-served from a server root also booted and loaded `assets/PRIVACY.md`.  The
-fallback is not needed.
+A relative `<base href="./">` behaves identically in a release build, and
+`flutter build web` accepts it.  It is not used because the development
+server behind `flutter run -d chrome` and `-d web-server` rejects any base
+href that does not start and end with `/`
+(`flutter_tools/lib/src/web_template.dart`, called from
+`isolated/web_asset_server.dart`).  That check runs only when a `<base>`
+element has an `href`, so leaving the element out satisfies it.
+
+*Alternative considered*: keep the placeholder and have CI rewrite
+`<base href="/">` to `<base href="./">` in the built `index.html`.  Rejected:
+it patches Flutter's output after the fact, and local release builds would
+then differ from CI's.
+
+**Verification (September 25, 2026).**  A release build
+(`flutter build web --release --wasm`) was served from `/app/` under a local
+server and driven in headless Chromium over the DevTools protocol, using real
+mouse input on Flutter's semantics nodes.  Every request resolved under
+`/app/` with status 200, including the fonts, the asset manifests, and
+`assets/LICENSE.md` and `assets/PRIVACY.md` when their screens were opened,
+and both screens rendered their documents.  A build served from a server root
+also booted and loaded `assets/PRIVACY.md`.  `flutter run -d web-server`
+started without error and served an app that loaded `assets/PRIVACY.md`.
 
 Headless Chromium's `--screenshot` and `--dump-dom` are useless for this kind
 of check: they capture before the Flutter view mounts and show a blank page,
@@ -268,11 +274,12 @@ against the policy.
 
 ## Risks / Trade-offs
 
-- **Relative base href does not work** → The spike runs first; the fallback
+- **Mount-agnostic build does not work** → The spike runs first; the fallback
   (`--base-href /app/` for the site, zip unchanged) is fully specified, at the
   cost of a combined, briefly broken cutover.
-- **Gap during the cutover** → With a relative base the new layout goes live
-  at `wisnij.github.io/unitary/` first and can be checked there; the only
+- **Gap during the cutover** → With a mount-agnostic build the new layout
+  goes live at `wisnij.github.io/unitary/` first and can be checked there; the
+  only
   remaining gap is certificate issuance after the domain is set, typically
   minutes.  HSTS means that gap cannot be bridged with plain HTTP.
 - **Old app bookmarks and installed PWAs land on the README** → One link from
@@ -322,6 +329,5 @@ be recreated from any pre-change commit with the old `deploy-web` steps.
 
 ## Open Questions
 
-- Does `flutter build web` accept an `index.html` without the
-  `$FLUTTER_BASE_HREF` placeholder, and does asset loading work under a
-  relative base?  Answered by the spike (D2).
+- Does a build with no `<base>` element work at any mount point, in both
+  `flutter build web` and `flutter run`?  Answered by the spike (D2).

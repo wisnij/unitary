@@ -1,9 +1,10 @@
-## 1. Spike: relative base href
+## 1. Spike: mount-agnostic web build
 
-- [x] 1.1 Replace `<base href="$FLUTTER_BASE_HREF">` in `web/index.html` with `<base href="./">` (updating the explanatory comment above it) and run `flutter build web --release --wasm` with no `--base-href`; record whether the build warns or fails
+- [x] 1.1 Remove the `<base href="$FLUTTER_BASE_HREF">` element from `web/index.html` (with a comment explaining its absence) and run `flutter build web --release --wasm` with no `--base-href`; record whether the build warns or fails
 - [x] 1.2 Serve `build/web` from a nested directory (e.g. copy it to `<scratch>/site/app/` and serve `<scratch>/site`), then load `/app/` and confirm startup, fonts, the License terms and Privacy policy screens (both load Markdown assets), and navigation between pages
 - [x] 1.3 Confirm the same build also runs when served from a server root, and that requesting `/app` without the slash is handled by the hosting redirect rather than the app (check behaviour under the local server used)
 - [x] 1.4 Record the outcome in `design.md` D2.  If the spike fails, switch the plan to the fallback: revert 1.1, build the site with `--base-href /app/`, leave `build-web` unchanged, and amend tasks 5 and 9 accordingly
+- [x] 1.5 Confirm `flutter run -d web-server` starts without a base-href error and serves an app that loads its assets (a relative `<base href="./">` fails this check, which is why the element is removed rather than made relative)
 
 ## 2. Generator: tests first
 

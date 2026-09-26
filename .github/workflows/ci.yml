@@ -194,7 +194,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
       # The same build, unzipped, for build-site to mount under app/.  Its
-      # relative base href lets one build serve both.
+      # index.html has no <base> element, so one build serves both.
       - uses: actions/upload-artifact@v4
         with:
           name: web-build

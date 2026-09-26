@@ -35,7 +35,7 @@ change of host.
 - Generate pages **in CI** instead of committing them.  The committed
   `web/privacy/index.html`, the `generate-web-docs` pre-commit hook, and
   `web/.nojekyll` (moot once Jekyll never runs) are removed.
-- Build the web app with a **relative base href** (`./`), so a single build
+- Build the web app with **no `<base>` element**, so a single build
   works at any mount point: `/app/` on the site, a subdirectory of any host
   for the release web zip, and a local preview.  Gated on a spike; the
   fallback is `--base-href /app/`.

@@ -703,7 +703,7 @@ than around the engineering tasks, which are small by comparison.
    - [x] Polish README — rewritten August 5, 2026 (F12) with eight
      device-captured screenshots added August 7
    - [x] Publish to GitHub — fully automated and proven: pushing a `vX.Y.Z`
-     tag runs `prepare` → `build-android-apk` + `build-web` → `release`,
+     tag runs `prepare` → `build-android-release` + `build-web` → `release`,
      which creates the GitHub release with the APK and web zip attached and
      the tag's annotation body as the release notes
    - [x] Web deployment — every push to `main` publishes the project site
@@ -957,20 +957,31 @@ than around the engineering tasks, which are small by comparison.
      rule in the console).  Testers install from Play, so anyone with the
      GitHub APK installed must uninstall it first unless the shared-key
      enrolment below has already been verified
-   - [ ] Build an AAB in CI — the release job currently runs `flutter build
-     apk` only; Play needs `flutter build appbundle`.  Add it alongside the
-     APK (which stays, for direct GitHub download) and attach it to the
-     release, or upload it to Play directly from CI
-     - The task 5 x86_64 exclusion is scoped to the release variant, so it will
-       probably apply to the bundle too.  Confirm that is wanted (Play serves
-       the ARM split to translating x86 devices), and never pass
-       `--target-platform` to a bundle build: Flutter issue #192530 reports
-       bundles built that way crashing on the ABIs they leave out
-   - [ ] Decide how uploads happen: manually through the Play Console at
-     first, or automated from CI.  Manual is the right default for the first
-     submission — the console surfaces policy warnings and pre-launch report
-     findings that a scripted upload would hide.  Automating later is
-     straightforward if the release cadence justifies it
+   - [x] Build an AAB in CI – done September 27, 2026 by the `play-bundle`
+     change (see `openspec/changes/play-bundle/`); confirmation on a real tag
+     build is still pending.  Each tag build now produces
+     `unitary-<version>.aab` alongside the APK, in the same job (renamed
+     `build-android-release`, with `build-android-test` rehearsing it on
+     every push and pull request).  The job signs the APK with the app
+     signing key, then rewrites `key.properties` and signs the bundle with
+     the **upload** key, checking each against its own expected fingerprint
+     before anything is uploaded.  The bundle's check uses `keytool
+     -printcert -jarfile`, since bundles are JAR-signed and `apksigner` cannot
+     read them.  The bundle is kept as a 90-day workflow artifact for
+     uploading by hand and is **not** attached to the GitHub release, since
+     end users cannot install it.  `tool/verify_apk_abis.dart` now checks
+     bundles too (native libraries under `base/lib/`)
+     - The task 5 x86_64 exclusion applies to the bundle as well, confirmed
+       on a local build, and is kept: no device that can install Unitary
+       needs x86_64, and one ABI set for both channels is simpler.  The
+       bundle is built without `--target-platform`, because Flutter issue
+       #192530 reports bundles built that way crashing on the ABIs they leave
+       out
+   - [x] Decide how uploads happen – manually through the Play Console,
+     downloading the bundle from the tag build's workflow artifacts.  The
+     console surfaces policy warnings and pre-launch report findings that a
+     scripted upload would hide.  Automating later is straightforward if the
+     release cadence justifies it
    - [ ] Enrol in Play App Signing with the **existing** key – at the first
      upload, choose to supply the app signing key from task 2 (through the
      console's encrypted key export) rather than letting Google generate

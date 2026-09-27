@@ -684,10 +684,11 @@ extra the original list treated it as.  The task list below is re-derived
 from the actual state rather than kept as originally written.
 
 The "Week 25" estimate no longer reflects the scope.  Play Store onboarding
-is gated by Google's timelines rather than by work on this end — identity
-verification, and possibly a mandatory closed-testing period measured in
-weeks — so the phase should be planned around that rather than around the
-engineering tasks, which are small by comparison.
+is gated by Google's timelines rather than by work on this end: this account
+must run a closed test with at least 12 testers for at least 14 days before
+it can apply for production access, and Google then reviews that
+application (see task 7).  The phase should be planned around that rather
+than around the engineering tasks, which are small by comparison.
 
 **Tasks:**
 
@@ -712,7 +713,7 @@ engineering tasks, which are small by comparison.
      `openspec/changes/pages-site/`
    - [x] Screenshots — eight captured via `tool/take_screenshots.sh`.  Note
      these are sized for the README; the Play Store needs its own set (see
-     task 8)
+     task 7)
 
 2. Release signing — **RESOLVED** (September 5, 2026)
    - [x] **Decide the two-channel signing strategy first** — this is the one
@@ -769,9 +770,10 @@ engineering tasks, which are small by comparison.
    - **Still ahead, and still irreversible:** this task settles the GitHub half
      of the strategy.  The Play half — enrolling in Play App Signing with *this
      same key* rather than letting Google generate one — has not happened yet
-     and lives in task 8.  Until it does, the "one signature across both
-     channels" property is decided but not realised, and the single
-     unrecoverable click of the phase is still ahead
+     and lives in task 7, where it happens at the first closed-test upload.
+     Until it does, the "one signature across both channels" property is
+     decided but not realised, and the single unrecoverable click of the
+     phase is still ahead
 
 3. Version code — **RESOLVED** (September 2, 2026)
    - [x] Adopt a `version: X.Y.Z+N` scheme in `pubspec.yaml` and decide how
@@ -933,30 +935,28 @@ engineering tasks, which are small by comparison.
      `dartdoc_options.yaml`, with each library opting in via
      `{@category …}` on a `library;` directive
 
-7. Cut 1.0.0
-   - [ ] Decide what 1.0.0 means here and whether any deferred item should
-     land first — the open candidate is code-review **F8** (the worksheet
-     AppBar dropdown overflows at ≲410 dp), the only user-visible item among
-     the deferred findings; F2/F3/F4/F5/F7/F16 are architecture debt or
-     latent-only and are fine to carry
-   - [ ] Bump `pubspec.yaml` to 1.0.0 with its build number, update
-     `CHANGELOG.md`, tag, and let the existing pipeline publish
-   - [ ] Verify the published artifacts: signature, version code, and an
-     install-over-previous test on a real device
-   - [ ] Update the README's "Project status" section, which will no longer
-     be describing a pre-release app
-
-8. Play Store submission — the largest single group, and the long pole for
-   the phase.  Start the account and testing-track steps **early**: they are
-   gated by Google's timelines rather than by work on this end, so they can
-   run in parallel with tasks 2–7 rather than waiting on them
-   - [ ] Register a Google Play developer account (one-time fee) and complete
-     identity verification.  **Verify current onboarding requirements before
-     planning the timeline** — Google has previously required new personal
-     developer accounts to run a closed test with a minimum number of testers
-     for a minimum continuous period before production access is granted.  If
-     that still applies it dominates the schedule and needs recruiting real
-     testers, so establish it first rather than discovering it at submission
+7. Play Store submission – the largest single group, and the long pole for
+   the phase.  This account must run a **closed test with at least 12
+   testers for at least 14 days** before it can even apply for production
+   access (confirmed in the Play Console, September 26, 2026), and Google
+   then reviews that application.  The critical path is therefore:
+   everything a closed-test release needs, then the 14-day test, then the
+   production-access application and its review.  Tester recruitment has
+   the longest lead time and can start immediately.  The closed test runs
+   on 0.9.x builds; each further upload only needs a higher version code,
+   which the task 3 scheme guarantees.  1.0.0 is cut afterwards (task 8), so
+   that anything the test turns up can be fixed before it
+   - [x] Register a Google Play developer account (one-time fee)
+   - [x] Complete identity verification
+   - [x] Confirm the onboarding requirements – a closed test with at least 12
+     testers for at least 14 days is a prerequisite for applying for
+     production access (confirmed in the Play Console, September 26, 2026)
+   - [ ] Recruit testers – at least 12, each with a Google account, plus a
+     few spare: as understood, testers must stay opted in for the whole
+     period to count, so one who drops out partway may not (check the exact
+     rule in the console).  Testers install from Play, so anyone with the
+     GitHub APK installed must uninstall it first unless the shared-key
+     enrolment below has already been verified
    - [ ] Build an AAB in CI — the release job currently runs `flutter build
      apk` only; Play needs `flutter build appbundle`.  Add it alongside the
      APK (which stays, for direct GitHub download) and attach it to the
@@ -971,6 +971,12 @@ engineering tasks, which are small by comparison.
      submission — the console surfaces policy warnings and pre-launch report
      findings that a scripted upload would hide.  Automating later is
      straightforward if the release cadence justifies it
+   - [ ] Enrol in Play App Signing with the **existing** key – at the first
+     upload, choose to supply the app signing key from task 2 (through the
+     console's encrypted key export) rather than letting Google generate
+     one.  This is the irreversible step of the phase, and it happens at the
+     first closed-test upload, not at production submission.  Verify the
+     current enrolment options before that upload
    - [ ] Verify the AAB against the signing strategy chosen in task 2 —
      specifically that a Play-delivered build and a GitHub-downloaded APK of
      the same version carry the same signature, so users are not locked into
@@ -1009,16 +1015,35 @@ engineering tasks, which are small by comparison.
    - [ ] Confirm the target API level meets Play's current requirement.
      `targetSdk` is 36 and `minSdk` 24 as built, which is current today, but
      the requirement advances annually and is enforced on new uploads
-   - [ ] Roll out through the testing tracks — internal, then closed if
-     required by the account rules above, then production.  Read the
-     pre-launch report at each stage: it runs the app on real devices and
-     catches crashes, accessibility issues, and policy problems before users
-     do
+   - [ ] Run the closed test – optionally an internal-track upload first as a
+     smoke test, then the closed track with the recruited testers for at
+     least 14 days.  Read the pre-launch report for each upload: it runs the
+     app on real devices and catches crashes, accessibility issues, and
+     policy problems before users do.  Fixes found during the test ship as
+     further 0.9.x uploads
+   - [ ] Apply for production access once the test has run its course – the
+     application asks about the closed test, and Google reviews it before
+     granting access
    - [ ] Accept the recurring obligations this channel brings, which the
      GitHub and web channels do not: annual target-API deadlines, periodic
      re-declaration of data safety and content rating, and policy compliance
      on an ongoing basis.  A published app that falls behind these is
      eventually removed from the store
+
+8. Cut 1.0.0 and release it to production
+   - [ ] Decide what 1.0.0 means here and whether any deferred item should
+     land first — the open candidate is code-review **F8** (the worksheet
+     AppBar dropdown overflows at ≲410 dp), the only user-visible item among
+     the deferred findings; F2/F3/F4/F5/F7/F16 are architecture debt or
+     latent-only and are fine to carry.  Anything the closed test found that
+     was not already fixed in a 0.9.x upload is also decided here
+   - [ ] Bump `pubspec.yaml` to 1.0.0 with its build number, update
+     `CHANGELOG.md`, tag, and let the existing pipeline publish
+   - [ ] Verify the published artifacts: signature, version code, and an
+     install-over-previous test on a real device
+   - [ ] Update the README's "Project status" section, which will no longer
+     be describing a pre-release app
+   - [ ] Publish 1.0.0 to the production track on the Play Store
 
 **Deliverable:** Public MVP release — a signed, versioned 1.0.0 published on
 GitHub and live on the Play Store, with the web app deployed and a privacy

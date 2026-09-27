@@ -73,17 +73,17 @@
 - [x] 5.1 Open a pull request and confirm `build-android-test` builds both
   artifacts, both ABI checks pass, and both rehearsal artifacts appear with
   7-day retention
-- [ ] 5.2 After merging, cut the next `0.9.x` tag.  Confirm in the
+- [x] 5.2 After merging, cut the next `0.9.x` tag.  Confirm in the
   `build-android-release` log that the APK matched the app certificate and the
   bundle matched the upload certificate, that the two fingerprints differ, and
   that the log shows no key material
-- [ ] 5.3 Confirm the GitHub release carries only the APK and the web archive,
+- [x] 5.3 Confirm the GitHub release carries only the APK and the web archive,
   and that the `android-aab-release` artifact is listed with 90-day retention
-- [ ] 5.4 Download the bundle artifact and confirm locally that
+- [x] 5.4 Download the bundle artifact and confirm locally that
   `keytool -printcert -jarfile` reports the upload certificate, that its
   `base/lib/` holds only the two ARM ABIs, and that it contains no keystore or
   `key.properties`
-- [ ] 5.5 Confirm the bundle's version code equals the APK's, either with
+- [x] 5.5 Confirm the bundle's version code equals the APK's, either with
   `bundletool dump manifest --xpath /manifest/@android:versionCode` or from the
   Play Console when it is uploaded
 

@@ -958,8 +958,8 @@ than around the engineering tasks, which are small by comparison.
      GitHub APK installed must uninstall it first unless the shared-key
      enrolment below has already been verified
    - [x] Build an AAB in CI – done September 27, 2026 by the `play-bundle`
-     change (see `openspec/changes/play-bundle/`); confirmation on a real tag
-     build is still pending.  Each tag build now produces
+     change (see `openspec/changes/play-bundle/`), and confirmed on the
+     v0.9.11 tag build.  Each tag build now produces
      `unitary-<version>.aab` alongside the APK, in the same job (renamed
      `build-android-release`, with `build-android-test` rehearsing it on
      every push and pull request).  The job signs the APK with the app

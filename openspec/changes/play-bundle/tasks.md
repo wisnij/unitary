@@ -70,7 +70,7 @@
 
 ## 5. Verification in CI
 
-- [ ] 5.1 Open a pull request and confirm `build-android-test` builds both
+- [x] 5.1 Open a pull request and confirm `build-android-test` builds both
   artifacts, both ABI checks pass, and both rehearsal artifacts appear with
   7-day retention
 - [ ] 5.2 After merging, cut the next `0.9.x` tag.  Confirm in the

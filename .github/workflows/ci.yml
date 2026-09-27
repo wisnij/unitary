@@ -151,12 +151,12 @@ jobs:
         env:
           EXPECTED: ${{ vars.ANDROID_APP_CERT_SHA256 }}
         run: |
-          if [ -z "$EXPECTED" ]; then
+          if [[ -z $EXPECTED ]]; then
             echo "::error::ANDROID_APP_CERT_SHA256 is not set; cannot verify signing"
             exit 1
           fi
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
-          if [ -z "$apksigner" ]; then
+          if [[ -z $apksigner ]]; then
             echo "::error::apksigner not found in $ANDROID_HOME/build-tools"
             exit 1
           fi
@@ -165,7 +165,7 @@ jobs:
             | awk '/certificate SHA-256 digest/ {print $NF}')
           echo "expected: $EXPECTED"
           echo "actual:   $actual"
-          if [ "$actual" != "$EXPECTED" ]; then
+          if [[ $actual != "$EXPECTED" ]]; then
             echo "::error::APK is not signed with the expected app signing key"
             exit 1
           fi
@@ -204,7 +204,7 @@ jobs:
           EXPECTED: ${{ vars.ANDROID_UPLOAD_CERT_SHA256 }}
           BUNDLE: build/app/outputs/bundle/release/app-release.aab
         run: |
-          if [ -z "$EXPECTED" ]; then
+          if [[ -z $EXPECTED ]]; then
             echo "::error::ANDROID_UPLOAD_CERT_SHA256 is not set; cannot verify signing"
             exit 1
           fi
@@ -214,7 +214,7 @@ jobs:
             exit 1
           fi
           signers=$(printf '%s\n' "$certs" | grep -c '^Signer #' || true)
-          if [ "$signers" -ne 1 ]; then
+          if [[ $signers -ne 1 ]]; then
             printf '%s\n' "$certs"
             echo "::error::bundle has $signers signers; expected exactly 1"
             exit 1
@@ -225,7 +225,7 @@ jobs:
           expected=$(printf '%s' "$EXPECTED" | tr -d ':' | tr 'A-F' 'a-f')
           echo "expected: $expected"
           echo "actual:   $actual"
-          if [ "$actual" != "$expected" ]; then
+          if [[ $actual != "$expected" ]]; then
             echo "::error::bundle is not signed with the expected upload key"
             exit 1
           fi

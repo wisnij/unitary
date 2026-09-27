@@ -39,18 +39,18 @@ jobs:
           echo "build_metadata=${build_timestamp}-${description}" >> $GITHUB_OUTPUT
           echo "version=$(git describe | sed 's/^v//')" >> $GITHUB_OUTPUT
 
-  # Rehearses the release APK job on every push and pull request, so a failure
-  # in the build, naming, or upload steps surfaces before a tag is cut rather
-  # than during a release.  Identical to build-android-apk-release except that
-  # no signing secrets are in reach: without android/key.properties the release
-  # build type falls back to the debug key, whichever throwaway one the runner
-  # generated.  Its artifact is never published.
+  # Rehearses the release Android job on every push and pull request, so a
+  # failure in the build, naming, or upload steps surfaces before a tag is cut
+  # rather than during a release.  Identical to build-android-release except
+  # that no signing secrets are in reach: without android/key.properties the
+  # release build type falls back to the debug key, whichever throwaway one the
+  # runner generated, so there is no signature to check.  Its artifacts are
+  # never published.
   #
-  # Skipped on tags: build-android-apk-release then covers the same ground with
-  # the real key, so running both would spend a full APK build to produce a
-  # second, debug-signed unitary-<version>.apk sitting beside the publishable
-  # one under the same filename.
-  build-android-apk-test:
+  # Skipped on tags: build-android-release then covers the same ground with the
+  # real keys, so running both would spend two full builds producing
+  # debug-signed artifacts under the same file names as the publishable ones.
+  build-android-test:
     if: github.ref_type != 'tag'
     needs: prepare
     runs-on: ubuntu-latest
@@ -68,31 +68,54 @@ jobs:
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
           --target-platform android-arm,android-arm64
-      - name: Verify native library ABIs
+      - name: Verify APK native library ABIs
         run: dart run tool/verify_apk_abis.dart build/app/outputs/flutter-apk/app-release.apk
-      - name: Compute asset name
+      # No --target-platform: bundles built with it have been reported to crash
+      # on the ABIs they leave out (Flutter issue #192530).  The release-only
+      # packaging exclusion in android/app/build.gradle.kts drops x86_64.
+      - name: Build Android App Bundle (debug-signed)
+        run: >-
+          flutter build appbundle
+          --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
+          --release
+      - name: Verify bundle native library ABIs
+        run: dart run tool/verify_apk_abis.dart build/app/outputs/bundle/release/app-release.aab
+      - name: Compute asset names
         id: asset
-        run: echo "name=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
-      - name: Prepare Android APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk "${{ steps.asset.outputs.name }}"
+        run: |
+          echo "apk=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
+          echo "aab=unitary-${{ needs.prepare.outputs.version }}.aab" >> "$GITHUB_OUTPUT"
+      - name: Prepare Android artifacts
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk "${{ steps.asset.outputs.apk }}"
+          cp build/app/outputs/bundle/release/app-release.aab "${{ steps.asset.outputs.aab }}"
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk-test
-          path: ${{ steps.asset.outputs.name }}
+          path: ${{ steps.asset.outputs.apk }}
+          if-no-files-found: error
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-test
+          path: ${{ steps.asset.outputs.aab }}
           if-no-files-found: error
           retention-days: 7
 
-  # Release build type, app signing key — tags only.  The `release` environment
-  # carries the signing secrets and is restricted by repository settings to v*
-  # tags, so this job cannot run — and the secrets cannot be reached — from a
-  # branch or a pull request, whatever the workflow file says.
-  build-android-apk-release:
+  # Release build type, tags only.  The APK for the GitHub release is signed
+  # with the app signing key, and the App Bundle for Google Play with the upload
+  # key; android/key.properties is rewritten between the two builds.  The
+  # `release` environment carries the signing secrets and is restricted by
+  # repository settings to v* tags, so this job cannot run, and the secrets
+  # cannot be reached, from a branch or a pull request, whatever the workflow
+  # file says.  Every check runs before anything is uploaded.
+  build-android-release:
     if: github.ref_type == 'tag'
     needs: prepare
     runs-on: ubuntu-latest
     environment: release
     outputs:
-      asset: ${{ steps.asset.outputs.name }}
+      apk: ${{ steps.asset.outputs.apk }}
     steps:
       - uses: actions/checkout@v6
       - uses: subosito/flutter-action@v2
@@ -101,7 +124,7 @@ jobs:
           channel: stable
           cache: true
       - run: flutter pub get
-      - name: Write signing configuration
+      - name: Write app signing configuration
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_APP_KEYSTORE_B64 }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_APP_KEYSTORE_PASSWORD }}
@@ -124,16 +147,16 @@ jobs:
           --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
           --release
           --target-platform android-arm,android-arm64
-      - name: Verify signing certificate
+      - name: Verify APK signing certificate
         env:
           EXPECTED: ${{ vars.ANDROID_APP_CERT_SHA256 }}
         run: |
-          if [ -z "$EXPECTED" ]; then
+          if [[ -z $EXPECTED ]]; then
             echo "::error::ANDROID_APP_CERT_SHA256 is not set; cannot verify signing"
             exit 1
           fi
           apksigner=$(ls "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1)
-          if [ -z "$apksigner" ]; then
+          if [[ -z $apksigner ]]; then
             echo "::error::apksigner not found in $ANDROID_HOME/build-tools"
             exit 1
           fi
@@ -142,26 +165,100 @@ jobs:
             | awk '/certificate SHA-256 digest/ {print $NF}')
           echo "expected: $EXPECTED"
           echo "actual:   $actual"
-          if [ "$actual" != "$EXPECTED" ]; then
+          if [[ $actual != "$EXPECTED" ]]; then
             echo "::error::APK is not signed with the expected app signing key"
             exit 1
           fi
-      - name: Verify native library ABIs
+      - name: Verify APK native library ABIs
         run: dart run tool/verify_apk_abis.dart build/app/outputs/flutter-apk/app-release.apk
+      - name: Write upload signing configuration
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_UPLOAD_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_UPLOAD_KEY_ALIAS }}
+        run: |
+          set +x
+          umask 077
+          keystore="${RUNNER_TEMP}/unitary-upload.p12"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$keystore"
+          # Replaces the app signing configuration written above.
+          {
+            printf 'storeFile=%s\n' "$keystore"
+            printf 'storePassword=%s\n' "$KEYSTORE_PASSWORD"
+            printf 'keyAlias=%s\n' "$KEY_ALIAS"
+            printf 'keyPassword=%s\n' "$KEYSTORE_PASSWORD"
+          } > android/key.properties
+      # No --target-platform: bundles built with it have been reported to crash
+      # on the ABIs they leave out (Flutter issue #192530).  The release-only
+      # packaging exclusion in android/app/build.gradle.kts drops x86_64.
+      - name: Build Android App Bundle (upload-signed)
+        run: >-
+          flutter build appbundle
+          --dart-define=BUILD_METADATA='${{ needs.prepare.outputs.build_metadata }}'
+          --release
+      # Bundles are JAR-signed, so apksigner cannot check them.  keytool exits
+      # non-zero when a signed entry fails verification, but exits 0 for an
+      # unsigned bundle, so the signer count is checked separately.
+      - name: Verify bundle signing certificate
+        env:
+          EXPECTED: ${{ vars.ANDROID_UPLOAD_CERT_SHA256 }}
+          BUNDLE: build/app/outputs/bundle/release/app-release.aab
+        run: |
+          if [[ -z $EXPECTED ]]; then
+            echo "::error::ANDROID_UPLOAD_CERT_SHA256 is not set; cannot verify signing"
+            exit 1
+          fi
+          if ! certs=$(keytool -printcert -jarfile "$BUNDLE" 2>&1); then
+            printf '%s\n' "$certs"
+            echo "::error::bundle signature does not verify"
+            exit 1
+          fi
+          signers=$(printf '%s\n' "$certs" | grep -c '^Signer #' || true)
+          if [[ $signers -ne 1 ]]; then
+            printf '%s\n' "$certs"
+            echo "::error::bundle has $signers signers; expected exactly 1"
+            exit 1
+          fi
+          # keytool prints the fingerprint as uppercase colon-separated hex;
+          # normalise both sides so either form of the expected value matches.
+          actual=$(printf '%s\n' "$certs" | awk '$1 == "SHA256:" {print $2}' | tr -d ':' | tr 'A-F' 'a-f')
+          expected=$(printf '%s' "$EXPECTED" | tr -d ':' | tr 'A-F' 'a-f')
+          echo "expected: $expected"
+          echo "actual:   $actual"
+          if [[ $actual != "$expected" ]]; then
+            echo "::error::bundle is not signed with the expected upload key"
+            exit 1
+          fi
+      - name: Verify bundle native library ABIs
+        run: dart run tool/verify_apk_abis.dart build/app/outputs/bundle/release/app-release.aab
       - name: Remove signing material
         if: always()
-        run: rm -f android/key.properties "${RUNNER_TEMP}/unitary-app.p12"
-      - name: Compute asset name
+        run: rm -f android/key.properties "${RUNNER_TEMP}/unitary-app.p12" "${RUNNER_TEMP}/unitary-upload.p12"
+      - name: Compute asset names
         id: asset
-        run: echo "name=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
-      - name: Prepare Android APK
-        run: cp build/app/outputs/flutter-apk/app-release.apk "${{ steps.asset.outputs.name }}"
+        run: |
+          echo "apk=unitary-${{ needs.prepare.outputs.version }}.apk" >> "$GITHUB_OUTPUT"
+          echo "aab=unitary-${{ needs.prepare.outputs.version }}.aab" >> "$GITHUB_OUTPUT"
+      - name: Prepare Android artifacts
+        run: |
+          cp build/app/outputs/flutter-apk/app-release.apk "${{ steps.asset.outputs.apk }}"
+          cp build/app/outputs/bundle/release/app-release.aab "${{ steps.asset.outputs.aab }}"
       - uses: actions/upload-artifact@v4
         with:
           name: android-apk-release
-          path: ${{ steps.asset.outputs.name }}
+          path: ${{ steps.asset.outputs.apk }}
           if-no-files-found: error
           retention-days: 7
+      # Kept for uploading to the Play Console by hand, possibly well after the
+      # tag, so it outlives the APK artifact, which is only a hand-off to the
+      # release job.  Deliberately not attached to the GitHub release: end
+      # users cannot install a bundle.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-aab-release
+          path: ${{ steps.asset.outputs.aab }}
+          if-no-files-found: error
+          retention-days: 90
 
   build-web:
     needs: prepare
@@ -250,7 +347,7 @@ jobs:
 
   release:
     if: github.ref_type == 'tag'
-    needs: [prepare, build-android-apk-release, build-web]
+    needs: [prepare, build-android-release, build-web]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -275,5 +372,5 @@ jobs:
           gh release create ${{ github.ref_name }}
           --notes-file RELEASE_NOTES.md
           --title "Release ${{ needs.prepare.outputs.version }}"
-          ${{ needs.build-android-apk-release.outputs.asset }}
+          ${{ needs.build-android-release.outputs.apk }}
           ${{ needs.build-web.outputs.asset }}

@@ -295,10 +295,10 @@ key password distinct from the store password — keytool warns and ignores
 
 ## 6. Play App Signing enrolment
 
-- [ ] 6.1 In the Play Console, create the first release **deliberately choosing
+- [x] 6.1 In the Play Console, create the first release **deliberately choosing
   to upload the existing app signing key** — the default generates a Google key
   and silently forecloses matching signatures across channels, permanently
-- [ ] 6.2 Export the app signing key with PEPK and complete the upload.  Play's
+- [x] 6.2 Export the app signing key with PEPK and complete the upload.  Play's
   documentation describes the upload key as "stored in a Java keystore (.jks or
   .keystore)", while these keys are PKCS12 (`.p12`) — the modern keytool default,
   and a format Play never actually sees for the upload key, since it verifies a
@@ -313,8 +313,8 @@ key password distinct from the store password — keytool warns and ignores
 
   Verified lossless — the converted keystore holds the same key and reports an
   identical certificate fingerprint, so nothing downstream changes
-- [ ] 6.3 Designate `unitary-upload` as the upload key
-- [ ] 6.4 Confirm the app signing certificate shown in the Console matches the
+- [x] 6.3 Designate `unitary-upload` as the upload key
+- [x] 6.4 Confirm the app signing certificate shown in the Console matches the
   fingerprint recorded in 3.6
 - [ ] 6.5 Confirm a Play-delivered install and a GitHub APK of the same version
   present the same certificate, and that each installs over the other as an

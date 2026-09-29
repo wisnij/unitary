@@ -982,34 +982,43 @@ than around the engineering tasks, which are small by comparison.
      console surfaces policy warnings and pre-launch report findings that a
      scripted upload would hide.  Automating later is straightforward if the
      release cadence justifies it
-   - [ ] Enrol in Play App Signing with the **existing** key – at the first
+   - [x] Enrol in Play App Signing with the **existing** key – at the first
      upload, choose to supply the app signing key from task 2 (through the
      console's encrypted key export) rather than letting Google generate
      one.  This is the irreversible step of the phase, and it happens at the
-     first closed-test upload, not at production submission.  Verify the
-     current enrolment options before that upload
+     first closed-test upload, not at production submission.  Done with the
+     first closed-test upload of the v0.9.11 bundle (reported September 29,
+     2026): the app signing key and the upload key were both supplied, and
+     the fingerprints the console shows for each match the expected values
    - [ ] Verify the AAB against the signing strategy chosen in task 2 —
      specifically that a Play-delivered build and a GitHub-downloaded APK of
      the same version carry the same signature, so users are not locked into
-     whichever channel they installed from first
+     whichever channel they installed from first.  The console-side half is
+     done (its app signing certificate matches the GitHub APK's); what
+     remains is installing a Play-delivered build on a device and installing
+     the GitHub APK over it, and the reverse
    - [ ] Store listing copy: short description ≤80 characters, full
      description ≤4000.  The README's feature tour is the obvious source, but
      Play descriptions are read cold by people who have never heard of the
      app, so lead with what it does rather than how it is built.  The "no
      ads, no tracking, no subscriptions, everything offline" angle is a
-     genuine differentiator in this category and belongs near the top
+     genuine differentiator in this category and belongs near the top.  A
+     basic placeholder description is live; the real one should be
+     version-controlled, either as its own files or generated from the
+     README
    - [ ] Store listing graphics: app icon at 512×512 (derivable from
      `assets/icon/unitary.svg` via the existing `tool/generate_icons.sh`
      pipeline) and a feature graphic at 1024×500, which has no existing
-     source and must be designed
+     source and must be designed.  A mockup exists as the design target
    - [ ] Store listing screenshots — a separate set from the README's.  Play
      has its own count and aspect-ratio rules per form factor, and listing
      tablet screenshots is what makes the app eligible to be surfaced as
      tablet-capable.  The app genuinely earns that: the two-pane expanded
      layouts are worth showing.  `tool/take_screenshots.sh` already automates
      device capture and can be pointed at a tablet AVD, so extend it rather
-     than capturing by hand
-   - [ ] Complete the Data safety declaration — straightforward here: no data
+     than capturing by hand.  The existing phone screenshots are uploaded;
+     tablet ones are still to be taken
+   - [x] Complete the Data safety declaration — straightforward here: no data
      collected, none shared, none transmitted off-device except the
      unauthenticated exchange-rate fetch, which carries no user identifier.
      Keep it consistent with the privacy policy from task 4, since the two
@@ -1019,19 +1028,23 @@ than around the engineering tasks, which are small by comparison.
      host that logs requests.  Register the canonical URL
      <https://unitary.wisnij.dev/privacy>, with **no trailing slash**: that
      form is served directly, while `/privacy/` returns 404
-   - [ ] Complete the content rating questionnaire (expected: rated for
+   - [x] Complete the content rating questionnaire (expected: rated for
      everyone) and the remaining declarations Play requires at submission —
      ads (none), target audience, and news/government/financial category
      questions
-   - [ ] Confirm the target API level meets Play's current requirement.
+   - [x] Confirm the target API level meets Play's current requirement.
      `targetSdk` is 36 and `minSdk` 24 as built, which is current today, but
-     the requirement advances annually and is enforced on new uploads
+     the requirement advances annually and is enforced on new uploads.
+     Confirmed by Play accepting the v0.9.11 upload, since it rejects uploads
+     below the requirement
    - [ ] Run the closed test – optionally an internal-track upload first as a
      smoke test, then the closed track with the recruited testers for at
      least 14 days.  Read the pre-launch report for each upload: it runs the
      app on real devices and catches crashes, accessibility issues, and
      policy problems before users do.  Fixes found during the test ship as
-     further 0.9.x uploads
+     further 0.9.x uploads.  The v0.9.11 release is published on the closed
+     track (September 29, 2026) with no problems reported; the 14 days start
+     once testers are enrolled
    - [ ] Apply for production access once the test has run its course – the
      application asks about the closed test, and Google reviews it before
      granting access

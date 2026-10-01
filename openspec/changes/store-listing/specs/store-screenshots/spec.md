@@ -3,7 +3,7 @@
 ### Requirement: Screenshot sets for phone, 7-inch, and 10-inch tablets
 
 The repository SHALL hold three store screenshot sets under
-`fastlane/metadata/android/en-US/images/`: `phoneScreenshots/`,
+`metadata/en-US/images/`: `phoneScreenshots/`,
 `sevenInchScreenshots/`, and `tenInchScreenshots/`.  Each set SHALL contain
 between four and eight PNG files named `NN_<name>.png`, where `NN` is a two-digit
 number giving the order in the listing.

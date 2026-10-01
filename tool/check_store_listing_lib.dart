@@ -1,8 +1,10 @@
 /// Checks the Google Play store listing against Play's requirements.
 ///
-/// The listing lives under [storeListingRoot] in the layout fastlane `supply`
-/// reads: three text files and an `images/` folder holding the icon, the
-/// feature graphic, and one folder of screenshots per device type.  The
+/// The listing lives under [storeListingRoot], one of the locations F-Droid
+/// reads metadata from in an app's source repository, in the same layout as
+/// fastlane's `fastlane/metadata/android/<locale>/`: three text files and an
+/// `images/` folder holding the icon, the feature graphic, and one folder of
+/// screenshots per device type.  The
 /// limits here follow Play's help page on preview assets as read on September
 /// 29, 2026.  The test suite runs [checkStoreListing] against the committed
 /// tree, so a listing that breaks a rule fails CI.
@@ -12,7 +14,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 /// The store listing's directory, relative to the repository root.
-const String storeListingRoot = 'fastlane/metadata/android/en-US';
+const String storeListingRoot = 'metadata/en-US';
 
 /// The fields of a PNG file's `IHDR` chunk that the checks need.
 final class PngInfo {

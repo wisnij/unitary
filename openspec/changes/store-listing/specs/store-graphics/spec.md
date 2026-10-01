@@ -2,7 +2,7 @@
 
 ### Requirement: Store icon rendered from the app icon source
 
-The store icon SHALL be `fastlane/metadata/android/en-US/images/icon.png`, a
+The store icon SHALL be `metadata/en-US/images/icon.png`, a
 512×512 32-bit PNG with an alpha channel, rendered from
 `assets/icon/unitary.svg` by `tool/generate_store_graphics.sh`.
 
@@ -13,7 +13,7 @@ The store icon SHALL be `fastlane/metadata/android/en-US/images/icon.png`, a
 
 ### Requirement: Feature graphic rendered from an SVG source
 
-The feature graphic SHALL be `fastlane/metadata/android/en-US/images/featureGraphic.png`,
+The feature graphic SHALL be `metadata/en-US/images/featureGraphic.png`,
 a 1024×500 24-bit PNG with no alpha channel, rendered by
 `tool/generate_store_graphics.sh` from `assets/store/feature_graphic.svg`.  The
 SVG SHALL follow the mockup: the app icon, the wordmark "Unitary", the tagline

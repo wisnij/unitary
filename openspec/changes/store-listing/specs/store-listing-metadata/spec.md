@@ -1,16 +1,16 @@
 ## ADDED Requirements
 
-### Requirement: Store text is version-controlled in the fastlane layout
+### Requirement: Store text is version-controlled in the F-Droid metadata layout
 
 The Google Play listing text SHALL be kept in the repository under
-`fastlane/metadata/android/en-US/`, as `title.txt`, `short_description.txt`,
+`metadata/en-US/`, as `title.txt`, `short_description.txt`,
 and `full_description.txt`, in plain text.  These files SHALL be the source the
 Play Console listing is copied from.
 
 #### Scenario: The text files exist
 
 - **WHEN** the repository is checked out
-- **THEN** `fastlane/metadata/android/en-US/` contains `title.txt`,
+- **THEN** `metadata/en-US/` contains `title.txt`,
   `short_description.txt`, and `full_description.txt`, each non-empty
 
 ### Requirement: Store text fits Play's limits

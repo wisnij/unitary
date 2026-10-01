@@ -2,7 +2,7 @@
      viewBox="0 0 1024 500" width="1024" height="500">
   <!--
     Google Play feature graphic, rendered to
-    fastlane/metadata/android/en-US/images/featureGraphic.png by
+    metadata/en-US/images/featureGraphic.png by
     tool/generate_store_graphics.sh.
 
     The wordmark and tagline use the bundled font in fonts/ (SIL Open Font
@@ -39,6 +39,6 @@
         stroke="#3a3d42" stroke-width="2.5"/>
   <image x="719" y="72" width="194" height="345" preserveAspectRatio="xMidYMid slice"
          clip-path="url(#screen)"
-         xlink:href="../../fastlane/metadata/android/en-US/images/phoneScreenshots/02_worksheet.png"/>
+         xlink:href="../../metadata/en-US/images/phoneScreenshots/02_worksheet.png"/>
   <circle cx="816" cy="80" r="4" fill="#050506" stroke="#1e2024" stroke-width="1"/>
 </svg>

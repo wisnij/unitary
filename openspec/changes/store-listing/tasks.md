@@ -11,7 +11,7 @@
   alpha rejection, size bounds, and the 4–8 count per set
 - [x] 1.4 Implement `tool/check_store_listing_lib.dart` until 1.1–1.3 pass
 - [x] 1.5 Add a test that runs every check against the real
-  `fastlane/metadata/android/en-US/` tree, reporting each failing file and
+  `metadata/en-US/` tree, reporting each failing file and
   rule.  It fails until sections 2–5 have produced the tree
 
 ## 2. Screenshot capture
@@ -35,7 +35,7 @@
   default, `phone`, `seven-inch`, `ten-inch`, `store`).  For store targets:
   boot the AVD, turn on the dark theme, capture into
   `build/screenshots/<target>/`, remove the alpha channel, and replace the
-  fastlane folder's contents with numbered files.  Use `[[ ]]` tests
+  screenshot folder's contents with numbered files.  Use `[[ ]]` tests
 - [x] 2.6 ~~Check the demo-mode commands on the API 35 image~~ – dropped: the
   capture records only the Flutter surface, so the system status bar never
   appears in a screenshot (README captures included), and demo mode had

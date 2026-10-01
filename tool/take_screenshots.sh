@@ -13,7 +13,7 @@
 #
 # phone, seven-inch, ten-inch
 #   Captures one store screenshot set into
-#   fastlane/metadata/android/en-US/images/<set>/, replacing what is there.
+#   metadata/en-US/images/<set>/, replacing what is there.
 #   Each target has its own emulator profile with an exact 9:16 or 16:9 screen,
 #   created on first use from the API 35 google_apis x86_64 system image and
 #   run on its own port, so it never captures on some other device.  The
@@ -165,7 +165,7 @@ capture_store () {
       ;;
   esac
   local staging="build/screenshots/$target"
-  local dest="fastlane/metadata/android/en-US/images/$folder"
+  local dest="metadata/en-US/images/$folder"
 
   # avdmanager and the emulator default to different AVD directories on some
   # machines; pin both to the same one.

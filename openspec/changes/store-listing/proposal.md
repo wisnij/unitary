@@ -10,8 +10,9 @@ layouts are worth showing.
 
 ## What Changes
 
-- New `fastlane/metadata/android/en-US/` tree, the standard layout read by
-  fastlane `supply`, Gradle Play Publisher, and F-Droid.  It holds the store
+- New `metadata/en-US/` tree, one of the locations F-Droid reads from an
+  app's source repository, in the same structure as fastlane's
+  `fastlane/metadata/android/`.  It holds the store
   text (`title.txt`, `short_description.txt`, `full_description.txt`) and the
   images (`images/icon.png`, `images/featureGraphic.png`, and screenshot
   folders for phone, 7-inch, and 10-inch tablets).  Uploading stays manual:
@@ -56,7 +57,7 @@ None.
 
 ## Impact
 
-- New `fastlane/metadata/android/en-US/` tree (text and PNGs).
+- New `metadata/en-US/` tree (text and PNGs).
 - New `assets/store/` holding the feature-graphic SVG and its font with the
   font's license.
 - `tool/take_screenshots.sh`, `integration_test/screenshots/take_screenshots.dart`,

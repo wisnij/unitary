@@ -89,10 +89,10 @@ generated assets in sync automatically.
 
 ### Store listing
 
-The Google Play listing lives in `fastlane/metadata/android/en-US/`: the
-title and descriptions as text files, and the icon, feature graphic, and
-phone, 7-inch, and 10-inch screenshots under `images/`.  The files are copied
-into the Play Console by hand.
+The Google Play listing lives in `metadata/en-US/`: the title and
+descriptions as text files, and the icon, feature graphic, and phone, 7-inch,
+and 10-inch screenshots under `images/`.  The files are copied into the Play
+Console by hand.
 
 - **Graphics:** the icon is rendered from `assets/icon/unitary.svg` and the
   feature graphic from `assets/store/feature_graphic.svg` by

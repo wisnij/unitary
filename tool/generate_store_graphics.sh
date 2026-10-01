@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-# Renders the Google Play store graphics into
-# fastlane/metadata/android/en-US/images/:
+# Renders the Google Play store graphics into metadata/en-US/images/:
 #
 #   icon.png             512x512 32-bit PNG with alpha, from
 #                        assets/icon/unitary.svg
@@ -33,7 +32,7 @@ FEATURE_SVG="assets/store/feature_graphic.svg"
 FONT_DIR="${ROOT_DIR}/assets/store/fonts"
 FONT_FAMILY="Anton"
 FONT_FILE="${FONT_DIR}/Anton-Regular.ttf"
-OUT_DIR="fastlane/metadata/android/en-US/images"
+OUT_DIR="metadata/en-US/images"
 # The bottom colour of the feature graphic's background gradient, used when
 # flattening away the alpha channel.
 FEATURE_BACKGROUND="#0f0d2a"

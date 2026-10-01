@@ -1004,8 +1004,9 @@ than around the engineering tasks, which are small by comparison.
      ads, no tracking, no subscriptions, everything offline" angle is a
      genuine differentiator in this category and belongs near the top.
      Written October 1, 2026 by the `store-listing` change, in
-     `fastlane/metadata/android/en-US/` (the layout fastlane `supply`, Gradle
-     Play Publisher, and F-Droid read) rather than generated from the README,
+     `metadata/en-US/` (where F-Droid reads listing metadata from a source
+     repository, in the same structure as fastlane's) rather than generated
+     from the README,
      whose reader already knows the project.  Title "Unitary: Unit
      Converter"; a test enforces Play's length limits.  Remaining: copy it
      into the Play Console over the placeholder
@@ -1014,7 +1015,7 @@ than around the engineering tasks, which are small by comparison.
      pipeline) and a feature graphic at 1024×500, which has no existing
      source and must be designed.  Done October 1, 2026 by the
      `store-listing` change: `tool/generate_store_graphics.sh` renders both
-     into the fastlane tree, the feature graphic from
+     into `metadata/en-US/images/`, the feature graphic from
      `assets/store/feature_graphic.svg`, which follows the mockup with the
      wordmark in Anton (SIL Open Font License, bundled in
      `assets/store/fonts/` and not shipped in the app) and the phone set's

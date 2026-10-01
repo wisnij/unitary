@@ -68,9 +68,9 @@ acceptable tablet screenshot as is.
 
 ## Decisions
 
-### D1: Fastlane metadata layout, plain text
+### D1: F-Droid metadata layout at `metadata/en-US/`, plain text
 
-Everything goes under `fastlane/metadata/android/en-US/`:
+Everything goes under `metadata/en-US/`:
 
 ```
 title.txt
@@ -83,10 +83,15 @@ images/sevenInchScreenshots/NN_<name>.png
 images/tenInchScreenshots/NN_<name>.png
 ```
 
-This is the layout fastlane `supply` and Gradle Play Publisher read and write,
-and the one F-Droid reads.  Adopting it costs nothing now and keeps automated
-uploads, or an F-Droid listing, a matter of configuration later.  The `NN_`
-prefix fixes the order in which the screenshots appear.
+F-Droid reads listing metadata from an app's source repository at
+`metadata/<locale>/` or `fastlane/metadata/android/<locale>/`, both with this
+structure (F-Droid's documentation on descriptions, graphics, and
+screenshots), so an F-Droid listing would pick it up with no extra files.  The
+shorter of the two paths is used.  fastlane `supply`, if uploads are ever
+automated with it, reads the same structure and can be pointed here with its
+`metadata_path` option.  Gradle Play Publisher is not a reader: it uses its own
+layout under `src/main/play/listings/`.  The `NN_` prefix fixes the order in
+which the screenshots appear.
 
 The description is plain text.  Play renders line breaks and accepts a few
 HTML tags, but the other readers of this layout treat HTML differently.
@@ -110,7 +115,7 @@ should be written differently anyway.
 
 `test/tool/check_store_listing_lib_test.dart` tests those functions with
 synthetic inputs, and one test runs them against the real
-`fastlane/metadata/android/en-US/` tree.  That test makes `flutter test`, and
+`metadata/en-US/` tree.  That test makes `flutter test`, and
 so CI, fail when a committed asset breaks a rule.  The same pattern already
 protects the README's links in `generate_web_docs_lib_test.dart`.
 
@@ -250,8 +255,8 @@ variable, defaulting to `doc/screenshots/`, so the README path is unchanged.
 - no argument or `readme`: today's behaviour, unchanged;
 - `phone`, `seven-inch`, `ten-inch`: boot that AVD, set the dark theme
   (`cmd uimode night yes`), capture into `build/screenshots/<target>/`,
-  remove the alpha channel from each image, and replace the matching fastlane
-  folder's contents with the results, numbered in capture order;
+  remove the alpha channel from each image, and replace the matching
+  screenshot folder's contents with the results, numbered in capture order;
 - `store`: all three store targets in turn.
 
 Each store target boots its own emulator and shuts it down afterwards, since

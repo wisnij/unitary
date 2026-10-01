@@ -29,8 +29,10 @@ layouts are worth showing.
   at a resolution Play accepts.  The capture flow navigates each layout the way
   a user would: drawer or navigation rail, template dropdown or list pane,
   pushed or embedded unit detail.  Store captures keep full resolution and use
-  the dark theme.
-- The existing README capture is unchanged by default.
+  the dark theme, except for a final Settings capture in the light theme.
+- The README screenshots are derived from the phone set, downscaled to the
+  480 px width the README embeds them at, so a single phone capture produces
+  both and the separate README capture on its own emulator is retired.
 - A test checks the committed images against Play's requirements: dimensions,
   aspect ratios, alpha channel, and the minimum screenshot counts.
 
@@ -49,7 +51,8 @@ Not in this change: automated uploads to Play, per-release "What's new" text
   their sources.
 - `store-screenshots`: the phone, 7-inch, and 10-inch screenshot sets: the
   emulator profiles, what each set shows, the requirements each image must
-  meet, and how they are captured without disturbing the README screenshots.
+  meet, how they are captured, and how the README screenshots are derived
+  from the phone set.
 
 ### Modified Capabilities
 

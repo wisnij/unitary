@@ -103,3 +103,20 @@
   graphics, and screenshot items, with what was done and what remains (copying
   into the Play Console)
 - [x] 6.3 Add a dated entry to `doc/design_progress.md`
+
+## 7. README screenshots from the phone set
+
+- [x] 7.1 End every capture sequence with Settings in the dark theme and again
+  in the light theme, and remove the `readme` sequence from
+  `integration_test/screenshots/take_screenshots.dart`
+- [x] 7.2 Make the `phone` target of `tool/take_screenshots.sh` also write the
+  README screenshots to `doc/screenshots/` as 480 px wide copies of the phone
+  set; remove the `readme` target and require a target argument
+- [x] 7.3 Point the driver's default output at `build/screenshots/`
+- [x] 7.4 Re-capture all three sets and the README screenshots with
+  `tool/take_screenshots.sh store`, review them, and re-render the feature
+  graphic
+- [x] 7.5 Fix the README's unit-detail alt text, which names the newton while
+  the capture shows hbar
+- [x] 7.6 Update `CONTRIBUTING.md` and the `doc/` tracking files
+

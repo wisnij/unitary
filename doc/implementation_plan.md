@@ -1035,8 +1035,9 @@ than around the engineering tasks, which are small by comparison.
      and 7-inch, 2560×1440 landscape for the 10-inch, putting the app in its
      compact, medium, and expanded layouts respectively.  The phone set
      replaces the README-sized images uploaded first, which were 480 px wide
-     and so below Play's 1080 px condition for promoting an app.  Remaining:
-     upload the three sets
+     and so below Play's 1080 px condition for promoting an app; the README's
+     own screenshots are now downscaled copies of it.  Remaining: upload the
+     three sets
    - [x] Complete the Data safety declaration — straightforward here: no data
      collected, none shared, none transmitted off-device except the
      unauthenticated exchange-rate fetch, which carries no user identifier.

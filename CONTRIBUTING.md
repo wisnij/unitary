@@ -101,10 +101,10 @@ Console by hand.
   hook re-renders them when their sources change.
 - **Screenshots:** `tool/take_screenshots.sh phone`, `seven-inch`, or
   `ten-inch` captures one set, and `store` captures all three.  Each set has
-  its own emulator profile, created on first use.  The feature graphic shows
-  the phone set's worksheet screenshot, so re-capture the phone set before
-  re-rendering it.  With no argument the script regenerates the README
-  screenshots instead.
+  its own emulator profile, created on first use.  The phone target also
+  regenerates the README screenshots in `doc/screenshots/`, as 480 px wide
+  copies of the phone set.  The feature graphic shows the phone set's
+  worksheet screenshot, so re-capture the phone set before re-rendering it.
 - **Checks:** `test/tool/check_store_listing_lib_test.dart` fails when any of
   these files breaks Play's requirements (text length, image size, aspect
   ratio, alpha channel, screenshot count).

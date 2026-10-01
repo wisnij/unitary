@@ -1,28 +1,25 @@
 #!/bin/bash
-# Captures screenshots of the app for the README or the Google Play listing.
+# Captures screenshots of the app for the Google Play listing, and derives the
+# README screenshots from the phone set.
 #
-# Usage: tool/take_screenshots.sh [readme|phone|seven-inch|ten-inch|store]
-#
-# readme (the default)
-#   Regenerates the README screenshots in doc/screenshots/.  Boots the
-#   Android emulator if no target device is already connected, runs
-#   integration_test/screenshots/take_screenshots.dart via flutter drive, and
-#   downscales the captured PNGs to the sizes the README embeds them at (480 px
-#   wide, except the two settings captures at 400 px so the pair fits side by
-#   side).  DEVICE_ID and AVD_NAME override the device.
+# Usage: tool/take_screenshots.sh phone|seven-inch|ten-inch|store
 #
 # phone, seven-inch, ten-inch
-#   Captures one store screenshot set into
-#   metadata/en-US/images/<set>/, replacing what is there.
-#   Each target has its own emulator profile with an exact 9:16 or 16:9 screen,
-#   created on first use from the API 35 google_apis x86_64 system image and
-#   run on its own port, so it never captures on some other device.  The
-#   captures use the dark theme, keep their full resolution, and have their
+#   Captures one screenshot set into metadata/en-US/images/<set>/, replacing
+#   what is there.  Each target has its own emulator profile with an exact
+#   9:16 or 16:9 screen, created on first use from the API 35 google_apis
+#   x86_64 system image and run on its own port, so it never captures on some
+#   other device.  The captures use the dark theme until the last, which shows
+#   Settings in the light theme; keep their full resolution; and have their
 #   alpha channel removed, as Play requires.  They show only the app: the
 #   capture records the Flutter surface, not the system status bar.
 #
+#   The phone target also regenerates the README screenshots in
+#   doc/screenshots/, as copies of the phone set downscaled to 480 px wide,
+#   the width the README embeds them at.
+#
 # store
-#   All three store targets in turn.
+#   All three targets in turn.
 #
 # An emulator is shut down afterwards only if this script started it.
 #
@@ -31,7 +28,7 @@ set -eu
 
 cd "$(dirname "$0")/.."
 
-target="${1:-readme}"
+target="${1:-}"
 
 if ! command -v magick >/dev/null; then
   echo "error: ImageMagick ('magick') is required to process the screenshots" >&2
@@ -58,32 +55,6 @@ wait_for_boot () {
   until [[ "$(adb -s "$1" shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" == "1" ]]; do
     sleep 2
   done
-}
-
-capture_readme () {
-  local device="${DEVICE_ID:-emulator-5554}"
-  local avd="${AVD_NAME:-Pixel_6_Pro_API_33_13.0_}"
-
-  if ! device_ready "$device"; then
-    echo "Starting emulator $avd..."
-    flutter emulators --launch "$avd"
-    started_emulators+=("$device")
-    wait_for_boot "$device"
-  fi
-
-  flutter drive --profile \
-    --driver=test_driver/screenshots_driver.dart \
-    --target=integration_test/screenshots/take_screenshots.dart \
-    -d "$device"
-
-  (
-    cd doc/screenshots
-    for f in *.png; do
-      (set -x; magick "$f" -resize 480x "$f")
-    done
-    echo "Done:"
-    identify ./*.png
-  )
 }
 
 # The SDK root, found from adb's location (<sdk>/platform-tools/adb).
@@ -141,7 +112,7 @@ create_store_avd () {
   set_avd_config "$config" showDeviceFrame no
 }
 
-capture_store () {
+capture_set () {
   local target="$1"
   local avd device_profile width height density orientation port
   store_profile "$target"
@@ -151,17 +122,17 @@ capture_store () {
     phone)
       set=phone
       folder=phoneScreenshots
-      names=(freeform worksheet currency browser unit-detail settings)
+      names=(freeform worksheet currency browser unit-detail settings-dark settings-light)
       ;;
     seven-inch)
       set=tablet
       folder=sevenInchScreenshots
-      names=(freeform worksheet currency browser settings)
+      names=(freeform worksheet currency browser settings-dark settings-light)
       ;;
     ten-inch)
       set=tablet
       folder=tenInchScreenshots
-      names=(freeform worksheet currency browser settings)
+      names=(freeform worksheet currency browser settings-dark settings-light)
       ;;
   esac
   local staging="build/screenshots/$target"
@@ -207,6 +178,16 @@ capture_store () {
   echo "Done ($target):"
   identify "$dest"/*.png
 
+  if [[ $target == phone ]]; then
+    mkdir -p doc/screenshots
+    for name in "${names[@]}"; do
+      (set -x; magick "$dest/"*"_$name.png" -resize 480x -strip \
+        "PNG24:doc/screenshots/$name.png")
+    done
+    echo "Done (README):"
+    identify doc/screenshots/*.png
+  fi
+
   # Shut down now rather than at exit, so the store target does not end up
   # running three emulators at once.
   if [[ $started -eq 1 ]]; then
@@ -219,19 +200,16 @@ capture_store () {
 }
 
 case "$target" in
-  readme)
-    capture_readme
-    ;;
   phone|seven-inch|ten-inch)
-    capture_store "$target"
+    capture_set "$target"
     ;;
   store)
     for t in phone seven-inch ten-inch; do
-      capture_store "$t"
+      capture_set "$t"
     done
     ;;
   *)
-    echo "usage: $0 [readme|phone|seven-inch|ten-inch|store]" >&2
+    echo "usage: $0 phone|seven-inch|ten-inch|store" >&2
     exit 2
     ;;
 esac

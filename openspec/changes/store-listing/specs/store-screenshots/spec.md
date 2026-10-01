@@ -45,6 +45,9 @@ rail.  The tablet sets SHALL show the two-pane layouts: freeform with its
 history pane holding past conversions, a worksheet beside the template list,
 and the unit browser with a unit's detail in the right pane.
 
+Every set SHALL end with the Settings page twice: in the dark theme, and again
+after switching the app to light mode.
+
 #### Scenario: 10-inch browser capture
 
 - **WHEN** the 10-inch set's browser screenshot is viewed
@@ -56,10 +59,17 @@ and the unit browser with a unit's detail in the right pane.
 - **WHEN** a tablet set's freeform screenshot is viewed
 - **THEN** its history pane lists at least one earlier conversion
 
+#### Scenario: Both themes in every set
+
+- **WHEN** any set's last two screenshots are viewed
+- **THEN** they show the Settings page in the dark theme and then in the light
+  theme
+
 ### Requirement: Screenshots are captured reproducibly by script
 
-`tool/take_screenshots.sh` SHALL capture a store set when given its target
-(`phone`, `seven-inch`, or `ten-inch`), and all three when given `store`.  For
+`tool/take_screenshots.sh` SHALL capture a set when given its target
+(`phone`, `seven-inch`, or `ten-inch`), and all three when given `store`, and
+SHALL require one of those arguments.  For
 each target it SHALL create the target's emulator profile if it does not exist,
 boot it, capture the set in the dark theme, remove the alpha channel, and
 replace the contents of the set's folder with the new captures.  It SHALL
@@ -77,20 +87,27 @@ shut down only emulators it started.
 - **WHEN** a set is re-captured with fewer screenshots than before
 - **THEN** the folder holds only the new captures
 
-### Requirement: The README screenshots are unaffected
+### Requirement: The README screenshots are derived from the phone set
 
-Running `tool/take_screenshots.sh` with no argument, or with `readme`, SHALL
-capture the README screenshots exactly as before: the same device, the same
-sequence and names, written to `doc/screenshots/`, and downscaled to the same
-widths.  Capturing store sets SHALL NOT modify `doc/screenshots/`.
+The README screenshots in `doc/screenshots/` SHALL be copies of the phone set,
+downscaled to 480 px wide and named after the page each shows (`freeform.png`,
+`worksheet.png`, `currency.png`, `browser.png`, `unit-detail.png`,
+`settings-dark.png`, `settings-light.png`).  Capturing the phone set SHALL
+regenerate them; no separate README capture SHALL exist.  Capturing a tablet
+set SHALL NOT modify `doc/screenshots/`.
 
-#### Scenario: README capture
+#### Scenario: Phone capture updates the README
+
+- **WHEN** `tool/take_screenshots.sh phone` runs
+- **THEN** `doc/screenshots/` holds the seven named files, each a 480 px wide
+  copy of the corresponding phone screenshot
+
+#### Scenario: Tablet capture leaves the README alone
+
+- **WHEN** `tool/take_screenshots.sh ten-inch` runs
+- **THEN** no file under `doc/screenshots/` changes
+
+#### Scenario: No target given
 
 - **WHEN** `tool/take_screenshots.sh` runs with no argument
-- **THEN** it writes the same seven files to `doc/screenshots/` at the same
-  sizes as before this change
-
-#### Scenario: Store capture leaves the README alone
-
-- **WHEN** `tool/take_screenshots.sh store` runs
-- **THEN** no file under `doc/screenshots/` changes
+- **THEN** it prints its usage and exits without capturing anything

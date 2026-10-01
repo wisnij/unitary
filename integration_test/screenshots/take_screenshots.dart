@@ -1,18 +1,18 @@
-// Captures screenshots of the major interface pages, for the README or for the
-// Google Play listing.
+// Captures screenshots of the major interface pages for the Google Play
+// listing, from which the README screenshots are also derived.
 //
 // Not part of the regular integration-test suite (tool/run_integration_tests.sh
 // and CI glob `integration_test/*.dart`, which does not match this
 // subdirectory).  Run via the wrapper script, which boots the right emulator,
 // runs this test through `flutter drive`, and post-processes the images:
 //
-//   tool/take_screenshots.sh [readme|phone|seven-inch|ten-inch|store]
+//   tool/take_screenshots.sh [phone|seven-inch|ten-inch|store]
 //
-// The sequence is chosen with `--dart-define=SCREENSHOT_SET=`:
-//
-// - `readme` (the default): the README screenshots, captured on a phone.
-// - `phone`: the phone set for the store listing.
-// - `tablet`: the 7-inch and 10-inch tablet sets for the store listing.
+// Every set captures the same pages, ending with Settings in the dark theme
+// and again in the light theme.  `--dart-define=SCREENSHOT_SET=tablet` adapts
+// the sequence to the two-pane layouts: freeform first gets a few earlier
+// conversions so its history pane is not empty, and the unit browser is
+// captured with a unit's detail beside the list instead of as two pages.
 //
 // The flow adapts to the layout it finds: it navigates with the navigation
 // rail when there is one and the drawer otherwise, picks worksheets from the
@@ -32,12 +32,8 @@ import 'package:unitary/main.dart' as app;
 
 import '../helpers/real_prefs.dart';
 
-const String _set = String.fromEnvironment(
-  'SCREENSHOT_SET',
-  defaultValue: 'readme',
-);
-const bool _isReadme = _set == 'readme';
-const bool _isTablet = _set == 'tablet';
+const bool _isTablet =
+    String.fromEnvironment('SCREENSHOT_SET', defaultValue: 'phone') == 'tablet';
 
 /// Opens a top-level page or Settings, through the navigation rail if the
 /// layout has one and through the drawer otherwise.
@@ -201,14 +197,12 @@ void main() {
       await capture(tester, 'browser');
     }
 
-    // -- Settings, in the device's dark theme.  The README also shows it again
-    // after switching the app to light mode.
+    // -- Settings, in the device's dark theme, then again after switching the
+    // app to light mode.
     await _openPage(tester, 'Settings');
-    await capture(tester, _isReadme ? 'settings-dark' : 'settings');
-    if (_isReadme) {
-      await tester.tap(find.text('Light mode'));
-      await tester.pumpAndSettle();
-      await capture(tester, 'settings-light');
-    }
+    await capture(tester, 'settings-dark');
+    await tester.tap(find.text('Light mode'));
+    await tester.pumpAndSettle();
+    await capture(tester, 'settings-light');
   });
 }

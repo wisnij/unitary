@@ -79,9 +79,9 @@ short_description.txt
 full_description.txt
 images/icon.png
 images/featureGraphic.png
-images/phoneScreenshots/NN_<name>.png
-images/sevenInchScreenshots/NN_<name>.png
-images/tenInchScreenshots/NN_<name>.png
+images/phoneScreenshots/NN-<name>.png
+images/sevenInchScreenshots/NN-<name>.png
+images/tenInchScreenshots/NN-<name>.png
 ```
 
 F-Droid reads listing metadata from an app's source repository at
@@ -91,7 +91,7 @@ screenshots), so an F-Droid listing would pick it up with no extra files.  The
 shorter of the two paths is used.  fastlane `supply`, if uploads are ever
 automated with it, reads the same structure and can be pointed here with its
 `metadata_path` option.  Gradle Play Publisher is not a reader: it uses its own
-layout under `src/main/play/listings/`.  The `NN_` prefix fixes the order in
+layout under `src/main/play/listings/`.  The `NN-` prefix fixes the order in
 which the screenshots appear.
 
 The description is plain text.  Play renders line breaks and accepts a few

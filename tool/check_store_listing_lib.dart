@@ -161,10 +161,10 @@ bool _is16By9(PngInfo info) => _long(info) * 9 == _short(info) * 16;
 const int minScreenshots = 4;
 const int maxScreenshots = 8;
 
-final RegExp _screenshotName = RegExp(r'^(\d\d)_[^/]+\.png$');
+final RegExp _screenshotName = RegExp(r'^(\d\d)-[^/]+\.png$');
 
 /// Checks the names of the PNG files in one screenshot folder: between
-/// [minScreenshots] and [maxScreenshots] files, each named `NN_<name>.png`,
+/// [minScreenshots] and [maxScreenshots] files, each named `NN-<name>.png`,
 /// with no number used twice.
 List<String> checkScreenshotFileNames(List<String> names) {
   final problems = <String>[];
@@ -178,7 +178,7 @@ List<String> checkScreenshotFileNames(List<String> names) {
   for (final name in [...names]..sort()) {
     final match = _screenshotName.firstMatch(name);
     if (match == null) {
-      problems.add('$name is not named NN_<name>.png');
+      problems.add('$name is not named NN-<name>.png');
     } else if (!seen.add(match.group(1)!)) {
       problems.add('number ${match.group(1)} is used more than once');
     }

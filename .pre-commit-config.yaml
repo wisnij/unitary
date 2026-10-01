@@ -42,7 +42,7 @@ repos:
             assets/store/feature_graphic\.svg |
             assets/store/fonts/Anton-Regular\.ttf |
             assets/icon/unitary\.svg |
-            metadata/en-US/images/phoneScreenshots/02_worksheet\.png |
+            metadata/en-US/images/phoneScreenshots/02-worksheet\.png |
             tool/generate_store_graphics\.sh
           )$
   - repo: https://github.com/DavidAnson/markdownlint-cli2

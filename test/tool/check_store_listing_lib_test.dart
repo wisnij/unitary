@@ -259,16 +259,16 @@ void main() {
     test('accepts four to eight numbered PNG files', () {
       expect(
         checkScreenshotFileNames([
-          '01_freeform.png',
-          '02_worksheet.png',
-          '03_currency.png',
-          '04_browser.png',
+          '01-freeform.png',
+          '02-worksheet.png',
+          '03-currency.png',
+          '04-browser.png',
         ]),
         isEmpty,
       );
       expect(
         checkScreenshotFileNames([
-          for (var i = 1; i <= 8; i++) '0${i}_shot.png',
+          for (var i = 1; i <= 8; i++) '0$i-shot.png',
         ]),
         isEmpty,
       );
@@ -276,23 +276,23 @@ void main() {
 
     test('rejects fewer than four or more than eight', () {
       expect(
-        checkScreenshotFileNames(['01_a.png', '02_b.png', '03_c.png']),
+        checkScreenshotFileNames(['01-a.png', '02-b.png', '03-c.png']),
         [contains('3')],
       );
       expect(
         checkScreenshotFileNames([
-          for (var i = 1; i <= 9; i++) '0${i}_shot.png',
+          for (var i = 1; i <= 9; i++) '0$i-shot.png',
         ]),
         [contains('9')],
       );
     });
 
-    test('rejects a name not of the form NN_name.png', () {
+    test('rejects a name not of the form NN-name.png', () {
       expect(
         checkScreenshotFileNames([
-          '01_a.png',
-          '02_b.png',
-          '03_c.png',
+          '01-a.png',
+          '02-b.png',
+          '03-c.png',
           'worksheet.png',
         ]),
         [contains('worksheet.png')],
@@ -302,10 +302,10 @@ void main() {
     test('rejects two files with the same number', () {
       expect(
         checkScreenshotFileNames([
-          '01_a.png',
-          '02_b.png',
-          '03_c.png',
-          '03_d.png',
+          '01-a.png',
+          '02-b.png',
+          '03-c.png',
+          '03-d.png',
         ]),
         [contains('03')],
       );
@@ -342,9 +342,9 @@ void main() {
       write('images/icon.png', pngHeader(512, 512, colorType: 6));
       write('images/featureGraphic.png', pngHeader(1024, 500));
       for (var i = 1; i <= 4; i++) {
-        write('images/phoneScreenshots/0${i}_s.png', pngHeader(1080, 1920));
-        write('images/sevenInchScreenshots/0${i}_s.png', pngHeader(1080, 1920));
-        write('images/tenInchScreenshots/0${i}_s.png', pngHeader(2560, 1440));
+        write('images/phoneScreenshots/0$i-s.png', pngHeader(1080, 1920));
+        write('images/sevenInchScreenshots/0$i-s.png', pngHeader(1080, 1920));
+        write('images/tenInchScreenshots/0$i-s.png', pngHeader(2560, 1440));
       }
     }
 
@@ -376,11 +376,11 @@ void main() {
 
     test('names the file for each image problem', () {
       writeValidTree();
-      write('images/sevenInchScreenshots/02_s.png', pngHeader(2560, 1600));
+      write('images/sevenInchScreenshots/02-s.png', pngHeader(2560, 1600));
 
       expect(checkStoreListing(root.path), [
         allOf(
-          contains('images/sevenInchScreenshots/02_s.png'),
+          contains('images/sevenInchScreenshots/02-s.png'),
           contains('9:16'),
         ),
       ]);
@@ -389,7 +389,7 @@ void main() {
     test('checks phone screenshots against the phone rule', () {
       writeValidTree();
       // Valid for a tablet but not a phone: the long side is above 3840 px.
-      write('images/phoneScreenshots/01_s.png', pngHeader(4320, 7680));
+      write('images/phoneScreenshots/01-s.png', pngHeader(4320, 7680));
 
       expect(checkStoreListing(root.path), [contains('3840')]);
     });

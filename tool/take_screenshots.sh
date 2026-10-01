@@ -171,7 +171,7 @@ capture_set () {
   for name in "${names[@]}"; do
     i=$((i + 1))
     local out
-    out="$dest/$(printf '%02d' "$i")_$name.png"
+    out="$dest/$(printf '%02d' "$i")-$name.png"
     (set -x; magick "$staging/$name.png" -background black -alpha remove \
       -alpha off -strip "PNG24:$out")
   done
@@ -181,7 +181,7 @@ capture_set () {
   if [[ $target == phone ]]; then
     mkdir -p doc/screenshots
     for name in "${names[@]}"; do
-      (set -x; magick "$dest/"*"_$name.png" -resize 480x -strip \
+      (set -x; magick "$dest/"[0-9][0-9]"-$name.png" -resize 480x -strip \
         "PNG24:doc/screenshots/$name.png")
     done
     echo "Done (README):"

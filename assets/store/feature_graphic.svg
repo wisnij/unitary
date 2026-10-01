@@ -39,6 +39,6 @@
         stroke="#3a3d42" stroke-width="2.5"/>
   <image x="719" y="72" width="194" height="345" preserveAspectRatio="xMidYMid slice"
          clip-path="url(#screen)"
-         xlink:href="../../metadata/en-US/images/phoneScreenshots/02_worksheet.png"/>
+         xlink:href="../../metadata/en-US/images/phoneScreenshots/02-worksheet.png"/>
   <circle cx="816" cy="80" r="4" fill="#050506" stroke="#1e2024" stroke-width="1"/>
 </svg>

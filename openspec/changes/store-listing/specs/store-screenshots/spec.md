@@ -5,13 +5,13 @@
 The repository SHALL hold three store screenshot sets under
 `metadata/en-US/images/`: `phoneScreenshots/`,
 `sevenInchScreenshots/`, and `tenInchScreenshots/`.  Each set SHALL contain
-between four and eight PNG files named `NN_<name>.png`, where `NN` is a two-digit
+between four and eight PNG files named `NN-<name>.png`, where `NN` is a two-digit
 number giving the order in the listing.
 
 #### Scenario: Each set exists and is within the count limits
 
 - **WHEN** the three screenshot folders are listed
-- **THEN** each contains between four and eight files named `NN_<name>.png`
+- **THEN** each contains between four and eight files named `NN-<name>.png`
 
 ### Requirement: Screenshots meet Play's image requirements
 

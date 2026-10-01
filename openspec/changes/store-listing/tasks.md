@@ -56,7 +56,7 @@
   wordmark and tagline as `<text>`, and a device frame with the phone set's
   Length worksheet clipped to its screen
 - [x] 3.3 Render the graphic with each candidate font, compare both with
-  `feature-graphic.png`, keep the closer one in `assets/store/fonts/` with its
+  the mockup, keep the closer one in `assets/store/fonts/` with its
   `OFL.txt`, and record the choice in the design's Open Questions
 - [x] 3.4 Write `tool/generate_store_graphics.sh`: temporary fontconfig file
   adding `assets/store/fonts/`, an `fc-match` check that fails unless the
@@ -86,11 +86,11 @@
 - [x] 5.2 Run `pre-commit run --all-files` and fix anything it reports
 - [x] 5.3 Run `flutter test --reporter failures-only` and `flutter analyze`,
   both clean
-- [ ] 5.4 Compare the rendered feature graphic with the mockup side by side
-  and show both to the maintainer
-- [ ] 5.5 Delete `feature-graphic.png` from the repository root once the
-  maintainer accepts the rendered graphic, or move it under `assets/store/` if
-  they want to keep it as a reference
+- [x] 5.4 Compare the rendered feature graphic with the mockup side by side
+  and show both to the maintainer – accepted October 1, 2026
+- [x] 5.5 Delete the mockup from the repository root once the maintainer
+  accepts the rendered graphic, or move it under `assets/store/` if they want
+  to keep it as a reference – deleted by the maintainer
 
 ## 6. Documentation
 

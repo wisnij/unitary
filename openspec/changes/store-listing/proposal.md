@@ -18,8 +18,8 @@ layouts are worth showing.
   the files are copied into the Play Console by hand.
 - Store text written for people who have never heard of the app, with the title
   **"Unitary: Unit Converter"**.  A test enforces Play's length limits.
-- A feature graphic built from an SVG source that follows the mockup
-  (`feature-graphic.png`): the app icon, the "Unitary" wordmark and tagline in a
+- A feature graphic built from an SVG source that follows the maintainer's
+  mockup: the app icon, the "Unitary" wordmark and tagline in a
   bundled SIL Open Font License font, and a device frame holding a screenshot
   from the capture pipeline.  It renders to a 1024×500 PNG with no alpha.  The
   512×512 store icon is rendered from the existing `assets/icon/unitary.svg`.

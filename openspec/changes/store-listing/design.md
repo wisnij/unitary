@@ -3,11 +3,10 @@
 Unitary is published on Google Play's closed track.  The listing has a
 placeholder description typed into the Play Console and the README's phone
 screenshots, which are downscaled to 480 px wide.  It has no feature graphic
-and no tablet screenshots.  A mockup of the feature graphic is at
-`feature-graphic.png` in the repository root: a dark navy gradient, the app
-icon, the "Unitary" wordmark in a condensed bold face, the tagline "Unit
-conversion & dimensional analysis", and a phone showing the Length worksheet
-in the dark theme.
+and no tablet screenshots.  The maintainer's mockup of the feature graphic
+shows a dark navy gradient, the app icon, the "Unitary" wordmark in a
+condensed bold face, the tagline "Unit conversion & dimensional analysis", and
+a phone showing the Length worksheet in the dark theme.
 
 Existing pieces this change builds on:
 

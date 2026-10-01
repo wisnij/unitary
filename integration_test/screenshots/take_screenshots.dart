@@ -1,34 +1,110 @@
-// Captures README screenshots of the major interface pages.
+// Captures screenshots of the major interface pages, for the README or for the
+// Google Play listing.
 //
 // Not part of the regular integration-test suite (tool/run_integration_tests.sh
 // and CI glob `integration_test/*.dart`, which does not match this
-// subdirectory).  Run via the wrapper script, which boots the emulator, runs
-// this test through `flutter drive`, and downscales the captured PNGs to the
-// sizes the README embeds them at:
+// subdirectory).  Run via the wrapper script, which boots the right emulator,
+// runs this test through `flutter drive`, and post-processes the images:
 //
-//   tool/take_screenshots.sh
+//   tool/take_screenshots.sh [readme|phone|seven-inch|ten-inch|store]
 //
-// Screenshots are written to doc/screenshots/ by the driver
-// (test_driver/screenshots_driver.dart) at the device's native resolution.
+// The sequence is chosen with `--dart-define=SCREENSHOT_SET=`:
+//
+// - `readme` (the default): the README screenshots, captured on a phone.
+// - `phone`: the phone set for the store listing.
+// - `tablet`: the 7-inch and 10-inch tablet sets for the store listing.
+//
+// The flow adapts to the layout it finds: it navigates with the navigation
+// rail when there is one and the drawer otherwise, picks worksheets from the
+// AppBar dropdown or the template list, and only pops the unit detail when it
+// was pushed as a route.
+//
+// Screenshots are written by the driver (test_driver/screenshots_driver.dart)
+// at the device's native resolution, to the directory in SCREENSHOT_DIR.
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
+import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';
 import 'package:unitary/features/worksheet/presentation/worksheet_screen.dart';
 import 'package:unitary/main.dart' as app;
 
 import '../helpers/real_prefs.dart';
 
-Future<void> _openDrawerPage(WidgetTester tester, String title) async {
-  await tester.tap(find.byTooltip('Open navigation menu'));
+const String _set = String.fromEnvironment(
+  'SCREENSHOT_SET',
+  defaultValue: 'readme',
+);
+const bool _isReadme = _set == 'readme';
+const bool _isTablet = _set == 'tablet';
+
+/// Opens a top-level page or Settings, through the navigation rail if the
+/// layout has one and through the drawer otherwise.
+Future<void> _openPage(WidgetTester tester, String title) async {
+  final rail = find.byType(NavigationRail);
+  if (rail.evaluate().isNotEmpty) {
+    if (title == 'Settings') {
+      await tester.tap(find.byTooltip('Settings'));
+    } else {
+      await tester.tap(find.descendant(of: rail, matching: find.text(title)));
+    }
+  } else {
+    await tester.tap(find.byTooltip('Open navigation menu'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(title).last);
+  }
   await tester.pumpAndSettle();
-  await tester.tap(find.text(title).last);
+}
+
+/// Selects a worksheet template from the AppBar dropdown when there is one
+/// (compact layout, once a template is active), and from the template list
+/// otherwise.
+Future<void> _selectWorksheet(WidgetTester tester, String name) async {
+  final dropdown = find.byType(DropdownButton<String>);
+  if (dropdown.evaluate().isNotEmpty) {
+    await tester.tap(dropdown);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text(name).last);
+  } else {
+    await tester.tap(
+      find
+          .descendant(
+            of: find.byType(WorksheetScreen),
+            matching: find.widgetWithText(ListTile, name),
+          )
+          .first,
+    );
+  }
+  await tester.pumpAndSettle();
+}
+
+/// Enters a conversion in the freeform fields and waits for it to evaluate.
+Future<void> _convert(WidgetTester tester, String from, String to) async {
+  await tester.enterText(find.widgetWithText(TextField, 'Convert from'), from);
+  await tester.pump();
+  await tester.enterText(
+    find.widgetWithText(TextField, 'Convert to (optional)'),
+    to,
+  );
+  // Real-time evaluation debounce is 500 ms.
+  await tester.pump(const Duration(milliseconds: 700));
   await tester.pumpAndSettle();
 }
 
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  /// Takes a screenshot once animations have finished.  pumpAndSettle alone
+  /// is not always enough on a slow emulator: the 10-inch tablet once captured
+  /// the Settings route halfway through its page transition.  Waiting a moment
+  /// in real time and settling again lets the last frame land first.
+  Future<void> capture(WidgetTester tester, String name) async {
+    await tester.pumpAndSettle();
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pumpAndSettle();
+    await binding.takeScreenshot(name);
+  }
 
   testWidgets('capture screenshots of major pages', (tester) async {
     await binding.convertFlutterSurfaceToImage();
@@ -54,53 +130,48 @@ void main() {
       matching: find.byType(TextField),
     );
 
-    // -- Freeform: enter an example conversion and let it evaluate.
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Convert from'),
-      '5 ft + 3 in',
-    );
-    await tester.pump();
-    await tester.enterText(
-      find.widgetWithText(TextField, 'Convert to (optional)'),
-      'cm',
-    );
-    // Real-time evaluation debounce is 500 ms.
-    await tester.pump(const Duration(milliseconds: 700));
-    await tester.pumpAndSettle();
+    // -- Freeform: enter an example conversion and let it evaluate.  The
+    // tablet layouts show the history beside the fields, so a few earlier
+    // conversions go in first to fill it.
+    if (_isTablet) {
+      await _convert(tester, '3e4 kilometers/week', 'mph');
+      await _convert(tester, 'tempF(212)', 'tempC');
+      await _convert(tester, 'sqrt(9 m^2) + sin(45 degrees) * 5 ft', 'm');
+    }
+    await _convert(tester, '5 ft + 3 in', 'cm');
     // Dismiss the completion overlay (typing "cm" opens it over the result).
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
-    await binding.takeScreenshot('freeform');
+    await capture(tester, 'freeform');
 
     // -- Worksheet: pick the Length template and enter a source value into
     // the meter row (index 6: micron, mm, cm, inch, foot, yard, meter, ...).
-    await _openDrawerPage(tester, 'Worksheet');
-    await tester.tap(find.text('Length'));
-    await tester.pumpAndSettle();
+    await _openPage(tester, 'Worksheet');
+    await _selectWorksheet(tester, 'Length');
     await tester.enterText(worksheetFields.at(6), '100');
     await tester.pumpAndSettle();
-    await binding.takeScreenshot('worksheet');
+    await capture(tester, 'worksheet');
 
-    // -- Currency worksheet: switch template via the AppBar dropdown.
-    await tester.tap(find.byType(DropdownButton<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Currency').last);
-    await tester.pumpAndSettle();
+    // -- Currency worksheet.
+    await _selectWorksheet(tester, 'Currency');
     await tester.enterText(worksheetFields.first, '100');
     await tester.pumpAndSettle();
-    await binding.takeScreenshot('currency');
+    await capture(tester, 'currency');
 
     // -- Browse: expand a single group partway down the list ("Area" is the
     // seventh alphabetically), so the capture shows collapsed headers above
-    // an expanded one.
-    await _openDrawerPage(tester, 'Browse');
+    // an expanded one.  On tablets the unit detail sits beside the list, so
+    // the browser capture waits until a unit is selected.
+    await _openPage(tester, 'Browse');
     await tester.tap(find.textContaining('Area ('));
     await tester.pumpAndSettle();
-    await binding.takeScreenshot('browser');
+    if (!_isTablet) {
+      await capture(tester, 'browser');
+    }
 
-    // -- Unit detail: search for a well-known unit and open its detail page.
-    // The search-result tap is scoped to a ListTile because the search
-    // field's own text also matches find.text('hbar').
+    // -- Unit detail: search for a well-known unit and open its detail.  The
+    // search-result tap is scoped to a ListTile because the search field's
+    // own text also matches find.text('hbar').
     await tester.tap(find.byTooltip('Search'));
     await tester.pumpAndSettle();
     await tester.enterText(
@@ -117,16 +188,27 @@ void main() {
           .first,
     );
     await tester.pumpAndSettle();
-    await binding.takeScreenshot('unit-detail');
-    await tester.pageBack();
-    await tester.pumpAndSettle();
+    // At compact width the detail is a pushed route; wider layouts embed it.
+    final pushed = find.byType(UnitEntryDetailScreen).evaluate().isNotEmpty;
+    if (pushed) {
+      await capture(tester, 'unit-detail');
+      await tester.pageBack();
+      await tester.pumpAndSettle();
+    } else {
+      // The search field stays on screen beside the detail; drop its cursor.
+      FocusManager.instance.primaryFocus?.unfocus();
+      await tester.pumpAndSettle();
+      await capture(tester, 'browser');
+    }
 
-    // -- Settings: once in the emulator's dark system theme, then again
+    // -- Settings, in the device's dark theme.  The README also shows it again
     // after switching the app to light mode.
-    await _openDrawerPage(tester, 'Settings');
-    await binding.takeScreenshot('settings-dark');
-    await tester.tap(find.text('Light mode'));
-    await tester.pumpAndSettle();
-    await binding.takeScreenshot('settings-light');
+    await _openPage(tester, 'Settings');
+    await capture(tester, _isReadme ? 'settings-dark' : 'settings');
+    if (_isReadme) {
+      await tester.tap(find.text('Light mode'));
+      await tester.pumpAndSettle();
+      await capture(tester, 'settings-light');
+    }
   });
 }

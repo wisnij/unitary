@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 1024 500" width="1024" height="500">
+  <!--
+    Google Play feature graphic, rendered to
+    fastlane/metadata/android/en-US/images/featureGraphic.png by
+    tool/generate_store_graphics.sh.
+
+    The wordmark and tagline use the bundled font in fonts/ (SIL Open Font
+    License; see fonts/OFL.txt), which the script makes available to Inkscape
+    without installing it.  The icon is the app icon's own source, and the
+    phone shows the worksheet screenshot from the phone screenshot set, so both
+    follow those sources when the graphic is re-rendered.
+  -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0f3053"/>
+      <stop offset="50%" stop-color="#0f1e3e"/>
+      <stop offset="100%" stop-color="#0f0d2a"/>
+    </linearGradient>
+    <clipPath id="screen">
+      <rect x="719" y="72" width="194" height="345" rx="16"/>
+    </clipPath>
+  </defs>
+
+  <rect width="1024" height="500" fill="url(#bg)"/>
+
+  <!-- App icon -->
+  <image x="91" y="168" width="146" height="146" xlink:href="../icon/unitary.svg"/>
+
+  <!-- Wordmark and tagline -->
+  <g fill="#ffffff" font-family="Anton">
+    <text x="244" y="281" font-size="95">Unitary</text>
+    <text x="252" y="338" font-size="27">Unit conversion &amp; dimensional analysis</text>
+  </g>
+
+  <!-- Phone: body with a lighter rim, side button, screen, and camera -->
+  <rect x="923" y="146" width="3" height="42" rx="1.5" fill="#2b2e33"/>
+  <rect x="709" y="60" width="214" height="369" rx="28" fill="#0b0c0e"
+        stroke="#3a3d42" stroke-width="2.5"/>
+  <image x="719" y="72" width="194" height="345" preserveAspectRatio="xMidYMid slice"
+         clip-path="url(#screen)"
+         xlink:href="../../fastlane/metadata/android/en-US/images/phoneScreenshots/02_worksheet.png"/>
+  <circle cx="816" cy="80" r="4" fill="#050506" stroke="#1e2024" stroke-width="1"/>
+</svg>

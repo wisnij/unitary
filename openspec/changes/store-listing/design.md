@@ -124,7 +124,7 @@ Rules checked:
 | `title.txt`       | 1–30 characters, one line                                                                     |
 | Short description | 1–80 characters, one line                                                                     |
 | Full description  | 1–4000 characters                                                                             |
-| Icon              | 512×512, 8-bit RGBA (colour type 6)                                                           |
+| Icon              | 512×512, 8-bit RGBA (colour type 6), at most 1024 KB                                          |
 | Feature graphic   | 1024×500, 8-bit RGB (colour type 2)                                                           |
 | Phone screenshots | 8-bit RGB; 9:16 or 16:9; short side ≥1080, long side ≤3840; 4–8 files                         |
 | Tablet sets       | 8-bit RGB; 9:16 or 16:9; each side 1080–7680; 4–8 files per set                               |
@@ -145,6 +145,12 @@ post-processes them with ImageMagick:
 - **Feature graphic:** `assets/store/feature_graphic.svg` at 1024×500, then
   flattened onto its background colour with the alpha channel removed, written
   as 24-bit RGB (`PNG24:`).
+
+Both images are written with `-strip`.  Without it ImageMagick records
+creation and modification times in each PNG, so every run produced a
+different file from identical pixels, and the hook below would have churned
+the committed images on every source change.  The screenshot post-processing
+strips them for the same reason.
 
 A `generate-store-graphics` pre-commit hook runs the script when the feature
 graphic SVG, its font, the icon SVG, the linked screenshot, or the script
@@ -244,8 +250,7 @@ variable, defaulting to `doc/screenshots/`, so the README path is unchanged.
 
 - no argument or `readme`: today's behaviour, unchanged;
 - `phone`, `seven-inch`, `ten-inch`: boot that AVD, set the dark theme
-  (`cmd uimode night yes`) and SystemUI demo mode (fixed clock, full battery,
-  full signal, no notifications), capture into `build/screenshots/<target>/`,
+  (`cmd uimode night yes`), capture into `build/screenshots/<target>/`,
   remove the alpha channel from each image, and replace the matching fastlane
   folder's contents with the results, numbered in capture order;
 - `store`: all three store targets in turn.
@@ -277,12 +282,16 @@ those rates, matching the policy.
 
 ## Risks / Trade-offs
 
-**[Emulator output varies between runs]** A clock, battery level, or
-notification in the status bar would make every re-capture differ.  → Demo
-mode fixes the status bar.  The app content is deterministic because each
-capture starts from cleared preferences, and currency values come from the
-built-in rates because the capture seeds a fresh rate timestamp and never
-fetches.
+**[Emulator output varies between runs]** → The system status bar is not an
+issue: the capture records only the Flutter surface, so the clock, battery,
+and notifications never appear (found on the first capture, which is why
+SystemUI demo mode is not used).  The app content is deterministic because
+each capture starts from cleared preferences, and currency values come from
+the built-in rates because the capture seeds a fresh rate timestamp and never
+fetches.  The one exception is the Currency worksheet's banner, which shows
+that seeded timestamp, so it reads the time of capture.  A fixed older
+timestamp would instead trigger a real rate fetch, since the app refreshes
+rates more than a day old.
 
 **[Rendered PNGs differ between tool versions]** A different Inkscape or
 ImageMagick version could render different bytes from the same source, so the
@@ -318,5 +327,9 @@ whatever was last uploaded until it is replaced.
 
 ## Open Questions
 
-- Anton or Oswald for the wordmark: decided by comparing renders against the
-  mockup during implementation (task list).
+- ~~Anton or Oswald for the wordmark~~ – **Anton**, decided October 1, 2026 by
+  rendering both into the layout: Anton's letterforms are identical to the
+  mockup's, while Oswald is visibly narrower and lighter.  At 95 px the
+  wordmark's bounds come within a pixel of the mockup's (263×97 against
+  264×96), and the 27 px tagline matches exactly (424×28).  Inkscape renders
+  the nested icon SVG cleanly, so the PNG fallback in D4 is not needed.

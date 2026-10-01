@@ -1,0 +1,31 @@
+Unitary is a unit converter and calculator that understands units. Type "5 ft + 3 in" and convert it to centimeters, or "3e4 kilometers/week" to miles per hour. Units are carried through every calculation, so a mix-up such as adding meters to seconds is caught instead of quietly giving a wrong answer.
+
+No ads, no trackers, no subscriptions, and no in-app purchases. Unitary collects no personal information, and everything works offline.
+
+FREEFORM CALCULATOR
+• Arithmetic, powers, fractions, and parentheses, with units anywhere: "sqrt(9 m^2) + sin(45 degrees) * 5 ft"
+• Full dimensional analysis: joules convert to kilowatt-hours, and incompatible units are an error
+• Temperature conversions such as tempF(212) to tempC
+• Mathematical and trigonometric functions, SI prefixes, and physical constants such as c, h, and pi
+• Suggestions for unit, prefix, and function names as you type
+• A history of past conversions, recalled with one tap
+• Enter a unit's name on its own to see how it is defined
+• Expression syntax compatible with GNU Units
+
+WORKSHEETS
+Type a value into any row and see it in every other unit at once. Twelve worksheets are built in: Angle, Area, Currency, Digital Storage, Energy, Length, Mass, Pressure, Speed, Temperature, Time, and Volume.
+
+UNIT BROWSER
+Browse over 7,000 units, 125 prefixes, and more than 100 functions, alphabetically or grouped by physical dimension, with search and a detail page for each one.
+
+CURRENCY
+Exchange rates for dozens of currencies, plus gold, silver, and platinum, come from the Frankfurter service (frankfurter.dev). They are fetched automatically when the stored rates are more than a day old, or whenever you refresh them, and built-in rates mean currency conversion works offline too. The request carries no identifier and none of your data.
+
+DESIGNED FOR DAILY USE
+• Light and dark themes, following your system setting
+• Phone and tablet layouts, in portrait and landscape
+• Screen reader support and high-contrast colors
+• Adjustable precision and number notation
+
+FREE SOFTWARE
+Unitary is free software under the GNU Affero General Public License, version 3, and its unit database comes from GNU Units. The source code is at https://github.com/wisnij/unitary

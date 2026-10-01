@@ -27,8 +27,8 @@ layouts are worth showing.
   10-inch tablet), each on its own emulator profile with a 9:16 or 16:9 screen
   at a resolution Play accepts.  The capture flow navigates each layout the way
   a user would: drawer or navigation rail, template dropdown or list pane,
-  pushed or embedded unit detail.  Store captures keep full resolution, a clean
-  status bar, and the dark theme.
+  pushed or embedded unit detail.  Store captures keep full resolution and use
+  the dark theme.
 - The existing README capture is unchanged by default.
 - A test checks the committed images against Play's requirements: dimensions,
   aspect ratios, alpha channel, and the minimum screenshot counts.

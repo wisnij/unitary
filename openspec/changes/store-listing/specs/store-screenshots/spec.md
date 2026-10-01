@@ -61,9 +61,8 @@ and the unit browser with a unit's detail in the right pane.
 `tool/take_screenshots.sh` SHALL capture a store set when given its target
 (`phone`, `seven-inch`, or `ten-inch`), and all three when given `store`.  For
 each target it SHALL create the target's emulator profile if it does not exist,
-boot it, capture the set in the dark theme with a fixed status bar (fixed
-clock, full battery and signal, no notifications), remove the alpha channel,
-and replace the contents of the set's folder with the new captures.  It SHALL
+boot it, capture the set in the dark theme, remove the alpha channel, and
+replace the contents of the set's folder with the new captures.  It SHALL
 shut down only emulators it started.
 
 #### Scenario: Capturing the 10-inch set on a fresh machine

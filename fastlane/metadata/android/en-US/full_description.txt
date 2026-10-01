@@ -1,6 +1,6 @@
 Unitary is a unit converter and calculator that understands units. Type "5 ft + 3 in" and convert it to centimeters, or "3e4 kilometers/week" to miles per hour. Units are carried through every calculation, so a mix-up such as adding meters to seconds is caught instead of quietly giving a wrong answer.
 
-No ads, no trackers, no subscriptions, and no in-app purchases. Unitary collects no personal information, and everything works offline.
+No ads, trackers, subscriptions, or in-app purchases. Unitary collects no personal information, and everything works offline.
 
 FREEFORM CALCULATOR
 • Arithmetic, powers, fractions, and parentheses, with units anywhere: "sqrt(9 m^2) + sin(45 degrees) * 5 ft"
@@ -19,7 +19,7 @@ UNIT BROWSER
 Browse over 7,000 units, 125 prefixes, and more than 100 functions, alphabetically or grouped by physical dimension, with search and a detail page for each one.
 
 CURRENCY
-Exchange rates for dozens of currencies, plus gold, silver, and platinum, come from the Frankfurter service (frankfurter.dev). They are fetched automatically when the stored rates are more than a day old, or whenever you refresh them, and built-in rates mean currency conversion works offline too. The request carries no identifier and none of your data.
+Exchange rates for dozens of currencies, plus gold, silver, and platinum. Current rates are fetched automatically when the stored rates are more than a day old, or whenever you refresh them, and built-in rates mean currency conversion works offline too.
 
 DESIGNED FOR DAILY USE
 • Light and dark themes, following your system setting

@@ -276,8 +276,10 @@ one line.  The full description:
 
 It makes no claim the privacy policy does not support.  It says the app
 collects no personal data, not that it makes no network requests, since it
-fetches exchange rates.  It names the Frankfurter service as the source of
-those rates, matching the policy.
+fetches exchange rates.  It does not repeat the policy's disclosures, such as
+which service supplies the rates: the listing is for deciding whether to
+install, and the policy and Play's Data safety declaration carry those
+details.
 
 ## Risks / Trade-offs
 

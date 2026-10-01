@@ -51,8 +51,10 @@ The store title SHALL be `Unitary: Unit Converter`.
 The full description SHALL open by saying what the app does, and SHALL state
 early that the app has no ads, trackers, subscriptions, or in-app purchases and
 works offline.  It SHALL NOT claim anything the privacy policy (`PRIVACY.md`)
-does not support: it SHALL NOT say the app makes no network requests, and it
-SHALL name the exchange-rate service the policy names.
+does not support; in particular, it SHALL NOT say the app makes no network
+requests, since it fetches exchange rates.  It need not repeat the policy's
+disclosures, such as which service supplies the rates, which the policy and
+Play's Data safety declaration cover.
 
 #### Scenario: Opening of the description
 
@@ -62,5 +64,5 @@ SHALL name the exchange-rate service the policy names.
 #### Scenario: Consistency with the privacy policy
 
 - **WHEN** the description mentions currency rates
-- **THEN** it names Frankfurter as their source, and nowhere does it say the
-  app never connects to the network
+- **THEN** it says they are fetched, and nowhere does it say the app never
+  connects to the network

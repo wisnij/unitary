@@ -78,7 +78,8 @@
 - [x] 4.2 Write `short_description.txt` per design D7
 - [x] 4.3 Write `full_description.txt` per design D7, checking every factual
   claim against the app and `PRIVACY.md`
-- [ ] 4.4 Show the text to the maintainer for review before finishing
+- [x] 4.4 Show the text to the maintainer for review before finishing –
+  approved October 1, 2026 with the maintainer's edits
 
 ## 5. Verification
 

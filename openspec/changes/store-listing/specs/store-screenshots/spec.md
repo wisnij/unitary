@@ -69,11 +69,11 @@ after switching the app to light mode.
 
 `tool/take_screenshots.sh` SHALL capture a set when given its target
 (`phone`, `seven-inch`, or `ten-inch`), and all three when given `store`, and
-SHALL require one of those arguments.  For
-each target it SHALL create the target's emulator profile if it does not exist,
-boot it, capture the set in the dark theme, remove the alpha channel, and
-replace the contents of the set's folder with the new captures.  It SHALL
-shut down only emulators it started.
+SHALL require one of those arguments.  For each target it SHALL create the
+target's emulator profile if it does not exist, boot it, capture the set with
+the device in the dark theme, remove the alpha channel, and replace the
+contents of the set's folder with the new captures.  It SHALL shut down only
+emulators it started.
 
 #### Scenario: Capturing the 10-inch set on a fresh machine
 

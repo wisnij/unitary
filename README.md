@@ -81,7 +81,7 @@ database – alphabetically or grouped by physical dimension, with search and
 per-unit detail pages showing definitions, aliases, and resolved values.
 
 ![Unit browser showing collapsed dimension groups above the expanded Area group](doc/screenshots/browser.png)
-![Detail page for the newton, showing its aliases, definition, and value](doc/screenshots/unit-detail.png)
+![Detail page for hbar, the reduced Planck constant, showing its aliases, definition, and value](doc/screenshots/unit-detail.png)
 
 ### Currency conversion
 

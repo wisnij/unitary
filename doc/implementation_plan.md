@@ -1002,22 +1002,42 @@ than around the engineering tasks, which are small by comparison.
      Play descriptions are read cold by people who have never heard of the
      app, so lead with what it does rather than how it is built.  The "no
      ads, no tracking, no subscriptions, everything offline" angle is a
-     genuine differentiator in this category and belongs near the top.  A
-     basic placeholder description is live; the real one should be
-     version-controlled, either as its own files or generated from the
-     README
+     genuine differentiator in this category and belongs near the top.
+     Written October 1, 2026 by the `store-listing` change, in
+     `metadata/en-US/` (where F-Droid reads listing metadata from a source
+     repository, in the same structure as fastlane's) rather than generated
+     from the README,
+     whose reader already knows the project.  Title "Unitary: Unit
+     Converter"; a test enforces Play's length limits.  Remaining: copy it
+     into the Play Console over the placeholder
    - [ ] Store listing graphics: app icon at 512×512 (derivable from
      `assets/icon/unitary.svg` via the existing `tool/generate_icons.sh`
      pipeline) and a feature graphic at 1024×500, which has no existing
-     source and must be designed.  A mockup exists as the design target
+     source and must be designed.  Done October 1, 2026 by the
+     `store-listing` change: `tool/generate_store_graphics.sh` renders both
+     into `metadata/en-US/images/`, the feature graphic from
+     `assets/store/feature_graphic.svg`, which follows the mockup with the
+     wordmark in Anton (SIL Open Font License, bundled in
+     `assets/store/fonts/` and not shipped in the app) and the phone set's
+     worksheet screenshot in a drawn device frame.  A pre-commit hook
+     re-renders them when a source changes.  Remaining: upload them
    - [ ] Store listing screenshots — a separate set from the README's.  Play
      has its own count and aspect-ratio rules per form factor, and listing
      tablet screenshots is what makes the app eligible to be surfaced as
      tablet-capable.  The app genuinely earns that: the two-pane expanded
      layouts are worth showing.  `tool/take_screenshots.sh` already automates
      device capture and can be pointed at a tablet AVD, so extend it rather
-     than capturing by hand.  The existing phone screenshots are uploaded;
-     tablet ones are still to be taken
+     than capturing by hand.  Done October 1, 2026 by the `store-listing`
+     change: `tool/take_screenshots.sh phone|seven-inch|ten-inch|store`
+     captures each set on its own emulator profile.  Play requires tablet
+     screenshots to be exactly 16:9 or 9:16, and every stock tablet profile
+     is 16:10, so the profiles override the screen: 1080×1920 for the phone
+     and 7-inch, 2560×1440 landscape for the 10-inch, putting the app in its
+     compact, medium, and expanded layouts respectively.  The phone set
+     replaces the README-sized images uploaded first, which were 480 px wide
+     and so below Play's 1080 px condition for promoting an app; the README's
+     own screenshots are now downscaled copies of it.  Remaining: upload the
+     three sets
    - [x] Complete the Data safety declaration — straightforward here: no data
      collected, none shared, none transmitted off-device except the
      unauthenticated exchange-rate fetch, which carries no user identifier.

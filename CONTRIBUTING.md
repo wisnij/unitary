@@ -33,7 +33,8 @@ flutter run
 ~~~~
 
 Install the [pre-commit](https://pre-commit.com/) hooks, which keep generated
-files (unit database, app icons) in sync and run formatting and lint checks:
+files (unit database, app icons, store graphics) in sync and run formatting
+and lint checks:
 
 ~~~~ bash
 pre-commit install
@@ -85,6 +86,28 @@ single source of truth).  After editing the SVG, regenerate all platform
 assets with `tool/generate_icons.sh` (requires Inkscape; the generated assets
 are committed, so normal builds don't need it).  A pre-commit hook keeps the
 generated assets in sync automatically.
+
+### Store listing
+
+The Google Play listing lives in `metadata/en-US/`: the title and
+descriptions as text files, and the icon, feature graphic, and phone, 7-inch,
+and 10-inch screenshots under `images/`.  The files are copied into the Play
+Console by hand.
+
+- **Graphics:** the icon is rendered from `assets/icon/unitary.svg` and the
+  feature graphic from `assets/store/feature_graphic.svg` by
+  `tool/generate_store_graphics.sh` (requires Inkscape and ImageMagick; the
+  feature graphic's font is bundled in `assets/store/fonts/`).  A pre-commit
+  hook re-renders them when their sources change.
+- **Screenshots:** `tool/take_screenshots.sh phone`, `seven-inch`, or
+  `ten-inch` captures one set, and `store` captures all three.  Each set has
+  its own emulator profile, created on first use.  The phone target also
+  regenerates the README screenshots in `doc/screenshots/`, as copies of the
+  phone set downscaled to 400 px wide, so that two fit side by side.  The feature graphic shows the phone set's
+  worksheet screenshot, so re-capture the phone set before re-rendering it.
+- **Checks:** `test/tool/check_store_listing_lib_test.dart` fails when any of
+  these files breaks Play's requirements (text length, image size, aspect
+  ratio, alpha channel, screenshot count).
 
 
 License

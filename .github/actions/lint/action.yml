@@ -17,8 +17,9 @@ runs:
       with:
         python-version: '3.x'
     - uses: pre-commit/action@v3.0.1
-      # generate-icons rasterizes the SVG via Inkscape, which is not installed
-      # on the runner; the icon assets are committed and the hook guards drift
-      # locally, so skip it in CI.
+      # generate-icons and generate-store-graphics rasterize SVGs via
+      # Inkscape, which is not installed on the runner; the rendered images are
+      # committed and the hooks guard drift locally, so skip them in CI.  The
+      # store images' formats are still checked by the test suite.
       env:
-        SKIP: generate-icons
+        SKIP: generate-icons,generate-store-graphics

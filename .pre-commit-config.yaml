@@ -32,6 +32,19 @@ repos:
             assets/icon/DejaVuSansMono-Bold\.ttf |
             tool/generate_icons\.sh
           )$
+      - id: generate-store-graphics
+        name: Regenerate store graphics
+        language: system
+        entry: tool/generate_store_graphics.sh
+        pass_filenames: false
+        files: |
+          (?x)^(
+            assets/store/feature_graphic\.svg |
+            assets/store/fonts/Anton-Regular\.ttf |
+            assets/icon/unitary\.svg |
+            metadata/en-US/images/phoneScreenshots/02-worksheet\.png |
+            tool/generate_store_graphics\.sh
+          )$
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.20.0
     hooks:

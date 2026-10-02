@@ -102,8 +102,8 @@ Console by hand.
 - **Screenshots:** `tool/take_screenshots.sh phone`, `seven-inch`, or
   `ten-inch` captures one set, and `store` captures all three.  Each set has
   its own emulator profile, created on first use.  The phone target also
-  regenerates the README screenshots in `doc/screenshots/`, as 480 px wide
-  copies of the phone set.  The feature graphic shows the phone set's
+  regenerates the README screenshots in `doc/screenshots/`, as copies of the
+  phone set downscaled to 400 px wide, so that two fit side by side.  The feature graphic shows the phone set's
   worksheet screenshot, so re-capture the phone set before re-rendering it.
 - **Checks:** `test/tool/check_store_listing_lib_test.dart` fails when any of
   these files breaks Play's requirements (text length, image size, aspect

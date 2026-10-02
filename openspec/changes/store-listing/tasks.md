@@ -119,4 +119,6 @@
 - [x] 7.5 Fix the README's unit-detail alt text, which names the newton while
   the capture shows hbar
 - [x] 7.6 Update `CONTRIBUTING.md` and the `doc/` tracking files
-
+- [x] 7.7 Downscale every README screenshot to 400 px instead of 480, so any
+  two fit side by side: the Settings pair, as the README intended (found by
+  code review), and the unit browser beside the unit detail

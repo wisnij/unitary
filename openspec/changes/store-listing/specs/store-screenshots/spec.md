@@ -90,7 +90,8 @@ shut down only emulators it started.
 ### Requirement: The README screenshots are derived from the phone set
 
 The README screenshots in `doc/screenshots/` SHALL be copies of the phone set,
-downscaled to 480 px wide and named after the page each shows (`freeform.png`,
+downscaled to 400 px wide so that the README can show any two side by side,
+and named after the page each shows (`freeform.png`,
 `worksheet.png`, `currency.png`, `browser.png`, `unit-detail.png`,
 `settings-dark.png`, `settings-light.png`).  Capturing the phone set SHALL
 regenerate them; no separate README capture SHALL exist.  Capturing a tablet
@@ -99,7 +100,7 @@ set SHALL NOT modify `doc/screenshots/`.
 #### Scenario: Phone capture updates the README
 
 - **WHEN** `tool/take_screenshots.sh phone` runs
-- **THEN** `doc/screenshots/` holds the seven named files, each a 480 px wide
+- **THEN** `doc/screenshots/` holds the seven named files, each a 400 px wide
   copy of the corresponding phone screenshot
 
 #### Scenario: Tablet capture leaves the README alone

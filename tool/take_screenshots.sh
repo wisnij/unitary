@@ -15,8 +15,8 @@
 #   capture records the Flutter surface, not the system status bar.
 #
 #   The phone target also regenerates the README screenshots in
-#   doc/screenshots/, as copies of the phone set downscaled to 480 px wide,
-#   the width the README embeds them at.
+#   doc/screenshots/, as copies of the phone set downscaled to the 400 px width
+#   the README embeds them at, narrow enough for two to sit side by side.
 #
 # store
 #   All three targets in turn.
@@ -181,7 +181,7 @@ capture_set () {
   if [[ $target == phone ]]; then
     mkdir -p doc/screenshots
     for name in "${names[@]}"; do
-      (set -x; magick "$dest/"[0-9][0-9]"-$name.png" -resize 480x -strip \
+      (set -x; magick "$dest/"[0-9][0-9]"-$name.png" -resize 400x -strip \
         "PNG24:doc/screenshots/$name.png")
     done
     echo "Done (README):"

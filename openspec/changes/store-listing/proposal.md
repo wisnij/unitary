@@ -30,8 +30,8 @@ layouts are worth showing.
   a user would: drawer or navigation rail, template dropdown or list pane,
   pushed or embedded unit detail.  Store captures keep full resolution and use
   the dark theme, except for a final Settings capture in the light theme.
-- The README screenshots are derived from the phone set, downscaled to the
-  480 px width the README embeds them at, so a single phone capture produces
+- The README screenshots are derived from the phone set, downscaled to 400 px
+  wide so that any two fit side by side, so a single phone capture produces
   both and the separate README capture on its own emulator is retired.
 - A test checks the committed images against Play's requirements: dimensions,
   aspect ratios, alpha channel, and the minimum screenshot counts.

@@ -265,7 +265,9 @@ variable, defaulting to `build/screenshots/`.
 
 The `phone` target also writes the README screenshots to `doc/screenshots/`,
 under the names the README already uses, as copies of the phone set
-downscaled to 480 px wide.  The README needs its own smaller files because
+downscaled to 400 px wide, narrow enough that the README can place any two
+side by side, as it does the browser and unit detail, and the two Settings
+themes.  The README needs its own smaller files because
 markdownlint forbids HTML sizing, so a 1080 px image would display at full
 width, and Play needs the full-resolution ones.  Neither needs a separate
 capture: the README previously came from its own run on a taller 19.5:9 phone

@@ -116,8 +116,7 @@ The system SHALL display completion suggestions in a completion area on the
 freeform screen, located below the result display and above the operator key
 panel, whenever a freeform expression field has focus, a token is detected at
 its cursor, and at least one suggestion exists.  The area is part of the page
-layout: it SHALL NOT cover either expression field, the swap button, or the
-result display.
+layout: it SHALL NOT cover either expression field or the result display.
 
 Suggestions SHALL be shown as chips in rank order, flowing left to right and
 wrapping onto further lines.  When the chips do not fit in the area's height,

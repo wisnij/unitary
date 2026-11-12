@@ -24,20 +24,26 @@
 - [ ] 4.3 Update existing `freeform_screen_test.dart` and `freeform_two_pane_test.dart` cases that find or tap overlay rows
 - [ ] 4.4 Run the rebuild-scope tests; confirm a keystroke still rebuilds the freeform screen subtree root zero times, and adjust the host widget (not the bound) if it does not
 
-## 5. Related tests and tools
+## 5. Swap button in the app bar
 
-- [ ] 5.1 Remove the completion-overlay exemption from the header comment of `test/shared/color_contrast_test.dart`
-- [ ] 5.2 Remove the unfocus-before-capture workaround for the overlay from `integration_test/screenshots/take_screenshots.dart` if it has no other purpose
-- [ ] 5.3 Check the `integration_test/` suite for finders that depend on the overlay and update them
+- [ ] 5.1 Update the swap-button tests: the button is found in the app bar before the history and conformable-units buttons, at compact and two-pane widths; it has the tooltip "Swap from and to"; the "Convert to" field starts 16 dp below the "Convert from" field; the existing enabled-state and swap-behaviour tests still pass
+- [ ] 5.2 Move the swap `ListenableBuilder` + `IconButton` into the app bar actions with the tooltip, and replace the row between the fields with a 16 dp gap
+- [ ] 5.3 Confirm the rebuild-scope test still shows the swap button reacting to a keystroke without a screen-subtree rebuild
 
-## 6. Documentation
+## 6. Related tests and tools
 
-- [ ] 6.1 Update `doc/implementation_plan.md` and `doc/design_progress.md` with a dated entry for this change, and correct any present-tense description of the completion overlay in `doc/architecture.md` or other docs
-- [ ] 6.2 Update the README only if it describes the dropdown's appearance
+- [ ] 6.1 Remove the completion-overlay exemption from the header comment of `test/shared/color_contrast_test.dart`
+- [ ] 6.2 Remove the unfocus-before-capture workaround for the overlay from `integration_test/screenshots/take_screenshots.dart` if it has no other purpose
+- [ ] 6.3 Check the `integration_test/` suite for finders that depend on the overlay and update them
 
-## 7. Verification
+## 7. Documentation
 
-- [ ] 7.1 Run `flutter test --reporter failures-only` and `flutter analyze`; both clean
-- [ ] 7.2 On a phone with the keyboard open, in portrait and landscape: confirm the result stays visible while typing in each field, measure how many chip lines fit, and check that chip tapping and area scrolling do not conflict
-- [ ] 7.3 On the web build: confirm a chip tap inserts the suggestion and returns focus with the cursor after the inserted text
-- [ ] 7.4 With TalkBack: confirm chips are announced as `"<name>, <kind>"` and can be activated
+- [ ] 7.1 Update `doc/implementation_plan.md` and `doc/design_progress.md` with a dated entry for this change, and correct any present-tense description of the completion overlay in `doc/architecture.md` or other docs
+- [ ] 7.2 Regenerate the screenshots that show the freeform screen (`tool/take_screenshots.sh`) and update the README if it describes the dropdown or the swap button's position
+
+## 8. Verification
+
+- [ ] 8.1 Run `flutter test --reporter failures-only` and `flutter analyze`; both clean
+- [ ] 8.2 On a phone with the keyboard open, in portrait and landscape: confirm the result stays visible while typing in each field, measure how many chip lines fit, and check that chip tapping and area scrolling do not conflict
+- [ ] 8.3 On the web build: confirm a chip tap inserts the suggestion and returns focus with the cursor after the inserted text
+- [ ] 8.4 With TalkBack: confirm chips are announced as `"<name>, <kind>"` and can be activated

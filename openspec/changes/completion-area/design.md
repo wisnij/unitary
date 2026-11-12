@@ -14,7 +14,7 @@ Column
 
 `ReadableWidth` is `Align(topCenter)` + `ConstrainedBox(maxWidth: 600)`.  The key panel is shown when a field has focus on mobile, and always on desktop and web.
 
-Estimated free height below the result with the keyboard open (from widget sizes, not measured): about 165 dp on a tall phone with a one-line result, about 110 dp with a multi-line conversion result, and about 40 dp on a short phone.
+Estimated free height below the result with the keyboard open, before the swap row is removed (from widget sizes, not measured): about 165 dp on a tall phone with a one-line result, about 110 dp with a multi-line conversion result, and about 40 dp on a short phone.
 
 Constraints that must keep holding:
 
@@ -92,11 +92,20 @@ On web the chip inserts on `onTapDown` (pointer-down arrives before the browser'
 
 Same rule as today: a field has focus, a token is detected at its cursor, and at least one suggestion exists.  Otherwise the area is empty and takes no minimum height.  After a chip is tapped the area updates from the new text; for a unit the inserted trailing space ends the token, so the area empties.
 
+### D7: Swap button in the app bar
+
+The swap button's row between the fields is removed and replaced by a 16 dp gap, which returns about 32 dp to the area on every screen.  The button becomes the first app bar action, before history and conformable units, at every window width.  It keeps the `swap_vert` icon (the fields are still stacked) and gains the tooltip "Swap from and to", matching the other app bar actions, which all have tooltips.  It still listens to both controllers through a `ListenableBuilder`, so its enabled state updates without a screen rebuild.
+
+At compact width the app bar then holds the drawer button, the title "Unitary", and three actions, which fits a 360 dp phone.
+
+*Alternative considered:* placing the button inside or beside one of the fields.  Rejected: it competes with the clear button and narrows the text.
+
 ## Risks / Trade-offs
 
 - **Fewer candidates on small screens than the overlay's 8 rows** → chips pack several per line, and the area scrolls.  On a one-line area the first three or four ranked candidates are visible, so ranking quality matters more; ranking is a recorded follow-up.
 - **Chips are harder to scan than a vertical list** → accepted as a trial; D1 keeps the rendering in one widget so switching to rows is a local change.
 - **Area height changes as the result changes height** (for example one-line result to a conversion with a reciprocal) → the chips reflow.  This happens after the evaluation debounce, not on each keystroke.
+- **The swap button is farther from the fields and from the thumb** → accepted for the height it frees; swap is used far less often than typing.
 - **Short screens: the result can be pushed partly out of view** → accepted by the maintainer; the content stays scrollable.
 - **The height estimates are not measured** → verify on a phone with the keyboard open, in both orientations, as a task.
 - **Web: `onTapDown` inserts when a touch scroll starts on a chip** → existing behaviour of the overlay on web; not made worse.

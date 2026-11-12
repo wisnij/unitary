@@ -41,7 +41,9 @@ Constraints that must keep holding:
 
 ### D1: One shared `CompletionArea` widget, owned by the screen
 
-A new `CompletionArea` widget receives the two fields' controllers, focus nodes, and `onChanged` callbacks.  It listens to all four listenables, picks the field that has focus, builds the `CompletionQuery` from that field's text and cursor, and watches `completionsProvider`.  Selecting a chip applies `applyCompletion` to the focused field's controller, restores focus and the cursor position, and calls that field's `onChanged`.
+A new `CompletionAreaLayout` widget receives the two fields' controllers, focus nodes, and `onChanged` callbacks (as `CompletionTarget`s) and the scrolling content as its child.  It listens to all four listenables, picks the field that has focus, builds the `CompletionQuery` from that field's text and cursor, and watches `completionsProvider`.  Selecting a chip applies `applyCompletion` to the focused field's controller, restores focus and the cursor position, and calls that field's `onChanged`.
+
+The chips themselves are drawn by `CompletionArea`, a presentational widget that takes a list of suggestions and a selection callback.  Splitting the two keeps the provider and focus logic out of the rendering, so a later switch from chips to rows touches only `CompletionArea`.
 
 `CompletionField` keeps its name and its role as the configured `TextField` wrapper (soft wrap, keyboard type, autocorrect and suggestions off).  The overlay, the layer link, the above/below logic, and the suggestion watch are removed from it.  `applyCompletion` and `completionSemanticLabel` move with the code that uses them; the display-name and insert-text helpers move to the area.
 
@@ -72,7 +74,7 @@ The floor applies only while suggestions are showing.  On a screen with at least
 
 ### D3: The layout host must not rebuild the content
 
-The layout widget needs to know whether suggestions are showing, which changes with keystrokes.  The widget that computes this takes the scrolling content as a prebuilt `child` from the screen.  When it rebuilds, the content widget instance is identical, so Flutter does not rebuild the content subtree.  The existing rebuild-scope tests must pass unchanged in their bounds.
+The layout widget (`FreeSpaceLayout`) needs to know whether suggestions are showing, which changes with keystrokes.  The widget that computes this (`CompletionAreaLayout`) takes the scrolling content as a prebuilt `child` from the screen.  When it rebuilds, the content widget instance is identical, so Flutter does not rebuild the content subtree.  The existing rebuild-scope tests must pass unchanged in their bounds.
 
 ### D4: Chips in a `Wrap` inside a vertical scroll view
 

@@ -135,7 +135,8 @@ void main() {
       await _convert(tester, 'sqrt(9 m^2) + sin(45 degrees) * 5 ft', 'm');
     }
     await _convert(tester, '5 ft + 3 in', 'cm');
-    // Dismiss the completion overlay (typing "cm" opens it over the result).
+    // Drop focus so the capture shows neither the completion chips (typing
+    // "cm" brings them up) nor the operator key panel.
     FocusManager.instance.primaryFocus?.unfocus();
     await tester.pumpAndSettle();
     await capture(tester, 'freeform');

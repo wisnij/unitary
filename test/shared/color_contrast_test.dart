@@ -16,10 +16,9 @@ import 'package:flutter_test/flutter_test.dart';
 /// Deliberately absent (decorative exemptions, WCAG 1.4.11; recorded in the
 /// color-contrast spec):
 ///
-/// - `outlineVariant` borders on the completion overlay
-///   (completion_field.dart) and unit-detail tables
-///   (unit_entry_detail_screen.dart) — the overlay is identified by its
-///   elevation and filled surface, the tables by their layout.
+/// - `outlineVariant` borders on unit-detail tables
+///   (unit_entry_detail_screen.dart) — the tables are identified by their
+///   layout.
 /// - The `surfaceContainerHighest`-derived background tints of the currency
 ///   banner (worksheet_banner.dart) and browse sticky group headers
 ///   (browser_screen.dart) — supplementary grouping cues; the text they

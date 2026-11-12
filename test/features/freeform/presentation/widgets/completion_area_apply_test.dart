@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:unitary/features/freeform/presentation/widgets/completion_field.dart';
+import 'package:unitary/features/freeform/presentation/widgets/completion_area.dart';
 
 TextEditingValue _value(String text, int cursor) => TextEditingValue(
   text: text,

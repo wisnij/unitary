@@ -17,10 +17,20 @@ Finder _chip(String text) => find.descendant(
   matching: find.text(text),
 );
 
-/// All chips' touch targets.
+/// All chips, each sized to its touch target.
 final Finder _chips = find.descendant(
   of: find.byType(CompletionArea),
-  matching: find.byType(InkWell),
+  matching: find.byType(OutlinedButton),
+);
+
+/// The pill of the chip labelled [text]: the region that draws the border
+/// and the hover and press highlights.
+Finder _pill(String text) => find.ancestor(
+  of: _chip(text),
+  matching: find.descendant(
+    of: find.byType(CompletionArea),
+    matching: find.byType(InkWell),
+  ),
 );
 
 /// The area's scroll offset.
@@ -179,6 +189,62 @@ void main() {
         expect(size.height, greaterThanOrEqualTo(48));
         expect(size.width, greaterThanOrEqualTo(48));
       }
+    });
+
+    testWidgets('highlights stay inside the pill, which is 32 dp high', (
+      tester,
+    ) async {
+      await _pumpArea(
+        tester,
+        suggestions: [_entry('li'), _entry('internationalnauticalmile')],
+      );
+
+      for (final name in ['li', 'internationalnauticalmile']) {
+        final pill = tester.getRect(_pill(name));
+        final target = tester.getRect(
+          find.ancestor(of: _chip(name), matching: _chips),
+        );
+        expect(pill.height, 32, reason: name);
+        // The pill is centred in the taller touch target and spans its width.
+        expect(pill.center.dy, target.center.dy, reason: name);
+        expect(pill.left, target.left, reason: name);
+        expect(pill.right, target.right, reason: name);
+      }
+    });
+
+    testWidgets('a narrow chip is a 48 dp pill flush with the left inset', (
+      tester,
+    ) async {
+      // A one-character label is narrower than the minimum (the test font
+      // is wider than the real one, so 'li' would not be).  The long names
+      // push later chips onto new lines.
+      await _pumpArea(
+        tester,
+        suggestions: [
+          _entry('l'),
+          _entry('x' * 40),
+          _entry('y' * 40),
+        ],
+      );
+
+      final narrow = tester.getRect(_pill('l'));
+      final nextLine = tester.getRect(_pill('y' * 40));
+      expect(narrow.width, 48);
+      expect(nextLine.top, greaterThan(narrow.bottom));
+      expect(narrow.left, nextLine.left, reason: 'no extra indentation');
+      expect(narrow.left, 16);
+    });
+
+    testWidgets('a tap in the padding around the pill selects the chip', (
+      tester,
+    ) async {
+      final selected = <CompletionEntry>[];
+      final li = _entry('li');
+      await _pumpArea(tester, suggestions: [li], onSelected: selected.add);
+
+      final pill = tester.getRect(_pill('li'));
+      await tester.tapAt(Offset(pill.center.dx, pill.top - 4));
+      expect(selected, [li]);
     });
 
     testWidgets('a chip is never wider than the area', (tester) async {

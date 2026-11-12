@@ -11,7 +11,7 @@ import 'free_space_layout.dart';
 /// chip's touch target.
 const double kCompletionChipLineHeight = 48.0;
 
-/// Minimum width of a chip's touch target.
+/// Minimum width of a chip, and so of its touch target.
 const double _kChipMinTapWidth = 48.0;
 
 /// Height of the visible pill inside a chip's touch target.
@@ -318,10 +318,12 @@ class _CompletionAreaState extends State<CompletionArea> {
   }
 }
 
-/// One suggestion: an outlined pill centred in a larger touch target.
+/// One suggestion: an outlined pill, at least 48 dp wide, inside a touch
+/// target one chip line high.
 ///
-/// Built from [InkWell] rather than a Material chip because the web tap
-/// handling needs `onTapDown`, which the Material chips do not offer.
+/// Built on [OutlinedButton] for its padded tap target: taps in the padding
+/// around the pill count as taps on it, while the hover and press highlights
+/// stay inside the pill's border.
 class _CompletionChip extends StatelessWidget {
   const _CompletionChip({required this.entry, required this.onSelected});
 
@@ -332,57 +334,45 @@ class _CompletionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    return InkWell(
-      borderRadius: BorderRadius.circular(kCompletionChipLineHeight / 2),
-      // On web, onTap fires after the browser focusout event removes focus
-      // from the text field, which clears the suggestions before the tap is
-      // delivered.  onTapDown fires at pointer-down, before focusout.
-      // On mobile, onTapDown would also fire when a scroll drag starts on a
-      // chip, so onTap is used there instead.
-      onTapDown: kIsWeb ? (_) => onSelected() : null,
-      onTap: kIsWeb
-          ? () {} // non-null keeps InkWell press effects
-          : onSelected,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(
-          minWidth: _kChipMinTapWidth,
-          minHeight: kCompletionChipLineHeight,
-          maxHeight: kCompletionChipLineHeight,
-        ),
-        child: Center(
-          widthFactor: 1,
-          child: Container(
-            height: _kChipVisualHeight,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: ShapeDecoration(
-              shape: StadiumBorder(
-                side: BorderSide(color: colorScheme.outline),
-              ),
-            ),
-            // Announce "<name>, <kind>"; the visible display text (with its
-            // trailing -/( ) is excluded so the punctuation is not read out
-            // literally.
-            // widthFactor keeps the pill as wide as its label.
-            child: Center(
-              widthFactor: 1,
-              child: Semantics(
-                label: completionSemanticLabel(entry),
-                child: ExcludeSemantics(
-                  child: Text(
-                    completionDisplayName(entry),
-                    maxLines: 1,
-                    softWrap: false,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+    final button = OutlinedButton(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: colorScheme.onSurface,
+        textStyle: theme.textTheme.labelLarge,
+        minimumSize: const Size(_kChipMinTapWidth, _kChipVisualHeight),
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        shape: const StadiumBorder(),
+        side: BorderSide(color: colorScheme.outline),
+        // Pads the tap target out to 48 dp without enlarging the pill.  The
+        // density is fixed because the desktop default (compact) would
+        // shrink both.
+        tapTargetSize: MaterialTapTargetSize.padded,
+        visualDensity: VisualDensity.standard,
+      ),
+      // On web the selection is made at pointer-down (see below); the
+      // callback stays non-null there to keep the button enabled.
+      onPressed: kIsWeb ? () {} : onSelected,
+      // Announce "<name>, <kind>"; the visible display text (with its
+      // trailing -/( ) is excluded so the punctuation is not read out
+      // literally.
+      child: Semantics(
+        label: completionSemanticLabel(entry),
+        child: ExcludeSemantics(
+          child: Text(
+            completionDisplayName(entry),
+            maxLines: 1,
+            softWrap: false,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),
     );
+    if (!kIsWeb) {
+      return button;
+    }
+    // On web, a press completes after the browser's focusout event has taken
+    // focus from the text field, which clears the suggestions before the tap
+    // is delivered.  Pointer-down arrives before focusout.  This is not used
+    // on mobile, where pointer-down is also how a scroll drag starts.
+    return Listener(onPointerDown: (_) => onSelected(), child: button);
   }
 }

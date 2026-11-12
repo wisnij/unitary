@@ -1386,7 +1386,7 @@ void main() {
 
     final chips = find.descendant(
       of: find.byType(CompletionArea),
-      matching: find.byType(InkWell),
+      matching: find.byType(OutlinedButton),
     );
 
     /// Focuses [field] and types [text] into it.

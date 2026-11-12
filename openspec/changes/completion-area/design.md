@@ -80,7 +80,7 @@ The layout widget (`FreeSpaceLayout`) needs to know whether suggestions are show
 
 Suggestions render in rank order in a `Wrap`, inside a `SingleChildScrollView`, aligned to the top-left of the area.  All suggestions are built (at most 50).  The scroll position returns to the top when the query changes.
 
-Each chip is a small custom widget (`Material` + `InkWell`), not `ActionChip`, because `ActionChip` has no `onTapDown` and the web tap handling needs it (D5).  A chip is a 32 dp tall outlined pill centred in a 48 dp tall tap target that is at least 48 dp wide.  A chip is never wider than the area; a longer name is ellipsized.
+Each chip is an `OutlinedButton` styled as a pill: 32 dp high, at least 48 dp wide, with the button's padded tap target making the touch target 48 dp high.  Taps in that padding count as taps on the pill, while the hover and press highlights stay inside its border, and a narrow chip is not indented.  `ActionChip` was not used because its sizing and web tap handling (D5) are harder to control.  A chip is never wider than the area; a longer name is ellipsized.
 
 Chips use standard Material 3 role pairings unmodified: `onSurface` text on the page surface with an `outline` border.  Standard pairings are outside the `color-contrast` spec, so no new pinned pairing or exemption is needed.  The overlay's `outlineVariant` exemption is deleted.
 
@@ -88,7 +88,7 @@ Chips use standard Material 3 role pairings unmodified: `onSurface` text on the 
 
 ### D5: Keep the existing tap handling per platform
 
-On web the chip inserts on `onTapDown` (pointer-down arrives before the browser's focus-out hides the suggestions); elsewhere it inserts on `onTap`, so a scroll drag that starts on a chip does not insert it.  This is the overlay's current behaviour, moved as is.
+On web the chip inserts at pointer-down, through a `Listener` around the button (pointer-down arrives before the browser's focus-out clears the suggestions); elsewhere it inserts when the press completes, so a scroll drag that starts on a chip does not insert it.  This is the overlay's current behaviour, moved as is.
 
 ### D6: When the area shows suggestions
 

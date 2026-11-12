@@ -665,4 +665,5 @@ Questions that arose during design but haven't been resolved:
   - The swap button moved from its own row between the fields into the app bar, as the first action, with the tooltip "Swap from and to".  The fields are now 16 dp apart, which returns 32 dp of height to the result and the area
   - Chips use standard Material 3 pairings (`onSurface` text, `outline` border), so the contrast spec needs no new entry, and the overlay's `outlineVariant` border exemption is removed
   - Not changed: which suggestions appear and their ranking.  The first line of chips is all a short screen shows, and alphabetical order puts `mebi-` and `mega-` ahead of `meter` for `me`; smarter ranking is a separate change.  Keyboard selection of suggestions on web is also still absent
-  - Remaining, by hand: on-device checks (phone with keyboard in both orientations, web tap handling, TalkBack) and regenerating the freeform screenshots for the README and the store listing, which still show the swap button between the fields
+  - The freeform screenshots for the README and the store listing were regenerated to show the swap button in the app bar
+  - Remaining, by hand: on-device checks (phone with keyboard in both orientations, web tap handling, TalkBack)

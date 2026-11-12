@@ -39,7 +39,7 @@
 ## 7. Documentation
 
 - [x] 7.1 Update `doc/implementation_plan.md` and `doc/design_progress.md` with a dated entry for this change, and correct any present-tense description of the completion overlay in `doc/architecture.md` or other docs
-- [ ] 7.2 Regenerate the screenshots that show the freeform screen (`tool/take_screenshots.sh`) and update the README if it describes the dropdown or the swap button's position
+- [x] 7.2 Regenerate the screenshots that show the freeform screen (`tool/take_screenshots.sh`) and update the README if it describes the dropdown or the swap button's position
 
 ## 8. Verification
 

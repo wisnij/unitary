@@ -68,11 +68,7 @@ with the caller-supplied `overrides`.
 
 ### Requirement: No hand-rolled must-override boilerplate in migrated tests
 
-Test files that exercise a widget or provider depending on one or more
-must-override providers SHALL obtain default repository instances via
-`TestRepositories` (directly, or through `pumpApp`) rather than duplicating
-the `SharedPreferences.setMockInitialValues` + repository-construction +
-override-list sequence inline.
+Test files that exercise a widget or provider depending on one or more must-override providers SHALL obtain default repository instances via `TestRepositories` (directly, or through `pumpApp`) rather than duplicating the `SharedPreferences.setMockInitialValues` + repository-construction + override-list sequence inline.
 
 #### Scenario: Widget test uses the shared helper
 

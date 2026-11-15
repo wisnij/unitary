@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD
+Defines the AST node types and parser entry points that distinguish an expression from a bare function name, and the freeform evaluation results that follow from them: function definition display, inverse function conversion, and reciprocal conversion.
 
 ## Requirements
 
@@ -330,9 +330,7 @@ expression.
 
 ### Requirement: Bare function name input shows function definition
 
-When the input field parses to `FunctionNameNode(f, inverse: false)` and the
-output field is empty, the system SHALL display the forward definition of
-function `f`.
+When the input field parses to `FunctionNameNode(f, inverse: false)` and the output field is empty, the system SHALL display the forward definition of function `f`.
 
 The resulting state SHALL be `FunctionDefinitionResult`.  The display SHALL show
 `f.definitionDisplay` when non-null, or `"<not available>"` as a fallback when
@@ -353,9 +351,7 @@ it is null.
 
 ### Requirement: Bare inverse function name input shows inverse expression
 
-When the input field parses to `FunctionNameNode(f, inverse: true)` and the
-output field is empty, the system SHALL display the inverse expression of
-function `f`.
+When the input field parses to `FunctionNameNode(f, inverse: true)` and the output field is empty, the system SHALL display the inverse expression of function `f`.
 
 The resulting state SHALL be `FunctionDefinitionResult`.  The `label` field
 SHALL be formatted as `"~f ="` (without parameter list).  The `expression`
@@ -376,10 +372,7 @@ field SHALL be `f.inverseDisplay`.
 
 ### Requirement: Bare function name output applies inverse conversion
 
-When the input field parses to an `ExpressionNode` and the output field parses
-to `FunctionNameNode(f, inverse: false)`, the system SHALL evaluate the input
-expression to a `Quantity`, then call `f.callInverse([inputQty])` and display
-the numeric result.
+When the input field parses to an `ExpressionNode` and the output field parses to `FunctionNameNode(f, inverse: false)`, the system SHALL evaluate the input expression to a `Quantity`, then call `f.callInverse([inputQty])` and display the numeric result.
 
 #### Scenario: Function name output applies inverse to input quantity
 
@@ -395,9 +388,7 @@ the numeric result.
 
 ### Requirement: Inverse-flagged function name in output field produces an error
 
-When the output field parses to `FunctionNameNode(f, inverse: true)`, the
-system SHALL set state to `EvaluationError` with a message indicating that
-`~funcName` is not valid as a conversion target.
+When the output field parses to `FunctionNameNode(f, inverse: true)`, the system SHALL set state to `EvaluationError` with a message indicating that `~funcName` is not valid as a conversion target.
 
 #### Scenario: ~funcName in output field is rejected
 

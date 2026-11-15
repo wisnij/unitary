@@ -1,9 +1,14 @@
+# Unknown Unit Error
+
+## Purpose
+
+Defines how the evaluator reports a unit name that is not found in the unit repository: evaluation fails with an `EvalException` that names the unknown unit.
+
+## Requirements
+
 ### Requirement: Unknown unit name raises EvalException
 
-When the evaluator encounters an identifier that is not found in the provided
-unit repository, it SHALL throw an `EvalException` with a message that includes
-the unrecognized unit name.  A unit repository MUST always be provided; there
-is no null-repo fallback mode.
+When the evaluator encounters an identifier that is not found in the provided unit repository, it SHALL throw an `EvalException` with a message that includes the unrecognized unit name.  A unit repository MUST always be provided; there is no null-repo fallback mode.
 
 #### Scenario: Unrecognized unit with repo throws EvalException
 

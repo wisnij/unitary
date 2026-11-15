@@ -1,8 +1,14 @@
+# Parser Error Messages
+
+## Purpose
+
+Defines the wording of the error messages that the parser and evaluator produce, so that each message identifies the problem in terms the user can read and does not expose internal implementation details.
+
+## Requirements
+
 ### Requirement: Unrecognized unit name produces EvalException
 
-When a unit identifier is not found in the repository during expression
-evaluation, the evaluator SHALL throw an `EvalException` whose message
-identifies the unknown unit name.
+When a unit identifier is not found in the repository during expression evaluation, the evaluator SHALL throw an `EvalException` whose message identifies the unknown unit name.
 
 #### Scenario: EvalException message contains the unknown name
 
@@ -12,10 +18,7 @@ identifies the unknown unit name.
 
 ### Requirement: EOF produces human-readable error message
 
-When the parser encounters an unexpected end-of-input, the resulting
-`ParseException` message SHALL use the text `<end of input>` to identify the
-offending token, not an internal implementation detail such as a Dart enum
-name.
+When the parser encounters an unexpected end-of-input, the resulting `ParseException` message SHALL use the text `<end of input>` to identify the offending token, not an internal implementation detail such as a Dart enum name.
 
 #### Scenario: Empty input yields `<end of input>` in message
 

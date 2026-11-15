@@ -11,10 +11,7 @@ evaluation.
 
 ### Requirement: Enter in the Convert-from field advances focus to the Convert-to field
 
-When the user submits the "Convert from" field (presses Enter / the keyboard
-action key), the system SHALL move input focus to the "Convert to" field rather
-than dismissing input focus.  The system keyboard SHALL remain visible, now
-editing the "Convert to" field.
+When the user submits the "Convert from" field (presses Enter / the keyboard action key), the system SHALL move input focus to the "Convert to" field rather than dismissing input focus.  The system keyboard SHALL remain visible, now editing the "Convert to" field.
 
 Submitting the "Convert from" field SHALL also trigger evaluation, so on-submit
 evaluation mode continues to produce a result.
@@ -33,9 +30,7 @@ evaluation mode continues to produce a result.
 
 ### Requirement: Enter in the Convert-to field dismisses input focus
 
-When the user submits the "Convert to" field (presses Enter / the keyboard
-action key), the system SHALL dismiss input focus, ending text entry and
-hiding the system keyboard, as it does today.
+When the user submits the "Convert to" field (presses Enter / the keyboard action key), the system SHALL dismiss input focus, ending text entry and hiding the system keyboard, as it does today.
 
 Submitting the "Convert to" field SHALL also trigger evaluation.
 

@@ -10,10 +10,7 @@ interactions, and in-session state retention.
 
 ### Requirement: No worksheet selected state
 
-When no worksheet template is active (for example on first launch before the
-user has ever selected one), the worksheet screen SHALL NOT display any
-worksheet rows.  Instead it SHALL present an affordance for choosing a
-worksheet, whose form depends on the window size class:
+When no worksheet template is active (for example on first launch before the user has ever selected one), the worksheet screen SHALL NOT display any worksheet rows.  Instead it SHALL present an affordance for choosing a worksheet, whose form depends on the window size class:
 
 - At `compact` width: the screen body SHALL show the worksheet template list
   (the same list of templates, in the same case-insensitive alphabetical order,
@@ -198,9 +195,7 @@ The active row (the one being edited) SHALL NOT be overwritten by the engine.
 - **THEN** all other rows display their computed equivalents without delay
 
 ### Requirement: Source transfer on keystroke only
-Typing in a row makes it the active (source) row.  Merely focusing a row
-(tapping without typing) SHALL NOT transfer source ownership and SHALL NOT
-trigger recalculation.
+Typing in a row makes it the active (source) row.  Merely focusing a row (tapping without typing) SHALL NOT transfer source ownership and SHALL NOT trigger recalculation.
 
 #### Scenario: Focus without typing does not recalculate
 - **WHEN** the user taps a non-active row without typing

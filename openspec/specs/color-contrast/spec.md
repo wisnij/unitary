@@ -10,11 +10,7 @@ covered by the M3 tonal system's own guarantees and are outside this spec.
 ## Requirements
 
 ### Requirement: Custom text pairings meet WCAG 4.5:1
-Every custom-composed text coloring (a text color placed on a background other
-than its standard Material 3 role pairing, or involving an alpha blend) SHALL
-have a WCAG 2.x contrast ratio of at least 4.5:1 against its effective
-background, in both the light and dark color schemes.  Alpha-blended colors
-SHALL be evaluated after compositing over their actual opaque background.
+Every custom-composed text coloring (a text color placed on a background other than its standard Material 3 role pairing, or involving an alpha blend) SHALL have a WCAG 2.x contrast ratio of at least 4.5:1 against its effective background, in both the light and dark color schemes.  Alpha-blended colors SHALL be evaluated after compositing over their actual opaque background.
 
 #### Scenario: Muted text on tinted banner passes
 - **WHEN** `onSurfaceVariant` body text is rendered on the
@@ -28,10 +24,7 @@ SHALL be evaluated after compositing over their actual opaque background.
   against the panel's `primary` background
 
 ### Requirement: Custom non-text indicators meet WCAG 3:1
-Every custom-drawn UI component or state indicator whose recognition depends
-on its color (e.g. the fast-scroll thumb, the worksheet source-row indicator)
-SHALL have a WCAG 2.x contrast ratio of at least 3:1 against adjacent colors,
-in both the light and dark color schemes.
+Every custom-drawn UI component or state indicator whose recognition depends on its color (e.g. the fast-scroll thumb, the worksheet source-row indicator) SHALL have a WCAG 2.x contrast ratio of at least 3:1 against adjacent colors, in both the light and dark color schemes.
 
 #### Scenario: Source-row indicator perceivable in light mode
 - **WHEN** a worksheet row is the active source row in the light theme

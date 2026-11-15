@@ -79,9 +79,7 @@ Entries stored before this field was introduced SHALL deserialize with
 - **THEN** the entry is moved to the top and its result reflects the new evaluation
 
 ### Requirement: History deduplicates entries by moving them to top
-If the (from, to) pair of a new entry is identical (exact string match, after
-trimming) to an existing entry, the system SHALL remove the existing entry and
-prepend the new entry, rather than creating a duplicate.
+If the (from, to) pair of a new entry is identical (exact string match, after trimming) to an existing entry, the system SHALL remove the existing entry and prepend the new entry, rather than creating a duplicate.
 
 #### Scenario: Re-submitting an existing pair moves it to top
 - **WHEN** the user evaluates a (from, to) pair that already exists in history

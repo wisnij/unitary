@@ -97,11 +97,7 @@ fallback rates.
 
 ### Requirement: Currency worksheet recomputes after a rate refresh
 
-When a currency rate refresh updates dynamic units in the shared
-`UnitRepository` (signaled via `unitRepositoryVersionProvider`), the
-worksheet feature SHALL recompute and update the displayed values for
-every worksheet template that has a persisted source value, using that
-template's stored source row and text.
+When a currency rate refresh updates dynamic units in the shared `UnitRepository` (signaled via `unitRepositoryVersionProvider`), the worksheet feature SHALL recompute and update the displayed values for every worksheet template that has a persisted source value, using that template's stored source row and text.
 
 #### Scenario: Currency worksheet updates after manual refresh
 

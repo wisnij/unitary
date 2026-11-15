@@ -1,3 +1,11 @@
+# Passthrough Unit Repository
+
+## Purpose
+
+Defines the `PassthroughUnitRepository` test utility, which resolves any unit name to a synthetic primitive unit so that tests can exercise the expression parser and evaluator without registering real units.
+
+## Requirements
+
 ### Requirement: PassthroughUnitRepository accepts any identifier
 
 A `PassthroughUnitRepository` test utility SHALL be available in `test/helpers/`

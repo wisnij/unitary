@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - Add store listing descriptions and screenshots
+- Fix OpenSpec specs that fail validation
 
 
 [0.9.11] - 2026-09-27

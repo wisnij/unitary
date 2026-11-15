@@ -91,13 +91,7 @@ appearance SHALL remain unchanged.
 
 ### Requirement: Long-press copy gestures expose labeled custom actions
 
-Each long-press-to-copy gesture outside the worksheet — the About screen's
-copyable rows and the unit entry detail's copyable definition — SHALL expose
-the copy action to assistive technology as a labeled `CustomSemanticsAction`
-(e.g. "Copy version", "Copy definition"), so the action is discoverable in
-TalkBack's actions menu and VoiceOver's rotor.  Invoking the custom action
-SHALL have the same effect as the long press, including the confirmation
-snackbar.  The long-press gesture itself SHALL remain unchanged.
+Each long-press-to-copy gesture outside the worksheet — the About screen's copyable rows and the unit entry detail's copyable definition — SHALL expose the copy action to assistive technology as a labeled `CustomSemanticsAction` (e.g. "Copy version", "Copy definition"), so the action is discoverable in TalkBack's actions menu and VoiceOver's rotor.  Invoking the custom action SHALL have the same effect as the long press, including the confirmation snackbar.  The long-press gesture itself SHALL remain unchanged.
 
 (The worksheet value-cell copy action is specified in the `worksheet-ui`
 capability.)

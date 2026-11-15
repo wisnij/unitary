@@ -2,7 +2,7 @@
 
 ## Purpose
 
-TBD
+Defines what Freeform mode shows when the input is a bare unit name, prefix name, or prefix and unit combination with no conversion target: the canonical name, the definition, and the resolved value.
 
 ## Requirements
 
@@ -70,9 +70,7 @@ quantity, formatted with the user's current precision and notation settings.
 
 ### Requirement: Bare unit alias input shows canonical ID and definition
 
-When the input field is a bare unit name that is an alias (not the canonical
-`unit.id`) and the output field is empty, the provider SHALL produce
-`UnitDefinitionResult` where:
+When the input field is a bare unit name that is an alias (not the canonical `unit.id`) and the output field is empty, the provider SHALL produce `UnitDefinitionResult` where:
 
 - `aliasLine` is `"= <unit.id>"` (the canonical unit ID)
 - `definitionLine` is `"= <DerivedUnit.expression>"` when the unit is a
@@ -96,9 +94,7 @@ When the input field is a bare unit name that is an alias (not the canonical
 
 ### Requirement: Bare canonical unit ID input shows definition only
 
-When the input field is a bare unit name that equals the canonical `unit.id`
-(not an alias) and the output field is empty, the provider SHALL produce
-`UnitDefinitionResult` where:
+When the input field is a bare unit name that equals the canonical `unit.id` (not an alias) and the output field is empty, the provider SHALL produce `UnitDefinitionResult` where:
 
 - `aliasLine` is `null`
 - `definitionLine` is `"= <DerivedUnit.expression>"` when the unit is a
@@ -121,11 +117,7 @@ When the input field is a bare unit name that equals the canonical `unit.id`
 
 ### Requirement: Redundant definition line is suppressed
 
-When the definition expression of a `DerivedUnit` evaluates to a formatted
-string equivalent to `formattedResult`, the provider SHALL set `definitionLine`
-to `null` rather than displaying the same information twice.  Equivalence is
-determined by stripping all whitespace from both strings before comparing;
-strings that differ only in spacing SHALL be treated as identical.
+When the definition expression of a `DerivedUnit` evaluates to a formatted string equivalent to `formattedResult`, the provider SHALL set `definitionLine` to `null` rather than displaying the same information twice.  Equivalence is determined by stripping all whitespace from both strings before comparing; strings that differ only in spacing SHALL be treated as identical.
 
 #### Scenario: Derived unit whose expression equals formatted result omits definition line
 
@@ -151,10 +143,7 @@ strings that differ only in spacing SHALL be treated as identical.
 
 ### Requirement: Prefix+unit input shows decomposed canonical form
 
-When the input field is a bare identifier that resolves as a known prefix
-combined with a known unit (with all aliases and plural forms resolved) and
-the output field is empty, the provider SHALL produce `UnitDefinitionResult`
-where:
+When the input field is a bare identifier that resolves as a known prefix combined with a known unit (with all aliases and plural forms resolved) and the output field is empty, the provider SHALL produce `UnitDefinitionResult` where:
 
 - `aliasLine` is `"= <prefix.id> <unit.id>"` (canonical IDs, space-separated)
 - `definitionLine` is `null`
@@ -176,10 +165,7 @@ where:
 
 ### Requirement: Bare prefix alias input shows canonical prefix ID and value
 
-When the input field is a bare identifier that resolves as a prefix alias (not
-the canonical `prefix.id`) with no following unit, and the output field is
-empty, and no unit with the same name is registered, the provider SHALL produce
-`UnitDefinitionResult` where:
+When the input field is a bare identifier that resolves as a prefix alias (not the canonical `prefix.id`) with no following unit, and the output field is empty, and no unit with the same name is registered, the provider SHALL produce `UnitDefinitionResult` where:
 
 - `aliasLine` is `"= <prefix.id>"`
 - `definitionLine` is `null`
@@ -195,10 +181,7 @@ empty, and no unit with the same name is registered, the provider SHALL produce
 
 ### Requirement: Bare canonical prefix ID input shows scalar value only
 
-When the input field is a bare identifier that equals the canonical `prefix.id`
-with no following unit, and the output field is empty, and no unit with the
-same name is registered, the provider SHALL produce `UnitDefinitionResult`
-where:
+When the input field is a bare identifier that equals the canonical `prefix.id` with no following unit, and the output field is empty, and no unit with the same name is registered, the provider SHALL produce `UnitDefinitionResult` where:
 
 - `aliasLine` is `null`
 - `definitionLine` is `null`
@@ -214,9 +197,7 @@ where:
 
 ### Requirement: Unit name takes priority over prefix name for definition display
 
-When an identifier resolves as both a registered unit name and a registered
-prefix name, the unit definition SHALL be displayed.  The prefix check in
-`parseQuery()` is only reached when the unit check returns no match.
+When an identifier resolves as both a registered unit name and a registered prefix name, the unit definition SHALL be displayed.  The prefix check in `parseQuery()` is only reached when the unit check returns no match.
 
 #### Scenario: Identifier that is both a unit and a prefix shows unit definition
 

@@ -11,10 +11,7 @@ under `assets/units/`; generated Dart source remains in `lib/core/domain/data/`.
 ## Requirements
 
 ### Requirement: GNU Units source files live in assets/units/
-The GNU Units source data files (`definitions.units` and any companion `.units`
-files) SHALL be located in `assets/units/` at the repository root.  The
-associated `LICENSE.md` and `README.md` for those files SHALL also reside in
-`assets/units/`.
+The GNU Units source data files (`definitions.units` and any companion `.units` files) SHALL be located in `assets/units/` at the repository root.  The associated `LICENSE.md` and `README.md` for those files SHALL also reside in `assets/units/`.
 
 #### Scenario: Import tool reads from assets/units/
 - **WHEN** a developer runs `dart run tool/import_gnu_units.dart`
@@ -25,8 +22,7 @@ associated `LICENSE.md` and `README.md` for those files SHALL also reside in
 ---
 
 ### Requirement: JSON pipeline artifacts live in assets/units/
-The three JSON files that make up the unit pipeline intermediate and merged
-databases SHALL be located in `assets/units/`:
+The three JSON files that make up the unit pipeline intermediate and merged databases SHALL be located in `assets/units/`:
 
 - `units-parsed.json` — generated output of the importer; SHALL NOT appear
   under `lib/`
@@ -51,9 +47,7 @@ databases SHALL be located in `assets/units/`:
 ---
 
 ### Requirement: Generated Dart source remains in lib/core/domain/data/
-The generated Dart source files (`predefined_units.dart`,
-`builtin_functions.dart`) SHALL remain in `lib/core/domain/data/`.  Only
-non-Dart pipeline data files are relocated.
+The generated Dart source files (`predefined_units.dart`, `builtin_functions.dart`) SHALL remain in `lib/core/domain/data/`.  Only non-Dart pipeline data files are relocated.
 
 #### Scenario: Dart source location is unchanged after reorganization
 - **WHEN** the codegen tool runs successfully

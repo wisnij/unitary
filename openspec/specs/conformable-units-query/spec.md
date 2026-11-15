@@ -88,9 +88,7 @@ The returned list SHALL be sorted case-insensitively by `name`.
 
 ### Requirement: findConformable entries for derived units carry the definition expression
 
-For a `DerivedUnit` in the result of `findConformable`, the `ConformableEntry`
-SHALL have `definitionExpression` set to the unit's `expression` field and
-`functionLabel` set to `null`.
+For a `DerivedUnit` in the result of `findConformable`, the `ConformableEntry` SHALL have `definitionExpression` set to the unit's `expression` field and `functionLabel` set to `null`.
 
 #### Scenario: Derived unit entry has definition expression
 
@@ -100,8 +98,7 @@ SHALL have `definitionExpression` set to the unit's `expression` field and
 
 ### Requirement: findConformable entries for primitive units have no secondary label
 
-For a `PrimitiveUnit` in the result of `findConformable`, the `ConformableEntry`
-SHALL have both `definitionExpression` and `functionLabel` set to `null`.
+For a `PrimitiveUnit` in the result of `findConformable`, the `ConformableEntry` SHALL have both `definitionExpression` and `functionLabel` set to `null`.
 
 #### Scenario: Primitive unit entry has no secondary fields
 

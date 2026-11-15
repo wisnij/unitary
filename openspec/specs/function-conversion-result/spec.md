@@ -32,13 +32,7 @@ statements over `EvaluationResult`.
 
 ### Requirement: FreeformNotifier produces FunctionConversionResult for function-name output
 
-When the output field parses to `FunctionNameNode(f, inverse: false)` and the
-inverse application of function `f` to the evaluated input quantity succeeds,
-`FreeformNotifier.evaluate` SHALL set state to
-`FunctionConversionResult(functionName: <name as entered in the output field>, formattedValue: <formatted result>)`.
-It SHALL NOT set state to `EvaluationSuccess` or `ConversionSuccess` in this
-case.  The `functionName` field SHALL be the user's verbatim input (e.g. an
-alias), not the canonical function id.
+When the output field parses to `FunctionNameNode(f, inverse: false)` and the inverse application of function `f` to the evaluated input quantity succeeds, `FreeformNotifier.evaluate` SHALL set state to `FunctionConversionResult(functionName: <name as entered in the output field>, formattedValue: <formatted result>)`.  It SHALL NOT set state to `EvaluationSuccess` or `ConversionSuccess` in this case.  The `functionName` field SHALL be the user's verbatim input (e.g. an alias), not the canonical function id.
 
 #### Scenario: Function name output produces FunctionConversionResult with dimensionless result
 

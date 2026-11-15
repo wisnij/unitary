@@ -4,6 +4,8 @@ Defines the character set rules for lexer identifier tokens, covering which char
 
 ---
 
+## Requirements
+
 ### Requirement: Identifier start character set
 A lexer identifier token SHALL start with any character that is not whitespace (as matched by `\s` in a Dart `RegExp`), not an ASCII digit (`0`–`9`), not a period (`.`), and not an identifier-excluded character (see the excluded-characters requirement). This includes ASCII letters, underscore, Unicode characters, and non-excluded punctuation such as `%`, `°`, and `'`.
 

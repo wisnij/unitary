@@ -9,8 +9,7 @@ ratio-based (`UnitRow`) and function-based (`FunctionRow`) row kinds.
 ## Requirements
 
 ### Requirement: UnitRow conversion
-Given a source value `v` typed into a `UnitRow` with expression `E_src`, the
-engine SHALL compute:
+Given a source value `v` typed into a `UnitRow` with expression `E_src`, the engine SHALL compute:
 
 1. Parse and evaluate `E_src` → `unitQty_src` (a `Quantity`)
 2. `base = v × unitQty_src.value` (a scalar in primitive units)
@@ -27,8 +26,7 @@ engine SHALL compute:
 - **THEN** the `km/h` row displays approximately `3.6`
 
 ### Requirement: FunctionRow as source
-Given a source value `v` typed into a `FunctionRow` with function name `F`,
-the engine SHALL compute:
+Given a source value `v` typed into a `FunctionRow` with function name `F`, the engine SHALL compute:
 
 1. Look up function `F` in `UnitRepository`
 2. `base = F.call([Quantity(v, dimensionless)], context)` → a `Quantity` in
@@ -40,8 +38,7 @@ the engine SHALL compute:
 - **THEN** the `K` row displays `373.15`
 
 ### Requirement: FunctionRow as target
-Given a base `Quantity` derived from the source row, for a target `FunctionRow`
-with function name `F`, the engine SHALL compute:
+Given a base `Quantity` derived from the source row, for a target `FunctionRow` with function name `F`, the engine SHALL compute:
 
 `display = F.callInverse([base], context)` → a scalar
 
@@ -124,8 +121,7 @@ label rather than a value (see Requirement: Specific error labels).
 - **THEN** that row displays the label `"wrong unit type"` (not a numeric value)
 
 ### Requirement: Invalid or empty input clears all rows
-If the active row's input string is empty or cannot be parsed as a number, the
-engine SHALL set all non-active rows to empty string (`""`).
+If the active row's input string is empty or cannot be parsed as a number, the engine SHALL set all non-active rows to empty string (`""`).
 
 #### Scenario: Empty input clears other rows
 - **WHEN** the user clears the active row's text field

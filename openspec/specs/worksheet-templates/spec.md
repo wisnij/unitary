@@ -126,9 +126,7 @@ against the live `UnitRepository`:
 
 ### Requirement: Templates with ordering `alphabetical` are in label order
 
-For any predefined template with `ordering == WorksheetOrdering.alphabetical`,
-rows SHALL be in non-decreasing order by their `label` field (case-sensitive
-lexicographic order).
+For any predefined template with `ordering == WorksheetOrdering.alphabetical`, rows SHALL be in non-decreasing order by their `label` field (case-sensitive lexicographic order).
 
 #### Scenario: Alphabetical-ordered template rows are in label order
 
@@ -137,11 +135,7 @@ lexicographic order).
 
 ### Requirement: Templates with ordering `magnitude` are in ascending quantity order
 
-For any predefined template with `ordering == WorksheetOrdering.magnitude`,
-evaluating each row's expression with `ExpressionParser.evaluate` SHALL yield
-`Quantity` values in non-decreasing order.  When two adjacent rows produce the
-same `Quantity.value`, their expression strings SHALL be in non-decreasing
-lexicographic order.
+For any predefined template with `ordering == WorksheetOrdering.magnitude`, evaluating each row's expression with `ExpressionParser.evaluate` SHALL yield `Quantity` values in non-decreasing order.  When two adjacent rows produce the same `Quantity.value`, their expression strings SHALL be in non-decreasing lexicographic order.
 
 #### Scenario: Magnitude-ordered template rows are in ascending quantity order
 

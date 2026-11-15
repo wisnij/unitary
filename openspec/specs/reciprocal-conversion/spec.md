@@ -37,13 +37,7 @@ dimensionless dimension is its own reciprocal.
 
 ### Requirement: FreeformNotifier detects reciprocal dimensions and performs reciprocal conversion
 
-When `_evaluateConversion` determines that the input and output quantities are
-not conformable, it SHALL additionally check whether their dimensions are
-reciprocals (applying the same dimensionless-unit stripping used by
-`_isConversionConformable`).  When reciprocal dimensions are detected, the
-system SHALL compute `convertedValue = 1 / (inputQty.value * outputQty.value)`,
-set `reciprocalValue = inputQty.value * outputQty.value`, and set state to
-`ReciprocalConversionSuccess` rather than `EvaluationError`.
+When `_evaluateConversion` determines that the input and output quantities are not conformable, it SHALL additionally check whether their dimensions are reciprocals (applying the same dimensionless-unit stripping used by `_isConversionConformable`).  When reciprocal dimensions are detected, the system SHALL compute `convertedValue = 1 / (inputQty.value * outputQty.value)`, set `reciprocalValue = inputQty.value * outputQty.value`, and set state to `ReciprocalConversionSuccess` rather than `EvaluationError`.
 
 The conformability check (direct conversion) SHALL take priority: the
 reciprocal path is only reached when the normal conversion fails.

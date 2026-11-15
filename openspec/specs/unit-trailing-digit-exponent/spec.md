@@ -4,11 +4,10 @@ Defines how the parser handles unit identifiers that end with one or more digit 
 
 ---
 
+## Requirements
+
 ### Requirement: Single trailing digit 2–9 is an exponent shorthand
-A unit identifier that ends with a single digit in the range 2–9, where that digit is
-not preceded by an underscore, SHALL be parsed as if the digit were an explicit exponent
-using `^`. The identifier before the digit is used as the unit name and the digit as the
-exponent value.
+A unit identifier that ends with a single digit in the range 2–9, where that digit is not preceded by an underscore, SHALL be parsed as if the digit were an explicit exponent using `^`. The identifier before the digit is used as the unit name and the digit as the exponent value.
 
 #### Scenario: Simple unit with trailing digit
 - **WHEN** the expression `m2` is parsed
@@ -29,9 +28,7 @@ exponent value.
 ---
 
 ### Requirement: Trailing digits 0 and 1 are part of the identifier name
-A unit identifier that ends with digit 0 or 1 (including multi-digit trailing runs
-ending in 0 or 1), where those digits are not preceded by an underscore, SHALL be
-treated as part of the identifier name, not as an exponent.
+A unit identifier that ends with digit 0 or 1 (including multi-digit trailing runs ending in 0 or 1), where those digits are not preceded by an underscore, SHALL be treated as part of the identifier name, not as an exponent.
 
 #### Scenario: Identifier ending in 0
 - **WHEN** the expression `x0` is parsed
@@ -56,10 +53,7 @@ treated as part of the identifier name, not as an exponent.
 ---
 
 ### Requirement: Multiple bare trailing digits ending in 2–9 are a parse error
-A unit identifier that ends with two or more consecutive digits not preceded by an
-underscore, where the last digit is in the range 2–9, SHALL cause a `ParseException`
-to be thrown. The exception message SHALL describe the error and reference the
-underscore convention for numeric suffixes.
+A unit identifier that ends with two or more consecutive digits not preceded by an underscore, where the last digit is in the range 2–9, SHALL cause a `ParseException` to be thrown. The exception message SHALL describe the error and reference the underscore convention for numeric suffixes.
 
 #### Scenario: Two bare trailing digits ending in non-0/1
 - **WHEN** the expression `u235` is parsed

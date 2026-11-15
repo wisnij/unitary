@@ -75,9 +75,7 @@ cache miss occurs.
   within the current resolution chain are still detected
 
 ### Requirement: Free function resolveUnit is removed
-The top-level free function `resolveUnit(Unit, UnitRepository, [Set<String>?])` in
-`unit_resolver.dart` SHALL be deleted.  All former call sites SHALL use
-`repo.resolveUnit()` instead.
+The top-level free function `resolveUnit(Unit, UnitRepository, [Set<String>?])` in `unit_resolver.dart` SHALL be deleted.  All former call sites SHALL use `repo.resolveUnit()` instead.
 
 #### Scenario: No import of unit_resolver needed at call sites
 - **WHEN** a file needs to resolve a unit to its base-unit Quantity

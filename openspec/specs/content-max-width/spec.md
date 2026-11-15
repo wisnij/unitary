@@ -10,10 +10,7 @@ the Freeform, Worksheet, and Settings content does not stretch uncomfortably wid
 
 ### Requirement: Single-column content is capped at a readable width
 
-Screens whose primary content is a single column (the Freeform input/output/result
-area, the Worksheet row table, and the Settings body) SHALL constrain that content
-to a maximum width and center it horizontally when the available width exceeds the
-maximum.  The maximum readable width SHALL be 600 logical pixels.
+Screens whose primary content is a single column (the Freeform input/output/result area, the Worksheet row table, and the Settings body) SHALL constrain that content to a maximum width and center it horizontally when the available width exceeds the maximum.  The maximum readable width SHALL be 600 logical pixels.
 
 #### Scenario: Wide pane centers the content
 

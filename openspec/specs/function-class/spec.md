@@ -86,9 +86,7 @@ expected count, and the actual count.
 ---
 
 ### Requirement: call() validates argument dimensions
-For each argument position that has a non-null `QuantitySpec` in `domain`,
-`call()` SHALL throw `DimensionException` when the argument's dimension does not
-match the spec's `dimension` (if specified).
+For each argument position that has a non-null `QuantitySpec` in `domain`, `call()` SHALL throw `DimensionException` when the argument's dimension does not match the spec's `dimension` (if specified).
 
 Validation for dimensionless primitive dimensions (e.g. radian) SHALL accept
 both quantities carrying that dimension and pure dimensionless quantities (empty
@@ -119,10 +117,7 @@ accepted for that argument.
 ---
 
 ### Requirement: call() validates argument value bounds
-For each argument position that has a non-null `QuantitySpec` in `domain`,
-`call()` SHALL throw `EvalException` when the argument's value violates the
-spec's `min` or `max` bound.  The error message SHALL identify the function name
-and the violated constraint.
+For each argument position that has a non-null `QuantitySpec` in `domain`, `call()` SHALL throw `EvalException` when the argument's value violates the spec's `min` or `max` bound.  The error message SHALL identify the function name and the violated constraint.
 
 A closed bound includes the endpoint (≤ / ≥); an open bound excludes it (< / >).
 

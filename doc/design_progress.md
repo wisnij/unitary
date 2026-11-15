@@ -204,7 +204,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: November 12, 2026*
+*Last Updated: November 15, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -669,3 +669,20 @@ Questions that arose during design but haven't been resolved:
   - The chips sit in a `TextFieldTapRegion`.  On web and desktop a text field drops its focus at a pointer-down outside it, and that handling runs after the chip's own pointer-down listener, so without the tap region a chip tap on web inserted the suggestion and then lost the focus
   - Checked on a phone: about 4 chip lines (about 15 chips) fit between the result and the keyboard, and about 11 lines with the keyboard minimized; chip taps keep the focus; TalkBack announces the chips correctly
   - Checked on the web build: a chip tap inserts the suggestion and keeps the focus
+- *Material library migration (November 15, 2026)*: direct change, no OpenSpec artifacts
+  - 2316 tests passing (5 new), `flutter analyze` clean
+  - Flutter 3.50 deprecates `package:flutter/material.dart`: the Material widgets now live in the `material_ui` pub package.  After the upgrade, `flutter analyze` reported one `deprecated_member_use` info for each of the 58 files that imported the old library.  All 58 (21 in `lib/`, 33 in `test/`, 4 in `integration_test/`) now import `package:material_ui/material_ui.dart`, and `material_ui` is a direct dependency
+  - `material_ui` requires Flutter 3.47 or later, so the project can no longer be built with an older SDK
+  - **The two libraries define separate classes with the same names.**  A widget from a package that still imports the SDK's library looks up the SDK's `Theme`, which a `material_ui` `MaterialApp` does not provide, and gets the default light theme.  `flutter_markdown_plus` 1.0.12, the latest version, is such a package: without a fix, the License and Privacy screens showed near-black text (`#1d1b20`) on the dark theme's surface (`#111418`)
+  - Fix: both screens wrap their `Markdown` widget in `MaterialUiCompatibilityBridge`, the stopgap that `material_ui` ships for this case.  It provides the SDK's `Theme` to a subtree, built from the app's `material_ui` theme.  The bridge is deprecated from the start to mark it as temporary, so each use has an `ignore` comment.  Remove it when `flutter_markdown_plus` supports `material_ui`
+  - Rejected: a hand-written `MarkdownStyleSheet` built from the app theme.  It worked, but it copied about 60 lines of the package's own defaults
+  - A test trap: the `RichText` that `Markdown` builds has an outer span that carries the ambient `DefaultTextStyle`, and the paragraph style is on a child span.  A test that reads `richText.text.style` sees the correct theme color even when the text is painted in the wrong one.  `paintedTextColor()` in `test/helpers/painted_text_color.dart` walks down to the span that holds the text
+- *Android build toolchain upgrade (November 15, 2026)*: see `openspec/changes/gradle-upgrade/`
+  - 2316 tests passing (no test changes), `flutter analyze` clean
+  - **The v0.9.12 release failed in CI and published nothing.**  GitHub moved the `ubuntu-latest` runner label from Ubuntu 24.04 to Ubuntu 26.04 (rolled out October 19 to November 19, 2026; actions/runner-images#14748), and the image's default JDK went from 17 to 25.  The workflow never selected a JDK, and Gradle 8.14 cannot run on Java 25 (that needs Gradle 9.1 or later).  The first Gradle build of the run, the debug APK for the integration tests, stopped with only the version number as its message: `What went wrong: 25.0.5`
+  - The Android build now uses Gradle 9.5.0, Android Gradle Plugin 9.3.1, and Kotlin Gradle Plugin 2.4.20 (from 8.14, 8.11.1, and 2.2.20).  These are the versions Flutter 3.50 uses for new projects, and the lowest it accepts without a "support will soon be dropped" warning.  Flutter 3.50 stops the build below Gradle 9.3.1, Android Gradle Plugin 9.1.1, or Kotlin 2.4.10, so this upgrade and the move to Flutter 3.50 depend on each other and land together
+  - One build-script change was needed: Kotlin 2.3 and later reject `kotlinOptions { jvmTarget }`, so `android/app/build.gradle.kts` now sets the target in a top-level `kotlin { compilerOptions { … } }` block.  The target is still 17.  The release-only x86_64 packaging exclusion and the signing configuration needed no change
+  - **CI now selects its JDK explicitly** (`actions/setup-java`, Temurin 21) in the three places that run Gradle: the shared test action, `build-android-test`, and `build-android-release`.  A change of the runner image's default can no longer break the build.  JDK 21 matches the development machine; Java 25 is untested
+  - Verified locally on Flutter 3.50 and JDK 21: the debug, profile, and release APKs and the app bundle all build; `tool/verify_apk_abis.dart` accepts both release artifacts; the integration suite passes on the x86_64 emulator; and the release APK matches the published v0.9.11 APK in application ID, SDK levels (24 and 36), permissions, ABIs, and signing certificate.  It installed over v0.9.11 on a phone and started
+  - The release APK is 37,898,830 bytes (36.1 MB), against 36,366,244 bytes (34.7 MB) for v0.9.11.  The comparison spans the Flutter 3.50 move as well as this change, so the growth is not attributed to either
+  - Not done: the move to the Android Gradle Plugin's built-in Kotlin support.  Version 9 of the plugin can compile Kotlin itself, and Flutter warns that applying the separate Kotlin plugin "will cause build failures in future versions".  `android.builtInKotlin=false` in `android/gradle.properties` keeps the old behaviour for now

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart' show CustomSemanticsAction;
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../core/domain/models/browse_entry.dart';
 import '../../../core/domain/models/function.dart';

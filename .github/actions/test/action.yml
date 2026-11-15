@@ -4,9 +4,17 @@ description: Run flutter tests with coverage reporting
 runs:
   using: composite
   steps:
+    # Select the JDK explicitly instead of using the runner image's default,
+    # which changes without notice: ubuntu-26.04 moved it from Java 17 to
+    # Java 25, and the Gradle version in use then could not run on it.  The
+    # Android build jobs in ci.yml select the same version.
+    - uses: actions/setup-java@v6
+      with:
+        distribution: temurin
+        java-version: '21'
     - uses: subosito/flutter-action@v2
       with:
-        flutter-version: '3.44.x'
+        flutter-version: '3.50.x'
         channel: stable
         cache: true
     - run: flutter pub get

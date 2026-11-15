@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../features/about/presentation/about_screen.dart';
 import '../features/browser/presentation/browser_screen.dart';

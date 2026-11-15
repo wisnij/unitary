@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:unitary/core/domain/models/browse_entry.dart';
 import 'package:unitary/core/domain/models/dimension.dart';

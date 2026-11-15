@@ -21,9 +21,9 @@
 //
 // Screenshots are written by the driver (test_driver/screenshots_driver.dart)
 // at the device's native resolution, to the directory in SCREENSHOT_DIR.
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:unitary/features/browser/presentation/browser_screen.dart';
 import 'package:unitary/features/browser/presentation/unit_entry_detail_screen.dart';

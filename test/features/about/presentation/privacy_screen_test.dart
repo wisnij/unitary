@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
+
+import 'package:unitary/features/about/presentation/markdown_style.dart';
 import 'package:unitary/features/about/presentation/privacy_screen.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
@@ -176,6 +179,29 @@ void main() {
 
       expect(find.text('Open policy'), findsOneWidget);
       expect(find.text('Privacy policy'), findsNothing);
+    });
+
+    testWidgets('styles the document from the app theme', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blue,
+              brightness: Brightness.dark,
+            ),
+          ),
+          home: DefaultAssetBundle(
+            bundle: _FakeAssetBundle(),
+            child: const PrivacyScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final markdown = tester.widget<Markdown>(find.byType(Markdown));
+      final theme = Theme.of(tester.element(find.byType(Markdown)));
+      expect(theme.brightness, Brightness.dark);
+      expect(markdown.styleSheet, themedMarkdownStyleSheet(theme));
     });
   });
 }

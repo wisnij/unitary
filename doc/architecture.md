@@ -42,7 +42,10 @@ Technology Stack
   worksheet state, freeform history, currency rates)
 - **http** - currency rate fetching (Frankfurter v2 API)
 - **package_info_plus** - runtime version display in Settings
-- **flutter_markdown_plus** - rendering the bundled license text
+- **material_ui** - the Material widget library, which Flutter 3.47 moved
+  out of the SDK (`package:flutter/material.dart` is deprecated)
+- **flutter_markdown_plus** - rendering the bundled license text and privacy
+  policy
 - **url_launcher** - opening external links from the About screen
 
 `sqflite` (or similar) is deliberately deferred until a feature needs it

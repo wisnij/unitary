@@ -12,7 +12,7 @@
 
 ## 2. CI
 
-- [x] 2.1 In `.github/actions/test/action.yml`, set the `actions/setup-java@v5`
+- [x] 2.1 In `.github/actions/test/action.yml`, set the `actions/setup-java@v6`
   step to Temurin 21 and update its comment to describe the upgraded toolchain
 - [x] 2.2 In `.github/workflows/ci.yml`, set the same step to Temurin 21 in
   `build-android-test` and `build-android-release`, with the same comment update

@@ -89,7 +89,7 @@ match `compileOptions`.
 
 ### CI selects JDK 21 explicitly
 
-Each job that runs Gradle gets an `actions/setup-java@v5` step with
+Each job that runs Gradle gets an `actions/setup-java@v6` step with
 `distribution: temurin` and `java-version: '21'`, before the Flutter setup step.
 There are three places: `.github/actions/test/action.yml` (the integration
 tests build a debug APK), `build-android-test`, and `build-android-release`.

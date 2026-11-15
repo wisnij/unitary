@@ -293,24 +293,29 @@ class _CompletionAreaState extends State<CompletionArea> {
     if (widget.suggestions.isEmpty) {
       return const SizedBox.expand();
     }
-    return Material(
-      type: MaterialType.transparency,
-      child: SingleChildScrollView(
-        controller: _scrollController,
-        padding: const EdgeInsets.symmetric(
-          horizontal: _kAreaHorizontalPadding,
-        ),
-        child: SizedBox(
-          width: double.infinity,
-          child: Wrap(
-            spacing: 8,
-            children: [
-              for (final entry in widget.suggestions)
-                _CompletionChip(
-                  entry: entry,
-                  onSelected: () => widget.onSelected(entry),
-                ),
-            ],
+    // On web and desktop, a text field drops its focus at a pointer-down
+    // outside it.  The tap region makes the chips count as part of the field,
+    // so a chip tap leaves the focus where it is.
+    return TextFieldTapRegion(
+      child: Material(
+        type: MaterialType.transparency,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          padding: const EdgeInsets.symmetric(
+            horizontal: _kAreaHorizontalPadding,
+          ),
+          child: SizedBox(
+            width: double.infinity,
+            child: Wrap(
+              spacing: 8,
+              children: [
+                for (final entry in widget.suggestions)
+                  _CompletionChip(
+                    entry: entry,
+                    onSelected: () => widget.onSelected(entry),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

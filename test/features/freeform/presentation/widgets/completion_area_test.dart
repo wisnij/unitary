@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -548,6 +549,35 @@ void main() {
       expect(fromFocus.hasFocus, isTrue);
       expect(_chips, findsNothing);
     });
+
+    testWidgets(
+      'a chip tap is not a tap outside the field, where that clears focus',
+      (tester) async {
+        // On desktop and web, a text field drops focus at pointer-down
+        // outside it.
+        debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+        try {
+          await pumpLayout(tester);
+          await type(tester, fromKey, '5 kilogra');
+
+          final gesture = await tester.startGesture(
+            tester.getCenter(_chip('kilogram')),
+          );
+          await tester.pump();
+          expect(fromFocus.hasFocus, isTrue);
+          expect(_chip('kilogram'), findsOneWidget);
+
+          await gesture.up();
+          await tester.pump();
+          await tester.pump();
+
+          expect(fromController.text, '5 kilogram ');
+          expect(fromFocus.hasFocus, isTrue);
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
+      },
+    );
 
     testWidgets('a prefix chip inserts the name without the dash', (
       tester,

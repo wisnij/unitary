@@ -44,6 +44,6 @@
 ## 8. Verification
 
 - [x] 8.1 Run `flutter test --reporter failures-only` and `flutter analyze`; both clean
-- [ ] 8.2 On a phone with the keyboard open, in portrait and landscape: confirm the result stays visible while typing in each field, measure how many chip lines fit, and check that chip tapping and area scrolling do not conflict
-- [ ] 8.3 On the web build: confirm a chip tap inserts the suggestion and returns focus with the cursor after the inserted text
-- [ ] 8.4 With TalkBack: confirm chips are announced as `"<name>, <kind>"` and can be activated
+- [x] 8.2 On a phone with the keyboard open, in portrait and landscape: confirm the result stays visible while typing in each field, measure how many chip lines fit, and check that chip tapping and area scrolling do not conflict
+- [x] 8.3 On the web build: confirm a chip tap inserts the suggestion and returns focus with the cursor after the inserted text
+- [x] 8.4 With TalkBack: confirm chips are announced as `"<name>, <kind>"` and can be activated

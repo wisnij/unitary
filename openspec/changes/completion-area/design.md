@@ -20,7 +20,7 @@ Constraints that must keep holding:
 
 - The `rebuild-scope` spec: a keystroke rebuilds the freeform screen subtree root zero times.
 - 48 dp touch targets and the `"<name>, <kind>"` accessible labels.
-- On web, the browser moves focus away from the text field at pointer-down, before `onTap` fires.
+- On web and desktop, a text field drops its focus at a pointer-down outside it, before `onTap` fires.
 
 ## Goals / Non-Goals
 
@@ -90,6 +90,8 @@ Chips use standard Material 3 role pairings unmodified: `onSurface` text on the 
 
 On web the chip inserts at pointer-down, through a `Listener` around the button (pointer-down arrives before the browser's focus-out clears the suggestions); elsewhere it inserts when the press completes, so a scroll drag that starts on a chip does not insert it.  This is the overlay's current behaviour, moved as is.
 
+The chips are wrapped in a `TextFieldTapRegion`, so Flutter counts a chip tap as a tap inside the field and does not clear the field's focus at pointer-down.  Without it the focus is lost on web after the insertion, because the tap-outside handling runs after the chip's pointer-down listener.
+
 ### D6: When the area shows suggestions
 
 Same rule as today: a field has focus, a token is detected at its cursor, and at least one suggestion exists.  Otherwise the area is empty and takes no minimum height.  After a chip is tapped the area updates from the new text; for a unit the inserted trailing space ends the token, so the area empties.
@@ -109,7 +111,7 @@ At compact width the app bar then holds the drawer button, the title "Unitary", 
 - **Area height changes as the result changes height** (for example one-line result to a conversion with a reciprocal) → the chips reflow.  This happens after the evaluation debounce, not on each keystroke.
 - **The swap button is farther from the fields and from the thumb** → accepted for the height it frees; swap is used far less often than typing.
 - **Short screens: the result can be pushed partly out of view** → accepted by the maintainer; the content stays scrollable.
-- **The height estimates are not measured** → verify on a phone with the keyboard open, in both orientations, as a task.
+- **The height estimates were not measured at design time** → measured on a phone: about 4 chip lines (about 15 chips) fit with the keyboard open, and about 11 lines with it minimized.
 - **Web: `onTapDown` inserts when a touch scroll starts on a chip** → existing behaviour of the overlay on web; not made worse.
 - **`SingleChildScrollView` now shrink-wraps**, so the empty space below the result is no longer part of the scroll view → no functional effect expected; check that tap-outside and overscroll still feel right.
 

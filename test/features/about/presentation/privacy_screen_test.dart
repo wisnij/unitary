@@ -3,10 +3,11 @@ import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:unitary/features/about/presentation/markdown_style.dart';
 import 'package:unitary/features/about/presentation/privacy_screen.dart';
 import 'package:url_launcher_platform_interface/link.dart';
 import 'package:url_launcher_platform_interface/url_launcher_platform_interface.dart';
+
+import '../../../helpers/painted_text_color.dart';
 
 // The link sits alone in its own paragraph so that tapping the centre of the
 // rendered widget lands on the link span rather than on surrounding prose.
@@ -181,7 +182,9 @@ void main() {
       expect(find.text('Privacy policy'), findsNothing);
     });
 
-    testWidgets('styles the document from the app theme', (tester) async {
+    testWidgets('paints the document in the app theme text color', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -198,10 +201,16 @@ void main() {
       );
       await tester.pump();
 
-      final markdown = tester.widget<Markdown>(find.byType(Markdown));
       final theme = Theme.of(tester.element(find.byType(Markdown)));
       expect(theme.brightness, Brightness.dark);
-      expect(markdown.styleSheet, themedMarkdownStyleSheet(theme));
+      expect(
+        paintedTextColor(
+          tester,
+          find.byType(Markdown),
+          'Unitary collects nothing',
+        ),
+        theme.textTheme.bodyMedium!.color,
+      );
     });
   });
 }

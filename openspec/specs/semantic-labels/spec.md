@@ -3,7 +3,7 @@
 ## Purpose
 
 Gives the app's custom-drawn interactive controls — the Freeform operator key
-panel and predictive-completion suggestion overlay, the tappable idle-example
+panel and predictive-completion suggestion area, the tappable idle-example
 hint, and long-press copy gestures — accessible labels, roles, and actions in
 the semantics tree, so assistive technology (screen readers, braille displays,
 switch access) can convey what each control does and what kind of entry it is,

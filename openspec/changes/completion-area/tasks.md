@@ -8,7 +8,7 @@
 - [x] 2.1 Write widget tests for `CompletionArea`: chips appear in rank order for the focused field; no chips when unfocused, with no token, or with no matches; only the focused field's suggestions show; kind-annotated chip text (`kg`, `kilo-`, `tempC(`); `"<name>, <kind>"` semantic labels; tappable region at least 48 × 48 dp; a long name is ellipsized within the area width
 - [x] 2.2 Write widget tests for selection: tapping a chip inserts the kind-specific text into the focused field only, places the cursor after it, restores focus, calls that field's `onChanged`, and a unit insertion leaves no chips
 - [x] 2.3 Write widget tests for scrolling: with more chips than fit, the last one can be scrolled into view; the scroll position returns to the top when the suggestions change
-- [x] 2.4 Implement `CompletionArea` (listens to both controllers and focus nodes, watches `completionsProvider`, `Wrap` of custom `Material` + `InkWell` chips in a vertical `SingleChildScrollView`, `outline` border with `onSurface` text) with the web `onTapDown` / mobile `onTap` handling moved from the overlay
+- [x] 2.4 Implement `CompletionAreaLayout` (listens to both controllers and focus nodes, watches `completionsProvider`, inserts the tapped suggestion) and `CompletionArea` (`Wrap` of `OutlinedButton` pill chips in a vertical `SingleChildScrollView`, `outline` border with `onSurface` text, inside a `TextFieldTapRegion`), with selection at pointer-down on web and on a completed press elsewhere
 - [x] 2.5 Move `applyCompletion`, `completionSemanticLabel`, and the display-name and insert-text helpers to the area's file, and update their existing tests' imports
 
 ## 3. Remove the overlay

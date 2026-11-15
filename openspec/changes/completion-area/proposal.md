@@ -10,7 +10,7 @@ In freeform mode, the predictive-completion dropdown is an overlay anchored to t
 - Move the swap button from its own row between the two fields into the app bar, and close the gap between the fields to 16 dp.  This returns about 32 dp of height to the result and the completion area.
 - One shared area serves both fields and shows the suggestions for the focused field.  The same design applies at all window widths and on web.
 - Remove the `OverlayPortal` / `CompositedTransformFollower` dropdown from `CompletionField`, with its above/below positioning and its 8-row cap.
-- Unchanged: which suggestions appear (identifier of at least 2 characters ending at the cursor, in a focused field), suggestion ranking, the kind-specific display and insertion text, the `"<name>, <kind>"` accessible labels, focus restoration after insertion, and the web tap handling.
+- Unchanged: which suggestions appear (identifier of at least 2 characters ending at the cursor, in a focused field), suggestion ranking, the kind-specific display and insertion text, the `"<name>, <kind>"` accessible labels, focus restoration after insertion, and the web tap behaviour.
 
 Chips are a trial.  The maintainer will evaluate them on a device and may switch to full-width rows in a later change.
 

@@ -7,7 +7,7 @@ Defines the IME/keyboard configuration of the freeform expression fields
 soft-wrapping multiline layout does not invite prose treatment (Android IME
 auto-capitalization), and no platform autocorrect or word suggestions, since
 expression content is case-sensitive unit identifiers served by the app's own
-predictive-completion overlay.
+predictive-completion area.
 
 ## Requirements
 

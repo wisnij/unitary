@@ -897,12 +897,9 @@ void main() {
           ),
         );
 
-        // Trailing space keeps the cursor off an identifier token so the
-        // completion overlay (which can overlap the Evaluate button at compact
-        // width) does not appear.
         await tester.enterText(
           find.widgetWithText(TextField, 'Convert from'),
-          '5 km ',
+          '5 km',
         );
         await tester.pump();
 

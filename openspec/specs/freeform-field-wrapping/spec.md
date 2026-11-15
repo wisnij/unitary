@@ -5,8 +5,7 @@
 Defines how the freeform screen's "Convert from" and "Convert to" expression
 fields handle long expressions: soft-wrapping onto additional visual lines and
 growing vertically so the entire expression stays visible and editable, while
-preserving Enter-to-submit semantics and correct completion-overlay positioning
-on multi-line fields.
+preserving Enter-to-submit semantics.
 
 ## Requirements
 ### Requirement: Freeform expression fields soft-wrap long expressions

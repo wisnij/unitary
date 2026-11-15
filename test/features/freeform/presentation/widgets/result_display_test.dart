@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';

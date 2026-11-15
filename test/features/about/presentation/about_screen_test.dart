@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:unitary/features/about/presentation/about_screen.dart';
 import 'package:unitary/features/about/presentation/license_screen.dart';

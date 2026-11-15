@@ -204,7 +204,7 @@ Questions that arose during design but haven't been resolved:
 
 ---
 
-*Last Updated: November 12, 2026*
+*Last Updated: November 15, 2026*
 *Design Sessions:*
 
 - *Initial requirements gathering and core architecture*
@@ -669,3 +669,11 @@ Questions that arose during design but haven't been resolved:
   - The chips sit in a `TextFieldTapRegion`.  On web and desktop a text field drops its focus at a pointer-down outside it, and that handling runs after the chip's own pointer-down listener, so without the tap region a chip tap on web inserted the suggestion and then lost the focus
   - Checked on a phone: about 4 chip lines (about 15 chips) fit between the result and the keyboard, and about 11 lines with the keyboard minimized; chip taps keep the focus; TalkBack announces the chips correctly
   - Checked on the web build: a chip tap inserts the suggestion and keeps the focus
+- *Material library migration (November 15, 2026)*: direct change, no OpenSpec artifacts
+  - 2316 tests passing (5 new), `flutter analyze` clean
+  - Flutter 3.50 deprecates `package:flutter/material.dart`: the Material widgets now live in the `material_ui` pub package.  After the upgrade, `flutter analyze` reported one `deprecated_member_use` info for each of the 58 files that imported the old library.  All 58 (21 in `lib/`, 33 in `test/`, 4 in `integration_test/`) now import `package:material_ui/material_ui.dart`, and `material_ui` is a direct dependency
+  - `material_ui` requires Flutter 3.47 or later, so the project can no longer be built with an older SDK
+  - **The two libraries define separate classes with the same names.**  A widget from a package that still imports the SDK's library looks up the SDK's `Theme`, which a `material_ui` `MaterialApp` does not provide, and gets the default light theme.  `flutter_markdown_plus` 1.0.12, the latest version, is such a package: without a fix, the License and Privacy screens showed near-black text (`#1d1b20`) on the dark theme's surface (`#111418`)
+  - Fix: both screens wrap their `Markdown` widget in `MaterialUiCompatibilityBridge`, the stopgap that `material_ui` ships for this case.  It provides the SDK's `Theme` to a subtree, built from the app's `material_ui` theme.  The bridge is deprecated from the start to mark it as temporary, so each use has an `ignore` comment.  Remove it when `flutter_markdown_plus` supports `material_ui`
+  - Rejected: a hand-written `MarkdownStyleSheet` built from the app theme.  It worked, but it copied about 60 lines of the package's own defaults
+  - A test trap: the `RichText` that `Markdown` builds has an outer span that carries the ambient `DefaultTextStyle`, and the paragraph style is on a child span.  A test that reads `richText.text.style` sees the correct theme color even when the text is painted in the wrong one.  `paintedTextColor()` in `test/helpers/painted_text_color.dart` walks down to the span that holds the text

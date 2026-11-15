@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// WCAG 2.x contrast regression test for the app's custom-composed color
 /// pairings (see openspec/specs/color-contrast/spec.md).

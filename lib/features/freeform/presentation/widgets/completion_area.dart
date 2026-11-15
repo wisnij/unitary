@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb, listEquals;
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../../../core/domain/completion/token_at_cursor.dart';
 import '../../../../core/domain/models/completion_entry.dart';

@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:material_ui/material_ui.dart';
 
 import 'package:unitary/features/about/presentation/license_screen.dart';
+
+import '../../../helpers/painted_text_color.dart';
 
 const _fakeLicenseText =
     'GNU AFFERO GENERAL PUBLIC LICENSE\nVersion 3, 19 November 2007\n';
@@ -91,6 +94,33 @@ void main() {
 
       expect(find.text('Open license'), findsOneWidget);
       expect(find.text('License terms'), findsNothing);
+    });
+
+    testWidgets('paints the document in the app theme text color', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blue,
+              brightness: Brightness.dark,
+            ),
+          ),
+          home: DefaultAssetBundle(
+            bundle: _FakeAssetBundle(),
+            child: const LicenseScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      final theme = Theme.of(tester.element(find.byType(Markdown)));
+      expect(theme.brightness, Brightness.dark);
+      expect(
+        paintedTextColor(tester, find.byType(Markdown), 'GNU AFFERO'),
+        theme.textTheme.bodyMedium!.color,
+      );
     });
   });
 }

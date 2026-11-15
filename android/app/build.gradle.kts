@@ -29,10 +29,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
-    }
-
     defaultConfig {
         applicationId = "dev.wisnij.unitary"
         // You can update the following values to match your application needs.
@@ -89,6 +85,12 @@ android {
 androidComponents {
     onVariants(selector().withBuildType("release")) { variant ->
         variant.packaging.jniLibs.excludes.add("**/x86_64/**")
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
     }
 }
 

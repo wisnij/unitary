@@ -56,6 +56,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+      # Select the JDK explicitly instead of using the runner image's
+      # default.  See .github/actions/test/action.yml.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.44.x'
@@ -118,6 +124,12 @@ jobs:
       apk: ${{ steps.asset.outputs.apk }}
     steps:
       - uses: actions/checkout@v6
+      # Select the JDK explicitly instead of using the runner image's
+      # default.  See .github/actions/test/action.yml.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.44.x'

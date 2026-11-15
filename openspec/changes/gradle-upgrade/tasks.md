@@ -1,22 +1,22 @@
 ## 1. Build configuration
 
-- [ ] 1.1 In `android/gradle/wrapper/gradle-wrapper.properties`, change the
+- [x] 1.1 In `android/gradle/wrapper/gradle-wrapper.properties`, change the
   `distributionUrl` from `gradle-8.14-all.zip` to `gradle-9.3.1-all.zip`
-- [ ] 1.2 In `android/settings.gradle.kts`, set `com.android.application` to
+- [x] 1.2 In `android/settings.gradle.kts`, set `com.android.application` to
   version 9.0.1 and `org.jetbrains.kotlin.android` to version 2.3.20
-- [ ] 1.3 In `android/app/build.gradle.kts`, remove the `kotlinOptions` block
+- [x] 1.3 In `android/app/build.gradle.kts`, remove the `kotlinOptions` block
   from the `android` block and add a top-level
   `kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }` block
-- [ ] 1.4 Confirm `android/gradle.properties` is unchanged (the
+- [x] 1.4 Confirm `android/gradle.properties` is unchanged (the
   `android.builtInKotlin=false` and `android.newDsl=false` flags stay)
 
 ## 2. CI
 
-- [ ] 2.1 In `.github/actions/test/action.yml`, set the `actions/setup-java@v5`
+- [x] 2.1 In `.github/actions/test/action.yml`, set the `actions/setup-java@v5`
   step to Temurin 21 and update its comment to describe the upgraded toolchain
-- [ ] 2.2 In `.github/workflows/ci.yml`, set the same step to Temurin 21 in
+- [x] 2.2 In `.github/workflows/ci.yml`, set the same step to Temurin 21 in
   `build-android-test` and `build-android-release`, with the same comment update
-- [ ] 2.3 Confirm no other job runs a Gradle build
+- [x] 2.3 Confirm no other job runs a Gradle build
 
 ## 3. Local verification
 

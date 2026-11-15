@@ -19,6 +19,7 @@ import '../state/freeform_history_provider.dart';
 import '../state/freeform_provider.dart';
 import '../state/freeform_state.dart';
 import '../state/parser_provider.dart';
+import 'widgets/completion_area.dart';
 import 'widgets/completion_field.dart';
 import 'widgets/result_display.dart';
 
@@ -45,6 +46,21 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
   bool _anyFieldFocused = false;
   ({TextEditingController ctrl, FocusNode focus})? _lastFocused;
   Timer? _debounceTimer;
+
+  /// The two expression fields, as served by the completion area.  Kept as
+  /// one stable list so the area does not resubscribe on screen rebuilds.
+  late final List<CompletionTarget> _completionTargets = [
+    CompletionTarget(
+      controller: _inputController,
+      focusNode: _inputFocus,
+      onChanged: _onInputChanged,
+    ),
+    CompletionTarget(
+      controller: _outputController,
+      focusNode: _outputFocus,
+      onChanged: _onOutputChanged,
+    ),
+  ];
 
   @override
   void initState() {
@@ -243,6 +259,24 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
         automaticallyImplyLeading: !usesRail,
         title: const Text('Unitary'),
         actions: [
+          // Listens to both controllers so its enabled state follows the
+          // text without a screen rebuild.
+          ListenableBuilder(
+            listenable: Listenable.merge([
+              _inputController,
+              _outputController,
+            ]),
+            builder: (context, _) {
+              final canSwap =
+                  _inputController.text.isNotEmpty &&
+                  _outputController.text.isNotEmpty;
+              return IconButton(
+                icon: const Icon(Icons.swap_vert),
+                tooltip: 'Swap from and to',
+                onPressed: canSwap ? _swap : null,
+              );
+            },
+          ),
           if (!twoPane)
             Consumer(
               builder: (context, ref, _) {
@@ -294,106 +328,92 @@ class _FreeformScreenState extends ConsumerState<FreeformScreen> {
             children: [
               Expanded(
                 child: ReadableWidth(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // The ListenableBuilder re-evaluates the clear
-                        // suffixIcon on each text change.  It wraps the whole
-                        // field (rather than supplying an always-present
-                        // suffixIcon widget) because InputDecorator reserves
-                        // the 48 dp suffix slot whenever suffixIcon is
-                        // non-null — the null/non-null switch must stay to
-                        // keep the empty field's geometry unchanged.
-                        ListenableBuilder(
-                          listenable: _inputController,
-                          builder: (context, _) => CompletionField(
-                            controller: _inputController,
-                            focusNode: _inputFocus,
-                            decoration: InputDecoration(
-                              labelText: 'Convert from',
-                              border: const OutlineInputBorder(),
-                              suffixIcon: _inputController.text.isNotEmpty
-                                  ? IconButton(
-                                      icon: const Icon(Icons.clear),
-                                      onPressed: _clear,
-                                    )
-                                  : null,
-                            ),
-                            textInputAction: TextInputAction.next,
-                            onChanged: _onInputChanged,
-                            onSubmitted: (_) {
-                              _evaluate();
-                              // Advance to the output field as the natural next step.
-                              _outputFocus.requestFocus();
-                            },
-                          ),
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            ListenableBuilder(
-                              listenable: Listenable.merge([
-                                _inputController,
-                                _outputController,
-                              ]),
-                              builder: (context, _) {
-                                final canSwap =
-                                    _inputController.text.isNotEmpty &&
-                                    _outputController.text.isNotEmpty;
-                                return IconButton(
-                                  icon: const Icon(Icons.swap_vert),
-                                  onPressed: canSwap ? _swap : null,
-                                );
+                  // The completion area takes the height the content leaves
+                  // free, so suggestions never cover a field or the result.
+                  child: CompletionAreaLayout(
+                    targets: _completionTargets,
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // The ListenableBuilder re-evaluates the clear
+                          // suffixIcon on each text change.  It wraps the whole
+                          // field (rather than supplying an always-present
+                          // suffixIcon widget) because InputDecorator reserves
+                          // the 48 dp suffix slot whenever suffixIcon is
+                          // non-null — the null/non-null switch must stay to
+                          // keep the empty field's geometry unchanged.
+                          ListenableBuilder(
+                            listenable: _inputController,
+                            builder: (context, _) => CompletionField(
+                              controller: _inputController,
+                              focusNode: _inputFocus,
+                              decoration: InputDecoration(
+                                labelText: 'Convert from',
+                                border: const OutlineInputBorder(),
+                                suffixIcon: _inputController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear),
+                                        onPressed: _clear,
+                                      )
+                                    : null,
+                              ),
+                              textInputAction: TextInputAction.next,
+                              onChanged: _onInputChanged,
+                              onSubmitted: (_) {
+                                _evaluate();
+                                // Advance to the output field as the natural next step.
+                                _outputFocus.requestFocus();
                               },
                             ),
-                          ],
-                        ),
-                        CompletionField(
-                          controller: _outputController,
-                          focusNode: _outputFocus,
-                          decoration: const InputDecoration(
-                            labelText: 'Convert to (optional)',
-                            border: OutlineInputBorder(),
                           ),
-                          textInputAction: TextInputAction.done,
-                          onChanged: _onOutputChanged,
-                          onSubmitted: (_) => _evaluate(),
-                        ),
-                        const SizedBox(height: 24),
-                        Consumer(
-                          builder: (context, ref, _) {
-                            final result = ref.watch(freeformProvider);
-                            return ResultDisplay(
-                              result: result,
-                              onTap:
-                                  result is EvaluationIdle &&
-                                      result.example != null
-                                  ? () {
-                                      final ex = result.example!;
-                                      _inputController.text =
-                                          ex.inputExpression;
-                                      if (ex.outputExpression != null) {
-                                        _outputController.text =
-                                            ex.outputExpression!;
-                                      }
-                                      _cancelDebounce();
-                                      _evaluate();
-                                      FocusScope.of(context).unfocus();
-                                    }
-                                  : null,
-                            );
-                          },
-                        ),
-                        if (isOnSubmit) ...[
                           const SizedBox(height: 16),
-                          ElevatedButton(
-                            onPressed: _evaluate,
-                            child: const Text('Evaluate'),
+                          CompletionField(
+                            controller: _outputController,
+                            focusNode: _outputFocus,
+                            decoration: const InputDecoration(
+                              labelText: 'Convert to (optional)',
+                              border: OutlineInputBorder(),
+                            ),
+                            textInputAction: TextInputAction.done,
+                            onChanged: _onOutputChanged,
+                            onSubmitted: (_) => _evaluate(),
                           ),
+                          const SizedBox(height: 24),
+                          Consumer(
+                            builder: (context, ref, _) {
+                              final result = ref.watch(freeformProvider);
+                              return ResultDisplay(
+                                result: result,
+                                onTap:
+                                    result is EvaluationIdle &&
+                                        result.example != null
+                                    ? () {
+                                        final ex = result.example!;
+                                        _inputController.text =
+                                            ex.inputExpression;
+                                        if (ex.outputExpression != null) {
+                                          _outputController.text =
+                                              ex.outputExpression!;
+                                        }
+                                        _cancelDebounce();
+                                        _evaluate();
+                                        FocusScope.of(context).unfocus();
+                                      }
+                                    : null,
+                              );
+                            },
+                          ),
+                          if (isOnSubmit) ...[
+                            const SizedBox(height: 16),
+                            ElevatedButton(
+                              onPressed: _evaluate,
+                              child: const Text('Evaluate'),
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ),
                 ),

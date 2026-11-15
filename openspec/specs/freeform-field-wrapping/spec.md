@@ -5,8 +5,7 @@
 Defines how the freeform screen's "Convert from" and "Convert to" expression
 fields handle long expressions: soft-wrapping onto additional visual lines and
 growing vertically so the entire expression stays visible and editable, while
-preserving Enter-to-submit semantics and correct completion-overlay positioning
-on multi-line fields.
+preserving Enter-to-submit semantics.
 
 ## Requirements
 ### Requirement: Freeform expression fields soft-wrap long expressions
@@ -46,15 +45,6 @@ The submit action (Enter / the keyboard action key) on a multi-line freeform exp
 - **THEN** evaluation is triggered
 - **AND** no newline character is inserted into the text
 
-### Requirement: Completion overlay positions correctly against a multi-line field
-
-The predictive-completion overlay SHALL anchor to the field's current edges as the field grows or shrinks, appearing below the field's bottom edge (or above its top edge when the field is in the lower half of the viewport).
-
-#### Scenario: Overlay appears below a two-line field
-
-- **WHEN** the "Convert from" field has wrapped to two lines and the cursor ends a completable identifier
-- **THEN** the completion overlay appears immediately below the field's current (taller) bottom edge
-
 ### Requirement: Pasted newlines do not break evaluation
 
 Text pasted into a freeform expression field MAY contain literal newline characters; the system SHALL treat them as whitespace during evaluation.
@@ -63,4 +53,3 @@ Text pasted into a freeform expression field MAY contain literal newline charact
 
 - **WHEN** the user pastes text containing a newline character into an expression field
 - **THEN** the expression evaluates as if the newline were a space
-

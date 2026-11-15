@@ -3,7 +3,7 @@
 ## Purpose
 
 Gives the app's custom-drawn interactive controls — the Freeform operator key
-panel and predictive-completion suggestion overlay, the tappable idle-example
+panel and predictive-completion suggestion area, the tappable idle-example
 hint, and long-press copy gestures — accessible labels, roles, and actions in
 the semantics tree, so assistive technology (screen readers, braille displays,
 switch access) can convey what each control does and what kind of entry it is,
@@ -41,7 +41,7 @@ unchanged, and the raw glyph MUST NOT be announced in place of the label.
 
 ### Requirement: Completion suggestions expose name and kind
 
-Each suggestion in the predictive-completion overlay SHALL expose an accessible
+Each suggestion in the predictive-completion area SHALL expose an accessible
 label that includes both the suggestion's name and its kind (unit, prefix, or
 function).  The label MUST convey the kind that is otherwise indicated only
 visually (the trailing `-` for prefixes and trailing `(` for functions), so a
@@ -67,7 +67,7 @@ visible display text MUST remain unchanged.
 
 #### Scenario: Visual display text is unchanged
 
-- **WHEN** the completion overlay is rendered
+- **WHEN** the completion area is rendered
 - **THEN** each suggestion still shows its original display text (plain name,
   `name-`, or `name(`) with no visible change
 

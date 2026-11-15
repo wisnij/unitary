@@ -7,7 +7,7 @@ Defines the IME/keyboard configuration of the freeform expression fields
 soft-wrapping multiline layout does not invite prose treatment (Android IME
 auto-capitalization), and no platform autocorrect or word suggestions, since
 expression content is case-sensitive unit identifiers served by the app's own
-predictive-completion overlay.
+predictive-completion area.
 
 ## Requirements
 
@@ -38,7 +38,7 @@ The freeform expression fields SHALL disable platform autocorrect
 (`autocorrect: false`) and IME word suggestions (`enableSuggestions: false`).
 Expression content consists of unit identifiers, numbers, and operators — not
 dictionary words — and the application provides its own domain-aware predictive
-completion overlay.
+completion area.
 
 #### Scenario: Inner text field disables autocorrect and suggestions
 
@@ -46,8 +46,8 @@ completion overlay.
 - **THEN** `TextField.autocorrect` is `false`
 - **AND** `TextField.enableSuggestions` is `false`
 
-#### Scenario: Predictive completion overlay is unaffected
+#### Scenario: Predictive completion area is unaffected
 
 - **WHEN** the user types a partial identifier of at least 2 characters in a
   freeform expression field
-- **THEN** the app's own completion overlay still appears with suggestions
+- **THEN** the app's own completion area still shows suggestions

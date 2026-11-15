@@ -94,7 +94,7 @@ tens-of-ms noise regardless.
 1. `flutter run --profile`, open the DevTools URL printed in the terminal,
    go to the **Performance** page.
 2. **Jank check first, in profile mode**: watch the frame chart while
-   exercising the flows (typing in freeform with the completion overlay open,
+   exercising the flows (typing in freeform with completion suggestions showing,
    editing worksheet cells, scrolling Browse with and without the fast-scroll
    thumb).  Bars over the budget line are jank; ignore the first frame or two
    after opening a screen.

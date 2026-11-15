@@ -6,6 +6,8 @@ import 'package:unitary/core/domain/models/dimension.dart';
 import 'package:unitary/core/domain/models/quantity.dart';
 import 'package:unitary/features/freeform/data/idle_examples.dart';
 import 'package:unitary/features/freeform/presentation/freeform_screen.dart';
+import 'package:unitary/features/freeform/presentation/widgets/completion_area.dart';
+import 'package:unitary/features/freeform/presentation/widgets/result_display.dart';
 import 'package:unitary/features/freeform/state/freeform_provider.dart';
 import 'package:unitary/features/freeform/state/freeform_state.dart';
 import 'package:unitary/features/settings/models/user_settings.dart';
@@ -357,11 +359,64 @@ void main() {
   });
 
   group('FreeformScreen — swap button', () {
-    testWidgets('swap button is always visible between the two fields', (
+    testWidgets('swap button is in the app bar, before the other actions', (
       tester,
     ) async {
+      // Compact width, where the history button is also an app bar action.
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(400, 800);
+      addTearDown(tester.view.reset);
+
       await tester.pumpWidget(buildApp());
+
+      Finder inAppBar(IconData icon) => find.descendant(
+        of: find.byType(AppBar),
+        matching: find.byIcon(icon),
+      );
+
       expect(find.byIcon(Icons.swap_vert), findsOneWidget);
+      expect(inAppBar(Icons.swap_vert), findsOneWidget);
+      final swap = tester.getCenter(inAppBar(Icons.swap_vert)).dx;
+      final history = tester.getCenter(inAppBar(Icons.history)).dx;
+      final conformable = tester.getCenter(inAppBar(Icons.balance)).dx;
+      expect(swap, lessThan(history));
+      expect(history, lessThan(conformable));
+    });
+
+    testWidgets('swap button has a tooltip', (tester) async {
+      await tester.pumpWidget(buildApp());
+      final button = tester.widget<IconButton>(
+        find.widgetWithIcon(IconButton, Icons.swap_vert),
+      );
+      expect(button.tooltip, 'Swap from and to');
+    });
+
+    testWidgets('the two fields are separated by a 16 dp gap', (tester) async {
+      await tester.pumpWidget(buildApp());
+      final from = tester.getRect(
+        find.widgetWithText(TextField, 'Convert from'),
+      );
+      final to = tester.getRect(
+        find.widgetWithText(TextField, 'Convert to (optional)'),
+      );
+      expect(to.top - from.bottom, 16);
+    });
+
+    testWidgets('swap button stays in the app bar at two-pane width', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(1200, 800);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(buildApp());
+      expect(
+        find.descendant(
+          of: find.byType(AppBar),
+          matching: find.byIcon(Icons.swap_vert),
+        ),
+        findsOneWidget,
+      );
     });
 
     Finder findSwapButton() => find.ancestor(
@@ -842,12 +897,9 @@ void main() {
           ),
         );
 
-        // Trailing space keeps the cursor off an identifier token so the
-        // completion overlay (which can overlap the Evaluate button at compact
-        // width) does not appear.
         await tester.enterText(
           find.widgetWithText(TextField, 'Convert from'),
-          '5 km ',
+          '5 km',
         );
         await tester.pump();
 
@@ -1319,102 +1371,76 @@ void main() {
   });
 
   group('FreeformScreen — predictive completion', () {
-    testWidgets('Convert-from field shows completion overlay when typing', (
+    final fromField = find.widgetWithText(TextField, 'Convert from');
+    final toField = find.widgetWithText(TextField, 'Convert to (optional)');
+
+    /// Finds the chip label [text] inside the completion area (and not the
+    /// same text in an expression field).
+    Finder chip(String text) => find.descendant(
+      of: find.byType(CompletionArea),
+      matching: find.text(text),
+    );
+
+    final chips = find.descendant(
+      of: find.byType(CompletionArea),
+      matching: find.byType(OutlinedButton),
+    );
+
+    /// Focuses [field] and types [text] into it.
+    Future<void> type(WidgetTester tester, Finder field, String text) async {
+      await tester.tap(field);
+      await tester.pump();
+      await tester.enterText(field, text);
+      await tester.pump();
+      await tester.pump();
+    }
+
+    testWidgets('Convert-from field shows suggestions when typing', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+      expect(chips, findsNothing);
+
+      await type(tester, fromField, 'kg');
+      expect(chip('kg'), findsOneWidget);
+    });
+
+    testWidgets('Convert-to field shows suggestions when typing', (
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
 
-      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
-      await tester.pump();
-
-      // Enter a 2-char prefix that matches a known unit primary ID.
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        'kg',
-      );
-      // Post-frame callbacks + overlay render.
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
-
-      // "kg" should appear at least twice: once in the field, once in overlay.
-      expect(find.text('kg'), findsWidgets);
+      await type(tester, toField, 'kg');
+      expect(chip('kg'), findsOneWidget);
     });
 
-    testWidgets('Convert-to field shows completion overlay when typing', (
-      tester,
-    ) async {
+    testWidgets('suggestions cleared when field loses focus', (tester) async {
       await tester.pumpWidget(buildApp());
 
-      await tester.tap(
-        find.widgetWithText(TextField, 'Convert to (optional)'),
-      );
-      await tester.pump();
+      await type(tester, fromField, 'kg');
+      expect(chips, findsWidgets);
 
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert to (optional)'),
-        'kg',
-      );
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
-
-      expect(find.text('kg'), findsWidgets);
-    });
-
-    testWidgets('overlay dismissed when field loses focus', (tester) async {
-      await tester.pumpWidget(buildApp());
-
-      // Focus Convert-from and type a matching prefix.
-      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
-      await tester.pump();
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        'kg',
-      );
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
-      // Overlay visible — "kg" appears at least twice (field + suggestion row).
-      expect(find.text('kg'), findsWidgets);
-
-      // Unfocus programmatically (avoids tapping through the overlay, which
-      // can cover the "Convert to" field in the test viewport).
       FocusManager.instance.primaryFocus?.unfocus();
       for (var i = 0; i < 4; i++) {
         await tester.pump();
       }
-      // Overlay dismissed; "kg" appears only once (in the text field itself).
-      expect(find.text('kg'), findsOneWidget);
+      expect(chips, findsNothing);
     });
 
     testWidgets('tapping suggestion updates expression', (tester) async {
       await tester.pumpWidget(buildApp());
 
-      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
-      await tester.pump();
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        'kilo',
-      );
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
+      await type(tester, fromField, 'kilo');
 
       // Tap a completion suggestion (the "kilo-" prefix entry).
-      final sugg = find.text('kilo-');
-      expect(sugg, findsOneWidget);
-      await tester.tap(sugg);
+      expect(chip('kilo-'), findsOneWidget);
+      await tester.tap(chip('kilo-'));
       for (var i = 0; i < 4; i++) {
         await tester.pump();
       }
 
       // Text field should now contain the selected identifier.
-      expect(
-        find.widgetWithText(TextField, 'kilo'),
-        findsOneWidget,
-      );
+      expect(find.widgetWithText(TextField, 'kilo'), findsOneWidget);
     });
 
     testWidgets('tapping suggestion triggers evaluation in real-time mode', (
@@ -1422,19 +1448,10 @@ void main() {
     ) async {
       await tester.pumpWidget(buildApp());
 
-      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
-      await tester.pump();
-
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
-        'kilo',
-      );
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
+      await type(tester, fromField, 'kilo');
 
       // Tap the "kilo-" prefix suggestion.
-      await tester.tap(find.text('kilo-'));
+      await tester.tap(chip('kilo-'));
       // Allow debounce to fire.
       await tester.pump(const Duration(milliseconds: 600));
 
@@ -1442,43 +1459,141 @@ void main() {
       expect(find.text('Enter an expression above.'), findsNothing);
     });
 
-    testWidgets('only the focused field shows its completion overlay', (
+    testWidgets('only the focused field\'s suggestions are shown', (
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
 
-      // Focus Convert-from and type a matching prefix → overlay appears.
-      await tester.tap(find.widgetWithText(TextField, 'Convert from'));
+      await type(tester, fromField, 'kg');
+      expect(chip('kg'), findsOneWidget);
+
+      // The fields stay reachable while suggestions are showing.
+      await type(tester, toField, 'met');
+      expect(chip('kg'), findsNothing);
+      expect(chip('meter'), findsOneWidget);
+    });
+
+    testWidgets('a suggestion is inserted into the focused field only', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await type(tester, fromField, 'kg');
+      await type(tester, toField, 'kilo');
+      await tester.tap(chip('kilo-'));
       await tester.pump();
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert from'),
+
+      expect(
+        tester.widget<TextField>(fromField).controller!.text,
         'kg',
       );
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
-      // "kg" appears at least twice: text field + overlay suggestion row.
-      expect(find.text('kg'), findsWidgets);
+      expect(tester.widget<TextField>(toField).controller!.text, 'kilo');
+    });
 
-      // Now focus Convert-to and type a different prefix.
-      await tester.tap(
-        find.widgetWithText(TextField, 'Convert to (optional)'),
-      );
+    testWidgets(
+      'suggestions sit between the result and the key panel and cover '
+      'neither field nor the result',
+      (tester) async {
+        await tester.pumpWidget(buildApp());
+
+        // A result to protect, then a token with many suggestions.
+        await type(tester, fromField, '5 ft');
+        await tester.pump(const Duration(milliseconds: 600));
+        await type(tester, toField, 'me');
+        await tester.pump(const Duration(milliseconds: 600));
+        expect(chips, findsWidgets);
+
+        final from = tester.getRect(fromField);
+        final to = tester.getRect(toField);
+        final result = tester.getRect(find.byType(ResultDisplay));
+        final area = tester.getRect(find.byType(CompletionArea));
+        final keyPanel = tester.getRect(find.widgetWithText(TextButton, '^'));
+
+        // Everything above the area is fully on screen...
+        final body = tester.getRect(find.byType(ReadableWidth));
+        expect(from.top, greaterThanOrEqualTo(body.top));
+        expect(from.bottom, lessThan(to.top));
+        expect(to.bottom, lessThan(result.top));
+        // ...and the area starts below the result and ends at the key panel.
+        expect(area.top, greaterThanOrEqualTo(result.bottom));
+        expect(area.bottom, lessThanOrEqualTo(keyPanel.top));
+        expect(area.height, greaterThanOrEqualTo(48));
+
+        // No visible chip overlaps a field or the result.
+        for (final element in chips.evaluate()) {
+          final box = element.renderObject! as RenderBox;
+          final rect = box.localToGlobal(Offset.zero) & box.size;
+          expect(rect.overlaps(from), isFalse);
+          expect(rect.overlaps(to), isFalse);
+          expect(rect.overlaps(result), isFalse);
+        }
+      },
+    );
+
+    testWidgets('showing suggestions does not move the fields or result', (
+      tester,
+    ) async {
+      await tester.pumpWidget(buildApp());
+
+      await type(tester, fromField, '5 ');
+      await tester.pump(const Duration(milliseconds: 600));
+      expect(chips, findsNothing);
+      final toBefore = tester.getRect(toField);
+      final resultBefore = tester.getRect(find.byType(ResultDisplay));
+
+      // On-submit style: change the text without waiting for the debounce,
+      // so the result is the same widget content before and after.
+      await tester.enterText(fromField, '5 me');
       await tester.pump();
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Convert to (optional)'),
-        'met',
+      expect(chips, findsWidgets);
+      expect(tester.getRect(toField), toBefore);
+      expect(tester.getRect(find.byType(ResultDisplay)), resultBefore);
+    });
+
+    testWidgets('on a short screen the area keeps one chip line and the '
+        'content scrolls', (tester) async {
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(400, 300);
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(buildApp());
+      await type(tester, fromField, 'me');
+
+      final area = tester.getRect(find.byType(CompletionArea));
+      final keyPanel = tester.getRect(find.widgetWithText(TextButton, '^'));
+      expect(area.height, 48);
+      expect(area.bottom, lessThanOrEqualTo(keyPanel.top));
+      expect(chips, findsWidgets);
+
+      // The content above is cut short and can scroll.
+      final content = find
+          .ancestor(of: fromField, matching: find.byType(Scrollable))
+          .first;
+      expect(
+        tester.state<ScrollableState>(content).position.maxScrollExtent,
+        greaterThan(0),
       );
-      for (var i = 0; i < 4; i++) {
-        await tester.pump();
-      }
+      expect(tester.takeException(), isNull);
+    });
 
-      // Convert-from overlay is gone: "kg" appears only once (in the field).
-      expect(find.text('kg'), findsOneWidget);
+    testWidgets('on a wide pane the area lines up with the fields', (
+      tester,
+    ) async {
+      tester.view.devicePixelRatio = 1.0;
+      tester.view.physicalSize = const Size(1400, 800);
+      addTearDown(tester.view.reset);
 
-      // Convert-to overlay is visible: 'met'-prefix suggestions are shown.
-      // "meter" is a registered unit alias — it should appear in the overlay.
-      expect(find.text('meter'), findsWidgets);
+      await tester.pumpWidget(buildApp());
+      await type(tester, fromField, 'me');
+
+      final from = tester.getRect(fromField);
+      final area = tester.getRect(find.byType(CompletionArea));
+      expect(area.width, kReadableMaxWidth);
+      // The fields are inset from the content edge by its 16 dp padding, and
+      // the chips by the same amount.
+      expect(area.left, from.left - 16);
+      expect(area.right, from.right + 16);
+      expect(tester.getRect(chips.first).left, from.left);
     });
   });
 

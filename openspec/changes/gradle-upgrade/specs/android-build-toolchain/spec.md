@@ -2,21 +2,21 @@
 
 ### Requirement: The Android build uses a supported toolchain
 
-The project SHALL build with Gradle 9.3.1, Android Gradle Plugin 9.0.1, and
-Kotlin Gradle Plugin 2.3.20.  These versions SHALL be ones that the Flutter
-version pinned in CI lists as supported.  The app's JVM target SHALL remain 17
+The project SHALL build with Gradle 9.5.0, Android Gradle Plugin 9.3.1, and
+Kotlin Gradle Plugin 2.4.20.  These versions SHALL be ones that the Flutter
+version pinned in CI accepts without a warning.  The app's JVM target SHALL remain 17
 for both Java and Kotlin compilation.
 
 #### Scenario: The wrapper names the Gradle version
 
 - **WHEN** `android/gradle/wrapper/gradle-wrapper.properties` is read
-- **THEN** its `distributionUrl` names the Gradle 9.3.1 distribution
+- **THEN** its `distributionUrl` names the Gradle 9.5.0 distribution
 
 #### Scenario: The settings file names the plugin versions
 
 - **WHEN** `android/settings.gradle.kts` is read
-- **THEN** it declares `com.android.application` at version 9.0.1 and
-  `org.jetbrains.kotlin.android` at version 2.3.20
+- **THEN** it declares `com.android.application` at version 9.3.1 and
+  `org.jetbrains.kotlin.android` at version 2.4.20
 
 #### Scenario: A build raises no toolchain version warning
 

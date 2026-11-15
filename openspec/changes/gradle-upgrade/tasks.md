@@ -1,9 +1,9 @@
 ## 1. Build configuration
 
 - [x] 1.1 In `android/gradle/wrapper/gradle-wrapper.properties`, change the
-  `distributionUrl` from `gradle-8.14-all.zip` to `gradle-9.3.1-all.zip`
+  `distributionUrl` from `gradle-8.14-all.zip` to `gradle-9.5.0-all.zip`
 - [x] 1.2 In `android/settings.gradle.kts`, set `com.android.application` to
-  version 9.0.1 and `org.jetbrains.kotlin.android` to version 2.3.20
+  version 9.3.1 and `org.jetbrains.kotlin.android` to version 2.4.20
 - [x] 1.3 In `android/app/build.gradle.kts`, remove the `kotlinOptions` block
   from the `android` block and add a top-level
   `kotlin { compilerOptions { jvmTarget = JvmTarget.JVM_17 } }` block
@@ -20,31 +20,31 @@
 
 ## 3. Local verification
 
-- [ ] 3.1 Run `flutter clean`, then `flutter test --reporter failures-only` and
+- [x] 3.1 Run `flutter clean`, then `flutter test --reporter failures-only` and
   `flutter analyze`
-- [ ] 3.2 Build the debug APK and confirm the output has no warning about
+- [x] 3.2 Build the debug APK and confirm the output has no warning about
   Gradle, Android Gradle Plugin, or Kotlin version support
-- [ ] 3.3 Build the profile APK (the variant `tool/take_screenshots.sh` uses)
-- [ ] 3.4 Build the release APK with
+- [x] 3.3 Build the profile APK (the variant `tool/take_screenshots.sh` uses)
+- [x] 3.4 Build the release APK with
   `--target-platform android-arm,android-arm64` and run
   `dart run tool/verify_apk_abis.dart` on it
-- [ ] 3.5 Build the release app bundle and run
+- [x] 3.5 Build the release app bundle and run
   `dart run tool/verify_apk_abis.dart` on it
-- [ ] 3.6 With `aapt2 dump badging`, compare the release APK with the published
+- [x] 3.6 With `aapt2 dump badging`, compare the release APK with the published
   v0.9.11 APK: same application ID, `minSdk`, `targetSdk`, and permissions, and
   the version code that `pubspec.yaml` records
-- [ ] 3.7 Run `tool/run_integration_tests.sh` against the local x86_64 emulator
-- [ ] 3.8 Install the release APK on a real device over the existing install and
+- [x] 3.7 Run `tool/run_integration_tests.sh` against the local x86_64 emulator
+- [x] 3.8 Install the release APK on a real device over the existing install and
   confirm the app starts and keeps its data
-- [ ] 3.9 Run the pre-commit hooks on the changed files
+- [x] 3.9 Run the pre-commit hooks on the changed files
 
 ## 4. Documentation
 
-- [ ] 4.1 Add a dated entry to `doc/design_progress.md` describing the failure,
+- [x] 4.1 Add a dated entry to `doc/design_progress.md` describing the failure,
   its cause, the upgrade, and the JDK selection in CI
-- [ ] 4.2 Update `doc/implementation_plan.md` where it describes the release
+- [x] 4.2 Update `doc/implementation_plan.md` where it describes the release
   pipeline or toolchain, if anything there is now out of date
-- [ ] 4.3 Check `README.md`, `CONTRIBUTING.md`, and `doc/best_practices.md` for
+- [x] 4.3 Check `README.md`, `CONTRIBUTING.md`, and `doc/best_practices.md` for
   statements about the JDK or Gradle that need a change
 
 ## 5. CI verification and release
